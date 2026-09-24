@@ -106,9 +106,9 @@ launches:
   text: Ikke egnet, men mulig i svak vind med krabbevinkel fra toppen eller i bakvind. Går lettere med ski om vinteren.
 images:
   overview: sollifjellet-overview.jpg
-  launch: null
-  landing: null
-  air: null
+  launch: sollifjellet-launch.jpg
+  landing: sollifjellet-landing.jpg
+  air: sollifjellet-air.jpg
   overview_credit: Gammel flystedsoversikt
 reviewed:
   by: Kristoffer D. Hofstad
