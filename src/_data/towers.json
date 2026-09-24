@@ -1,5 +1,7 @@
 [
   { "name": "Evenes tårn", "phone": "+47 67 03 41 23" },
   { "name": "Bardufoss tårn", "phone": "+47 67 03 44 12" },
+  { "name": "Andenes tårn", "phone": "+47 67 03 40 33" },
+  { "name": "Tromsø tårn", "phone": "+47 67 03 47 66" },
   { "name": "Bodø tårn", "phone": null }
 ]
