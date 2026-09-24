@@ -4,7 +4,7 @@ import { processRoute } from "../../lib/gpx.js";
 import { lastModified } from "../../lib/git.js";
 import { sourceLabel } from "../../lib/format.js";
 import { processImage } from "../../lib/images.js";
-import { readCachedAirspace, ceilingOverLaunch } from "../../lib/airspace.js";
+import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
 import site from "../_data/site.js";
 
 // Ingressen (teksten før første ##) som ren tekst, til kortet på forsiden.
@@ -79,7 +79,8 @@ export default {
       }
 
       // Luftrom hentet fra openAIP med `npm run airspace`. null hvis stedet ikke er hentet ennå.
-      const airspace = readCachedAirspace(data.id);
+      const cached = readCachedAirspace(data.id);
+      const airspace = cached ? { ...cached, airspaces: applyManualAirspace(cached.airspaces, data.airspace) } : null;
 
       return {
         routes,
