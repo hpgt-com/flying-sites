@@ -214,7 +214,7 @@ scripts:
               {% else %}
               <span class="muted">Ingen faste luftrom over starten.</span>
               {% endif %}
-              <span class="airspace__source">Hentet automatisk fra openAIP {{ derived.airspace.fetched | formatDate }}.<br>Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr.</span>
+              <span class="airspace__source">Hentet automatisk fra openAIP {{ derived.airspace.fetched | formatDate }}.<br>Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr.<br><a href="/luftrom/">Telefonnumre til tårnene</a></span>
               {% else %}
               {% set mainAirspace = airspace | rejectattr("nearby") | list %}
               {% for a in mainAirspace %}

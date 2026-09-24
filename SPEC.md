@@ -27,7 +27,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Kart med alle starter som små vindroser. Steder som ikke passer filteret tones ned. Klikk på en start viser et kort med rose, tagger, kort tekst, «Se hele stedet» og «Se på Flightlog».
 - Forklaring til rosefargene (hovedretning, mulig, ikke egnet). Mobil: under kartet. Desktop: under kortet for valgt sted.
 - Liste over steder som passer filteret.
-- «Før du drar»: NOTAM og luftrom (https://ippc.no), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.
+- «Før du drar»: NOTAM og luftrom (https://ippc.no), Tårn (egen side `/luftrom/` med telefonnumre til tårnene, fra `src/_data/towers.json`, tårn uten nummer vises ikke), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.
 - Nederst: ansvarsfraskrivelse og kreditering av Lars Sletten. Krediteringen står bare her, ikke på hver stedsside.
 - Desktop: tre kolonner (filtre og liste | kart | valgt sted, forklaring, «Før du drar»).
 
