@@ -6,7 +6,7 @@ region: Harstad og Kvæfjord
 external:
   flightlog_id: null
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-290560
 level: null
 training_site: false
 categories:
