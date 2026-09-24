@@ -20,8 +20,8 @@ wind_directions:
   - E
   - SE
   - S
-  possible:
   - NW
+  possible: []
   source: flightlog/lokalkunnskap
 launch:
   lat: 68.80389
@@ -98,7 +98,7 @@ launches:
 - directions:
   - NW
   categories: null
-  text: På baksiden av fjellet, se oversiktsbildet. Hanget her er ikke optimalt.
+  text: På baksiden av fjellet, se oversiktsbildet.
 - directions:
   - W
   - SW
