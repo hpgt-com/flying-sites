@@ -105,10 +105,10 @@
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
   var bounds = [];
 
-  // Pilen viser hvor vinden blåser mot (varselet oppgir hvor den kommer fra).
+  // Pilen står på siden vinden kommer fra og peker inn mot starten, som vinden som blåser inn i rosen.
   function markerIcon(site, assessment) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
-    var arrow = assessment ? '<span class="wind-arrow" style="transform: rotate(' + (assessment.wind.dir + 180) + 'deg)"></span>' : "";
+    var arrow = assessment ? '<span class="wind-arrow" style="transform: rotate(' + assessment.wind.dir + 'deg)"></span>' : "";
     return L.divIcon({
       className: "rose-marker",
       html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 24, false) + arrow + "</span>",
