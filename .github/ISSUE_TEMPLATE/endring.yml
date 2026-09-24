@@ -1,0 +1,32 @@
+name: Endringsforslag for et flysted
+description: Noe er feil, mangler eller har endret seg på et flysted.
+title: "Endring: "
+labels: ["endringsforslag"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Takk for at du hjelper til! Beskriv kort hva som bør endres. Bilder kan dras inn i tekstfeltet.
+        Obs: saken blir offentlig synlig.
+  - type: input
+    id: site
+    attributes:
+      label: Sted
+      description: Fylles inn automatisk når du kommer fra en stedsside. Ellers skriv navnet på stedet.
+      placeholder: sollifjellet
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Hva bør endres?
+      description: Hva er feil eller mangler, og hva bør det stå i stedet?
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Kilde
+      description: Hvordan vet du dette? For eksempel egen erfaring, bilde, eller at du har snakket med grunneier.
+    validations:
+      required: false
