@@ -15,8 +15,8 @@ season: Sommer og høst
 wind_directions:
   primary:
   - S
-  possible:
   - SE
+  possible: []
   source: flightlog/lokalkunnskap
 launch:
   lat: 68.73083
@@ -56,6 +56,7 @@ hazards:
 launches:
 - directions:
   - S
+  - SE
   categories: null
   text: Subbhang i de rette forholdene. Du kan henge i svært svak vind, helst S–SØ.
 images:
