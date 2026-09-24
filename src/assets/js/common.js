@@ -51,6 +51,15 @@
     });
     topo.addTo(map);
     map.layersControl = L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo }, null, { position: "topright" }).addTo(map);
+    // Termikk fra thermal.kk7.ch: statistikk fra loggede flyturer, ikke et varsel. Av som standard.
+    // Flisene er i TMS-rekkefølge, og src skal oppgi domenet vårt (vilkår på thermal.kk7.ch).
+    ["skyways_all_all", "thermals_all_all"].forEach(function (name, i) {
+      var layer = L.tileLayer("https://thermal.kk7.ch/tiles/" + name + "/{z}/{x}/{y}.png?src=" + encodeURIComponent(location.hostname), {
+        tms: true, maxNativeZoom: 13, maxZoom: 18, opacity: 0.7,
+        attribution: 'Termikk: <a href="https://thermal.kk7.ch">thermal.kk7.ch</a> (<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>)',
+      });
+      map.layersControl.addOverlay(layer, i ? "Termikk: hotspots" : "Termikk: skyways");
+    });
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     return map;
