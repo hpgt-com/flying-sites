@@ -66,4 +66,8 @@ Andre kommandoer:
 
 ## Lisens
 
-Koden er MIT-lisensiert, se [LICENSE](LICENSE).
+Koden (maler, skript, CSS og JavaScript) er MIT-lisensiert, se [LICENSE](LICENSE).
+
+Innholdet tilhører klubben og dem som har bidratt, og er ikke omfattet av MIT-lisensen. Det gjelder tekstene om flystedene, bildene, de tegnede oversiktsbildene og gangrutene i `src/flysteder/`. Bildene kan vise personer og er delt til bruk på denne siden. Ta kontakt med HPGT før du bruker innhold herfra andre steder.
+
+Data fra andre kilder følger lisensene deres, se [Kilder](#kilder).
