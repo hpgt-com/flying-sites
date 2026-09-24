@@ -60,6 +60,7 @@
       });
       map.layersControl.addOverlay(layer, i ? "Termikk: hotspots" : "Termikk: skyways");
     });
+    addStationLayer(map);
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     return map;
@@ -152,6 +153,27 @@
       active--;
       if (!active && attribution) map.attributionControl.removeAttribution(attribution);
     });
+  }
+
+  // --- Værstasjoner ---
+  // Stasjonene i src/_data/stations.json, med lenke til sanntidsdata hos eieren (Holfuy osv.).
+  // På som standard. Laget viser bare hvor stasjonene står, ikke målingene.
+  var STATION_ICON = '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#fff" stroke="#2E5E6E" stroke-width="2"/>' +
+    '<path d="M8 20V6" stroke="#2E5E6E" stroke-width="2" stroke-linecap="round"/><path d="M8 7l11 2v4L8 15z" fill="#C24A12"/><path d="M12 7.7v6.6M16 8.4v5.2" stroke="#fff" stroke-width="1.5"/></svg>';
+
+  function addStationLayer(map) {
+    var stations = readJson("stations-data");
+    if (!stations || !stations.length) return;
+    var layer = L.layerGroup();
+    stations.forEach(function (s) {
+      var icon = L.divIcon({ className: "station-marker", html: STATION_ICON, iconSize: [26, 26], iconAnchor: [13, 13] });
+      L.marker([s.lat, s.lon], { icon: icon, title: s.name, alt: s.name, keyboard: true, zIndexOffset: 1000 })
+        .bindPopup('<div class="station-popup"><strong>' + escapeHtml(s.name) + "</strong><br>" + escapeHtml(s.source) +
+          (s.masl != null ? ", " + s.masl + " moh" : "") + '<br><a href="' + escapeHtml(s.url) + '" target="_blank" rel="noopener">Se vinden nå' + EXTERNAL_MARK + "</a></div>")
+        .addTo(layer);
+    });
+    layer.addTo(map);
+    map.layersControl.addOverlay(layer, "Værstasjoner");
   }
 
   function escapeHtml(s) {
