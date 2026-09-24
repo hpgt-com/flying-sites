@@ -49,20 +49,6 @@
 </svg>
 {%- endmacro %}
 
-{#- Ett luftrom som tagger, som i IPPC: navn, klasse, nedre og øvre grense. `extras` er ekstra tagger [tekst, variant]. -#}
-{% macro airspaceRow(a, extras=[]) -%}
-{%- set lower = a.lower | formatLimit -%}
-<span class="tags">
-  {{ tag(a.name) }}
-  {%- if a["class"] %}{{ tag("Klasse " ~ a["class"]) }}{% endif %}
-  {{- tag("Fra bakken" if lower == "bakken" else "Nedre " ~ lower) }}
-  {%- if a.lower | limitMasl %}{{ tag(a.lower | limitMasl) }}{% endif %}
-  {%- if a.upper %}{{ tag("Øvre " ~ (a.upper | formatLimit)) }}{% endif %}
-  {%- for e in extras %}{{ tag(e[0], e[1]) }}{% endfor %}
-</span>
-{%- if a.note %}<span class="muted">{{ a.note }}</span>{% endif %}
-{%- endmacro %}
-
 {#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet. -#}
 {% macro lightboxLink(image, caption) -%}
 <a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}">{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span></a>
