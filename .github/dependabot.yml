@@ -1,0 +1,19 @@
+# Dependabot lager PR-er når det kommer nye versjoner av GitHub Actions og npm-pakkene.
+# Én samlet PR per økosystem i måneden. PR-sjekken bygger siden, så det er trygt å merge når den er grønn.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      npm:
+        patterns: ["*"]

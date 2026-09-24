@@ -1,0 +1,32 @@
+---
+layout: base.njk
+permalink: /404.html
+bodyClass: page-404
+name: Fant ikke siden
+noindex: true
+eleventyExcludeFromCollections: true
+---
+{#- GitHub Pages viser denne for alle adresser som ikke finnes, også lenker til den gamle oversikten. -#}
+{%- import "macros.njk" as m with context -%}
+<div class="simple-page">
+  <header class="topbar">
+    <a class="back-link" href="/">{{ m.chevron("left") }}Alle flysteder</a>
+  </header>
+
+  <div class="simple-page__intro">
+    <h1>Fant ikke siden</h1>
+    <p class="muted">Siden finnes ikke, eller den har flyttet. Flystedsoversikten er ny, så gamle lenker og bokmerker virker ikke lenger. Alle stedene finner du på forsiden.</p>
+  </div>
+
+  <nav class="link-list" aria-label="Videre herfra">
+    {{ m.linkRow("/", "Alle flysteder", "Kart og liste over alle stedene", false) }}
+  </nav>
+
+  <details class="simple-page__sites">
+    <summary>Gå rett til et flysted</summary>
+    <ul>
+      {% for s in collections.sites %}<li><a href="{{ s.url }}">{{ s.data.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </details>
+</div>

@@ -3,8 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% if name %}{{ name }} – {% endif %}{{ site.title }}</title>
-{% if description %}<meta name="description" content="{{ description }}">{% endif %}
+{%- set pageTitle = (name + " – " if name else "") + site.title -%}
+{%- set pageDescription = description or (derived.intro if derived else "") -%}
+{%- set shareImage = derived.images.overview.shareUrl if (derived and derived.images and derived.images.overview) else "/assets/img/share.jpg" -%}
+<title>{{ pageTitle }}</title>
+{% if pageDescription %}<meta name="description" content="{{ pageDescription }}">{% endif %}
+{#- Forhåndsvisning når lenken deles på Facebook, Messenger osv. Adressene må være absolutte. -#}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:locale" content="nb_NO">
+<meta property="og:title" content="{{ pageTitle }}">
+{% if pageDescription %}<meta property="og:description" content="{{ pageDescription }}">{% endif %}
+<meta property="og:url" content="{{ page.url | htmlBaseUrl(site.url) }}">
+<meta property="og:image" content="{{ shareImage | htmlBaseUrl(site.url) }}">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11191D" media="(prefers-color-scheme: dark)">
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}
