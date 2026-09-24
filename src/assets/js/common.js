@@ -191,6 +191,12 @@
     root.setAttribute("data-theme-choice", choice);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", THEME_COLORS[theme]);
+    // Bilder med egen mørk variant, som Yr-meteogrammet. Den lyse adressen huskes i data-src-light.
+    document.querySelectorAll("img[data-src-dark]").forEach(function (img) {
+      if (!img.hasAttribute("data-src-light")) img.setAttribute("data-src-light", img.getAttribute("src"));
+      var src = img.getAttribute(theme === "dark" ? "data-src-dark" : "data-src-light");
+      if (img.getAttribute("src") !== src) img.setAttribute("src", src);
+    });
     document.querySelectorAll(".theme-toggle button").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-choice") === choice));
     });
