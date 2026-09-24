@@ -199,26 +199,27 @@ scripts:
             <dt>Luftrom</dt>
             <dd class="airspace">
               {% if derived.airspace %}
-              {#- Hentet automatisk fra openAIP (npm run airspace), vist som strukturerte tagger som i IPPC.
-                  Navn og merknad fra stedsfilens airspace overstyrer når type og nedre grense er like. -#}
+              {#- Hentet automatisk fra openAIP (npm run airspace). Viser bare taket over start: det laveste faste
+                  luftrommet over startstedet. Navn fra stedsfilens airspace overstyrer når type og nedre grense er like. -#}
               {% set ceiling = derived.airspaceCeiling %}
-              {% set over = derived.airspace.airspaces | selectattr("overLaunch") | list %}
-              {% set near = derived.airspace.airspaces | rejectattr("overLaunch") | list %}
-              {% for a in over %}
-              {% set extras = [] %}
-              {% if ceiling and not ceiling.fromGround and ceiling.airspace.name == a.name and ceiling.aboveLaunch != null %}{% set extras = [["ca. " ~ ceiling.aboveLaunch ~ " m over start", ""]] %}{% endif %}
-              {% if a.byNotam %}{% set extras = [["Aktiveres ved NOTAM", "warning"]] %}{% endif %}
-              {{ m.airspaceRow(a, extras) }}
-              {% endfor %}
-              {% if near.length %}
-              <span class="airspace__heading">Nærliggende, innen {{ derived.airspace.nearbyKm }} km</span>
-              {% for a in near %}
-              {% set extras = [[a.distanceKm | formatNumber(1) ~ " km unna", ""]] %}
-              {% if a.byNotam %}{% set extras = [[a.distanceKm | formatNumber(1) ~ " km unna", ""], ["Aktiveres ved NOTAM", "warning"]] %}{% endif %}
-              {{ m.airspaceRow(a, extras) }}
-              {% endfor %}
+              {% if ceiling %}
+              {% set a = ceiling.airspace %}
+              <span class="tags">
+                {{ m.tag(a.name) }}
+                {% if a["class"] %}{{ m.tag("Klasse " ~ a["class"]) }}{% endif %}
+                {{ m.tag("Fra bakken" if ceiling.fromGround else "Nedre " ~ (a.lower | formatLimit)) }}
+                {% if a.lower | limitMasl %}{{ m.tag(a.lower | limitMasl) }}{% endif %}
+              </span>
+              {% if a.note %}<span class="muted">{{ a.note }}</span>{% endif %}
+              {% else %}
+              <span class="muted">Ingen faste luftrom over starten.</span>
               {% endif %}
-              {% if not derived.airspace.airspaces.length %}<span class="muted">Ingen luftrom registrert innen {{ derived.airspace.nearbyKm }} km.</span>{% endif %}
+              {#- Nærliggende faste luftrom (innen nearbyKm) som dempet tekst, som stedssidene hadde det før.
+                  Militære områder og andre som bare aktiveres ved behov, er utelatt. -#}
+              {% for n in derived.airspace.airspaces | rejectattr("overLaunch") | rejectattr("byNotam") %}
+              {% set lower = n.lower | formatLimit %}
+              <span class="muted">Nærliggende: {{ n.name }}{% if n["class"] %}, klasse {{ n["class"] }}{% endif %}, {{ "fra bakken" if lower == "bakken" else "nedre grense " ~ lower }}{% if n.lower | limitMasl %} ({{ n.lower | limitMasl }}){% endif %}.{% if n.note %} {{ n.note }}{% endif %}</span>
+              {% endfor %}
               <span class="airspace__source">Hentet automatisk fra openAIP {{ derived.airspace.fetched | formatDate }}. Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr.</span>
               {% else %}
               {% set mainAirspace = airspace | rejectattr("nearby") | list %}
