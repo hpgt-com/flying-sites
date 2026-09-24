@@ -4,6 +4,7 @@ import { processRoute } from "../../lib/gpx.js";
 import { lastModified } from "../../lib/git.js";
 import { sourceLabel } from "../../lib/format.js";
 import { processImage } from "../../lib/images.js";
+import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
 import site from "../_data/site.js";
 
 // Ingressen (teksten før første ##) som ren tekst, til kortet på forsiden.
@@ -18,7 +19,7 @@ function readIntro(inputPath) {
 }
 
 // Én linje med kildene for stedet, til bunnen av stedssiden.
-function describeSources(data, routes) {
+function describeSources(data, routes, airspace) {
   const lines = [];
   const add = (what, source) => source && lines.push(`${what}: ${sourceLabel(source)}`);
   const unique = (list) => [...new Set((list ?? []).map((x) => x.source))].map(sourceLabel).join(", ");
@@ -27,7 +28,8 @@ function describeSources(data, routes) {
   add("Retninger", data.wind_directions?.source);
   add("Landing", unique(data.landings));
   add("Parkering", unique(data.parking));
-  add("Luftrom", unique(data.airspace));
+  if (airspace) lines.push(`Luftrom: openAIP (CC BY-NC 4.0), hentet ${airspace.fetched.split("-").reverse().join(".")}`);
+  else add("Luftrom", unique(data.airspace));
   if (routes.length) {
     const elevationSources = [...new Set(routes.map((r) => r.elevationSource).filter(Boolean))];
     lines.push(`Gangrute: logget tur (GPX)${elevationSources.length ? `, høyder fra ${elevationSources.join("/")}` : ""}`);
@@ -76,11 +78,17 @@ export default {
         });
       }
 
+      // Luftrom hentet fra openAIP med `npm run airspace`. null hvis stedet ikke er hentet ennå.
+      const cached = readCachedAirspace(data.id);
+      const airspace = cached ? { ...cached, airspaces: applyManualAirspace(cached.airspaces, data.airspace) } : null;
+
       return {
         routes,
         images,
+        airspace,
+        airspaceCeiling: airspace ? ceilingOverLaunch(airspace.airspaces, data.elevation?.launch_masl) : null,
         lastModified: lastModified(inputPath),
-        sources: describeSources(data, routes),
+        sources: describeSources(data, routes, airspace),
         intro: readIntro(inputPath),
         hasPage,
       };

@@ -667,3 +667,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox__prev { left: 8px; }
 .lightbox__next { right: 8px; }
 .lightbox__button[hidden] { display: none; }
+
+/* Luftrom fra openAIP */
+.airspace__heading { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 4px; }
+.airspace__source { font-size: 13px; color: var(--muted); }
