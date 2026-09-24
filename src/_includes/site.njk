@@ -209,6 +209,7 @@ scripts:
                 {% if a["class"] %}{{ m.tag("Klasse " ~ a["class"]) }}{% endif %}
                 {{ m.tag("Fra bakken" if ceiling.fromGround else "Nedre " ~ (a.lower | formatLimit)) }}
                 {% if a.lower | limitMasl %}{{ m.tag(a.lower | limitMasl) }}{% endif %}
+                {% if ceiling.aboveLaunch != null and ceiling.aboveLaunch < 0 %}{{ m.tag("Starten er over grensen", "warning") }}{% endif %}
               </span>
               {% if a.note %}<span class="muted">{{ a.note }}</span>{% endif %}
               {% else %}

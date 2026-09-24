@@ -3,8 +3,8 @@
   "fetched": "2026-09-24",
   "nearbyKm": 10,
   "launch": {
-    "lat": 68.80389,
-    "lon": 16.36667
+    "lat": 68.85889,
+    "lon": 16.25333
   },
   "airspaces": [
     {
@@ -46,6 +46,101 @@
       "byNotam": true
     },
     {
+      "name": "Lofoten TMA",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 3500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 5.1,
+      "byNotam": false
+    },
+    {
+      "name": "EN-D460 ANDFJORDEN/GROTAER",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 460,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 6.4,
+      "byNotam": true
+    },
+    {
+      "name": "EN-D474 Andoya 2",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 999,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 7,
+      "byNotam": true
+    },
+    {
+      "name": "EN-D473 Andoya 2",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 999,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 7.3,
+      "byNotam": true
+    },
+    {
+      "name": "Andøya TMA",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 2500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 7.5,
+      "byNotam": false
+    },
+    {
       "name": "ENT737 B37",
       "type": "MTA",
       "typeLabel": "Militært øvings- og operasjonsområde",
@@ -61,27 +156,27 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 2.5,
+      "distanceKm": 7.9,
       "byNotam": true
     },
     {
-      "name": "Evenes TMA2",
-      "type": "TMA",
-      "typeLabel": "Terminalområde",
-      "class": "D",
+      "name": "ENT738 Grytoya Nord",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
       "lower": {
-        "value": 2500,
+        "value": 0,
         "unit": "FT",
-        "ref": "MSL"
+        "ref": "GND"
       },
       "upper": {
-        "value": 105,
+        "value": 210,
         "unit": "FL",
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 3.5,
-      "byNotam": false
+      "distanceKm": 8.1,
+      "byNotam": true
     },
     {
       "name": "ENT740 Trondenes",
@@ -99,45 +194,7 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 5,
-      "byNotam": true
-    },
-    {
-      "name": "Evenes CTR",
-      "type": "CTR",
-      "typeLabel": "Kontrollsone",
-      "class": "D",
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 2500,
-        "unit": "FT",
-        "ref": "MSL"
-      },
-      "overLaunch": false,
-      "distanceKm": 9.5,
-      "byNotam": false
-    },
-    {
-      "name": "EN-D462 Vagsfjorden",
-      "type": "D",
-      "typeLabel": "Fareområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 210,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 9.6,
+      "distanceKm": 9.4,
       "byNotam": true
     }
   ]

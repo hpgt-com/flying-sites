@@ -16,6 +16,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/flysteder/**/*.gpx");
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
+  // Luftrom fra openAIP til kartlaget (npm run airspace). Lastes først når noen slår på et luftromslag.
+  eleventyConfig.addPassthroughCopy({ "src/_data/cache/airspace/region.geojson": "assets/airspace.geojson" });
 
   eleventyConfig.ignores.add("src/_data/cache/**");
   eleventyConfig.addWatchTarget("./lib/");

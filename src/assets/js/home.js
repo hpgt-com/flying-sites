@@ -36,6 +36,7 @@
   // --- Kart ---
   var mapEl = document.getElementById("home-map");
   var map = FS.createMap(mapEl);
+  FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
   var bounds = [];
   sites.forEach(function (site) {
     var icon = L.divIcon({
