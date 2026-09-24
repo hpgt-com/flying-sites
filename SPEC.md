@@ -48,6 +48,11 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 11. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje, skilt med «|»), ansvarsfraskrivelse.
 - Desktop: to kolonner. Venstre: tittel, oversikt, start, landing, kart, bilder. Høyre: Før du starter, Fakta, Vær, Logg og mer.
 
+## Deling og søk
+- Alle sider har Open Graph-tagger (tittel, beskrivelse, bilde, adresse), så lenker får forhåndsvisning på Facebook og Messenger. Stedssider bruker oversiktsbildet og innledningen, andre sider `src/assets/img/share.jpg` (1200×630, skjermbilde av forsiden).
+- `/404.html`: «Fant ikke siden», lenke til forsiden og den gamle oversikten, og liste over alle stedene.
+- `/sitemap.xml` med alle sider uten `noindex` (stedssider med dato fra Git), og `/robots.txt` som peker på den.
+
 ## Design
 - Farger: bakgrunn #F3F5F4, tekst #1C2B33, dempet tekst #45545C, linjer #C3D0CF, fjord #2E5E6E, aksent (hovedretning) #C24A12, mulig #9DBAC2, farer-boks #FBE3DA med tekst #6B1A0B, parkering #2F6FB5.
 - Skrift: Barlow (brødtekst) og Barlow Condensed (overskrifter) fra Google Fonts.

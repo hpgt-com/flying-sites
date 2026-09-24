@@ -673,9 +673,11 @@ body:has(.lightbox[open]) { overflow: hidden; }
 
 /* ---------- Tårn (/luftrom/) ---------- */
 
-.towers-page { display: flex; flex-direction: column; gap: 24px; padding: 8px 16px 48px; max-width: 640px; margin: 0 auto; }
-.towers-page__intro { display: flex; flex-direction: column; gap: 6px; }
-.towers-page h1 { font-size: 40px; }
+.towers-page, .simple-page { display: flex; flex-direction: column; gap: 24px; padding: 8px 16px 48px; max-width: 640px; margin: 0 auto; }
+.towers-page__intro, .simple-page__intro { display: flex; flex-direction: column; gap: 6px; }
+.towers-page h1, .simple-page h1 { font-size: 40px; }
+.simple-page__sites summary { cursor: pointer; font-weight: 600; padding: 12px 0; }
+.simple-page__sites ul { columns: 2; gap: 16px; padding-left: 18px; line-height: 2; }
 .towers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .towers .big-btn { min-height: 64px; }
 .towers .big-btn > span { display: flex; flex-direction: column; gap: 2px; }
