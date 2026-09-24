@@ -50,7 +50,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 
 ## Deling og søk
 - Alle sider har Open Graph-tagger (tittel, beskrivelse, bilde, adresse), så lenker får forhåndsvisning på Facebook og Messenger. Stedssider bruker oversiktsbildet og innledningen, andre sider `src/assets/img/share.jpg` (1200×630, skjermbilde av forsiden).
-- `/404.html`: «Fant ikke siden», lenke til forsiden og den gamle oversikten, og liste over alle stedene.
+- `/404.html`: «Fant ikke siden», lenke til forsiden og liste over alle stedene. Ingen lenke til den gamle oversikten.
 - `/sitemap.xml` med alle sider uten `noindex` (stedssider med dato fra Git), og `/robots.txt` som peker på den.
 
 ## Design
