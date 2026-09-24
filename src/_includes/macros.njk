@@ -59,7 +59,7 @@
 <svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> (åpnes i ny fane)</span>
 {%- endmacro %}
 
-{#- Eksterne oppslag (vær, luftrom osv.) åpnes i ny fane, så stedssiden blir stående. -#}
-{% macro linkRow(href, title, subtitle) -%}
-<a class="link-row" href="{{ href }}" target="_blank" rel="noopener"><span><span class="link-row__title">{{ title }}</span><span class="link-row__subtitle">{{ subtitle }}</span></span>{{ external() }}</a>
+{#- Eksterne oppslag (vær, luftrom osv.) åpnes i ny fane, så stedssiden blir stående. Interne lenker (external=false) gjør ikke det. -#}
+{% macro linkRow(href, title, subtitle, isExternal=true) -%}
+<a class="link-row" href="{{ href }}"{% if isExternal %} target="_blank" rel="noopener"{% endif %}><span><span class="link-row__title">{{ title }}</span><span class="link-row__subtitle">{{ subtitle }}</span></span>{% if isExternal %}{{ external() }}{% else %}{{ chevron() }}{% endif %}</a>
 {%- endmacro %}

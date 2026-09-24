@@ -670,3 +670,14 @@ body:has(.lightbox[open]) { overflow: hidden; }
 
 /* Luftrom fra openAIP */
 .airspace__source { font-size: 13px; color: var(--muted); }
+
+/* ---------- Tårn (/luftrom/) ---------- */
+
+.towers-page { display: flex; flex-direction: column; gap: 24px; padding: 8px 16px 48px; max-width: 640px; margin: 0 auto; }
+.towers-page__intro { display: flex; flex-direction: column; gap: 6px; }
+.towers-page h1 { font-size: 40px; }
+.towers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.towers .big-btn { min-height: 64px; }
+.towers .big-btn > span { display: flex; flex-direction: column; gap: 2px; }
+.towers__name { font-size: 17px; }
+.towers__phone { font-size: 15px; font-weight: 500; color: var(--muted); }
