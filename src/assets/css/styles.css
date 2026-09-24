@@ -14,9 +14,61 @@
   --white: #FFFFFF;
   --surface: #E6ECEB;
   --rose-border: #9FB1B4;
+  --card: #FFFFFF;
+  --link: var(--fjord);
+  --on-color: #FFFFFF;
+  --inverse-bg: var(--text);
+  --inverse-text: #FFFFFF;
+  --rose-none: #FFFFFF;
+  --line-soft: #D5DEDD;
+  --grid: #E1E7E6;
+  --area: #DCE5E4;
+  --map-ink: #1C2B33;
+  color-scheme: light;
   --radius: 12px;
   --font-heading: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "Barlow", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Mørk modus følger innstillingen på telefonen eller PC-en. Kartene beholder lyse farger, siden
+   kartflisene er lyse, så alt inni kartet bruker de lyse verdiene. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11191D;
+    --text: #E4ECEA;
+    --muted: #A4B3B8;
+    --line: #34444B;
+    --fjord: #3C7486;
+    --accent: #D65A1E;
+    --possible: #6F8F99;
+    --hazard-bg: #3A1E16;
+    --hazard-text: #F6C9B8;
+    --parking: #4A86CC;
+    --surface: #223038;
+    --rose-border: #5C7076;
+    --card: #1A242A;
+    --link: #8CC3D3;
+    --inverse-bg: #E4ECEA;
+    --inverse-text: #11191D;
+    --rose-none: #26343B;
+    --line-soft: #2C3A40;
+    --grid: #2A383E;
+    --area: #24343B;
+    --map-ink: #F3F5F4;
+    color-scheme: dark;
+  }
+  /* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
+  .leaflet-popup, .leaflet-tooltip, .leaflet-control, .rose-marker {
+    --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
+    --possible: #9DBAC2; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
+    color: var(--text);
+  }
+  .map { background: #26343B; }
+  /* Mørkt kart: kartflisene inverteres og fargetonen snus tilbake, så vann blir mørkt og skog forblir grønn.
+     Bare bakgrunnskartet, ikke luftrom, termikk eller symbolene. */
+  .base-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.7); }
+  .leaflet-container { background: #1E2A30; }
+  .meteogram img { filter: brightness(0.92); }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -32,10 +84,10 @@ body {
   line-height: 1.5;
 }
 
-a { color: var(--fjord); }
+a { color: var(--link); }
 a:hover { color: var(--text); }
 a:focus-visible, button:focus-visible, input:focus-visible {
-  outline: 3px solid var(--fjord);
+  outline: 3px solid var(--link);
   outline-offset: 2px;
 }
 button { font-family: inherit; }
@@ -89,16 +141,16 @@ p { margin: 0; }
   padding: 3px 7px;
   border-radius: 6px;
 }
-.direction--primary { background: var(--accent); color: var(--white); }
+.direction--primary { background: var(--accent); color: var(--on-color); }
 .direction--possible { background: var(--possible); color: var(--text); }
-.direction--none { background: var(--white); color: var(--text); border: 1px solid var(--rose-border); padding: 2px 6px; }
+.direction--none { background: var(--card); color: var(--text); border: 1px solid var(--rose-border); padding: 2px 6px; }
 .direction--active { outline: 2px solid var(--text); outline-offset: 1px; }
 
 .rose { display: block; flex-shrink: 0; overflow: visible; }
 .rose .sector { stroke: var(--rose-border); stroke-width: 1; }
 .rose .sector--primary { fill: var(--accent); }
 .rose .sector--possible { fill: var(--possible); }
-.rose .sector--none { fill: var(--white); }
+.rose .sector--none { fill: var(--rose-none); }
 .rose__center { fill: var(--text); }
 .rose text { font-size: 14px; font-weight: 600; fill: var(--text); font-family: var(--font-body); }
 
@@ -116,7 +168,7 @@ p { margin: 0; }
 .swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 .swatch--primary { background: var(--accent); }
 .swatch--possible { background: var(--possible); }
-.swatch--none { background: var(--white); border: 1px solid var(--rose-border); }
+.swatch--none { background: var(--rose-none); border: 1px solid var(--rose-border); }
 
 .pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .pill {
@@ -133,7 +185,7 @@ p { margin: 0; }
 .pill[aria-pressed="true"], .pill[aria-selected="true"] {
   background: var(--fjord);
   border-color: var(--fjord);
-  color: var(--white);
+  color: var(--on-color);
 }
 
 .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -154,10 +206,10 @@ p { margin: 0; }
   font-size: 16px;
   text-align: center;
 }
-.btn:hover { color: var(--text); background: var(--white); }
-.btn--primary { background: var(--text); border-color: var(--text); color: var(--white); }
-.btn--primary:hover { background: var(--fjord); border-color: var(--fjord); color: var(--white); }
-.btn--white { background: var(--white); flex-grow: 0; align-self: flex-start; }
+.btn:hover { color: var(--text); background: var(--card); }
+.btn--primary { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
+.btn--primary:hover { background: var(--fjord); border-color: var(--fjord); color: var(--on-color); }
+.btn--white { background: var(--card); flex-grow: 0; align-self: flex-start; }
 .btn--muted { background: var(--surface); border-color: var(--surface); color: var(--muted); font-weight: 500; }
 .btn--wide { display: flex; width: 100%; }
 
@@ -255,7 +307,7 @@ p { margin: 0; }
   border-radius: 5px;
   border: 2.5px solid var(--white);
   box-shadow: 0 1px 3px rgba(28, 43, 51, 0.4);
-  color: var(--white);
+  color: var(--on-color);
   font-weight: 700;
   font-size: 14px;
   line-height: 1;
@@ -279,7 +331,7 @@ p { margin: 0; }
 .symbol--launch { border-radius: 50%; background: var(--accent); border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line); }
 .symbol--landing { border-radius: 3px; background: var(--fjord); }
 .symbol--alt-landing { border-radius: 3px; background: #8A9AA1; }
-.symbol--parking { border-radius: 3px; background: var(--parking); color: var(--white); font-size: 11px; font-weight: 700; }
+.symbol--parking { border-radius: 3px; background: var(--parking); color: var(--on-color); font-size: 11px; font-weight: 700; }
 .symbol--route { width: 22px; height: 0; border-top: 3px dotted var(--text); }
 
 /* ---------- Forsiden ---------- */
@@ -322,15 +374,15 @@ p { margin: 0; }
   font-size: 20px;
   font-weight: 600;
   cursor: pointer;
-  background: var(--white);
+  background: var(--card);
   color: var(--text);
   border: 2px solid var(--line);
 }
 .compass .compass__all { font-size: 16px; background: var(--surface); }
-.compass button[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--white); }
+.compass button[aria-pressed="true"] { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
 
 .selected {
-  background: var(--white);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 16px;
@@ -359,8 +411,8 @@ p { margin: 0; }
   border-radius: 10px;
   cursor: pointer;
   color: var(--text);
-  background: var(--white);
-  border: 2px solid #D5DEDD;
+  background: var(--card);
+  border: 2px solid var(--line-soft);
 }
 .results__item:hover { border-color: var(--rose-border); }
 .results__item--selected { border-color: var(--text); }
@@ -490,19 +542,19 @@ p { margin: 0; }
   display: block;
   width: 100%;
   height: 150px;
-  background: var(--white);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 10px;
   touch-action: none;
   cursor: ew-resize;
 }
-.profile__grid { stroke: #E1E7E6; }
+.profile__grid { stroke: var(--grid); }
 .profile__axis { font-size: 11px; fill: var(--muted); font-family: var(--font-body); }
-.profile__area { fill: #DCE5E4; }
+.profile__area { fill: var(--area); }
 .profile__line { fill: none; stroke: var(--text); stroke-width: 2; }
 .profile__steep { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
 .profile__cursor-line { stroke: var(--text); stroke-width: 1; stroke-dasharray: 3 3; }
-.profile__cursor { fill: var(--accent); stroke: var(--white); stroke-width: 2; }
+.profile__cursor { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
 .profile__slider { width: 100%; margin: 0; height: 32px; accent-color: var(--accent); }
 .profile__values { display: flex; gap: 18px; flex-wrap: wrap; font-size: 15px; }
 .profile__values strong { font-weight: 600; }
@@ -528,12 +580,12 @@ p { margin: 0; }
   text-decoration: none;
   font-size: 16px;
   font-weight: 600;
-  background: var(--white);
+  background: var(--card);
   border: 1px solid var(--line);
   color: var(--text);
 }
-.big-btn--dark { background: var(--text); border-color: var(--text); color: var(--white); }
-.big-btn--dark:hover { background: var(--fjord); color: var(--white); }
+.big-btn--dark { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
+.big-btn--dark:hover { background: var(--fjord); color: var(--on-color); }
 .big-btn--empty { background: transparent; border-style: dashed; color: var(--muted); font-weight: 500; }
 
 .page-footer { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -585,7 +637,7 @@ p { margin: 0; }
 
 .status-summary { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 .status-summary > div {
-  background: var(--white);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px 16px;
@@ -594,7 +646,7 @@ p { margin: 0; }
 .status-summary dt { font-size: 14px; color: var(--muted); }
 .status-summary dd { margin: 0; font-family: var(--font-heading); font-size: 28px; font-weight: 700; }
 
-.status-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+.status-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
 .status-table { width: 100%; border-collapse: collapse; font-size: 15px; }
 .status-table th, .status-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--line); }
 .status-table thead th { border-top: none; font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }
@@ -607,7 +659,7 @@ p { margin: 0; }
   .status-table-wrap { overflow: visible; border: none; background: none; }
   .status-table thead { display: none; }
   .status-table, .status-table tbody, .status-table tr, .status-table th, .status-table td { display: block; }
-  .status-table tr { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+  .status-table tr { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
   .status-table th, .status-table td { border-top: none; padding: 2px 0; white-space: normal !important; }
   .status-table tbody th { font-size: 17px; margin-bottom: 4px; }
   .status-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-size: 13px; }
@@ -627,7 +679,7 @@ p { margin: 0; }
   padding: 0;
   border: none;
   background: rgba(10, 16, 20, 0.94);
-  color: var(--white);
+  color: var(--on-color);
 }
 .lightbox::backdrop { background: rgba(10, 16, 20, 0.94); }
 body:has(.lightbox[open]) { overflow: hidden; }
@@ -655,7 +707,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.16);
-  color: var(--white);
+  color: var(--on-color);
   font-size: 30px;
   line-height: 1;
   cursor: pointer;
@@ -709,8 +761,8 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .rose-marker__ring--no { border: 3px solid var(--wind-no); }
 /* Pilen starter i midten og peker dit vinden blåser. 0 grader er nord. */
 .wind-arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; }
-.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 24px; width: 3px; height: 13px; background: var(--text); border-radius: 2px; }
-.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 17px; border: 5px solid transparent; border-top: 8px solid var(--text); border-bottom: 0; }
+.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 24px; width: 3px; height: 13px; background: var(--map-ink); border-radius: 2px; }
+.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 17px; border: 5px solid transparent; border-top: 8px solid var(--map-ink); border-bottom: 0; }
 .wind-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; vertical-align: -1px; }
 .wind-dot--ok { background: var(--wind-ok); }
 .wind-dot--maybe { background: var(--wind-maybe); }
