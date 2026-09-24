@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="HPGT flysteder" xmlns="http://www.topografix.com/GPX/1/1">
+ <trk>
+  <name>Rødmoldheia: parkering til start</name>
+  <trkseg>
+   <trkpt lat="68.783341" lon="16.199124"><ele>208.8</ele></trkpt>
+   <trkpt lat="68.783334" lon="16.198457"><ele>209.4</ele></trkpt>
+   <trkpt lat="68.783411" lon="16.197998"><ele>209.8</ele></trkpt>
+   <trkpt lat="68.783729" lon="16.197578"><ele>211.8</ele></trkpt>
+   <trkpt lat="68.783856" lon="16.197611"><ele>212.4</ele></trkpt>
+   <trkpt lat="68.784743" lon="16.198989"><ele>216.2</ele></trkpt>
+   <trkpt lat="68.785211" lon="16.200511"><ele>218.2</ele></trkpt>
+   <trkpt lat="68.785742" lon="16.200832"><ele>216.4</ele></trkpt>
+   <trkpt lat="68.786942" lon="16.203546"><ele>197.6</ele></trkpt>
+   <trkpt lat="68.789088" lon="16.205943"><ele>197.6</ele></trkpt>
+   <trkpt lat="68.790491" lon="16.206760"><ele>197.2</ele></trkpt>
+   <trkpt lat="68.791581" lon="16.208847"><ele>192.6</ele></trkpt>
+   <trkpt lat="68.791882" lon="16.210333"><ele>190.4</ele></trkpt>
+   <trkpt lat="68.791933" lon="16.212519"><ele>188.2</ele></trkpt>
+   <trkpt lat="68.792059" lon="16.212894"><ele>187.8</ele></trkpt>
+   <trkpt lat="68.792675" lon="16.213562"><ele>188.8</ele></trkpt>
+   <trkpt lat="68.793052" lon="16.215651"><ele>192.8</ele></trkpt>
+   <trkpt lat="68.793225" lon="16.216079"><ele>192.2</ele></trkpt>
+   <trkpt lat="68.793617" lon="16.216221"><ele>193.2</ele></trkpt>
+   <trkpt lat="68.794068" lon="16.215941"><ele>195.0</ele></trkpt>
+   <trkpt lat="68.794163" lon="16.216257"><ele>195.8</ele></trkpt>
+   <trkpt lat="68.794437" lon="16.216516"><ele>196.8</ele></trkpt>
+   <trkpt lat="68.794556" lon="16.217242"><ele>198.2</ele></trkpt>
+   <trkpt lat="68.795109" lon="16.218608"><ele>201.4</ele></trkpt>
+   <trkpt lat="68.795536" lon="16.218899"><ele>198.8</ele></trkpt>
+   <trkpt lat="68.796152" lon="16.220089"><ele>210.4</ele></trkpt>
+   <trkpt lat="68.796358" lon="16.220966"><ele>222.4</ele></trkpt>
+   <trkpt lat="68.796820" lon="16.221123"><ele>236.0</ele></trkpt>
+   <trkpt lat="68.796937" lon="16.222085"><ele>242.4</ele></trkpt>
+   <trkpt lat="68.797255" lon="16.223082"><ele>247.6</ele></trkpt>
+   <trkpt lat="68.797895" lon="16.223582"><ele>253.6</ele></trkpt>
+   <trkpt lat="68.798598" lon="16.224450"><ele>264.8</ele></trkpt>
+   <trkpt lat="68.798971" lon="16.224434"><ele>272.6</ele></trkpt>
+   <trkpt lat="68.799255" lon="16.225149"><ele>281.2</ele></trkpt>
+   <trkpt lat="68.799664" lon="16.225772"><ele>295.4</ele></trkpt>
+   <trkpt lat="68.800180" lon="16.225929"><ele>309.6</ele></trkpt>
+   <trkpt lat="68.801188" lon="16.224844"><ele>327.0</ele></trkpt>
+   <trkpt lat="68.801337" lon="16.224516"><ele>329.6</ele></trkpt>
+   <trkpt lat="68.801706" lon="16.223216"><ele>336.8</ele></trkpt>
+   <trkpt lat="68.802066" lon="16.220892"><ele>346.6</ele></trkpt>
+   <trkpt lat="68.802491" lon="16.220170"><ele>353.0</ele></trkpt>
+   <trkpt lat="68.803020" lon="16.218859"><ele>370.2</ele></trkpt>
+   <trkpt lat="68.803574" lon="16.216530"><ele>412.2</ele></trkpt>
+   <trkpt lat="68.803643" lon="16.214064"><ele>440.8</ele></trkpt>
+   <trkpt lat="68.804128" lon="16.214494"><ele>454.2</ele></trkpt>
+   <trkpt lat="68.804408" lon="16.214044"><ele>464.0</ele></trkpt>
+   <trkpt lat="68.804963" lon="16.211749"><ele>494.0</ele></trkpt>
+   <trkpt lat="68.805368" lon="16.210585"><ele>508.2</ele></trkpt>
+   <trkpt lat="68.805626" lon="16.210130"><ele>513.8</ele></trkpt>
+   <trkpt lat="68.805969" lon="16.208694"><ele>528.4</ele></trkpt>
+   <trkpt lat="68.806198" lon="16.208086"><ele>536.0</ele></trkpt>
+   <trkpt lat="68.806602" lon="16.203850"><ele>558.4</ele></trkpt>
+   <trkpt lat="68.806666" lon="16.199084"><ele>574.8</ele></trkpt>
+   <trkpt lat="68.806624" lon="16.197125"><ele>583.2</ele></trkpt>
+   <trkpt lat="68.806363" lon="16.194566"><ele>589.8</ele></trkpt>
+   <trkpt lat="68.806354" lon="16.193648"><ele>592.8</ele></trkpt>
+   <trkpt lat="68.806421" lon="16.193124"><ele>591.6</ele></trkpt>
+   <trkpt lat="68.806041" lon="16.193172"><ele>583.6</ele></trkpt>
+   <trkpt lat="68.806195" lon="16.192450"><ele>586.8</ele></trkpt>
+   <trkpt lat="68.806193" lon="16.191990"><ele>586.8</ele></trkpt>
+   <trkpt lat="68.806330" lon="16.191985"><ele>590.0</ele></trkpt>
+   <trkpt lat="68.806120" lon="16.193743"><ele>593.4</ele></trkpt>
+   <trkpt lat="68.806025" lon="16.193773"><ele>596.8</ele></trkpt>
+   <trkpt lat="68.806195" lon="16.192940"><ele>591.4</ele></trkpt>
+   <trkpt lat="68.806173" lon="16.191962"><ele>589.6</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>

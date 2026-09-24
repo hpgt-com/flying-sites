@@ -1,0 +1,93 @@
+---
+layout: base.njk
+bodyClass: page-home
+description: Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.
+scripts:
+  - /assets/js/home.js
+---
+{%- import "macros.njk" as m with context -%}
+<div class="home">
+  <div class="home__left">
+    <header class="topbar">
+      <span class="logo">{{ site.title }}</span>
+      <a href="{{ site.hpgtUrl }}">Til hpgt.com</a>
+    </header>
+
+    <div class="home__intro">
+      <h1>Hvor står vinden i dag?</h1>
+      <p class="muted">Filtrer på vindretning, nivå og kategori, og trykk på et flysted i kartet.</p>
+    </div>
+
+    <div class="filters" id="filters">
+      <div class="filter">
+        <span class="filter__title" id="f-direction">Vindretning</span>
+        <div class="compass" role="group" aria-labelledby="f-direction">
+          {% for code in ["NW", "N", "NE", "W", null, "E", "SW", "S", "SE"] %}
+          <button type="button" data-filter="direction" data-value="{{ code or '' }}" aria-pressed="{{ 'false' if code else 'true' }}"{% if not code %} class="compass__all"{% endif %}{% if code %} aria-label="{{ code | directionWord | capitalizeFirst }}"{% endif %}>{{ (code | directionLabel) if code else "Alle" }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter">
+        <span class="filter__title" id="f-level">Nivå</span>
+        <div class="pills" role="group" aria-labelledby="f-level">
+          {% for value in ["", "PP2", "PP3", "PP4", "PP5"] %}
+          <button type="button" class="pill" data-filter="level" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or "Alle" }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter">
+        <span class="filter__title" id="f-category">Kategori</span>
+        <div class="pills" role="group" aria-labelledby="f-category">
+          {% for value in ["", "PG", "SPG", "PPG"] %}
+          <button type="button" class="pill" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or "Alle" }}</button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <section class="results" aria-labelledby="results-title">
+      <h2 id="results-title">{{ collections.sites.length }} flysteder</h2>
+      <p class="muted" id="no-results" hidden>Ingen flysteder passer. Nivå er foreløpig bare satt for noen av stedene.</p>
+      <ul class="results__list" id="results-list">
+        {% for s in collections.sites %}
+        <li data-id="{{ s.data.id }}">
+          <button type="button" class="results__item" data-select="{{ s.data.id }}">
+            <span class="results__name">{{ s.data.name }}</span>
+            <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <main class="home__map">
+    <div id="home-map" class="map map--home" role="region" aria-label="Kart over flysteder. Hver start er en vindrose."></div>
+  </main>
+
+  <div class="home__right">
+    <section class="selected" id="selected" aria-live="polite">
+      <p class="muted selected__empty">Trykk på et flysted i kartet eller i listen for å se mer.</p>
+    </section>
+
+    <div class="home__legend">
+      {{ m.legend() }}
+    </div>
+
+    <section class="before-you-go" aria-labelledby="h-before-you-go">
+      <h2 id="h-before-you-go">Før du drar</h2>
+      <nav class="link-list" aria-label="Før du drar">
+        {{ m.linkRow("https://ippc.no", "NOTAM og luftrom", "IPPC") }}
+        {{ m.linkRow("https://flybart.net/", "Flybart", "Værstasjoner i området samlet på ett sted") }}
+        {{ m.linkRow("http://xcc.no/xccflymet.html", "XCC flymet", "Værstasjonene til Egil Fonn") }}
+      </nav>
+    </section>
+
+    <footer class="disclaimer">
+      <p>Oversikten er en grov guide til flysteder i HPGTs område. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold. Hver pilot og elev vurderer selv om stedet og forholdene er OK.</p>
+      <p>Siden bygger videre på den gamle flystedsoversikten til Lars Sletten, som han har gitt til klubben.</p>
+    </footer>
+  </div>
+</div>
+
+<script type="application/json" id="sites-data">{{ collections.sites | homeData | json | safe }}</script>

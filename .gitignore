@@ -1,0 +1,11 @@
+node_modules/
+_site/
+.cache/
+
+# Lokalt oppsett for forhåndsvisning i Claude-appen
+.claude/
+
+# Grunnlag fra designfasen (prototyper, uttrekk fra den gamle oversikten, gamle bilder).
+# Brukes ikke av bygget, og uttrekket inneholder originaltekster som ikke skal publiseres.
+referanse/
+PROMPT.md

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="HPGT flysteder" xmlns="http://www.topografix.com/GPX/1/1">
+ <trk>
+  <name>Kilhusåsen: parkering til start</name>
+  <trkseg>
+   <trkpt lat="68.795118" lon="16.445379"><ele>125.8</ele></trkpt>
+   <trkpt lat="68.795353" lon="16.445550"><ele>126.6</ele></trkpt>
+   <trkpt lat="68.796475" lon="16.444458"><ele>146.8</ele></trkpt>
+   <trkpt lat="68.796902" lon="16.444424"><ele>152.6</ele></trkpt>
+   <trkpt lat="68.797729" lon="16.444922"><ele>167.8</ele></trkpt>
+   <trkpt lat="68.798471" lon="16.444689"><ele>189.4</ele></trkpt>
+   <trkpt lat="68.799072" lon="16.444227"><ele>204.0</ele></trkpt>
+   <trkpt lat="68.799726" lon="16.443350"><ele>218.2</ele></trkpt>
+   <trkpt lat="68.800188" lon="16.443974"><ele>226.0</ele></trkpt>
+   <trkpt lat="68.800532" lon="16.445035"><ele>236.2</ele></trkpt>
+   <trkpt lat="68.800724" lon="16.446120"><ele>246.4</ele></trkpt>
+   <trkpt lat="68.800731" lon="16.447182"><ele>257.2</ele></trkpt>
+   <trkpt lat="68.801698" lon="16.451420"><ele>277.6</ele></trkpt>
+   <trkpt lat="68.801887" lon="16.451808"><ele>281.2</ele></trkpt>
+   <trkpt lat="68.802231" lon="16.451471"><ele>283.2</ele></trkpt>
+   <trkpt lat="68.802521" lon="16.451483"><ele>282.4</ele></trkpt>
+   <trkpt lat="68.802871" lon="16.452109"><ele>287.8</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>

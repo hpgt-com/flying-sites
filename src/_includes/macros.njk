@@ -1,0 +1,60 @@
+{#- Vindrose med åtte sektorer. Rekkefølge: N, NE, E, SE, S, SW, W, NW. Samme stier i assets/js/common.js. -#}
+{% macro rose(windDirections, size=120, labels=true) -%}
+{%- set ROSE_PATHS = [
+  "M58.8 21.7 A62 62 0 0 1 101.2 21.7 L85.5 65.0 A16 16 0 0 0 74.5 65.0Z",
+  "M106.2 23.8 A62 62 0 0 1 136.2 53.8 L94.5 73.2 A16 16 0 0 0 86.8 65.5Z",
+  "M138.3 58.8 A62 62 0 0 1 138.3 101.2 L95.0 85.5 A16 16 0 0 0 95.0 74.5Z",
+  "M136.2 106.2 A62 62 0 0 1 106.2 136.2 L86.8 94.5 A16 16 0 0 0 94.5 86.8Z",
+  "M101.2 138.3 A62 62 0 0 1 58.8 138.3 L74.5 95.0 A16 16 0 0 0 85.5 95.0Z",
+  "M53.8 136.2 A62 62 0 0 1 23.8 106.2 L65.5 86.8 A16 16 0 0 0 73.2 94.5Z",
+  "M21.7 101.2 A62 62 0 0 1 21.7 58.8 L65.0 74.5 A16 16 0 0 0 65.0 85.5Z",
+  "M23.8 53.8 A62 62 0 0 1 53.8 23.8 L73.2 65.5 A16 16 0 0 0 65.5 73.2Z"
+] -%}
+{%- set primary = windDirections.primary or [] -%}
+{%- set possible = windDirections.possible or [] -%}
+<svg class="rose" width="{{ size }}" height="{{ size }}" viewBox="{{ '-12 -12 184 184' if labels else '18 18 124 124' }}" role="img"
+  aria-label="Vindrose. Hovedretning: {{ primary | directionLabels or 'ingen' }}.{% if possible.length %} Mulig: {{ possible | directionLabels }}.{% endif %}">
+  {%- for code in DIRECTIONS %}
+  <path d="{{ ROSE_PATHS[loop.index0] }}" class="sector sector--{{ code | directionType(windDirections) }}"></path>
+  {%- endfor %}
+  <circle cx="80" cy="80" r="9" class="rose__center"></circle>
+  {%- if labels %}
+  <text x="80" y="2" text-anchor="middle">N</text>
+  <text x="80" y="168" text-anchor="middle">S</text>
+  <text x="-4" y="85" text-anchor="middle">V</text>
+  <text x="164" y="85" text-anchor="middle">Ø</text>
+  {%- endif %}
+</svg>
+{%- endmacro %}
+
+{% macro directionBadge(code, windDirections) -%}
+<span class="direction direction--{{ code | directionType(windDirections) }}" title="{{ code | directionWord }}">{{ code | directionLabel }}</span>
+{%- endmacro %}
+
+{% macro tag(text, variant="") -%}
+<span class="tag{% if variant %} tag--{{ variant }}{% endif %}">{{ text }}</span>
+{%- endmacro %}
+
+{% macro legend(windDirections=null) -%}
+<ul class="legend" aria-label="Forklaring til vindrosen">
+  <li><span class="swatch swatch--primary"></span>Hovedretning{% if windDirections and windDirections.primary.length %} {{ windDirections.primary | directionLabels }}{% endif %}</li>
+  <li><span class="swatch swatch--possible"></span>Mulig{% if windDirections and windDirections.possible.length %} {{ windDirections.possible | directionLabels }}{% endif %}</li>
+  <li><span class="swatch swatch--none"></span>Ikke egnet</li>
+</ul>
+{%- endmacro %}
+
+{% macro chevron(direction="right") -%}
+<svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {%- if direction == "left" %}<path d="M15 18l-6-6 6-6"></path>{% else %}<path d="M9 18l6-6-6-6"></path>{% endif -%}
+</svg>
+{%- endmacro %}
+
+{#- Merking av lenker som åpnes i ny fane: ↗-symbol, og tekst som bare skjermlesere leser opp. -#}
+{% macro external() -%}
+<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> (åpnes i ny fane)</span>
+{%- endmacro %}
+
+{#- Eksterne oppslag (vær, luftrom osv.) åpnes i ny fane, så stedssiden blir stående. -#}
+{% macro linkRow(href, title, subtitle) -%}
+<a class="link-row" href="{{ href }}" target="_blank" rel="noopener"><span><span class="link-row__title">{{ title }}</span><span class="link-row__subtitle">{{ subtitle }}</span></span>{{ external() }}</a>
+{%- endmacro %}
