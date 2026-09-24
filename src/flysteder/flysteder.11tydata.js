@@ -18,7 +18,7 @@ function readIntro(inputPath) {
     .trim();
 }
 
-// Én linje med kildene for stedet, til bunnen av stedssiden.
+// Én linje med kildene for stedet, til bunnen av stedssiden, skilt med «|».
 function describeSources(data, routes, airspace) {
   const lines = [];
   const add = (what, source) => source && lines.push(`${what}: ${sourceLabel(source)}`);
@@ -34,7 +34,7 @@ function describeSources(data, routes, airspace) {
     const elevationSources = [...new Set(routes.map((r) => r.elevationSource).filter(Boolean))];
     lines.push(`Gangrute: logget tur (GPX)${elevationSources.length ? `, høyder fra ${elevationSources.join("/")}` : ""}`);
   }
-  return lines.join(". ") + (lines.length ? "." : "");
+  return lines.join(" | ");
 }
 
 export default {

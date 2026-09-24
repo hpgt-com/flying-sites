@@ -35,7 +35,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 1. Navn, én–to setninger kort fortalt, tagger (kategori og sesong).
 2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler.
 3. **Før du starter**: bare farer som gjelder hele stedet. Rød boks. Hvis ingen: «Ingen spesielle farer registrert for stedet.»
-4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Høyde (start moh, landing moh, forskjell), Luftrom: bare taket over start, det laveste faste luftrommet over startstedet, som tagger (navn, klasse, nedre grense i ft, ca. moh regnet om fra fot), deretter nærliggende faste luftrom innen 10 km som dempet tekst («Nærliggende: Evenes TMA2, klasse D, nedre grense 2500 ft (ca. 762 moh).»), og til slutt kilde med dato for siste henting og «Sjekk alltid IPPC». Militære områder og andre som aktiveres ved behov, hentes, men vises ikke.
+4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Høyde (start moh, landing moh, forskjell), Luftrom: bare taket over start, det laveste faste luftrommet over startstedet, som tagger (navn, klasse, nedre grense i ft, ca. moh regnet om fra fot), og under: dato for siste henting, og «Sjekk alltid IPPC før du flyr.» på egen linje. Nærliggende og militære områder hentes, men vises ikke.
 5. **Start**: Parkering, Veien opp (med km og høydemeter fra GPX), Tid (bevegelsestid fra GPX). Deretter kort tekst om startområdet og én linje per retningsgruppe med retningsmerker i rosens farger og eventuelle kategori-tagger (PG/SPG).
 6. **Landing**: kort tekst.
 7. **Vær**: Yr-meteogram (`https://www.yr.no/nb/innhold/<yr_id>/meteogram.svg`, kreditering «Varsel fra Yr, levert av NRK og Meteorologisk institutt»), lenker til Yr, Windy (pin på startkoordinat: `https://www.windy.com/<lat>/<lon>?<lat>,<lon>,12`), Flybart, XCC flymet, IPPC.
@@ -44,7 +44,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
    - Tid under Start er bevegelsestid fra GPX (uten pauser), rundet til 5 min.
 9. **Bilder**: faste plasser for Start, Landing, Fra luften. Tom plass viser «Mangler bilde. Har du et herfra? Send det inn.»
 10. **Logg og mer**: Flightlog (`https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id=<id>`), Paraglidingearth (`https://www.paraglidingearth.com/?site=<pgearth_id>`, bare når `pgearth_id` er satt, ellers utelatt).
-11. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje), ansvarsfraskrivelse.
+11. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje, skilt med «|»), ansvarsfraskrivelse.
 - Desktop: to kolonner. Venstre: tittel, oversikt, start, landing, kart, bilder. Høyre: Før du starter, Fakta, Vær, Logg og mer.
 
 ## Design
