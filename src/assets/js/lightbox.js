@@ -31,11 +31,18 @@
     dialog.querySelector(".lightbox__next").hidden = true;
   }
 
+  // Bildet vises aldri større enn den største versjonen som finnes (data-width), så små bilder
+  // som oversiktstegningene ikke blåses opp. På mindre skjermer fyller det bredden.
+  function sizesFor(link) {
+    var width = Number(link.getAttribute("data-width"));
+    return width ? "(max-width: " + width + "px) 100vw, " + width + "px" : "100vw";
+  }
+
   // Henter neste og forrige bilde i forkant, i samme størrelse som visningen vil velge.
   function preload(index) {
     var link = links[(index + links.length) % links.length];
     var img = new Image();
-    img.sizes = "100vw";
+    img.sizes = sizesFor(link);
     img.srcset = link.getAttribute("data-srcset-webp");
   }
 
@@ -43,6 +50,7 @@
     current = (index + links.length) % links.length;
     var link = links[current];
     var thumb = link.querySelector("img");
+    source.sizes = image.sizes = sizesFor(link);
     source.srcset = link.getAttribute("data-srcset-webp");
     image.srcset = link.getAttribute("data-srcset-jpeg");
     image.src = link.getAttribute("href");
