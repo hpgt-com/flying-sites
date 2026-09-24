@@ -42,11 +42,13 @@
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
     var topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
+      className: "base-tiles",
       attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
     });
     var openTopo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       maxZoom: 17,
       subdomains: "abc",
+      className: "base-tiles",
       attribution: 'Kartdata: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     });
     topo.addTo(map);

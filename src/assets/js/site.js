@@ -8,7 +8,8 @@
   if (!data || !mapEl) return;
 
   var ACCENT = "#C24A12";
-  var INK = "#1C2B33";
+  // Gangruten må synes både på lyst og mørkt kart (mørk modus, se styles.css).
+  var INK = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "#F3F5F4" : "#1C2B33";
   var map = FS.createMap(mapEl, { scrollWheelZoom: false });
   var bounds = [];
   var routeLines = [];
