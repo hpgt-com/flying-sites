@@ -239,7 +239,7 @@ scripts:
         <h2 id="h-weather">Vær</h2>
         {% if external.yr_id %}
         <figure class="meteogram">
-          <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/{{ external.yr_id }}" target="_blank" rel="noopener"><span class="visually-hidden">Værvarsel på Yr (åpnes i ny fane)</span><img src="https://www.yr.no/nb/innhold/{{ external.yr_id }}/meteogram.svg" alt="Meteogram fra Yr for {{ name }}" loading="lazy"></a>
+          <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/{{ external.yr_id }}" target="_blank" rel="noopener"><span class="visually-hidden">Værvarsel på Yr (åpnes i ny fane)</span><img src="https://www.yr.no/nb/innhold/{{ external.yr_id }}/meteogram.svg" data-src-dark="https://www.yr.no/nb/innhold/{{ external.yr_id }}/meteogram.svg?mode=dark" alt="Meteogram fra Yr for {{ name }}" loading="lazy"></a>
           <figcaption>Varsel fra Yr, levert av NRK og Meteorologisk institutt.</figcaption>
         </figure>
         {% else %}
