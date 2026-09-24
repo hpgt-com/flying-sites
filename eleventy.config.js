@@ -5,6 +5,7 @@ import {
   DIRECTIONS, directionLabel, directionWord, directionType, sortDirections, formatNumber, formatDate, feetToMeters,
 } from "./lib/format.js";
 import { validateSite } from "./lib/validation.js";
+import { statusSummary } from "./lib/status.js";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPlugin(HtmlBasePlugin);
@@ -57,6 +58,9 @@ export default function (eleventyConfig) {
     }
     return "";
   });
+
+  // Oversikt til vedlikeholdssiden /status/.
+  eleventyConfig.addFilter("statusSummary", statusSummary);
 
   // Det forsidekartet og kortet trenger om hvert sted.
   eleventyConfig.addFilter("homeData", function (sites) {
