@@ -30,46 +30,44 @@
   --font-body: "Barlow", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-/* Mørk modus følger innstillingen på telefonen eller PC-en. Kartene beholder lyse farger, siden
-   kartflisene er lyse, så alt inni kartet bruker de lyse verdiene. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #11191D;
-    --text: #E4ECEA;
-    --muted: #A4B3B8;
-    --line: #34444B;
-    --fjord: #3C7486;
-    --accent: #D65A1E;
-    --possible: #6F8F99;
-    --hazard-bg: #3A1E16;
-    --hazard-text: #F6C9B8;
-    --parking: #4A86CC;
-    --surface: #223038;
-    --rose-border: #5C7076;
-    --card: #1A242A;
-    --link: #8CC3D3;
-    --inverse-bg: #E4ECEA;
-    --inverse-text: #11191D;
-    --rose-none: #26343B;
-    --line-soft: #2C3A40;
-    --grid: #2A383E;
-    --area: #24343B;
-    --map-ink: #F3F5F4;
-    color-scheme: dark;
-  }
-  /* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
-  .leaflet-popup, .leaflet-tooltip, .leaflet-control, .rose-marker {
-    --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
-    --possible: #9DBAC2; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
-    color: var(--text);
-  }
-  .map { background: #26343B; }
-  /* Mørkt kart: kartflisene inverteres og fargetonen snus tilbake, så vann blir mørkt og skog forblir grønn.
-     Bare bakgrunnskartet, ikke luftrom, termikk eller symbolene. */
-  .base-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.7); }
-  .leaflet-container { background: #1E2A30; }
-  .meteogram img { filter: brightness(0.92); }
+/* Mørk modus. data-theme settes av skriptet i <head> (base.njk): valget i fargeknappen, eller
+   innstillingen på enheten når valget er «Auto». Bakgrunnskartet gjøres mørkt med et filter. */
+:root[data-theme="dark"] {
+  --bg: #11191D;
+  --text: #E4ECEA;
+  --muted: #A4B3B8;
+  --line: #34444B;
+  --fjord: #3C7486;
+  --accent: #D65A1E;
+  --possible: #6F8F99;
+  --hazard-bg: #3A1E16;
+  --hazard-text: #F6C9B8;
+  --parking: #4A86CC;
+  --surface: #223038;
+  --rose-border: #5C7076;
+  --card: #1A242A;
+  --link: #8CC3D3;
+  --inverse-bg: #E4ECEA;
+  --inverse-text: #11191D;
+  --rose-none: #26343B;
+  --line-soft: #2C3A40;
+  --grid: #2A383E;
+  --area: #24343B;
+  --map-ink: #F3F5F4;
+  color-scheme: dark;
 }
+/* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
+[data-theme="dark"] .leaflet-popup, [data-theme="dark"] .leaflet-tooltip, [data-theme="dark"] .leaflet-control, [data-theme="dark"] .rose-marker {
+  --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
+  --possible: #9DBAC2; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
+  color: var(--text);
+}
+[data-theme="dark"] .map { background: #26343B; }
+/* Mørkt kart: kartflisene inverteres og fargetonen snus tilbake, så vann blir mørkt og skog forblir grønn.
+   Bare bakgrunnskartet, ikke luftrom, termikk eller symbolene. */
+[data-theme="dark"] .base-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.7); }
+[data-theme="dark"] .leaflet-container { background: #1E2A30; }
+[data-theme="dark"] .meteogram img { filter: brightness(0.92); }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -112,9 +110,17 @@ p { margin: 0; }
   gap: 12px;
 }
 .topbar a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; font-size: 15px; }
-.logo { font-family: var(--font-heading); font-weight: 700; font-size: 22px; }
-.back-link { gap: 6px; text-decoration: none; font-size: 16px !important; font-weight: 500 !important; }
+.logo { font-family: var(--font-heading); font-weight: 700; font-size: 22px; white-space: nowrap; flex-shrink: 0; }
+.back-link { gap: 6px; white-space: nowrap; flex-shrink: 0; text-decoration: none; font-size: 16px !important; font-weight: 500 !important; }
 .topbar__region { font-size: 15px; color: var(--muted); }
+.topbar__end { display: flex; align-items: center; gap: 0 12px; flex-wrap: wrap; justify-content: flex-end; }
+.theme-toggle { display: inline-flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
+.theme-toggle[hidden] { display: none; }
+.theme-toggle button {
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
+  border-radius: 999px; padding: 0 10px; min-height: 32px; cursor: pointer;
+}
+.theme-toggle button[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
@@ -444,7 +450,7 @@ p { margin: 0; }
   }
   .home__left { border-right: 1px solid var(--line); }
   .home__right { border-left: 1px solid var(--line); }
-  .home__left > *, .home__right > * { order: 0; }
+  .home__left > *, .home__right > *, .home .topbar { order: 0; }
   .home__map { height: 100vh; order: 0; }
   .map--home { height: 100%; border: none; border-radius: 0; }
   .home__legend { margin-top: -8px; }

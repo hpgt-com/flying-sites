@@ -56,7 +56,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 ## Design
 - Farger: bakgrunn #F3F5F4, tekst #1C2B33, dempet tekst #45545C, linjer #C3D0CF, fjord #2E5E6E, aksent (hovedretning) #C24A12, mulig #9DBAC2, farer-boks #FBE3DA med tekst #6B1A0B, parkering #2F6FB5.
 - Skrift: Barlow (brødtekst) og Barlow Condensed (overskrifter) fra Google Fonts.
-- Mobil først, lesbart ute i sollys, knapper minst 44 px høye. Mørk modus følger innstillingen på enheten (`prefers-color-scheme`): egne fargeverdier i `:root`, mørkt kart ved at bakgrunnskartet inverteres med CSS-filter (luftrom, termikk og symboler beholder fargene), popuper og lagvelger forblir lyse.
+- Mobil først, lesbart ute i sollys, knapper minst 44 px høye. Mørk modus: knapp øverst på alle sider med Auto, Lys og Mørk. Auto (standard) følger innstillingen på enheten (`prefers-color-scheme`), valget lagres i nettleseren (localStorage). Skriptet i `<head>` setter `data-theme` før siden tegnes; egne fargeverdier under `:root[data-theme="dark"]`, mørkt kart ved at bakgrunnskartet inverteres med CSS-filter (luftrom, termikk og symboler beholder fargene), popuper og lagvelger forblir lyse.
 - Designreferanse: `referanse/prototype/` (prototype-HTML fra designfasen, ikke kjørbar som den er). `referanse/` ligger bare lokalt og er ikke med i repoet (se `.gitignore`), fordi uttrekket fra den gamle oversikten inneholder originaltekster.
 
 ## Senere (fase 2)

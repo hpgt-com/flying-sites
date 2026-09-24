@@ -12,7 +12,7 @@ scripts:
 <div class="site-page">
   <header class="topbar">
     <a class="back-link" href="/">{{ m.chevron("left") }}Alle flysteder</a>
-    {% if region %}<span class="topbar__region">{{ region }}</span>{% endif %}
+    <span class="topbar__end">{% if region %}<span class="topbar__region">{{ region }}</span>{% endif %}{{ m.themeToggle() }}</span>
   </header>
 
   <div class="site-page__columns">
