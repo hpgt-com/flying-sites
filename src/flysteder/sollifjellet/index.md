@@ -1,7 +1,7 @@
 ---
 name: Sollifjellet
 id: sollifjellet
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 235
@@ -111,8 +111,8 @@ images:
   air: null
   overview_credit: Gammel flystedsoversikt
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-09-24'
 ---
 
 Klubbens mest brukte sted, og det flys året rundt. Heisen tar deg opp når alpinbakken er åpen, ellers går vi. Mye brukt til skliturer.
