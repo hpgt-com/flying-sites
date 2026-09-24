@@ -5,7 +5,6 @@ import { lastModified } from "../../lib/git.js";
 import { sourceLabel } from "../../lib/format.js";
 import { processImage } from "../../lib/images.js";
 import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
-import site from "../_data/site.js";
 
 // Ingressen (teksten før første ##) som ren tekst, til kortet på forsiden.
 function readIntro(inputPath) {
@@ -40,7 +39,7 @@ function describeSources(data, routes, airspace) {
 export default {
   layout: "site.njk",
   eleventyComputed: {
-    permalink: (data) => (site.publishedSites.includes(data.id) ? `/flysteder/${data.id}/` : false),
+    permalink: (data) => `/flysteder/${data.id}/`,
     // Verdier som regnes ut ved bygging. Skrives aldri tilbake til stedsfilen.
     derived: async (data) => {
       const inputPath = data.page.inputPath;
@@ -58,8 +57,6 @@ export default {
           url: `/flysteder/${data.id}/${r.file}`,
         });
       }
-      // Bildene lages bare for steder med egen side.
-      const hasPage = site.publishedSites.includes(data.id);
       const images = {};
       const IMAGE_ALT = {
         overview: `Oversiktsbilde over ${data.name} med starter og landing tegnet inn`,
@@ -67,7 +64,7 @@ export default {
         landing: `Landingen ved ${data.name}`,
         air: `${data.name} sett fra luften`,
       };
-      for (const field of hasPage ? Object.keys(IMAGE_ALT) : []) {
+      for (const field of Object.keys(IMAGE_ALT)) {
         const file = data.images?.[field];
         if (!file) continue;
         images[field] = await processImage(dir, data.id, field, file, {
@@ -90,7 +87,6 @@ export default {
         lastModified: lastModified(inputPath),
         sources: describeSources(data, routes, airspace),
         intro: readIntro(inputPath),
-        hasPage,
       };
     },
   },

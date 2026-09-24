@@ -19,7 +19,6 @@ noindex: true
 
   <dl class="status-summary">
     <div><dt>Gjennomgått</dt><dd>{{ s.reviewed }} av {{ s.total }}</dd></div>
-    <div><dt>Egen side</dt><dd>{{ s.withPage }} av {{ s.total }}</dd></div>
   </dl>
 
   {% if s.missingCounts.length %}
@@ -36,14 +35,13 @@ noindex: true
     <div class="status-table-wrap">
       <table class="status-table">
         <thead>
-          <tr><th scope="col">Sted</th><th scope="col">Gjennomgått</th><th scope="col">Egen side</th><th scope="col">Mangler</th></tr>
+          <tr><th scope="col">Sted</th><th scope="col">Gjennomgått</th><th scope="col">Mangler</th></tr>
         </thead>
         <tbody>
           {% for row in s.rows %}
           <tr>
-            <th scope="row">{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}</th>
+            <th scope="row"><a href="{{ row.url }}">{{ row.name }}</a></th>
             <td data-label="Gjennomgått">{% if row.reviewed %}{{ row.reviewed.date | formatDate }}<span class="muted"> av {{ row.reviewed.by }}</span>{% else %}<strong class="danger">Nei</strong>{% endif %}</td>
-            <td data-label="Egen side">{{ "Ja" if row.url else "Nei" }}</td>
             <td data-label="Mangler">{% if row.missing.length %}<span class="tags">{% for item in row.missing %}{{ m.tag(item, "missing") }}{% endfor %}</span>{% else %}<span class="muted">Ingenting</span>{% endif %}</td>
           </tr>
           {% endfor %}
