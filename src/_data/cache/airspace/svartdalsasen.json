@@ -3,17 +3,17 @@
   "fetched": "2026-09-24",
   "nearbyKm": 10,
   "launch": {
-    "lat": 68.80389,
-    "lon": 16.36667
+    "lat": 68.75556,
+    "lon": 16.42361
   },
   "airspaces": [
     {
-      "name": "Evenes TMA1",
+      "name": "Evenes TMA2",
       "type": "TMA",
       "typeLabel": "Terminalområde",
       "class": "D",
       "lower": {
-        "value": 4500,
+        "value": 2500,
         "unit": "FT",
         "ref": "MSL"
       },
@@ -27,7 +27,7 @@
       "byNotam": false
     },
     {
-      "name": "ENT736 B36",
+      "name": "ENT737 B37",
       "type": "MTA",
       "typeLabel": "Militært øvings- og operasjonsområde",
       "class": null,
@@ -46,7 +46,26 @@
       "byNotam": true
     },
     {
-      "name": "ENT737 B37",
+      "name": "Evenes TMA1",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 4500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 2.3,
+      "byNotam": false
+    },
+    {
+      "name": "ENT736 B36",
       "type": "MTA",
       "typeLabel": "Militært øvings- og operasjonsområde",
       "class": null,
@@ -65,22 +84,22 @@
       "byNotam": true
     },
     {
-      "name": "Evenes TMA2",
-      "type": "TMA",
-      "typeLabel": "Terminalområde",
+      "name": "Evenes CTR",
+      "type": "CTR",
+      "typeLabel": "Kontrollsone",
       "class": "D",
       "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
         "value": 2500,
         "unit": "FT",
         "ref": "MSL"
       },
-      "upper": {
-        "value": 105,
-        "unit": "FL",
-        "ref": "STD"
-      },
       "overLaunch": false,
-      "distanceKm": 3.5,
+      "distanceKm": 3.9,
       "byNotam": false
     },
     {
@@ -99,27 +118,8 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 5,
+      "distanceKm": 7.6,
       "byNotam": true
-    },
-    {
-      "name": "Evenes CTR",
-      "type": "CTR",
-      "typeLabel": "Kontrollsone",
-      "class": "D",
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 2500,
-        "unit": "FT",
-        "ref": "MSL"
-      },
-      "overLaunch": false,
-      "distanceKm": 9.5,
-      "byNotam": false
     },
     {
       "name": "EN-D462 Vagsfjorden",
@@ -137,7 +137,7 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 9.6,
+      "distanceKm": 8,
       "byNotam": true
     }
   ]

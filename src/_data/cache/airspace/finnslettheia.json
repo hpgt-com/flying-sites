@@ -1,0 +1,87 @@
+{
+  "source": "openAIP",
+  "fetched": "2026-09-24",
+  "nearbyKm": 10,
+  "launch": {
+    "lat": 68.67222,
+    "lon": 16.43333
+  },
+  "airspaces": [
+    {
+      "name": "Evenes TMA2",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 2500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": false
+    },
+    {
+      "name": "ENT737 B37",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 660,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": true
+    },
+    {
+      "name": "Evenes CTR",
+      "type": "CTR",
+      "typeLabel": "Kontrollsone",
+      "class": "D",
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 2500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "overLaunch": false,
+      "distanceKm": 1,
+      "byNotam": false
+    },
+    {
+      "name": "Evenes TMA1",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 4500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 8,
+      "byNotam": false
+    }
+  ]
+}

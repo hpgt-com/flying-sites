@@ -3,10 +3,48 @@
   "fetched": "2026-09-24",
   "nearbyKm": 10,
   "launch": {
-    "lat": 68.80389,
-    "lon": 16.36667
+    "lat": 68.75694,
+    "lon": 16.43139
   },
   "airspaces": [
+    {
+      "name": "Evenes TMA2",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 2500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": false
+    },
+    {
+      "name": "ENT737 B37",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 660,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": true
+    },
     {
       "name": "Evenes TMA1",
       "type": "TMA",
@@ -22,8 +60,8 @@
         "unit": "FL",
         "ref": "STD"
       },
-      "overLaunch": true,
-      "distanceKm": 0,
+      "overLaunch": false,
+      "distanceKm": 2.3,
       "byNotam": false
     },
     {
@@ -41,65 +79,8 @@
         "unit": "FL",
         "ref": "STD"
       },
-      "overLaunch": true,
-      "distanceKm": 0,
-      "byNotam": true
-    },
-    {
-      "name": "ENT737 B37",
-      "type": "MTA",
-      "typeLabel": "Militært øvings- og operasjonsområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 660,
-        "unit": "FL",
-        "ref": "STD"
-      },
       "overLaunch": false,
-      "distanceKm": 2.5,
-      "byNotam": true
-    },
-    {
-      "name": "Evenes TMA2",
-      "type": "TMA",
-      "typeLabel": "Terminalområde",
-      "class": "D",
-      "lower": {
-        "value": 2500,
-        "unit": "FT",
-        "ref": "MSL"
-      },
-      "upper": {
-        "value": 105,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 3.5,
-      "byNotam": false
-    },
-    {
-      "name": "ENT740 Trondenes",
-      "type": "MTA",
-      "typeLabel": "Militært øvings- og operasjonsområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 210,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 5,
+      "distanceKm": 2.3,
       "byNotam": true
     },
     {
@@ -118,8 +99,27 @@
         "ref": "MSL"
       },
       "overLaunch": false,
-      "distanceKm": 9.5,
+      "distanceKm": 3.8,
       "byNotam": false
+    },
+    {
+      "name": "ENT740 Trondenes",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 210,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 7.4,
+      "byNotam": true
     },
     {
       "name": "EN-D462 Vagsfjorden",
@@ -137,7 +137,7 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 9.6,
+      "distanceKm": 7.6,
       "byNotam": true
     }
   ]

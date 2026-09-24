@@ -9,7 +9,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Kart: **Leaflet**, installert via npm og servert fra egen side. Standard bakgrunn: Kartverkets åpne topografiske kart. Alternativt lag: OpenTopoMap. Kreditering av kartkilder.
 - Ingen validering av PR-er. Bygget skal feile hvis en stedsfil er ugyldig (manglende `name`, ugyldig retningskode, ukjent nøkkel, bilde som ikke finnes).
 - Automatiske importer (Kartverket-høyder, luftrom fra openAIP) skriver aldri i stedsfilene, bare i `src/_data/cache/`.
-- Luftrom hentes fra openAIP (CC BY-NC 4.0) med `npm run airspace`, og av workflowen «Oppdater luftrom» den 1. hver måned. Endringer kommer som PR og gjennomgås før merge. Nøkkelen ligger som repository secret `OPENAIP_API_KEY`. Stedsfilens `airspace` brukes bare til steder som ikke er hentet ennå, og til merknader (`note`).
+- Luftrom hentes fra openAIP (CC BY-NC 4.0) med `npm run airspace`, i ett kall for hele regionen (openAIP har streng fartsgrense), og lagres per start og som `region.geojson` til kartlaget. Hentes og av workflowen «Oppdater luftrom» den 1. hver måned. Endringer kommer som PR og gjennomgås før merge. Nøkkelen ligger som repository secret `OPENAIP_API_KEY`. Stedsfilens `airspace` brukes bare til steder som ikke er hentet ennå, og til merknader (`note`).
 
 ## Innhold
 - Én mappe per sted: `src/flysteder/<id>/index.md` med front matter + tekst, og bilder/GPX i samme mappe.
@@ -24,7 +24,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 ## Forside
 - Tittel «Hvor står vinden i dag?», lenke «Til hpgt.com».
 - Filtre som virker sammen: **vindretning** (kompass 3×3 med «Alle» i midten), **nivå** (Alle, PP2–PP5), **kategori** (Alle, PG, SPG, PPG).
-- Kart med alle starter som små vindroser. Steder som ikke passer filteret tones ned. Klikk på en start viser et kort med rose, tagger, kort tekst, «Se hele stedet» og «Se på Flightlog».
+- Kart med alle starter som små vindroser. Luftromslag som i IPPC kan slås av og på i kartets lagvelger: TMA, CTR, militære områder, fare og restriksjon. Av som standard, lastes først når de slås på, klikk viser navn, klasse og grenser. Kreditering «Luftrom: openAIP … Ikke for navigasjon, sjekk IPPC». Steder som ikke passer filteret tones ned. Klikk på en start viser et kort med rose, tagger, kort tekst, «Se hele stedet» og «Se på Flightlog».
 - Forklaring til rosefargene (hovedretning, mulig, ikke egnet). Mobil: under kartet. Desktop: under kortet for valgt sted.
 - Liste over steder som passer filteret.
 - «Før du drar»: NOTAM og luftrom (https://ippc.no), Tårn (egen side `/luftrom/` med telefonnumre til tårnene, fra `src/_data/towers.json`, tårn uten nummer vises ikke), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.

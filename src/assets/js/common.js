@@ -50,7 +50,7 @@
       attribution: 'Kartdata: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     });
     topo.addTo(map);
-    L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo }, null, { position: "topright" }).addTo(map);
+    map.layersControl = L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo }, null, { position: "topright" }).addTo(map);
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     return map;
@@ -70,6 +70,79 @@
     if ("ResizeObserver" in window) new ResizeObserver(check).observe(element);
     else window.addEventListener("resize", check);
     check();
+  }
+
+  // --- Luftromslag ---
+  // Fire grupper med av/på i kartets lagvelger, som i IPPC. Alle er av til å begynne med, og
+  // luftrommene (fra openAIP, se scripts/update-airspace.mjs) lastes først når en gruppe slås på.
+  var AIRSPACE_GROUPS = [
+    { name: "Luftrom: TMA", types: ["TMA", "CTA"], color: "#2F6FB5", dash: null },
+    { name: "Luftrom: CTR", types: ["CTR", "MCTR", "ATZ", "TIZ"], color: "#C0392B", dash: null },
+    { name: "Luftrom: militære områder", types: ["MTA", "TRA", "TSA"], color: "#7B3FA0", dash: "6 4" },
+    { name: "Luftrom: fare og restriksjon", types: ["D", "R", "P"], color: "#C24A12", dash: "6 4" },
+  ];
+
+  function formatLimit(l) {
+    if (!l) return "";
+    if (l.ref === "GND" && !l.value) return "bakken";
+    if (l.unit === "FL") return "FL" + l.value;
+    var text = l.value + (l.unit === "M" ? " m" : " ft");
+    if (l.ref === "GND") return text + " over bakken";
+    return l.ref === "MSL" && l.unit === "FT" ? text + " (ca. " + Math.round(l.value * 0.3048) + " moh)" : text;
+  }
+
+  function airspacePopup(p) {
+    var e = escapeHtml;
+    var rows = [["Klasse", p.class], ["Nedre", formatLimit(p.lower)], ["Øvre", formatLimit(p.upper)]]
+      .filter(function (row) { return row[1]; })
+      .map(function (row) { return "<tr><th>" + row[0] + "</th><td>" + e(row[1]) + "</td></tr>"; }).join("");
+    return '<div class="airspace-popup"><strong>' + e(p.name) + "</strong><table>" + rows + "</table>" +
+      (p.byNotam ? '<p class="airspace-popup__notam">Aktiveres ved NOTAM. Sjekk IPPC.</p>' : "") + "</div>";
+  }
+
+  function addAirspaceLayers(map, url) {
+    if (!url || !map.layersControl) return;
+    var groups = AIRSPACE_GROUPS.map(function (g) { return { def: g, layer: L.layerGroup() }; });
+    groups.forEach(function (g) { map.layersControl.addOverlay(g.layer, g.def.name); });
+    var loading = null, attribution = null, active = 0;
+
+    function load() {
+      if (loading) return loading;
+      loading = fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+        attribution = "Luftrom: openAIP (CC BY-NC 4.0), " + (data.fetched || "").split("-").reverse().join(".") +
+          ". Ikke for navigasjon, sjekk IPPC";
+        data.features.forEach(function (f) {
+          var g = groups.find(function (x) { return x.def.types.indexOf(f.properties.type) !== -1; });
+          if (!g) return;
+          // Gjennomsiktig fyll, så kartet synes også der flere luftrom overlapper. Fyllet er likevel
+          // klikkbart, og området lyser svakt opp når musen er over det.
+          L.geoJSON(f, {
+            style: { color: g.def.color, weight: 2, opacity: 0.9, fillColor: g.def.color, fillOpacity: 0, dashArray: g.def.dash },
+            onEachFeature: function (feature, layer) {
+              layer.on("mouseover", function () { layer.setStyle({ fillOpacity: 0.12, weight: 3 }); });
+              layer.on("mouseout", function () { layer.setStyle({ fillOpacity: 0, weight: 2 }); });
+            },
+          }).bindPopup(airspacePopup(f.properties)).addTo(g.layer);
+        });
+      });
+      return loading;
+    }
+
+    function isAirspace(layer) { return groups.some(function (g) { return g.layer === layer; }); }
+
+    // Kreditering vises så lenge minst ett luftromslag er på.
+    map.on("overlayadd", function (ev) {
+      if (!isAirspace(ev.layer)) return;
+      active++;
+      load().then(function () {
+        if (active && attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
+      });
+    });
+    map.on("overlayremove", function (ev) {
+      if (!isAirspace(ev.layer)) return;
+      active--;
+      if (!active && attribution) map.attributionControl.removeAttribution(attribution);
+    });
   }
 
   function escapeHtml(s) {
@@ -98,6 +171,7 @@
     directionType: directionType,
     roseSvg: roseSvg,
     createMap: createMap,
+    addAirspaceLayers: addAirspaceLayers,
     fitWhenVisible: fitWhenVisible,
     escapeHtml: escapeHtml,
     formatNumber: formatNumber,

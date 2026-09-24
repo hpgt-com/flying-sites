@@ -3,8 +3,8 @@
   "fetched": "2026-09-24",
   "nearbyKm": 10,
   "launch": {
-    "lat": 68.80389,
-    "lon": 16.36667
+    "lat": 68.81028,
+    "lon": 16.52639
   },
   "airspaces": [
     {
@@ -46,25 +46,6 @@
       "byNotam": true
     },
     {
-      "name": "ENT737 B37",
-      "type": "MTA",
-      "typeLabel": "Militært øvings- og operasjonsområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 660,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 2.5,
-      "byNotam": true
-    },
-    {
       "name": "Evenes TMA2",
       "type": "TMA",
       "typeLabel": "Terminalområde",
@@ -80,7 +61,7 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 3.5,
+      "distanceKm": 0.9,
       "byNotam": false
     },
     {
@@ -99,7 +80,45 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 5,
+      "distanceKm": 1.1,
+      "byNotam": true
+    },
+    {
+      "name": "EN-D462 Vagsfjorden",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 210,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 3.1,
+      "byNotam": true
+    },
+    {
+      "name": "ENT737 B37",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 660,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 4.1,
       "byNotam": true
     },
     {
@@ -118,27 +137,8 @@
         "ref": "MSL"
       },
       "overLaunch": false,
-      "distanceKm": 9.5,
+      "distanceKm": 8.5,
       "byNotam": false
-    },
-    {
-      "name": "EN-D462 Vagsfjorden",
-      "type": "D",
-      "typeLabel": "Fareområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 210,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 9.6,
-      "byNotam": true
     }
   ]
 }

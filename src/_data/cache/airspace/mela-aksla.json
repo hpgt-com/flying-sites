@@ -1,0 +1,87 @@
+{
+  "source": "openAIP",
+  "fetched": "2026-09-24",
+  "nearbyKm": 10,
+  "launch": {
+    "lat": 68.65397,
+    "lon": 16.11531
+  },
+  "airspaces": [
+    {
+      "name": "Evenes TMA1",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 4500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": false
+    },
+    {
+      "name": "ENT737 B37",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 660,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": true
+    },
+    {
+      "name": "Evenes TMA2",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 2500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 4,
+      "byNotam": false
+    },
+    {
+      "name": "Lofoten TMA",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 3500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 5.9,
+      "byNotam": false
+    }
+  ]
+}

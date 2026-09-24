@@ -3,8 +3,8 @@
   "fetched": "2026-09-24",
   "nearbyKm": 10,
   "launch": {
-    "lat": 68.80389,
-    "lon": 16.36667
+    "lat": 68.81222,
+    "lon": 16.09556
   },
   "airspaces": [
     {
@@ -46,6 +46,25 @@
       "byNotam": true
     },
     {
+      "name": "Lofoten TMA",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 3500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 0.4,
+      "byNotam": false
+    },
+    {
       "name": "ENT737 B37",
       "type": "MTA",
       "typeLabel": "Militært øvings- og operasjonsområde",
@@ -61,11 +80,49 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 2.5,
+      "distanceKm": 1.9,
       "byNotam": true
     },
     {
-      "name": "Evenes TMA2",
+      "name": "EN-D474 Andoya 2",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 999,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 6,
+      "byNotam": true
+    },
+    {
+      "name": "EN-D473 Andoya 2",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 999,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 8.7,
+      "byNotam": true
+    },
+    {
+      "name": "Andøya TMA",
       "type": "TMA",
       "typeLabel": "Terminalområde",
       "class": "D",
@@ -80,65 +137,8 @@
         "ref": "STD"
       },
       "overLaunch": false,
-      "distanceKm": 3.5,
+      "distanceKm": 8.8,
       "byNotam": false
-    },
-    {
-      "name": "ENT740 Trondenes",
-      "type": "MTA",
-      "typeLabel": "Militært øvings- og operasjonsområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 210,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 5,
-      "byNotam": true
-    },
-    {
-      "name": "Evenes CTR",
-      "type": "CTR",
-      "typeLabel": "Kontrollsone",
-      "class": "D",
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 2500,
-        "unit": "FT",
-        "ref": "MSL"
-      },
-      "overLaunch": false,
-      "distanceKm": 9.5,
-      "byNotam": false
-    },
-    {
-      "name": "EN-D462 Vagsfjorden",
-      "type": "D",
-      "typeLabel": "Fareområde",
-      "class": null,
-      "lower": {
-        "value": 0,
-        "unit": "FT",
-        "ref": "GND"
-      },
-      "upper": {
-        "value": 210,
-        "unit": "FL",
-        "ref": "STD"
-      },
-      "overLaunch": false,
-      "distanceKm": 9.6,
-      "byNotam": true
     }
   ]
 }
