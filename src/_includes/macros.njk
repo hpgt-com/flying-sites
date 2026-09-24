@@ -49,6 +49,11 @@
 </svg>
 {%- endmacro %}
 
+{#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet. -#}
+{% macro lightboxLink(image, caption) -%}
+<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}">{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span></a>
+{%- endmacro %}
+
 {#- Merking av lenker som åpnes i ny fane: ↗-symbol, og tekst som bare skjermlesere leser opp. -#}
 {% macro external() -%}
 <svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> (åpnes i ny fane)</span>
