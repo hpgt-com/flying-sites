@@ -214,6 +214,12 @@ scripts:
               {% else %}
               <span class="muted">Ingen faste luftrom over starten.</span>
               {% endif %}
+              {#- Nærliggende faste luftrom (innen nearbyKm) som dempet tekst, som stedssidene hadde det før.
+                  Militære områder og andre som bare aktiveres ved behov, er utelatt. -#}
+              {% for n in derived.airspace.airspaces | rejectattr("overLaunch") | rejectattr("byNotam") %}
+              {% set lower = n.lower | formatLimit %}
+              <span class="muted">Nærliggende: {{ n.name }}{% if n["class"] %}, klasse {{ n["class"] }}{% endif %}, {{ "fra bakken" if lower == "bakken" else "nedre grense " ~ lower }}{% if n.lower | limitMasl %} ({{ n.lower | limitMasl }}){% endif %}.{% if n.note %} {{ n.note }}{% endif %}</span>
+              {% endfor %}
               <span class="airspace__source">Hentet automatisk fra openAIP {{ derived.airspace.fetched | formatDate }}. Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr.</span>
               {% else %}
               {% set mainAirspace = airspace | rejectattr("nearby") | list %}
