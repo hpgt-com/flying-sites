@@ -3,6 +3,7 @@ import * as yaml from "js-yaml";
 import { HtmlBasePlugin } from "@11ty/eleventy";
 import {
   DIRECTIONS, directionLabel, directionWord, directionType, sortDirections, formatNumber, formatDate, feetToMeters,
+  formatLimit, limitMasl,
 } from "./lib/format.js";
 import { validateSite } from "./lib/validation.js";
 import { statusSummary } from "./lib/status.js";
@@ -45,6 +46,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("formatNumber", formatNumber);
   eleventyConfig.addFilter("formatDate", formatDate);
   eleventyConfig.addFilter("feetToMeters", feetToMeters);
+  eleventyConfig.addFilter("formatLimit", formatLimit);
+  eleventyConfig.addFilter("limitMasl", limitMasl);
   eleventyConfig.addFilter("capitalizeFirst", (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s));
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v).replace(/</g, "\\u003c"));
 

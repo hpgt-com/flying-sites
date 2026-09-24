@@ -8,7 +8,8 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - `actions/checkout` med `fetch-depth: 0`, så «sist endret» per sted kan hentes fra Git.
 - Kart: **Leaflet**, installert via npm og servert fra egen side. Standard bakgrunn: Kartverkets åpne topografiske kart. Alternativt lag: OpenTopoMap. Kreditering av kartkilder.
 - Ingen validering av PR-er. Bygget skal feile hvis en stedsfil er ugyldig (manglende `name`, ugyldig retningskode, ukjent nøkkel, bilde som ikke finnes).
-- Automatiske importer (Kartverket-høyder, senere luftrom) skriver aldri i stedsfilene, bare i `src/_data/cache/`.
+- Automatiske importer (Kartverket-høyder, luftrom fra openAIP) skriver aldri i stedsfilene, bare i `src/_data/cache/`.
+- Luftrom hentes fra openAIP (CC BY-NC 4.0) med `npm run airspace`, og av workflowen «Oppdater luftrom» den 1. hver måned. Endringer kommer som PR og gjennomgås før merge. Nøkkelen ligger som repository secret `OPENAIP_API_KEY`. Stedsfilens `airspace` brukes bare til steder som ikke er hentet ennå, og til merknader (`note`).
 
 ## Innhold
 - Én mappe per sted: `src/flysteder/<id>/index.md` med front matter + tekst, og bilder/GPX i samme mappe.
@@ -34,7 +35,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 1. Navn, én–to setninger kort fortalt, tagger (kategori og sesong).
 2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler.
 3. **Før du starter**: bare farer som gjelder hele stedet. Rød boks. Hvis ingen: «Ingen spesielle farer registrert for stedet.»
-4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Høyde (start moh, landing moh, forskjell), Luftrom (tagger: navn, klasse, nedre grense i ft, ca. moh; nærliggende luftrom som egen linje).
+4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Høyde (start moh, landing moh, forskjell), Luftrom: først taket over start (laveste faste luftrom, i moh og meter over startstedet), deretter militære og andre områder over start som kan aktiveres ved NOTAM (rød boks), nærliggende luftrom innen 10 km med avstand, og kilde med dato og «Sjekk alltid IPPC».
 5. **Start**: Parkering, Veien opp (med km og høydemeter fra GPX), Tid (bevegelsestid fra GPX). Deretter kort tekst om startområdet og én linje per retningsgruppe med retningsmerker i rosens farger og eventuelle kategori-tagger (PG/SPG).
 6. **Landing**: kort tekst.
 7. **Vær**: Yr-meteogram (`https://www.yr.no/nb/innhold/<yr_id>/meteogram.svg`, kreditering «Varsel fra Yr, levert av NRK og Meteorologisk institutt»), lenker til Yr, Windy (pin på startkoordinat: `https://www.windy.com/<lat>/<lon>?<lat>,<lon>,12`), Flybart, XCC flymet, IPPC.
@@ -53,6 +54,10 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Designreferanse: `referanse/prototype/` (prototype-HTML fra designfasen, ikke kjørbar som den er). `referanse/` ligger bare lokalt og er ikke med i repoet (se `.gitignore`), fordi uttrekket fra den gamle oversikten inneholder originaltekster.
 
 ## Senere (fase 2)
-- Høyder fra Kartverket, luftrom fra openAIP som forslag til godkjenning.
 - Automatisk vindvurdering fra MET per sted (forslag, aldri «OK å fly»), maks/min vind per sted.
 - Engelsk versjon, video fra YouTube, 3D-visning med tegnede lag (GeoJSON).
+
+## Fase 3: NOTAM
+- IPPC er eneste autoritative kilde. Venter til vi har en sikker og tillatt måte å hente fra IPPC på.
+- Visning som i IPPC: NOTAM-områder som polygoner eller sirkler på kartene, fargede markører per type (militært operasjonsområde, ubemannede luftfartøy, hindringer, advarsler) med forklaring, gyldighet i norsk tid, og lenke til IPPC.
+- Kobles til flystedene: stedssiden og forsidekortet viser aktive og kommende NOTAM som berører start eller landing.

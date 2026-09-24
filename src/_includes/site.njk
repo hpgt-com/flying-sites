@@ -198,6 +198,41 @@ scripts:
           <div>
             <dt>Luftrom</dt>
             <dd class="airspace">
+              {% if derived.airspace %}
+              {#- Hentet automatisk fra openAIP (npm run airspace). Faste luftrom over starten vises som tagger,
+                  resten som linjer. Områder som bare er aktive når de er varslet, samles for seg. -#}
+              {% set over = derived.airspace.airspaces | selectattr("overLaunch") | list %}
+              {% set ceiling = derived.airspaceCeiling %}
+              {% if ceiling and ceiling.fromGround %}
+              <span class="airspace__ceiling">Kontrollert luftrom fra bakken over starten: {{ ceiling.airspace.name }}{% if ceiling.airspace["class"] %}, klasse {{ ceiling.airspace["class"] }}{% endif %}. Krever klarering.</span>
+              {% elif ceiling %}
+              <span class="airspace__ceiling">Tak over start: <strong>ca. {{ ceiling.masl }} moh</strong> ({{ ceiling.airspace.lower | formatLimit }}){% if ceiling.aboveLaunch != null %}, ca. {{ ceiling.aboveLaunch }} m over startstedet{% endif %}. Grensen er {{ ceiling.airspace.name }}{% if ceiling.airspace["class"] %}, klasse {{ ceiling.airspace["class"] }}{% endif %}.</span>
+              {% endif %}
+              {% set near = derived.airspace.airspaces | rejectattr("overLaunch") | list %}
+              {% for a in over | rejectattr("byNotam") %}
+              {% if not ceiling or a.name != ceiling.airspace.name or a.lower.value != ceiling.airspace.lower.value %}
+              <span class="tags">
+                {{ m.tag(a.name) }}
+                {% if a["class"] %}{{ m.tag("Klasse " ~ a["class"]) }}{% endif %}
+                {{ m.tag("Fra bakken" if (a.lower | formatLimit) == "bakken" else "Nedre " ~ (a.lower | formatLimit)) }}
+                {% if a.lower | limitMasl %}{{ m.tag(a.lower | limitMasl) }}{% endif %}
+              </span>
+              {% endif %}
+              {% endfor %}
+              {% for a in over | selectattr("byNotam") %}
+              <span class="airspace__activatable"><strong>{{ a.name }}</strong> ({{ a.typeLabel | lower }}) ligger over starten, fra {{ a.lower | formatLimit }}. Kan aktiveres, sjekk NOTAM i IPPC.</span>
+              {% endfor %}
+              {% for a in near | rejectattr("byNotam") %}
+              <span class="muted">Nærliggende, {{ a.distanceKm | formatNumber(1) }} km unna: {{ a.name }}{% if a["class"] %}, klasse {{ a["class"] }}{% endif %}, {{ "fra bakken" if (a.lower | formatLimit) == "bakken" else "nedre grense " ~ (a.lower | formatLimit) }}{% if a.lower | limitMasl %} ({{ a.lower | limitMasl }}){% endif %}.</span>
+              {% endfor %}
+              {% set nearNotam = near | selectattr("byNotam") | list %}
+              {% if nearNotam.length %}
+              <span class="muted">Kan aktiveres i nærheten, sjekk NOTAM: {% for a in nearNotam %}{{ a.name }} ({{ a.distanceKm | formatNumber(1) }} km){{ ", " if not loop.last }}{% endfor %}.</span>
+              {% endif %}
+              {% for a in airspace | selectattr("note") %}<span class="muted">{{ a.note }}</span>{% endfor %}
+              {% if not derived.airspace.airspaces.length %}<span class="muted">Ingen luftrom registrert innen {{ derived.airspace.nearbyKm }} km.</span>{% endif %}
+              <span class="airspace__source">Hentet automatisk fra openAIP {{ derived.airspace.fetched | formatDate }}. Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr.</span>
+              {% else %}
               {% set mainAirspace = airspace | rejectattr("nearby") | list %}
               {% set nearbyAirspace = airspace | selectattr("nearby") | list %}
               {% for a in mainAirspace %}
@@ -213,6 +248,7 @@ scripts:
               <span class="muted">Nærliggende: {{ a.name }}{% if a["class"] %}, klasse {{ a["class"] }}{% endif %}{% if a.lower and a.lower.unit == "FT" %}, nedre grense {{ a.lower.value }} ft{% if a.lower.ref == "MSL" %} (ca. {{ a.lower.value | feetToMeters }} moh){% endif %}{% elif a.lower and a.lower.unit == "FL" %}, nedre grense FL {{ a.lower.value }}{% endif %}.{% if a.note %} {{ a.note }}{% endif %}</span>
               {% endfor %}
               {% if not airspace.length %}<span class="missing">Ikke registrert ennå. Sjekk <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a>.</span>{% endif %}
+              {% endif %}
             </dd>
           </div>
         </dl>

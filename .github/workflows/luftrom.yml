@@ -1,0 +1,57 @@
+name: Oppdater luftrom
+
+# Henter luftrom fra openAIP for alle flystedene én gang i måneden (AIRAC-syklusen er 28 dager).
+# Endringer kommer som en PR, så noen ser over diffen før det publiseres. Uten endringer skjer ingenting.
+# Krever repository secret OPENAIP_API_KEY, og at «Allow GitHub Actions to create and approve pull
+# requests» er slått på under Settings → Actions → General.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *" # den 1. hver måned kl. 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  luftrom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Hent luftrom fra openAIP
+        run: npm run --silent airspace | tee luftrom.txt
+        env:
+          OPENAIP_API_KEY: ${{ secrets.OPENAIP_API_KEY }}
+
+      - name: Lag PR hvis noe er endret
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain src/_data/cache/airspace)" ]; then
+            echo "Ingen endringer i luftrom."
+            exit 0
+          fi
+          branch="luftrom/$(date +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add src/_data/cache/airspace
+          git commit -m "Oppdater luftrom fra openAIP"
+          git push -u origin "$branch"
+          {
+            echo "Automatisk henting av luftrom fra openAIP. Se over diffen, og sammenlign med IPPC ved tvil, før du merger."
+            echo
+            echo '```'
+            grep -E "ENDRET|\(ny\)" -A 20 luftrom.txt | grep -v "^--$" || true
+            echo '```'
+          } > pr.md
+          gh pr create --title "Luftrom fra openAIP $(date +%d.%m.%Y)" --body-file pr.md
