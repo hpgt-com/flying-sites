@@ -175,7 +175,52 @@
   // Samme merking som external()-makroen i macros.njk.
   var EXTERNAL_MARK = '<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> (åpnes i ny fane)</span>';
 
+  // --- Fargemodus ---
+  // Skriptet i <head> (base.njk) setter data-theme før siden tegnes. Her kobles knappene til, og
+  // siden følger med når enheten bytter mellom lys og mørk mens valget er «Auto».
+  var THEME_COLORS = { light: "#F3F5F4", dark: "#11191D" };
+  var darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
+
+  function applyTheme(choice) {
+    var root = document.documentElement;
+    var theme = choice === "dark" || (choice === "auto" && darkQuery && darkQuery.matches) ? "dark" : "light";
+    var changed = root.getAttribute("data-theme") !== theme;
+    root.setAttribute("data-theme", theme);
+    root.setAttribute("data-theme-choice", choice);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", THEME_COLORS[theme]);
+    document.querySelectorAll(".theme-toggle button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-choice") === choice));
+    });
+    if (changed) document.dispatchEvent(new CustomEvent("themechange", { detail: { theme: theme } }));
+  }
+
+  document.querySelectorAll(".theme-toggle").forEach(function (group) {
+    group.hidden = false;
+    group.addEventListener("click", function (ev) {
+      var button = ev.target.closest("button[data-theme-choice]");
+      if (!button) return;
+      var choice = button.getAttribute("data-theme-choice");
+      try {
+        if (choice === "auto") localStorage.removeItem("theme");
+        else localStorage.setItem("theme", choice);
+      } catch (e) {
+        // privat modus eller blokkert lagring: valget gjelder bare denne siden
+      }
+      applyTheme(choice);
+    });
+  });
+  if (darkQuery) {
+    var onSystemChange = function () { if (document.documentElement.getAttribute("data-theme-choice") === "auto") applyTheme("auto"); };
+    if (darkQuery.addEventListener) darkQuery.addEventListener("change", onSystemChange);
+    else if (darkQuery.addListener) darkQuery.addListener(onSystemChange);
+  }
+  applyTheme(document.documentElement.getAttribute("data-theme-choice") || "auto");
+
   window.FlyingSites = {
+    isDark: isDark,
     EXTERNAL_MARK: EXTERNAL_MARK,
     DIRECTIONS: DIRECTIONS,
     DIRECTION_LABELS: DIRECTION_LABELS,

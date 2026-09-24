@@ -9,7 +9,8 @@
 
   var ACCENT = "#C24A12";
   // Gangruten må synes både på lyst og mørkt kart (mørk modus, se styles.css).
-  var INK = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "#F3F5F4" : "#1C2B33";
+  function inkColor() { return FS.isDark() ? "#F3F5F4" : "#1C2B33"; }
+  var INK = inkColor();
   var map = FS.createMap(mapEl, { scrollWheelZoom: false });
   var bounds = [];
   var routeLines = [];
@@ -23,6 +24,11 @@
     line.bindTooltip("Gangrute" + (route.name ? " " + route.name : ""), { sticky: true });
     routeLines.push(line);
     route.line.forEach(function (p) { bounds.push(p); });
+  });
+
+  document.addEventListener("themechange", function () {
+    INK = inkColor();
+    routeLines.forEach(function (line) { line.setStyle({ color: INK }); });
   });
 
   (data.parking || []).forEach(function (p) {

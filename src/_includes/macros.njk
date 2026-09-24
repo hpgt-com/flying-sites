@@ -49,6 +49,15 @@
 </svg>
 {%- endmacro %}
 
+{#- Valg av fargemodus. common.js lagrer valget og oppdaterer siden. Skjult uten JavaScript. -#}
+{% macro themeToggle() -%}
+<div class="theme-toggle" role="group" aria-label="Fargemodus" hidden>
+  <button type="button" data-theme-choice="auto" aria-pressed="false" title="Følger innstillingen på enheten">Auto</button>
+  <button type="button" data-theme-choice="light" aria-pressed="false">Lys</button>
+  <button type="button" data-theme-choice="dark" aria-pressed="false">Mørk</button>
+</div>
+{%- endmacro %}
+
 {#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet. -#}
 {% macro lightboxLink(image, caption) -%}
 <a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}">{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span></a>
