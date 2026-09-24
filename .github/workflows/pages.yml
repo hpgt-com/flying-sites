@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Bygg hver time, så vindvurderingen på forsiden har ferskt varsel fra MET.
+  # GitHub slår av planlagte kjøringer etter 60 dager uten aktivitet i repoet.
+  schedule:
+    - cron: "5 * * * *"
 
 permissions:
   contents: read

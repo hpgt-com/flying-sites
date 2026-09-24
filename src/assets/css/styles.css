@@ -690,3 +690,31 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .airspace-popup td { padding: 1px 0; }
 .airspace-popup__notam { margin: 6px 0 0; color: var(--hazard-text); font-weight: 600; }
 .leaflet-control-layers-overlays label { min-height: 32px; display: flex; align-items: center; }
+
+/* ---------- Vindvurdering fra varselet (forsiden) ---------- */
+
+:root {
+  --wind-ok: #2E8B57;
+  --wind-maybe: #D99A1E;
+  --wind-high: #C0392B;
+  --wind-no: #9FB1B4;
+}
+.filter__note { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.rose-marker__ring { position: relative; overflow: visible; }
+.rose-marker__ring--ok { border: 3px solid var(--wind-ok); }
+.rose-marker__ring--maybe { border: 3px solid var(--wind-maybe); }
+.rose-marker__ring--high { border: 3px solid var(--wind-high); }
+.rose-marker__ring--no { border: 3px solid var(--wind-no); }
+/* Pilen starter i midten og peker dit vinden blåser. 0 grader er nord. */
+.wind-arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; }
+.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 0; width: 3px; height: 24px; background: var(--text); border-radius: 2px; }
+.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 22px; border: 5px solid transparent; border-bottom: 8px solid var(--text); border-top: 0; }
+.wind-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; vertical-align: -1px; }
+.wind-dot--ok { background: var(--wind-ok); }
+.wind-dot--maybe { background: var(--wind-maybe); }
+.wind-dot--high { background: var(--wind-high); }
+.wind-dot--no { background: var(--wind-no); }
+.wind-legend { flex-direction: row; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; margin-top: 8px; }
+.wind-legend .wind-dot { margin-right: 0; }
+.results__wind { display: flex; align-items: center; font-size: 13px; color: var(--muted); }
+.selected__wind { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; font-size: 15px; }

@@ -19,6 +19,17 @@ scripts:
     </div>
 
     <div class="filters" id="filters">
+      {% if forecast %}
+      <div class="filter">
+        <span class="filter__title" id="f-wind">Vind fra varsel</span>
+        <div class="pills" role="group" aria-labelledby="f-wind">
+          {% for value, label in [["off", "Av"], ["0", "Nå"], ["3", "Om 3 t"], ["6", "Om 6 t"], ["tomorrow", "I morgen kl. 12"]] %}
+          <button type="button" class="pill" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}">{{ label }}</button>
+          {% endfor %}
+        </div>
+        <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s er for mye, og kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
+      </div>
+      {% endif %}
       <div class="filter">
         <span class="filter__title" id="f-direction">Vindretning</span>
         <div class="compass" role="group" aria-labelledby="f-direction">
@@ -72,6 +83,14 @@ scripts:
 
     <div class="home__legend">
       {{ m.legend() }}
+      {% if forecast %}
+      <ul class="legend wind-legend" id="wind-legend" aria-label="Forklaring til vindvurderingen">
+        <li><span class="wind-dot wind-dot--ok"></span>Kan passe</li>
+        <li><span class="wind-dot wind-dot--maybe"></span>Usikkert</li>
+        <li><span class="wind-dot wind-dot--high"></span>For mye vind</li>
+        <li><span class="wind-dot wind-dot--no"></span>Passer ikke</li>
+      </ul>
+      {% endif %}
     </div>
 
     <section class="before-you-go" aria-labelledby="h-before-you-go">
@@ -92,3 +111,4 @@ scripts:
 </div>
 
 <script type="application/json" id="sites-data">{{ collections.sites | homeData | json | safe }}</script>
+<script type="application/json" id="forecast-data">{{ { forecast: forecast, rules: windRules } | json | safe }}</script>

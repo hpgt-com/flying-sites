@@ -26,6 +26,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Filtre som virker sammen: **vindretning** (kompass 3×3 med «Alle» i midten), **nivå** (Alle, PP2–PP5), **kategori** (Alle, PG, SPG, PPG).
 - Kart med alle starter som små vindroser. Luftromslag som i IPPC kan slås av og på i kartets lagvelger: TMA, CTR, militære områder, fare og restriksjon. Av som standard, lastes først når de slås på, klikk viser navn, klasse og grenser. Kreditering «Luftrom: openAIP … Ikke for navigasjon, sjekk IPPC». Steder som ikke passer filteret tones ned. Klikk på en start viser et kort med rose, tagger, kort tekst, «Se hele stedet» og «Se på Flightlog».
 - Forklaring til rosefargene (hovedretning, mulig, ikke egnet). Mobil: under kartet. Desktop: under kortet for valgt sted.
+- **Vindvurdering** (filtergruppe «Vind fra varsel»: Av, Nå, Om 3 t, Om 6 t, I morgen kl. 12). Varsel fra MET Locationforecast for hver start (`src/_data/forecast.js`, 48 timer, hentes ved hver bygging, siden bygges hver time). Regler i `src/_data/windRules.json`: over `maxWind` (7 m/s) gir «For mye vind»; vindretning i hovedretning gir «Kan passe», men «Usikkert» når kastene er mer enn `maxGustSpread` (4 m/s) over middelvinden; mulig retning gir «Usikkert»; ellers «Passer ikke». Kartet viser farget ring og vindpil, listen sorteres etter vurdering, kortet viser vind og vurdering. Bare et forslag, aldri «OK å fly». Uten varsel (henting feilet) vises ikke vindvalget.
 - Liste over steder som passer filteret.
 - «Før du drar»: NOTAM og luftrom (https://ippc.no), Tårn (egen side `/luftrom/` med telefonnumre til tårnene, fra `src/_data/towers.json`, tårn uten nummer vises ikke), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.
 - Nederst: ansvarsfraskrivelse og kreditering av Lars Sletten. Krediteringen står bare her, ikke på hver stedsside.
@@ -54,7 +55,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Designreferanse: `referanse/prototype/` (prototype-HTML fra designfasen, ikke kjørbar som den er). `referanse/` ligger bare lokalt og er ikke med i repoet (se `.gitignore`), fordi uttrekket fra den gamle oversikten inneholder originaltekster.
 
 ## Senere (fase 2)
-- Automatisk vindvurdering fra MET per sted (forslag, aldri «OK å fly»), maks/min vind per sted.
+- Vindgrenser per sted (maks/min vind), vindvurdering også på stedssiden.
 - Engelsk versjon, video fra YouTube, 3D-visning med tegnede lag (GeoJSON).
 
 ## Fase 3: NOTAM
