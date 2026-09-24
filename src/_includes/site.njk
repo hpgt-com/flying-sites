@@ -3,6 +3,7 @@ layout: base.njk
 bodyClass: page-site
 scripts:
   - /assets/js/site.js
+  - /assets/js/lightbox.js
 ---
 {%- import "macros.njk" as m with context -%}
 {%- set routes = derived.routes -%}
@@ -31,8 +32,8 @@ scripts:
       {# 2. Oversiktsbilde #}
       <figure class="block block--overview">
         {% if derived.images.overview %}
-        <a href="{{ derived.images.overview.fullUrl }}" target="_blank" rel="noopener">{{ derived.images.overview.html | safe }}<span class="visually-hidden"> (åpnes i ny fane)</span></a>
-        <figcaption>{% if images.overview_credit %}Kilde: {{ images.overview_credit }}. {% endif %}Trykk for å se i full størrelse.</figcaption>
+        {{ m.lightboxLink(derived.images.overview, "Oversikt") }}
+        <figcaption>{% if images.overview_credit %}Kilde: {{ images.overview_credit }}. {% endif %}Trykk for å se større.</figcaption>
         {% else %}
         <div class="placeholder placeholder--overview">Mangler oversiktsbilde. Har du et herfra? Send det inn.</div>
         {% endif %}
@@ -142,7 +143,7 @@ scripts:
           {% for field, caption in [["launch", "Start"], ["landing", "Landing"], ["air", "Fra luften"]] %}
           <figure>
             {% if derived.images[field] %}
-            <a href="{{ derived.images[field].fullUrl }}" target="_blank" rel="noopener">{{ derived.images[field].html | safe }}<span class="visually-hidden"> (åpnes i ny fane)</span></a>
+            {{ m.lightboxLink(derived.images[field], caption) }}
             {% else %}
             <div class="placeholder">Mangler bilde. Har du et herfra? Send det inn.</div>
             {% endif %}
