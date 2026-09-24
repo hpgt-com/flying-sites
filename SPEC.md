@@ -1,0 +1,58 @@
+# HPGT flysteder – spesifikasjon
+
+Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsoversikten til Lars Sletten, som han har gitt til klubben. Målgruppe: ferske PP2-piloter og tilreisende piloter. Kun norsk i første omgang.
+
+## Teknisk oppsett
+- Statisk side bygget med **Eleventy (11ty)**. Ingen server, ingen database.
+- Publiseres på **GitHub Pages** via GitHub Actions ved push til `main`. Eget domene `flysteder.hpgt.com` settes i Pages-innstillingene (CNAME).
+- `actions/checkout` med `fetch-depth: 0`, så «sist endret» per sted kan hentes fra Git.
+- Kart: **Leaflet**, installert via npm og servert fra egen side. Standard bakgrunn: Kartverkets åpne topografiske kart. Alternativt lag: OpenTopoMap. Kreditering av kartkilder.
+- Ingen validering av PR-er. Bygget skal feile hvis en stedsfil er ugyldig (manglende `name`, ugyldig retningskode, ukjent nøkkel, bilde som ikke finnes).
+- Automatiske importer (Kartverket-høyder, senere luftrom) skriver aldri i stedsfilene, bare i `src/_data/cache/`.
+
+## Innhold
+- Én mappe per sted: `src/flysteder/<id>/index.md` med front matter + tekst, og bilder/GPX i samme mappe.
+- Faste filnavn med stedets id foran, som bygget håndhever: bilder heter `<id>-overview`, `<id>-launch`, `<id>-landing` og `<id>-air` (`.jpg`, `.png` eller `.webp`), gangruter heter `<id>-route.gpx`, eller `<id>-route-1.gpx`, `<id>-route-2.gpx` osv. når stedet har flere ruter. Filer fra Strava eller kamera må døpes om før de legges inn. Bilder importeres med `npm run images -- <id> <felt> <fil>`, som gir riktig navn, skalerer ned til maks 2560 px og fjerner metadata (EXIF/GPS). Originaler over 2 MB stopper bygget. Siden viser bare versjoner laget ved bygging (WebP/JPEG i flere størrelser), aldri originalene.
+- Front matter følger strukturen i eksisterende filer (se `src/flysteder/elgen/index.md` for et komplett eksempel). Nøklene er på engelsk, verdiene på norsk. `parking` er en liste (steder kan ha flere ruter med hver sin parkering). Hver linje under `launches` kan ha `categories` (PG/SPG).
+- Retninger lagres som standardkoder (N, NE, E, SE, S, SW, W, NW) og vises som norske (N, NØ, Ø, SØ, S, SV, V, NV).
+- `status: utkast` betyr at stedet vises, men merkes «Ikke gjennomgått ennå» til `reviewed.by` og `reviewed.date` er satt.
+- Tomme felt (`null`) vises som tydelige plassholdere eller utelates, aldri som gjettede verdier.
+- `MANGLER.csv` viser hva som mangler per sted.
+- `external.pgearth_id` settes manuelt, bare når stedet faktisk finnes på Paraglidingearth. Ingen import derfra: API-et er bare for lesing, bare 5 av 30 steder finnes der, dataene deres avviker fra våre, og innholdet er lisensiert med «del på samme vilkår» (CC BY-SA 3.0 / ODbL). Bidrag til Paraglidingearth gjøres manuelt på nettsiden deres, og bare med innhold klubben har rett til å dele.
+
+## Forside
+- Tittel «Hvor står vinden i dag?», lenke «Til hpgt.com».
+- Filtre som virker sammen: **vindretning** (kompass 3×3 med «Alle» i midten), **nivå** (Alle, PP2–PP5), **kategori** (Alle, PG, SPG, PPG).
+- Kart med alle starter som små vindroser. Steder som ikke passer filteret tones ned. Klikk på en start viser et kort med rose, tagger, kort tekst, «Se hele stedet» og «Se på Flightlog».
+- Forklaring til rosefargene (hovedretning, mulig, ikke egnet). Mobil: under kartet. Desktop: under kortet for valgt sted.
+- Liste over steder som passer filteret.
+- «Før du drar»: NOTAM og luftrom (https://ippc.no), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.
+- Nederst: ansvarsfraskrivelse og kreditering av Lars Sletten. Krediteringen står bare her, ikke på hver stedsside.
+- Desktop: tre kolonner (filtre og liste | kart | valgt sted, forklaring, «Før du drar»).
+
+## Stedsside – fast mal i denne rekkefølgen
+1. Navn, én–to setninger kort fortalt, tagger (kategori og sesong).
+2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler.
+3. **Før du starter**: bare farer som gjelder hele stedet. Rød boks. Hvis ingen: «Ingen spesielle farer registrert for stedet.»
+4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Høyde (start moh, landing moh, forskjell), Luftrom (tagger: navn, klasse, nedre grense i ft, ca. moh; nærliggende luftrom som egen linje).
+5. **Start**: Parkering, Veien opp (med km og høydemeter fra GPX), Tid (bevegelsestid fra GPX). Deretter kort tekst om startområdet og én linje per retningsgruppe med retningsmerker i rosens farger og eventuelle kategori-tagger (PG/SPG).
+6. **Landing**: kort tekst.
+7. **Vær**: Yr-meteogram (`https://www.yr.no/nb/innhold/<yr_id>/meteogram.svg`, kreditering «Varsel fra Yr, levert av NRK og Meteorologisk institutt»), lenker til Yr, Windy (pin på startkoordinat: `https://www.windy.com/<lat>/<lon>?<lat>,<lon>,12`), Flybart, XCC flymet, IPPC.
+8. **Kart**: start (oransje sirkel), landing (firkant), alternativ landing (grå), parkering (blå P), gangruter fra GPX (stiplet linje). Knapper: Veibeskrivelse til parkering (Google Maps), Last ned gangrute (GPX).
+   - **Høydeprofil** under kartet når stedet har gangrute: avstand/høyde, partier brattere enn 25 % markert i aksentfarge, glidebryter (og dra/touch i profilen) som flytter en markør langs ruten i kartet og viser avstand, høyde og stigning. Faner når stedet har flere ruter. Kort oppsummering under (km, fra–til moh, hvor mye som er brattere enn 25 %). Høyder bør hentes fra Kartverket, med GPS-høyde som reserve.
+   - Tid under Start er bevegelsestid fra GPX (uten pauser), rundet til 5 min.
+9. **Bilder**: faste plasser for Start, Landing, Fra luften. Tom plass viser «Mangler bilde. Har du et herfra? Send det inn.»
+10. **Logg og mer**: Flightlog (`https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id=<id>`), Paraglidingearth (`https://www.paraglidingearth.com/?site=<pgearth_id>`, bare når `pgearth_id` er satt, ellers utelatt).
+11. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje), ansvarsfraskrivelse.
+- Desktop: to kolonner. Venstre: tittel, oversikt, start, landing, kart, bilder. Høyre: Før du starter, Fakta, Vær, Logg og mer.
+
+## Design
+- Farger: bakgrunn #F3F5F4, tekst #1C2B33, dempet tekst #45545C, linjer #C3D0CF, fjord #2E5E6E, aksent (hovedretning) #C24A12, mulig #9DBAC2, farer-boks #FBE3DA med tekst #6B1A0B, parkering #2F6FB5.
+- Skrift: Barlow (brødtekst) og Barlow Condensed (overskrifter) fra Google Fonts.
+- Mobil først, lesbart ute i sollys, knapper minst 44 px høye, lys/mørk modus senere.
+- Designreferanse: `referanse/prototype/` (prototype-HTML fra designfasen, ikke kjørbar som den er). `referanse/` ligger bare lokalt og er ikke med i repoet (se `.gitignore`), fordi uttrekket fra den gamle oversikten inneholder originaltekster.
+
+## Senere (fase 2)
+- Høyder fra Kartverket, luftrom fra openAIP som forslag til godkjenning.
+- Automatisk vindvurdering fra MET per sted (forslag, aldri «OK å fly»), maks/min vind per sted.
+- Engelsk versjon, video fra YouTube, 3D-visning med tegnede lag (GeoJSON).

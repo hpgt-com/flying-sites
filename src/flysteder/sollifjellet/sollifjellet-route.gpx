@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="HPGT flysteder" xmlns="http://www.topografix.com/GPX/1/1">
+ <trk>
+  <name>Sollifjellet: parkering til start</name>
+  <trkseg>
+   <trkpt lat="68.802129" lon="16.404942"><ele>174.8</ele></trkpt>
+   <trkpt lat="68.802075" lon="16.404765"><ele>174.8</ele></trkpt>
+   <trkpt lat="68.802128" lon="16.403201"><ele>178.8</ele></trkpt>
+   <trkpt lat="68.802037" lon="16.401148"><ele>189.8</ele></trkpt>
+   <trkpt lat="68.803574" lon="16.390139"><ele>288.6</ele></trkpt>
+   <trkpt lat="68.804174" lon="16.385021"><ele>345.2</ele></trkpt>
+   <trkpt lat="68.804439" lon="16.383698"><ele>362.8</ele></trkpt>
+   <trkpt lat="68.805557" lon="16.375285"><ele>484.0</ele></trkpt>
+   <trkpt lat="68.805531" lon="16.374876"><ele>484.2</ele></trkpt>
+   <trkpt lat="68.805270" lon="16.374115"><ele>484.0</ele></trkpt>
+   <trkpt lat="68.805127" lon="16.373354"><ele>487.2</ele></trkpt>
+   <trkpt lat="68.804830" lon="16.372822"><ele>490.0</ele></trkpt>
+   <trkpt lat="68.804386" lon="16.371466"><ele>500.2</ele></trkpt>
+   <trkpt lat="68.804350" lon="16.370944"><ele>502.0</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>

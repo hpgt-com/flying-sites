@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="HPGT flysteder" xmlns="http://www.topografix.com/GPX/1/1">
+ <trk>
+  <name>Storhornet: parkering til start</name>
+  <trkseg>
+   <trkpt lat="68.842962" lon="16.189886"><ele>226.2</ele></trkpt>
+   <trkpt lat="68.842520" lon="16.190966"><ele>233.2</ele></trkpt>
+   <trkpt lat="68.842221" lon="16.191264"><ele>237.0</ele></trkpt>
+   <trkpt lat="68.842046" lon="16.191696"><ele>240.4</ele></trkpt>
+   <trkpt lat="68.841666" lon="16.191409"><ele>242.8</ele></trkpt>
+   <trkpt lat="68.841111" lon="16.190422"><ele>251.8</ele></trkpt>
+   <trkpt lat="68.840819" lon="16.189642"><ele>259.4</ele></trkpt>
+   <trkpt lat="68.840552" lon="16.189641"><ele>263.4</ele></trkpt>
+   <trkpt lat="68.840306" lon="16.189388"><ele>266.8</ele></trkpt>
+   <trkpt lat="68.839732" lon="16.188116"><ele>275.0</ele></trkpt>
+   <trkpt lat="68.839376" lon="16.188043"><ele>285.0</ele></trkpt>
+   <trkpt lat="68.838582" lon="16.188635"><ele>324.0</ele></trkpt>
+   <trkpt lat="68.838170" lon="16.188332"><ele>345.0</ele></trkpt>
+   <trkpt lat="68.837688" lon="16.188563"><ele>364.4</ele></trkpt>
+   <trkpt lat="68.837273" lon="16.189926"><ele>372.2</ele></trkpt>
+   <trkpt lat="68.836968" lon="16.191313"><ele>378.6</ele></trkpt>
+   <trkpt lat="68.836773" lon="16.191408"><ele>382.8</ele></trkpt>
+   <trkpt lat="68.836170" lon="16.192456"><ele>398.8</ele></trkpt>
+   <trkpt lat="68.835508" lon="16.194685"><ele>425.0</ele></trkpt>
+   <trkpt lat="68.835180" lon="16.195435"><ele>437.0</ele></trkpt>
+   <trkpt lat="68.834857" lon="16.195724"><ele>447.2</ele></trkpt>
+   <trkpt lat="68.834173" lon="16.196918"><ele>470.8</ele></trkpt>
+   <trkpt lat="68.833269" lon="16.197610"><ele>510.0</ele></trkpt>
+   <trkpt lat="68.833174" lon="16.197954"><ele>514.0</ele></trkpt>
+   <trkpt lat="68.832841" lon="16.198251"><ele>532.6</ele></trkpt>
+   <trkpt lat="68.832638" lon="16.199024"><ele>540.2</ele></trkpt>
+   <trkpt lat="68.832466" lon="16.198977"><ele>548.4</ele></trkpt>
+   <trkpt lat="68.832271" lon="16.199318"><ele>562.8</ele></trkpt>
+   <trkpt lat="68.831683" lon="16.199398"><ele>581.2</ele></trkpt>
+   <trkpt lat="68.830452" lon="16.198338"><ele>605.2</ele></trkpt>
+   <trkpt lat="68.829798" lon="16.197595"><ele>611.6</ele></trkpt>
+   <trkpt lat="68.828909" lon="16.196052"><ele>613.6</ele></trkpt>
+   <trkpt lat="68.827995" lon="16.195098"><ele>614.0</ele></trkpt>
+   <trkpt lat="68.826885" lon="16.193410"><ele>616.4</ele></trkpt>
+   <trkpt lat="68.826294" lon="16.193237"><ele>617.2</ele></trkpt>
+   <trkpt lat="68.826204" lon="16.193119"><ele>617.0</ele></trkpt>
+   <trkpt lat="68.826237" lon="16.193027"><ele>616.2</ele></trkpt>
+   <trkpt lat="68.826323" lon="16.193656"><ele>618.0</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>
