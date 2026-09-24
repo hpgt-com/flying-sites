@@ -1,7 +1,7 @@
 ---
 name: Sollifjellet
 id: sollifjellet
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 235
@@ -20,8 +20,8 @@ wind_directions:
   - E
   - SE
   - S
-  possible:
   - NW
+  possible: []
   source: flightlog/lokalkunnskap
 launch:
   lat: 68.80389
@@ -98,7 +98,7 @@ launches:
 - directions:
   - NW
   categories: null
-  text: På baksiden av fjellet, se oversiktsbildet. Hanget her er ikke optimalt.
+  text: På baksiden av fjellet, se oversiktsbildet.
 - directions:
   - W
   - SW
@@ -106,13 +106,13 @@ launches:
   text: Ikke egnet, men mulig i svak vind med krabbevinkel fra toppen eller i bakvind. Går lettere med ski om vinteren.
 images:
   overview: sollifjellet-overview.jpg
-  launch: null
-  landing: null
-  air: null
+  launch: sollifjellet-launch.jpg
+  landing: sollifjellet-landing.jpg
+  air: sollifjellet-air.jpg
   overview_credit: Gammel flystedsoversikt
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-09-24'
 ---
 
 Klubbens mest brukte sted, og det flys året rundt. Heisen tar deg opp når alpinbakken er åpen, ellers går vi. Mye brukt til skliturer.

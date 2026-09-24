@@ -15,9 +15,9 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Faste filnavn med stedets id foran, som bygget håndhever: bilder heter `<id>-overview`, `<id>-launch`, `<id>-landing` og `<id>-air` (`.jpg`, `.png` eller `.webp`), gangruter heter `<id>-route.gpx`, eller `<id>-route-1.gpx`, `<id>-route-2.gpx` osv. når stedet har flere ruter. Filer fra Strava eller kamera må døpes om før de legges inn. Bilder importeres med `npm run images -- <id> <felt> <fil>`, som gir riktig navn, skalerer ned til maks 2560 px og fjerner metadata (EXIF/GPS). Originaler over 2 MB stopper bygget. Siden viser bare versjoner laget ved bygging (WebP/JPEG i flere størrelser), aldri originalene.
 - Front matter følger strukturen i eksisterende filer (se `src/flysteder/elgen/index.md` for et komplett eksempel). Nøklene er på engelsk, verdiene på norsk. `parking` er en liste (steder kan ha flere ruter med hver sin parkering). Hver linje under `launches` kan ha `categories` (PG/SPG).
 - Retninger lagres som standardkoder (N, NE, E, SE, S, SW, W, NW) og vises som norske (N, NØ, Ø, SØ, S, SV, V, NV).
-- `status: utkast` betyr at stedet vises, men merkes «Ikke gjennomgått ennå» til `reviewed.by` og `reviewed.date` er satt.
+- `status: utkast` betyr at stedet vises, men merkes «Ikke gjennomgått ennå». Når stedet er kontrollert, settes `status: gjennomgått` sammen med `reviewed.by` (navn) og `reviewed.date` (`'2026-09-24'`). Bygget feiler hvis status og `reviewed` ikke stemmer overens.
 - Tomme felt (`null`) vises som tydelige plassholdere eller utelates, aldri som gjettede verdier.
-- `MANGLER.csv` viser hva som mangler per sted.
+- Statussiden `/status/` viser hvilke steder som er gjennomgått, hvilke som har egen side, og hva som mangler per sted (nivå, landing, parkering, gangrute, høyder, bilder, luftrom, yr_id, flightlog_id). Den lages automatisk ved hver bygging, lenkes ikke fra menyen og er merket `noindex`. Den erstatter `MANGLER.csv`.
 - `external.pgearth_id` settes manuelt, bare når stedet faktisk finnes på Paraglidingearth. Ingen import derfra: API-et er bare for lesing, bare 5 av 30 steder finnes der, dataene deres avviker fra våre, og innholdet er lisensiert med «del på samme vilkår» (CC BY-SA 3.0 / ODbL). Bidrag til Paraglidingearth gjøres manuelt på nettsiden deres, og bare med innhold klubben har rett til å dele.
 
 ## Forside

@@ -6,6 +6,7 @@
 <title>{% if name %}{{ name }} – {% endif %}{{ site.title }}</title>
 {% if description %}<meta name="description" content="{{ description }}">{% endif %}
 <meta name="theme-color" content="#F3F5F4">
+{% if noindex %}<meta name="robots" content="noindex">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">

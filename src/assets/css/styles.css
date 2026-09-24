@@ -568,3 +568,48 @@ p { margin: 0; }
   .block--title h1 { font-size: 60px; }
   .map--site { height: 440px; }
 }
+
+/* ---------- Statussiden (/status/) ---------- */
+
+.status-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 16px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.status-page__intro { display: flex; flex-direction: column; gap: 6px; }
+.status-page h1 { font-size: 40px; }
+.status-page h2 { font-size: 22px; margin-bottom: 8px; }
+
+.status-summary { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.status-summary > div {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  min-width: 150px;
+}
+.status-summary dt { font-size: 14px; color: var(--muted); }
+.status-summary dd { margin: 0; font-family: var(--font-heading); font-size: 28px; font-weight: 700; }
+
+.status-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+.status-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.status-table th, .status-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--line); }
+.status-table thead th { border-top: none; font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.status-table tbody th { font-weight: 600; white-space: nowrap; }
+.status-table td:nth-child(2), .status-table td:nth-child(3) { white-space: nowrap; }
+.status-table .tag { font-size: 12px; padding: 1px 6px; }
+
+/* Mobil: hver rad blir et kort, så kolonnen «Mangler» får hele bredden. */
+@media (max-width: 639px) {
+  .status-table-wrap { overflow: visible; border: none; background: none; }
+  .status-table thead { display: none; }
+  .status-table, .status-table tbody, .status-table tr, .status-table th, .status-table td { display: block; }
+  .status-table tr { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+  .status-table th, .status-table td { border-top: none; padding: 2px 0; white-space: normal !important; }
+  .status-table tbody th { font-size: 17px; margin-bottom: 4px; }
+  .status-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-size: 13px; }
+  .status-table td[data-label="Mangler"]::before { display: block; margin-top: 4px; }
+}
