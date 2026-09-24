@@ -119,7 +119,7 @@ scripts:
           {% if routes.length > 1 %}
           <div class="pills" role="tablist" aria-label="Velg gangrute">
             {% for r in routes %}
-            <button type="button" class="pill" role="tab" data-route="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ r.name or ("Rute " ~ loop.index) }}</button>
+            <button type="button" class="pill" role="tab" data-route="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ (r.name or ("rute " ~ loop.index)) | capitalizeFirst }}</button>
             {% endfor %}
           </div>
           {% endif %}
@@ -226,7 +226,7 @@ scripts:
               </span>
               {% if a.note %}<span class="muted">{{ a.note }}</span>{% endif %}
               {% endfor %}
-              {% if not airspace.length %}<span class="missing">Ikke registrert ennå. Sjekk <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a>.</span>{% endif %}
+              {% if not mainAirspace.length %}<span class="missing">Ikke registrert ennå. Sjekk <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a>.</span>{% endif %}
               {% endif %}
             </dd>
           </div>

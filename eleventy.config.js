@@ -81,7 +81,7 @@ export default function (eleventyConfig) {
         level: d.level ?? null,
         trainingSite: !!d.training_site,
         text: d.derived?.intro ?? "",
-        url: d.derived?.hasPage && s.url ? url(s.url) : null,
+        url: url(s.url),
         flightlogId: d.external?.flightlog_id ?? null,
         reviewed: !!(d.reviewed?.by && d.reviewed?.date),
       };

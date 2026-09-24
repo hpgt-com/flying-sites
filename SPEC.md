@@ -18,7 +18,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Retninger lagres som standardkoder (N, NE, E, SE, S, SW, W, NW) og vises som norske (N, NØ, Ø, SØ, S, SV, V, NV).
 - `status: utkast` betyr at stedet vises, men merkes «Ikke gjennomgått ennå». Når stedet er kontrollert, settes `status: gjennomgått` sammen med `reviewed.by` (navn) og `reviewed.date` (`'2026-09-24'`). Bygget feiler hvis status og `reviewed` ikke stemmer overens.
 - Tomme felt (`null`) vises som tydelige plassholdere eller utelates, aldri som gjettede verdier.
-- Statussiden `/status/` viser hvilke steder som er gjennomgått, hvilke som har egen side, og hva som mangler per sted (nivå, landing, parkering, gangrute, høyder, bilder, luftrom, yr_id, flightlog_id). Den lages automatisk ved hver bygging, lenkes ikke fra menyen og er merket `noindex`. Den erstatter `MANGLER.csv`.
+- Statussiden `/status/` viser hvilke steder som er gjennomgått, og hva som mangler per sted (nivå, landing, parkering, gangrute, høyder, bilder, luftrom, yr_id, flightlog_id). Den lages automatisk ved hver bygging, lenkes ikke fra menyen og er merket `noindex`. Den erstatter `MANGLER.csv`.
 - `external.pgearth_id` settes manuelt, bare når stedet faktisk finnes på Paraglidingearth. Ingen import derfra: API-et er bare for lesing, bare 5 av 30 steder finnes der, dataene deres avviker fra våre, og innholdet er lisensiert med «del på samme vilkår» (CC BY-SA 3.0 / ODbL). Bidrag til Paraglidingearth gjøres manuelt på nettsiden deres, og bare med innhold klubben har rett til å dele.
 
 ## Forside

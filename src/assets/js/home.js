@@ -66,8 +66,7 @@
       '<div class="directions">' + directionBadges(site) + "</div>" +
       '<div class="tags">' + tags(site) + "</div></div></div>";
     if (site.text) html += '<p class="selected__text">' + e(site.text) + "</p>";
-    if (site.url) html += '<a class="btn btn--primary btn--wide" href="' + e(site.url) + '">Se hele stedet</a>';
-    else html += '<span class="btn btn--muted btn--wide">Egen side kommer</span>';
+    html += '<a class="btn btn--primary btn--wide" href="' + e(site.url) + '">Se hele stedet</a>';
     if (site.flightlogId) {
       html += '<a class="btn btn--wide" href="https://flightlog.org/fl.html?l=1&amp;a=22&amp;country_id=160&amp;start_id=' +
         encodeURIComponent(site.flightlogId) + '" target="_blank" rel="noopener">Se på Flightlog' + FS.EXTERNAL_MARK + "</a>";
