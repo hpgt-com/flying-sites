@@ -7,9 +7,9 @@
   --line: #C3D0CF;
   --fjord: #2E5E6E;
   --accent: #C24A12;
-  --dir-primary: #2E5E6E;
+  --dir-primary: #3D7A8A;
   --dir-primary-text: #FFFFFF;
-  --possible: #6FA3B0;
+  --possible: #8FBCC7;
   --hazard-bg: #FBE3DA;
   --hazard-text: #6B1A0B;
   --parking: #2F6FB5;
@@ -63,7 +63,7 @@
 /* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
 [data-theme="dark"] .leaflet-popup, [data-theme="dark"] .leaflet-tooltip, [data-theme="dark"] .leaflet-control, [data-theme="dark"] .rose-marker {
   --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
-  --dir-primary: #2E5E6E; --dir-primary-text: #FFFFFF; --possible: #6FA3B0; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
+  --dir-primary: #3D7A8A; --dir-primary-text: #FFFFFF; --possible: #8FBCC7; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
   color: var(--text);
 }
 [data-theme="dark"] .map { background: #26343B; }
@@ -118,13 +118,40 @@ p { margin: 0; }
 .back-link { gap: 6px; white-space: nowrap; flex-shrink: 0; text-decoration: none; font-size: 16px !important; font-weight: 500 !important; }
 .topbar__region { font-size: 15px; color: var(--muted); }
 .topbar__end { display: flex; align-items: center; gap: 0 12px; flex-wrap: wrap; justify-content: flex-end; }
-.theme-toggle { display: inline-flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
-.theme-toggle[hidden] { display: none; }
+.theme-toggle { display: flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
 .theme-toggle button {
-  font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
-  border-radius: 999px; padding: 0 10px; min-height: 32px; cursor: pointer;
+  flex: 1; font: inherit; font-size: 15px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
+  border-radius: 999px; padding: 0 12px; min-height: 40px; cursor: pointer;
 }
 .theme-toggle button[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
+
+/* Meny oppe til høyre */
+.site-menu { position: relative; }
+.site-menu__button {
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+  border: 1px solid var(--rose-border); border-radius: 10px; background: var(--card); color: var(--text); cursor: pointer;
+}
+.site-menu__button[hidden] { display: none; }
+.site-menu__button[aria-expanded="true"] { background: var(--inverse-bg); color: var(--inverse-text); border-color: var(--inverse-bg); }
+.site-menu__panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 2000; width: min(300px, calc(100vw - 32px));
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(28, 43, 51, 0.18); padding: 14px; display: grid; gap: 14px;
+}
+.site-menu__panel[hidden] { display: none; }
+.site-menu__label { margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.site-menu__links { display: grid; border-top: 1px solid var(--line); padding-top: 6px; }
+.site-menu__links a { min-height: 44px; display: flex; align-items: center; font-weight: 600; text-decoration: none; }
+.switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  font: inherit; color: var(--text); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; min-height: 44px;
+}
+.switch__text { font-weight: 600; font-size: 15px; }
+.switch__hint { display: block; font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.switch__track { flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--rose-border); position: relative; transition: background 0.15s; }
+.switch__thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
+.switch[aria-checked="true"] .switch__track { background: var(--fjord); }
+.switch[aria-checked="true"] .switch__thumb { transform: translateX(18px); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
@@ -768,11 +795,16 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* ---------- Vindvurdering fra varselet (forsiden) ---------- */
 
 :root {
-  /* Grønn og mørk rød skilles også ved rød-grønn fargeblindhet (ulik lyshet). */
   --wind-ok: #2E8B57;
   --wind-maybe: #D99A1E;
-  --wind-high: #A50F15;
+  --wind-high: #C62828;
   --wind-no: #7F9396;
+}
+/* Fargeblindvennlige farger (valg i menyen): Okabe–Ito, blå i stedet for grønn. */
+:root[data-cvd="on"] {
+  --wind-ok: #0072B2;
+  --wind-maybe: #E69F00;
+  --wind-high: #D55E00;
 }
 .filter__note { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 .rose-marker__ring { position: relative; overflow: visible; }
