@@ -19,7 +19,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4">
 {#- Fargemodus settes før siden tegnes, så den ikke blinker lys først. Valget (auto, light, dark) lagres
-    i nettleseren av fargeknappen (common.js). Auto følger innstillingen på enheten. -#}
+    i nettleseren av menyen (common.js). Auto følger innstillingen på enheten. Det samme gjelder
+    fargeblindvennlige farger (data-cvd). -#}
 <script>
 (function () {
   var d = document.documentElement, choice = "auto";
@@ -27,6 +28,7 @@
   var dark = choice === "dark" || (choice === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
   d.setAttribute("data-theme", dark ? "dark" : "light");
   d.setAttribute("data-theme-choice", choice);
+  try { if (localStorage.getItem("cvd") === "on") d.setAttribute("data-cvd", "on"); } catch (e) {}
 })();
 </script>
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}

@@ -112,9 +112,10 @@
     var arrow = assessment ? '<span class="wind-arrow" style="transform: rotate(' + assessment.wind.dir + 'deg)"></span>' : "";
     return L.divIcon({
       className: "rose-marker" + (ok ? "" : " rose-marker--dimmed") + (selected ? " rose-marker--selected" : ""),
-      html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 24, false) + arrow + "</span>",
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 32, false) + arrow + "</span>" +
+        '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + "</span>",
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
     });
   }
 
@@ -154,6 +155,11 @@
     markers[site.id] = marker;
     bounds.push([site.lat, site.lon]);
   });
+  // Stedsnavn under rosene når man har zoomet nært inn.
+  var NAMES_ZOOM = 11;
+  function toggleNames() { mapEl.classList.toggle("map--names", map.getZoom() >= NAMES_ZOOM); }
+  map.on("zoomend", toggleNames);
+
   FS.fitWhenVisible(map, mapEl, function () {
     if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
   });

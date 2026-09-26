@@ -204,7 +204,6 @@
   }
 
   document.querySelectorAll(".theme-toggle").forEach(function (group) {
-    group.hidden = false;
     group.addEventListener("click", function (ev) {
       var button = ev.target.closest("button[data-theme-choice]");
       if (!button) return;
@@ -224,6 +223,45 @@
     else if (darkQuery.addListener) darkQuery.addListener(onSystemChange);
   }
   applyTheme(document.documentElement.getAttribute("data-theme-choice") || "auto");
+
+  // --- Fargeblindvennlige farger ---
+  // Bytter vindvurderingen til blå / gul / oransjerød / grå (Okabe–Ito). Lagres som «cvd» i nettleseren.
+  function applyCvd(on) {
+    var root = document.documentElement;
+    if (on) root.setAttribute("data-cvd", "on");
+    else root.removeAttribute("data-cvd");
+    document.querySelectorAll("[data-cvd-toggle]").forEach(function (b) { b.setAttribute("aria-checked", String(on)); });
+  }
+  document.querySelectorAll("[data-cvd-toggle]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var on = document.documentElement.getAttribute("data-cvd") !== "on";
+      try {
+        if (on) localStorage.setItem("cvd", "on");
+        else localStorage.removeItem("cvd");
+      } catch (e) {
+        // blokkert lagring: valget gjelder bare denne siden
+      }
+      applyCvd(on);
+    });
+  });
+  applyCvd(document.documentElement.getAttribute("data-cvd") === "on");
+
+  // --- Meny ---
+  // Åpnes med knappen, lukkes med knappen, Escape eller klikk utenfor.
+  document.querySelectorAll(".site-menu").forEach(function (menu) {
+    var button = menu.querySelector(".site-menu__button");
+    var panel = menu.querySelector(".site-menu__panel");
+    button.hidden = false;
+    function setOpen(open) {
+      panel.hidden = !open;
+      button.setAttribute("aria-expanded", String(open));
+    }
+    button.addEventListener("click", function () { setOpen(panel.hidden); });
+    document.addEventListener("click", function (ev) { if (!panel.hidden && !menu.contains(ev.target)) setOpen(false); });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && !panel.hidden) { setOpen(false); button.focus(); }
+    });
+  });
 
   window.FlyingSites = {
     isDark: isDark,

@@ -7,7 +7,9 @@
   --line: #C3D0CF;
   --fjord: #2E5E6E;
   --accent: #C24A12;
-  --possible: #9DBAC2;
+  --dir-primary: #3D7A8A;
+  --dir-primary-text: #FFFFFF;
+  --possible: #8FBCC7;
   --hazard-bg: #FBE3DA;
   --hazard-text: #6B1A0B;
   --parking: #2F6FB5;
@@ -39,7 +41,9 @@
   --line: #34444B;
   --fjord: #3C7486;
   --accent: #D65A1E;
-  --possible: #6F8F99;
+  --dir-primary: #5B9BAB;
+  --dir-primary-text: #11191D;
+  --possible: #3F7482;
   --hazard-bg: #3A1E16;
   --hazard-text: #F6C9B8;
   --parking: #4A86CC;
@@ -59,7 +63,7 @@
 /* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
 [data-theme="dark"] .leaflet-popup, [data-theme="dark"] .leaflet-tooltip, [data-theme="dark"] .leaflet-control, [data-theme="dark"] .rose-marker {
   --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
-  --possible: #9DBAC2; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
+  --dir-primary: #3D7A8A; --dir-primary-text: #FFFFFF; --possible: #8FBCC7; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
   color: var(--text);
 }
 [data-theme="dark"] .map { background: #26343B; }
@@ -114,13 +118,40 @@ p { margin: 0; }
 .back-link { gap: 6px; white-space: nowrap; flex-shrink: 0; text-decoration: none; font-size: 16px !important; font-weight: 500 !important; }
 .topbar__region { font-size: 15px; color: var(--muted); }
 .topbar__end { display: flex; align-items: center; gap: 0 12px; flex-wrap: wrap; justify-content: flex-end; }
-.theme-toggle { display: inline-flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
-.theme-toggle[hidden] { display: none; }
+.theme-toggle { display: flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
 .theme-toggle button {
-  font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
-  border-radius: 999px; padding: 0 10px; min-height: 32px; cursor: pointer;
+  flex: 1; font: inherit; font-size: 15px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
+  border-radius: 999px; padding: 0 12px; min-height: 40px; cursor: pointer;
 }
 .theme-toggle button[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
+
+/* Meny oppe til høyre */
+.site-menu { position: relative; }
+.site-menu__button {
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+  border: 1px solid var(--rose-border); border-radius: 10px; background: var(--card); color: var(--text); cursor: pointer;
+}
+.site-menu__button[hidden] { display: none; }
+.site-menu__button[aria-expanded="true"] { background: var(--inverse-bg); color: var(--inverse-text); border-color: var(--inverse-bg); }
+.site-menu__panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 2000; width: min(300px, calc(100vw - 32px));
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(28, 43, 51, 0.18); padding: 14px; display: grid; gap: 14px;
+}
+.site-menu__panel[hidden] { display: none; }
+.site-menu__label { margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.site-menu__links { display: grid; border-top: 1px solid var(--line); padding-top: 6px; }
+.site-menu__links a { min-height: 44px; display: flex; align-items: center; font-weight: 600; text-decoration: none; }
+.switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  font: inherit; color: var(--text); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; min-height: 44px;
+}
+.switch__text { font-weight: 600; font-size: 15px; }
+.switch__hint { display: block; font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.switch__track { flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--rose-border); position: relative; transition: background 0.15s; }
+.switch__thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
+.switch[aria-checked="true"] .switch__track { background: var(--fjord); }
+.switch[aria-checked="true"] .switch__thumb { transform: translateX(18px); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
@@ -147,14 +178,14 @@ p { margin: 0; }
   padding: 3px 7px;
   border-radius: 6px;
 }
-.direction--primary { background: var(--accent); color: var(--on-color); }
+.direction--primary { background: var(--dir-primary); color: var(--dir-primary-text); }
 .direction--possible { background: var(--possible); color: var(--text); }
 .direction--none { background: var(--card); color: var(--text); border: 1px solid var(--rose-border); padding: 2px 6px; }
 .direction--active { outline: 2px solid var(--text); outline-offset: 1px; }
 
 .rose { display: block; flex-shrink: 0; overflow: visible; }
 .rose .sector { stroke: var(--rose-border); stroke-width: 1; }
-.rose .sector--primary { fill: var(--accent); }
+.rose .sector--primary { fill: var(--dir-primary); }
 .rose .sector--possible { fill: var(--possible); }
 .rose .sector--none { fill: var(--rose-none); }
 .rose__center { fill: var(--text); }
@@ -172,7 +203,7 @@ p { margin: 0; }
 }
 .legend li { display: flex; align-items: center; gap: 8px; }
 .swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
-.swatch--primary { background: var(--accent); }
+.swatch--primary { background: var(--dir-primary); }
 .swatch--possible { background: var(--possible); }
 .swatch--none { background: var(--rose-none); border: 1px solid var(--rose-border); }
 
@@ -284,19 +315,25 @@ p { margin: 0; }
 /* Vindroser i kartet */
 .rose-marker { background: none; border: none; }
 .rose-marker__ring {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: var(--white);
-  border: 2px solid var(--white);
+  border: 2px solid var(--text);
   box-shadow: 0 1px 4px rgba(28, 43, 51, 0.45);
   cursor: pointer;
   transition: opacity 0.15s, transform 0.15s;
 }
-.rose-marker .rose .sector { stroke-width: 3; }
+/* I kartet skilles sektorene med hvitt i stedet for grått, så fargene blir tydelige i liten størrelse. */
+.rose-marker .rose .sector { stroke: var(--white); stroke-width: 4; }
+/* Navn under rosen når man har zoomet nært inn (klassen settes av home.js). */
+.rose-marker__name { display: none; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; white-space: nowrap; pointer-events: none;
+  font: 700 14px/1 var(--font-heading); color: #1C2B33; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+.map--names .rose-marker__name { display: block; }
+[data-theme="dark"] .rose-marker__name { color: #F3F5F4; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
 .rose-marker--dimmed { opacity: 0.25; }
 /* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
 .site-cluster__ring { width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
@@ -760,8 +797,14 @@ body:has(.lightbox[open]) { overflow: hidden; }
 :root {
   --wind-ok: #2E8B57;
   --wind-maybe: #D99A1E;
-  --wind-high: #C0392B;
-  --wind-no: #9FB1B4;
+  --wind-high: #C62828;
+  --wind-no: #7F9396;
+}
+/* Fargeblindvennlige farger (valg i menyen): Okabe–Ito, blå i stedet for grønn. */
+:root[data-cvd="on"] {
+  --wind-ok: #0072B2;
+  --wind-maybe: #E69F00;
+  --wind-high: #D55E00;
 }
 .filter__note { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 .rose-marker__ring { position: relative; overflow: visible; }
@@ -769,10 +812,16 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .rose-marker__ring--maybe { border: 3px solid var(--wind-maybe); }
 .rose-marker__ring--high { border: 3px solid var(--wind-high); }
 .rose-marker__ring--no { border: 3px solid var(--wind-no); }
+/* Tynn mørk kant utenpå vindringen, så også gul og grå skiller seg fra kartet (minst 3:1). */
+.rose-marker__ring--ok, .rose-marker__ring--maybe, .rose-marker__ring--high, .rose-marker__ring--no {
+  box-shadow: 0 0 0 1px rgba(28, 43, 51, 0.85), 0 1px 4px rgba(28, 43, 51, 0.45);
+}
+/* Ikke bare farge: steder som ikke passer eller har for mye vind, vises litt mindre. */
+.rose-marker__ring--high, .rose-marker__ring--no { transform: scale(0.85); }
 /* Pilen starter i midten og peker dit vinden blåser. 0 grader er nord. */
 .wind-arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; }
-.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 24px; width: 3px; height: 13px; background: var(--map-ink); border-radius: 2px; }
-.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 17px; border: 5px solid transparent; border-top: 8px solid var(--map-ink); border-bottom: 0; }
+.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 27px; width: 3px; height: 13px; background: var(--map-ink); border-radius: 2px; }
+.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 20px; border: 5px solid transparent; border-top: 8px solid var(--map-ink); border-bottom: 0; }
 .wind-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; vertical-align: -1px; }
 .wind-dot--ok { background: var(--wind-ok); }
 .wind-dot--maybe { background: var(--wind-maybe); }
