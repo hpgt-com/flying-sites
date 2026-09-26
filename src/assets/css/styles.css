@@ -7,7 +7,7 @@
   --line: #C3D0CF;
   --fjord: #2E5E6E;
   --accent: #C24A12;
-  --possible: #9DBAC2;
+  --possible: #F2B48F;
   --hazard-bg: #FBE3DA;
   --hazard-text: #6B1A0B;
   --parking: #2F6FB5;
@@ -39,7 +39,7 @@
   --line: #34444B;
   --fjord: #3C7486;
   --accent: #D65A1E;
-  --possible: #6F8F99;
+  --possible: #8C4A2B;
   --hazard-bg: #3A1E16;
   --hazard-text: #F6C9B8;
   --parking: #4A86CC;
@@ -59,7 +59,7 @@
 /* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
 [data-theme="dark"] .leaflet-popup, [data-theme="dark"] .leaflet-tooltip, [data-theme="dark"] .leaflet-control, [data-theme="dark"] .rose-marker {
   --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
-  --possible: #9DBAC2; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
+  --possible: #F2B48F; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
   color: var(--text);
 }
 [data-theme="dark"] .map { background: #26343B; }
@@ -284,19 +284,25 @@ p { margin: 0; }
 /* Vindroser i kartet */
 .rose-marker { background: none; border: none; }
 .rose-marker__ring {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: var(--white);
-  border: 2px solid var(--white);
+  border: 2px solid var(--text);
   box-shadow: 0 1px 4px rgba(28, 43, 51, 0.45);
   cursor: pointer;
   transition: opacity 0.15s, transform 0.15s;
 }
-.rose-marker .rose .sector { stroke-width: 3; }
+/* I kartet skilles sektorene med hvitt i stedet for grått, så fargene blir tydelige i liten størrelse. */
+.rose-marker .rose .sector { stroke: var(--white); stroke-width: 4; }
+/* Navn under rosen når man har zoomet nært inn (klassen settes av home.js). */
+.rose-marker__name { display: none; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; white-space: nowrap; pointer-events: none;
+  font: 700 14px/1 var(--font-heading); color: #1C2B33; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+.map--names .rose-marker__name { display: block; }
+[data-theme="dark"] .rose-marker__name { color: #F3F5F4; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
 .rose-marker--dimmed { opacity: 0.25; }
 /* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
 .site-cluster__ring { width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
@@ -771,8 +777,8 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .rose-marker__ring--no { border: 3px solid var(--wind-no); }
 /* Pilen starter i midten og peker dit vinden blåser. 0 grader er nord. */
 .wind-arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; }
-.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 24px; width: 3px; height: 13px; background: var(--map-ink); border-radius: 2px; }
-.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 17px; border: 5px solid transparent; border-top: 8px solid var(--map-ink); border-bottom: 0; }
+.wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 27px; width: 3px; height: 13px; background: var(--map-ink); border-radius: 2px; }
+.wind-arrow::after { content: ""; position: absolute; left: -5px; bottom: 20px; border: 5px solid transparent; border-top: 8px solid var(--map-ink); border-bottom: 0; }
 .wind-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; vertical-align: -1px; }
 .wind-dot--ok { background: var(--wind-ok); }
 .wind-dot--maybe { background: var(--wind-maybe); }
