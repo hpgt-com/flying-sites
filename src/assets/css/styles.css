@@ -7,7 +7,9 @@
   --line: #C3D0CF;
   --fjord: #2E5E6E;
   --accent: #C24A12;
-  --possible: #F2B48F;
+  --dir-primary: #2E5E6E;
+  --dir-primary-text: #FFFFFF;
+  --possible: #6FA3B0;
   --hazard-bg: #FBE3DA;
   --hazard-text: #6B1A0B;
   --parking: #2F6FB5;
@@ -39,7 +41,9 @@
   --line: #34444B;
   --fjord: #3C7486;
   --accent: #D65A1E;
-  --possible: #8C4A2B;
+  --dir-primary: #5B9BAB;
+  --dir-primary-text: #11191D;
+  --possible: #3F7482;
   --hazard-bg: #3A1E16;
   --hazard-text: #F6C9B8;
   --parking: #4A86CC;
@@ -59,7 +63,7 @@
 /* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
 [data-theme="dark"] .leaflet-popup, [data-theme="dark"] .leaflet-tooltip, [data-theme="dark"] .leaflet-control, [data-theme="dark"] .rose-marker {
   --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
-  --possible: #F2B48F; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
+  --dir-primary: #2E5E6E; --dir-primary-text: #FFFFFF; --possible: #6FA3B0; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
   color: var(--text);
 }
 [data-theme="dark"] .map { background: #26343B; }
@@ -147,14 +151,14 @@ p { margin: 0; }
   padding: 3px 7px;
   border-radius: 6px;
 }
-.direction--primary { background: var(--accent); color: var(--on-color); }
+.direction--primary { background: var(--dir-primary); color: var(--dir-primary-text); }
 .direction--possible { background: var(--possible); color: var(--text); }
 .direction--none { background: var(--card); color: var(--text); border: 1px solid var(--rose-border); padding: 2px 6px; }
 .direction--active { outline: 2px solid var(--text); outline-offset: 1px; }
 
 .rose { display: block; flex-shrink: 0; overflow: visible; }
 .rose .sector { stroke: var(--rose-border); stroke-width: 1; }
-.rose .sector--primary { fill: var(--accent); }
+.rose .sector--primary { fill: var(--dir-primary); }
 .rose .sector--possible { fill: var(--possible); }
 .rose .sector--none { fill: var(--rose-none); }
 .rose__center { fill: var(--text); }
@@ -172,7 +176,7 @@ p { margin: 0; }
 }
 .legend li { display: flex; align-items: center; gap: 8px; }
 .swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
-.swatch--primary { background: var(--accent); }
+.swatch--primary { background: var(--dir-primary); }
 .swatch--possible { background: var(--possible); }
 .swatch--none { background: var(--rose-none); border: 1px solid var(--rose-border); }
 
@@ -764,10 +768,11 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* ---------- Vindvurdering fra varselet (forsiden) ---------- */
 
 :root {
+  /* Grønn og mørk rød skilles også ved rød-grønn fargeblindhet (ulik lyshet). */
   --wind-ok: #2E8B57;
   --wind-maybe: #D99A1E;
-  --wind-high: #C0392B;
-  --wind-no: #9FB1B4;
+  --wind-high: #A50F15;
+  --wind-no: #7F9396;
 }
 .filter__note { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 .rose-marker__ring { position: relative; overflow: visible; }
@@ -775,6 +780,12 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .rose-marker__ring--maybe { border: 3px solid var(--wind-maybe); }
 .rose-marker__ring--high { border: 3px solid var(--wind-high); }
 .rose-marker__ring--no { border: 3px solid var(--wind-no); }
+/* Tynn mørk kant utenpå vindringen, så også gul og grå skiller seg fra kartet (minst 3:1). */
+.rose-marker__ring--ok, .rose-marker__ring--maybe, .rose-marker__ring--high, .rose-marker__ring--no {
+  box-shadow: 0 0 0 1px rgba(28, 43, 51, 0.85), 0 1px 4px rgba(28, 43, 51, 0.45);
+}
+/* Ikke bare farge: steder som ikke passer eller har for mye vind, vises litt mindre. */
+.rose-marker__ring--high, .rose-marker__ring--no { transform: scale(0.85); }
 /* Pilen starter i midten og peker dit vinden blåser. 0 grader er nord. */
 .wind-arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; }
 .wind-arrow::before { content: ""; position: absolute; left: -1.5px; bottom: 27px; width: 3px; height: 13px; background: var(--map-ink); border-radius: 2px; }
