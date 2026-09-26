@@ -298,6 +298,10 @@ p { margin: 0; }
 }
 .rose-marker .rose .sector { stroke-width: 3; }
 .rose-marker--dimmed { opacity: 0.25; }
+/* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
+.site-cluster__ring { width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
+.leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
+.leaflet-cluster-spider-leg { transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in; }
 .rose-marker--selected .rose-marker__ring {
   transform: scale(1.25);
   border-color: var(--text);

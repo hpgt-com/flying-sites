@@ -106,22 +106,51 @@
   var bounds = [];
 
   // Pilen står på siden vinden kommer fra og peker inn mot starten, som vinden som blåser inn i rosen.
-  function markerIcon(site, assessment) {
+  // Nedtoning og valgt sted ligger i className, så det overlever når markøren tas ut av og inn i en klynge.
+  function markerIcon(site, assessment, ok, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
     var arrow = assessment ? '<span class="wind-arrow" style="transform: rotate(' + assessment.wind.dir + 'deg)"></span>' : "";
     return L.divIcon({
-      className: "rose-marker",
+      className: "rose-marker" + (ok ? "" : " rose-marker--dimmed") + (selected ? " rose-marker--selected" : ""),
       html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 24, false) + arrow + "</span>",
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
   }
 
+  // Starter som ligger oppå hverandre på kartet slås sammen til en klynge med antall.
+  // Antallet teller bare steder som passer filteret. Med vind på får ringen fargen til den beste vurderingen i klyngen.
+  var markerState = {}; // id: { ok, rating, selected }, oppdateres i update()
+  function clusterIcon(cluster) {
+    var children = cluster.getAllChildMarkers();
+    var matching = 0, best = null, selected = false;
+    children.forEach(function (m) {
+      var st = markerState[m.options.siteId] || { ok: true };
+      if (st.selected) selected = true;
+      if (!st.ok) return;
+      matching++;
+      if (st.rating && (!best || RATINGS[st.rating].order < RATINGS[best].order)) best = st.rating;
+    });
+    var ring = best ? " rose-marker__ring--" + best : "";
+    return L.divIcon({
+      className: "rose-marker site-cluster" + (matching ? "" : " rose-marker--dimmed") + (selected ? " rose-marker--selected" : ""),
+      html: '<span class="rose-marker__ring site-cluster__ring' + ring + '">' + (matching || children.length) + "</span>",
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+  }
+  var cluster = L.markerClusterGroup({
+    maxClusterRadius: 32,
+    showCoverageOnHover: false,
+    spiderfyDistanceMultiplier: 1.6,
+    iconCreateFunction: clusterIcon,
+  }).addTo(map);
+
   sites.forEach(function (site) {
-    var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null), title: site.name, alt: site.name, keyboard: true, riseOnHover: true });
+    var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, true, false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
     marker.bindTooltip(site.name, { direction: "top", offset: [0, -14] });
     marker.on("click", function () { select(site.id, "map"); });
-    marker.addTo(map);
+    cluster.addLayer(marker);
     markers[site.id] = marker;
     bounds.push([site.lat, site.lon]);
   });
@@ -160,7 +189,8 @@
     update();
     writeHash();
     if (origin === "list") {
-      map.panTo([site.lat, site.lon]);
+      // Ligger stedet i en klynge, zoomes det inn til markøren vises.
+      cluster.zoomToShowLayer(markers[id], function () { map.panTo([site.lat, site.lon]); });
       if (window.matchMedia("(max-width: 1099px)").matches) cardEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
@@ -181,12 +211,8 @@
       var assessment = assessments && assessments[site.id];
       var marker = markers[site.id];
       if (marker) {
-        marker.setIcon(markerIcon(site, assessment));
-        var el = marker.getElement();
-        if (el) {
-          el.classList.toggle("rose-marker--dimmed", !ok);
-          el.classList.toggle("rose-marker--selected", site.id === selectedId);
-        }
+        marker.setIcon(markerIcon(site, assessment, ok, site.id === selectedId));
+        markerState[site.id] = { ok: ok, rating: assessment ? assessment.rating : null, selected: site.id === selectedId };
         var order = assessment ? 3 - RATINGS[assessment.rating].order : 0;
         marker.setZIndexOffset(site.id === selectedId ? 1000 : (ok ? 500 : 0) + order * 10);
       }
@@ -209,6 +235,8 @@
       }
       if (site.id === selectedId) showCard(site, assessment);
     });
+
+    cluster.refreshClusters();
 
     // Med vind på sorteres listen etter vurdering, ellers alfabetisk som fra bygget.
     var items = originalOrder.slice();
