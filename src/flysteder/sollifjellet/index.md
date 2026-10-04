@@ -113,7 +113,14 @@ launches:
   lat: 68.80612
   lon: 16.37473
   source: lokalkunnskap
-  text: På baksiden av fjellet, se oversiktsbildet.
+  text: I alpinanlegget, på veien som fører ned mot NØ-starten.
+- directions:
+  - NW
+  categories: null
+  lat: 68.80576
+  lon: 16.36962
+  source: lokalkunnskap
+  text: Lenger opp på ryggen, på baksiden av fjellet. Se oversiktsbildet.
 - directions:
   - W
   - SW
