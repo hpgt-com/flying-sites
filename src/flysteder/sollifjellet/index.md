@@ -89,16 +89,38 @@ launches:
   - SE
   - E
   categories: null
-  text: Som regel fra toppen av Sollifjellet, eventuelt toppen av alpinsenteret.
+  text: Som regel fra toppen av Sollifjellet.
+- directions:
+  - S
+  - SE
+  - E
+  categories: null
+  lat: 68.80604
+  lon: 16.37694
+  source: lokalkunnskap
+  text: Eventuelt fra toppen av alpinsenteret, ved masta og bua. Se trakteffekten under Før du starter.
 - directions:
   - N
   - NE
   categories: null
+  lat: 68.80693
+  lon: 16.37627
+  source: lokalkunnskap
   text: Fra høyresiden i alpinbakken. Ikke legg ut vingen i skitraseen.
 - directions:
   - NW
   categories: null
-  text: På baksiden av fjellet, se oversiktsbildet.
+  lat: 68.80612
+  lon: 16.37473
+  source: lokalkunnskap
+  text: I alpinanlegget, på veien som fører ned mot NØ-starten.
+- directions:
+  - NW
+  categories: null
+  lat: 68.80576
+  lon: 16.36962
+  source: lokalkunnskap
+  text: Lenger opp på ryggen, på baksiden av fjellet. Se oversiktsbildet.
 - directions:
   - W
   - SW

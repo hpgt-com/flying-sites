@@ -39,19 +39,81 @@
     bounds.push([p.lat, p.lon]);
   });
 
+  // Landing som målskive, alternativ landing i grått. Utseendet ligger i styles.css (.map-symbol).
   (data.landings || []).forEach(function (landing) {
     var isAlternative = landing.primary === false;
     var name = landing.name || (isAlternative ? "Alternativ landing" : "Landing");
-    L.marker([landing.lat, landing.lon], { icon: squareIcon(isAlternative ? "map-icon--alt-landing" : "map-icon--landing"), title: name, alt: name })
-      .bindTooltip(name, { direction: "top", offset: [0, -10] })
+    var icon = L.divIcon({ className: "map-symbol map-symbol--landing" + (isAlternative ? " map-symbol--alt" : ""), iconSize: [26, 26], iconAnchor: [13, 13] });
+    L.marker([landing.lat, landing.lon], { icon: icon, title: name, alt: name })
+      .bindTooltip(name, { direction: "top", offset: [0, -12] })
       .addTo(map);
     bounds.push([landing.lat, landing.lon]);
   });
 
-  L.circleMarker([data.launch.lat, data.launch.lon], { radius: 10, color: "#FFFFFF", weight: 3, fillColor: ACCENT, fillOpacity: 1 })
-    .bindTooltip("Start", { direction: "top", offset: [0, -10] })
-    .addTo(map);
-  bounds.push([data.launch.lat, data.launch.lon]);
+  // --- Starter som vindroser ---
+  // Starter med egen posisjon (launches[].lat/lon) får hver sin rose med sine retninger. Hovedstarten
+  // (launch) viser retningene til startene uten egen posisjon, eller alle retningene når ingen har det.
+  // Har alle startene egen posisjon, tegnes ikke hovedstarten.
+  // Starter som ligger så tett at rosene ville overlappet, slås sammen til én rose med alle retningene
+  // og antallet starter. Zoomer man inn, eller trykker på den, deles de opp.
+  var windDirections = data.wind_directions || { primary: [], possible: [] };
+  function roseFor(directions) {
+    return {
+      primary: (windDirections.primary || []).filter(function (d) { return directions.indexOf(d) !== -1; }),
+      possible: (windDirections.possible || []).filter(function (d) { return directions.indexOf(d) !== -1; }),
+    };
+  }
+  function directionList(directions) {
+    return FS.DIRECTIONS.filter(function (d) { return directions.indexOf(d) !== -1; })
+      .map(function (d) { return FS.DIRECTION_LABELS[d]; }).join(", ");
+  }
+  function launchIcon(directions, count) {
+    return L.divIcon({
+      className: "map-symbol map-symbol--launch",
+      html: FS.roseSvg(roseFor(directions), 30, false) + (count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : ""),
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+    });
+  }
+  var launchLayer = L.markerClusterGroup({
+    maxClusterRadius: 40,
+    showCoverageOnHover: false,
+    spiderfyDistanceMultiplier: 1.8,
+    iconCreateFunction: function (cluster) {
+      var directions = [];
+      cluster.getAllChildMarkers().forEach(function (m) {
+        m.options.directions.forEach(function (d) { if (directions.indexOf(d) === -1) directions.push(d); });
+      });
+      return launchIcon(directions, cluster.getChildCount());
+    },
+  }).addTo(map);
+  // Bare retninger stedet passer for (hovedretning eller mulig). Linjer som «ikke egnet, men mulig i
+  // svak vind» skal ikke gi farge eller stå i merkelappen.
+  function usable(directions) {
+    var rose = roseFor(directions);
+    return rose.primary.concat(rose.possible);
+  }
+  function addLaunch(lat, lon, directions, labelled) {
+    directions = usable(directions);
+    if (!directions.length) return;
+    var label = "Start" + (labelled ? " " + directionList(directions) : "");
+    L.marker([lat, lon], { icon: launchIcon(directions, 1), title: label, alt: label, zIndexOffset: 1000, directions: directions })
+      .bindTooltip(label, { direction: "top", offset: [0, -18] })
+      .addTo(launchLayer);
+    bounds.push([lat, lon]);
+  }
+  var launches = data.launches || [];
+  var placed = launches.filter(function (l) { return l.lat != null && l.lon != null; });
+  if (!placed.length) {
+    addLaunch(data.launch.lat, data.launch.lon, (windDirections.primary || []).concat(windDirections.possible || []), false);
+  } else {
+    var rest = [];
+    launches.forEach(function (l) {
+      if (l.lat == null) (l.directions || []).forEach(function (d) { if (rest.indexOf(d) === -1) rest.push(d); });
+    });
+    addLaunch(data.launch.lat, data.launch.lon, rest, true);
+    placed.forEach(function (l) { addLaunch(l.lat, l.lon, l.directions || [], true); });
+  }
 
   FS.fitWhenVisible(map, mapEl, function () {
     if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 });

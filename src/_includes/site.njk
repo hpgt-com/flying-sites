@@ -2,6 +2,7 @@
 layout: base.njk
 bodyClass: page-site
 scripts:
+  - /assets/leaflet-markercluster/leaflet.markercluster.js
   - /assets/js/site.js
   - /assets/js/lightbox.js
 ---
@@ -97,9 +98,9 @@ scripts:
         <h2 id="h-map">Kart</h2>
         <div id="site-map" class="map map--site" role="region" aria-label="Kart over {{ name }} med start, landing, parkering og gangrute"></div>
         <ul class="map-legend" aria-label="Tegnforklaring for kartet">
-          <li><span class="symbol symbol--launch"></span>Start</li>
-          {% if landings.length %}<li><span class="symbol symbol--landing"></span>Landing</li>{% endif %}
-          {% if landings | rejectattr("primary") | list | length %}<li><span class="symbol symbol--alt-landing"></span>Alternativ landing</li>{% endif %}
+          <li><span class="map-symbol map-symbol--launch">{{ m.rose(wind_directions, 16, false) }}</span>Start, med retningene den passer for</li>
+          {% if landings.length %}<li><span class="map-symbol map-symbol--landing"></span>Landing</li>{% endif %}
+          {% if landings | rejectattr("primary") | list | length %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}
           {% if parking.length %}<li><span class="symbol symbol--parking">P</span>Parkering</li>{% endif %}
           {% if routes.length %}<li><span class="symbol symbol--route"></span>Gangrute</li>{% endif %}
         </ul>
@@ -294,6 +295,8 @@ scripts:
 <script type="application/json" id="site-data">{{ {
   name: name,
   launch: launch,
+  launches: launches,
+  wind_directions: wind_directions,
   landings: landings,
   parking: parking,
   routes: derived.routes
