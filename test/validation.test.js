@@ -23,19 +23,6 @@ test("start med egen posisjon nær hovedstarten er gyldig", () => {
   assert.deepEqual(errorsFor([{ directions: ["E"], lat: 68.855, lon: 16.265, source: "gps" }]), []);
 });
 
-test("start nesten på samme sted som hovedstarten stopper bygget", () => {
-  assert.match(errorsFor([{ directions: ["E"], lat: 68.8502, lon: 16.2502 }])[0], /bare \d+ m fra launch/);
-});
-
-test("to starter med egen posisjon nesten på samme sted stopper bygget", () => {
-  const errors = errorsFor([
-    { directions: ["N"], lat: 68.855, lon: 16.265 },
-    { directions: ["NW"], lat: 68.8551, lon: 16.2651 },
-  ]);
-  assert.equal(errors.length, 1);
-  assert.match(errors[0], /launches\[1\] ligger bare \d+ m fra launches\[0\]/);
-});
-
 test("bare lat eller bare lon stopper bygget", () => {
   assert.match(errorsFor([{ directions: ["E"], lat: 68.855 }])[0], /både lat og lon/);
 });
