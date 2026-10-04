@@ -18,6 +18,9 @@ wind_directions:
   - SE
   possible: []
   source: flightlog/lokalkunnskap
+wind_limits:
+  max_wind: 5
+  source: lokalkunnskap
 launch:
   lat: 68.73083
   lon: 16.46444

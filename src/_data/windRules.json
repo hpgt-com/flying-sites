@@ -1,4 +1,8 @@
 {
   "maxWind": 7,
-  "maxGustSpread": 4
+  "maxGust": 10,
+  "maxGustSpread": 4,
+  "minWind": 2,
+  "sectorMargin": 10,
+  "maxForecastAgeHours": 3
 }

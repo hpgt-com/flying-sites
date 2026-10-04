@@ -187,6 +187,12 @@ scripts:
             <dt>Kategori</dt>
             <dd class="tags">{% for c in categories %}{{ m.tag(c) }}{% else %}{{ m.tag("Ikke satt", "missing") }}{% endfor %}</dd>
           </div>
+          {% if wind_limits and wind_limits.max_wind %}
+          <div>
+            <dt>Maks vind</dt>
+            <dd>{{ wind_limits.max_wind }} m/s <span class="muted">(brukes i vindvurderingen på forsiden)</span></dd>
+          </div>
+          {% endif %}
           <div>
             <dt>Høyde</dt>
             <dd class="elevations">

@@ -19,7 +19,7 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 |---|---|
 | `src/flysteder/<id>/index.md` | Ett flysted: strukturerte data øverst (front matter), tekst under |
 | `src/flysteder/<id>/` | Bilder (`<id>-overview.jpg`, `-launch`, `-landing`, `-air`) og gangruter (`<id>-route.gpx`) |
-| `src/_data/` | Tårn (`towers.json`), vindgrenser (`windRules.json`), vindvarsel (`forecast.js`) og mellomlagret luftrom |
+| `src/_data/` | Tårn (`towers.json`), felles vindgrenser (`windRules.json`), vindvarsel (`forecast.js`) og mellomlagret luftrom |
 | `src/_includes/` | Sidemaler for forsiden og stedssidene |
 | `src/assets/` | CSS, JavaScript og bilder |
 | `lib/`, `scripts/` | Validering, GPX, bilder, luftrom og vedlikeholdsskript |
@@ -43,6 +43,7 @@ Andre kommandoer:
 | Kommando | Hva |
 |---|---|
 | `npm run build` | Bygger siden til `_site/` |
+| `npm test` | Tester vindvurderingen |
 | `npm run images` | Sjekker alle bilder (størrelse, GPS-data) og krymper dem ved behov |
 | `npm run images -- <id> <felt> <fil>` | Importerer et nytt bilde til et sted med riktig navn og størrelse |
 | `npm run airspace` | Henter luftrom fra openAIP (krever `OPENAIP_API_KEY`) |

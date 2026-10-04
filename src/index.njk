@@ -4,6 +4,7 @@ bodyClass: page-home
 description: Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.
 scripts:
   - /assets/leaflet-markercluster/leaflet.markercluster.js
+  - /assets/js/wind.js
   - /assets/js/home.js
 ---
 {%- import "macros.njk" as m with context -%}
@@ -28,7 +29,8 @@ scripts:
           <button type="button" class="pill" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}">{{ label }}</button>
           {% endfor %}
         </div>
-        <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s er for mye, og kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
+        <p class="filter__note" id="forecast-status" aria-live="polite"></p>
+        <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden og retning nær kanten gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
       </div>
       {% endif %}
       <div class="filter">
@@ -59,7 +61,7 @@ scripts:
 
     <section class="results" aria-labelledby="results-title">
       <h2 id="results-title">{{ collections.sites.length }} flysteder</h2>
-      <p class="muted" id="no-results" hidden>Ingen flysteder passer. Nivå er foreløpig bare satt for noen av stedene.</p>
+      <p class="muted" id="no-results" hidden>Ingen flysteder passer filtrene.</p>
       <ul class="results__list" id="results-list">
         {% for s in collections.sites %}
         <li data-id="{{ s.data.id }}">
