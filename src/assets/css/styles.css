@@ -361,9 +361,25 @@ p { margin: 0; }
   font-size: 14px;
   line-height: 1;
 }
-.map-icon--landing { background: var(--fjord); }
-.map-icon--alt-landing { background: #8A9AA1; }
 .map-icon--parking { background: var(--parking); }
+
+/* Start og landing, både i kartet og i tegnforklaringen. Faste farger, så de synes på det inverterte
+   kartet i mørk modus. Start: vindrose med oransje ring, som på forsiden. Landing: målskive, grå når
+   den er alternativ. Formene skiller seg, så ingenting er bare farge. */
+.map-symbol { display: inline-flex !important; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; box-sizing: border-box; }
+.map-symbol--launch { background: #FFFFFF; border: 3px solid var(--accent); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.45); }
+.map-symbol--launch .rose .sector { stroke: #FFFFFF; stroke-width: 4; }
+.map-symbol--launch .rose .sector--none { fill: #DCE4E4; }
+.map-symbol--landing {
+  --target: #1C2B33;
+  background: radial-gradient(circle closest-side, #FFFFFF 0 22%, var(--target) 23% 49%, #FFFFFF 50% 64%, var(--target) 65%);
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 1px 3px rgba(28, 43, 51, 0.45);
+}
+.map-symbol--alt { --target: #7F9396; }
+.map-legend .map-symbol { width: 20px; height: 20px; }
+.map-legend .map-symbol--launch { border-width: 2px; }
+.map-legend .map-symbol--landing { border-width: 2px; box-shadow: 0 0 0 1px var(--line); }
 
 .map-legend {
   list-style: none;
@@ -377,9 +393,6 @@ p { margin: 0; }
 }
 .map-legend li { display: flex; align-items: center; gap: 6px; }
 .symbol { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; }
-.symbol--launch { border-radius: 50%; background: var(--accent); border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line); }
-.symbol--landing { border-radius: 3px; background: var(--fjord); }
-.symbol--alt-landing { border-radius: 3px; background: #8A9AA1; }
 .symbol--parking { border-radius: 3px; background: var(--parking); color: var(--on-color); font-size: 11px; font-weight: 700; }
 .symbol--route { width: 22px; height: 0; border-top: 3px dotted var(--text); }
 
