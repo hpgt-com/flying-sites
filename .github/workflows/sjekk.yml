@@ -25,6 +25,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npm test
+
       # Valideringen av stedsfilene skjer i byggingen. Vindvarselet hoppes over, så PR-er ikke spør MET.
       - run: npm run build
         env:

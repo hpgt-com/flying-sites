@@ -9,7 +9,8 @@
     "start": "eleventy --serve",
     "clean": "node -e \"require('fs').rmSync('_site',{recursive:true,force:true})\"",
     "images": "node scripts/optimize-images.mjs",
-    "airspace": "node scripts/update-airspace.mjs"
+    "airspace": "node scripts/update-airspace.mjs",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"

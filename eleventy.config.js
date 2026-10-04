@@ -82,6 +82,7 @@ export default function (eleventyConfig) {
         possible: d.wind_directions?.possible ?? [],
         categories: d.categories ?? [],
         level: d.level ?? null,
+        maxWind: d.wind_limits?.max_wind ?? null,
         trainingSite: !!d.training_site,
         text: d.derived?.intro ?? "",
         url: url(s.url),

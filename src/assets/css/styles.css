@@ -335,6 +335,8 @@ p { margin: 0; }
 .map--names .rose-marker__name { display: block; }
 [data-theme="dark"] .rose-marker__name { color: #F3F5F4; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
 .rose-marker--dimmed { opacity: 0.25; }
+/* Nivå ikke satt mens nivåfilteret er på: kan passe, så bare litt nedtonet. */
+.rose-marker--unknown { opacity: 0.6; }
 /* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
 .site-cluster__ring { width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
 .leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
@@ -466,6 +468,9 @@ p { margin: 0; }
 .results__name { font-weight: 600; font-size: 17px; }
 .results .direction { font-size: 13px; padding: 1px 6px; min-width: 26px; }
 .results .direction--none { padding: 0 5px; }
+.results__group { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
+.results__group-title { font-size: 18px; }
+.results__group .muted { margin: 0; font-size: 14px; line-height: 1.4; }
 
 .before-you-go { display: flex; flex-direction: column; gap: 8px; }
 .before-you-go h2 { font-size: 22px; }
@@ -831,4 +836,5 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .wind-legend .wind-dot { margin-right: 0; }
 .wind-legend__arrow { flex-basis: 100%; color: var(--muted); }
 .results__wind { display: flex; align-items: center; font-size: 13px; color: var(--muted); }
+.selected__reasons { margin: -4px 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
 .selected__wind { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; font-size: 15px; }

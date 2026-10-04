@@ -9,12 +9,15 @@
   var selectedId = null;
   var markers = {};
 
-  // Nivåfilteret viser steder for valgt nivå og lavere (en PP3-pilot kan fly PP2-steder).
+  // "match", "unknown" eller "no". Nivåfilteret viser steder for valgt nivå og lavere (en PP3-pilot kan
+  // fly PP2-steder). Steder uten registrert nivå skjules ikke, men får "unknown" og vises for seg, siden
+  // de fleste stedene ikke har nivå ennå og et tomt resultat ellers ville sett ut som «ingen steder».
   function matches(site) {
-    if (filter.direction && site.primary.indexOf(filter.direction) === -1 && site.possible.indexOf(filter.direction) === -1) return false;
-    if (filter.level && (!site.level || LEVELS.indexOf(site.level) > LEVELS.indexOf(filter.level))) return false;
-    if (filter.category && site.categories.indexOf(filter.category) === -1) return false;
-    return true;
+    if (filter.direction && site.primary.indexOf(filter.direction) === -1 && site.possible.indexOf(filter.direction) === -1) return "no";
+    if (filter.category && site.categories.indexOf(filter.category) === -1) return "no";
+    if (filter.level && !site.level) return "unknown";
+    if (filter.level && LEVELS.indexOf(site.level) > LEVELS.indexOf(filter.level)) return "no";
+    return "match";
   }
 
   function directionBadges(site) {
@@ -34,67 +37,65 @@
   }
 
   // --- Vindvurdering fra MET-varselet ---
-  // Grov vurdering per start og tidspunkt: retning mot stedets retninger, middelvind og kast.
-  // Reglene ligger i src/_data/windRules.json. Siden sier aldri «OK å fly».
+  // Logikken ligger i wind.js. Her velges tidspunkt, og resultatet vises i kart, liste og kort.
+  var W = window.FlyingSitesWind;
+  var RATINGS = W.RATINGS;
   var fc = FS.readJson("forecast-data") || {};
+  var rules = fc.rules;
   var forecast = fc.forecast || null;
-  var rules = fc.rules || { maxWind: 7, maxGustSpread: 4 };
-  var windSlot = forecast ? "0" : "off";
-  var RATINGS = {
-    ok: { label: "Kan passe", order: 0 },
-    maybe: { label: "Usikkert", order: 1 },
-    high: { label: "For mye vind", order: 2 },
-    no: { label: "Passer ikke", order: 3 },
-  };
-  var SLOT_LABELS = { "0": "nå", "3": "om 3 t", "6": "om 6 t", tomorrow: "i morgen kl. 12" };
+  var forecastStatusEl = document.getElementById("forecast-status");
+  // Er varselet for gammelt (den planlagte byggingen har stoppet, eller siden er lagret i nettleseren),
+  // slås vindvurderingen av, og det står hvorfor.
+  var stale = forecast ? W.isStale(forecast, rules, Date.now()) : false;
+  var windSlot = forecast && !stale ? "0" : "off";
+  var windIndex = -1; // indeks i varselet for valgt tidspunkt, settes av assessAll()
+  var SLOT_LABELS = { "0": "nå", "3": "om 3 t", "6": "om 6 t", tomorrow: "i morgen" };
 
-  // Indeks i varselet for valgt tidspunkt, ut fra klokka hos den som ser på siden.
-  function slotIndex() {
-    if (!forecast || windSlot === "off") return -1;
-    var times = forecast.times.map(Date.parse);
-    if (windSlot === "tomorrow") {
-      var t = new Date();
-      t.setDate(t.getDate() + 1);
-      t.setHours(12, 0, 0, 0);
-      var best = -1, bestDiff = Infinity;
-      times.forEach(function (x, i) { var d = Math.abs(x - t.getTime()); if (d < bestDiff) { bestDiff = d; best = i; } });
-      return bestDiff <= 3600000 ? best : -1;
+  function fetchedText() {
+    var fetched = Date.parse(forecast.fetched);
+    var today = W.osloParts(Date.now()).date, day = W.osloParts(fetched).date;
+    return (day === today ? "i dag" : day.slice(8, 10) + "." + day.slice(5, 7)) + " kl. " + W.formatClock(fetched);
+  }
+
+  if (forecast && stale) {
+    var pills = document.querySelector("#filters [data-wind]").parentNode;
+    pills.hidden = true;
+    forecastStatusEl.innerHTML = "<strong>Varselet er for gammelt.</strong> Det ble hentet " + fetchedText() +
+      ". Vindvurderingen er slått av til siden er oppdatert. Sjekk Yr eller Windy.";
+  }
+
+  // Tekst under vindvalget: når varselet ble hentet, og hvilket klokkeslett vurderingen gjelder.
+  function updateForecastStatus(index) {
+    if (!forecast || stale) return;
+    var text = "Varsel fra MET hentet " + fetchedText() + ".";
+    if (windSlot !== "off") {
+      text = index < 0
+        ? "<strong>Varselet dekker ikke dette tidspunktet.</strong> " + text
+        : "Viser vind kl. " + W.formatClock(Date.parse(forecast.times[index])) + (windSlot === "tomorrow" ? " i morgen" : "") + ". " + text;
     }
-    var now = Date.now(), current = 0;
-    times.forEach(function (x, i) { if (x <= now) current = i; });
-    var index = current + Number(windSlot);
-    return index < times.length ? index : -1;
-  }
-
-  function windAt(site, index) {
-    var series = forecast && forecast.sites[site.id];
-    return series && index >= 0 ? { dir: series[index][0], speed: series[index][1], gust: series[index][2] } : null;
-  }
-
-  function directionCode(degrees) {
-    return FS.DIRECTIONS[Math.round((((degrees % 360) + 360) % 360) / 45) % 8];
-  }
-
-  function rateWind(site, wind) {
-    if (wind.speed > rules.maxWind) return "high";
-    var type = FS.directionType(site, directionCode(wind.dir));
-    if (type === "primary") return wind.gust != null && wind.gust - wind.speed > rules.maxGustSpread ? "maybe" : "ok";
-    return type === "possible" ? "maybe" : "no";
+    forecastStatusEl.innerHTML = text;
   }
 
   function windText(wind) {
-    return FS.DIRECTION_LABELS[directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
-      (wind.gust != null ? ", kast " + Math.round(wind.gust) : "");
+    return FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
+      (wind.gust != null ? ", kast " + Math.round(wind.gust) : ", kast ukjent");
   }
 
-  // Vurdering for alle stedene på valgt tidspunkt: { id: { wind, rating } }, eller null når vind er av.
+  // Vurdering for alle stedene på valgt tidspunkt: { id: { wind, rating, reasons } }, eller null når vind er av
+  // eller varselet ikke dekker tidspunktet. Steder uten varsel (hentingen feilet) mangler i resultatet.
   function assessAll() {
-    var index = slotIndex();
+    if (!forecast || stale) return null;
+    if (windSlot === "off") { updateForecastStatus(-1); return null; }
+    var index = W.slotIndex(forecast.times, windSlot, Date.now());
+    windIndex = index;
+    updateForecastStatus(index);
     if (index < 0) return null;
     var result = {};
     sites.forEach(function (site) {
-      var wind = windAt(site, index);
-      if (wind) result[site.id] = { wind: wind, rating: rateWind(site, wind) };
+      var wind = W.windAt(forecast, site.id, index);
+      if (!wind) return;
+      var rating = W.rateWind(site, wind, rules);
+      result[site.id] = { wind: wind, rating: rating.rating, reasons: rating.reasons };
     });
     return result;
   }
@@ -107,11 +108,13 @@
 
   // Pilen står på siden vinden kommer fra og peker inn mot starten, som vinden som blåser inn i rosen.
   // Nedtoning og valgt sted ligger i className, så det overlever når markøren tas ut av og inn i en klynge.
-  function markerIcon(site, assessment, ok, selected) {
+  // match: "match", "unknown" (nivå ikke satt) eller "no", se matches().
+  function markerIcon(site, assessment, match, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
     var arrow = assessment ? '<span class="wind-arrow" style="transform: rotate(' + assessment.wind.dir + 'deg)"></span>' : "";
     return L.divIcon({
-      className: "rose-marker" + (ok ? "" : " rose-marker--dimmed") + (selected ? " rose-marker--selected" : ""),
+      className: "rose-marker" + (match === "no" ? " rose-marker--dimmed" : match === "unknown" ? " rose-marker--unknown" : "") +
+        (selected ? " rose-marker--selected" : ""),
       html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 32, false) + arrow + "</span>" +
         '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + "</span>",
       iconSize: [38, 38],
@@ -120,22 +123,26 @@
   }
 
   // Starter som ligger oppå hverandre på kartet slås sammen til en klynge med antall.
-  // Antallet teller bare steder som passer filteret. Med vind på får ringen fargen til den beste vurderingen i klyngen.
-  var markerState = {}; // id: { ok, rating, selected }, oppdateres i update()
+  // Antallet teller steder som passer filteret, eller steder uten nivå når ingen passer helt.
+  // Med vind på får ringen fargen til den beste vurderingen blant dem som telles.
+  var markerState = {}; // id: { match, rating, selected }, oppdateres i update()
   function clusterIcon(cluster) {
     var children = cluster.getAllChildMarkers();
-    var matching = 0, best = null, selected = false;
+    var counts = { match: 0, unknown: 0, no: 0 }, best = { match: null, unknown: null }, selected = false;
     children.forEach(function (m) {
-      var st = markerState[m.options.siteId] || { ok: true };
+      var st = markerState[m.options.siteId] || { match: "match" };
       if (st.selected) selected = true;
-      if (!st.ok) return;
-      matching++;
-      if (st.rating && (!best || RATINGS[st.rating].order < RATINGS[best].order)) best = st.rating;
+      counts[st.match]++;
+      if (st.match === "no" || !st.rating) return;
+      if (!best[st.match] || RATINGS[st.rating].order < RATINGS[best[st.match]].order) best[st.match] = st.rating;
     });
-    var ring = best ? " rose-marker__ring--" + best : "";
+    var shown = counts.match ? "match" : counts.unknown ? "unknown" : "no";
+    var rating = best[shown];
+    var ring = rating ? " rose-marker__ring--" + rating : "";
     return L.divIcon({
-      className: "rose-marker site-cluster" + (matching ? "" : " rose-marker--dimmed") + (selected ? " rose-marker--selected" : ""),
-      html: '<span class="rose-marker__ring site-cluster__ring' + ring + '">' + (matching || children.length) + "</span>",
+      className: "rose-marker site-cluster" + (shown === "no" ? " rose-marker--dimmed" : shown === "unknown" ? " rose-marker--unknown" : "") +
+        (selected ? " rose-marker--selected" : ""),
+      html: '<span class="rose-marker__ring site-cluster__ring' + ring + '">' + (shown === "no" ? children.length : counts[shown]) + "</span>",
       iconSize: [36, 36],
       iconAnchor: [18, 18],
     });
@@ -148,7 +155,7 @@
   }).addTo(map);
 
   sites.forEach(function (site) {
-    var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, true, false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
+    var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, "match", false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
     marker.bindTooltip(site.name, { direction: "top", offset: [0, -14] });
     marker.on("click", function () { select(site.id, "map"); });
     cluster.addLayer(marker);
@@ -167,7 +174,7 @@
   // --- Kort for valgt sted ---
   var cardEl = document.getElementById("selected");
   var emptyCardHtml = cardEl.innerHTML;
-  function showCard(site, assessment) {
+  function showCard(site, assessment, windOn) {
     var e = FS.escapeHtml;
     var html =
       '<div class="selected__top">' + FS.roseSvg(site, 84, true) +
@@ -176,7 +183,12 @@
       '<div class="tags">' + tags(site) + "</div></div></div>";
     if (assessment) {
       html += '<p class="selected__wind"><span class="wind-dot wind-dot--' + assessment.rating + '"></span>' +
-        "Vind " + SLOT_LABELS[windSlot] + ": " + windText(assessment.wind) + ". <strong>" + RATINGS[assessment.rating].label + "</strong></p>";
+        "Vind " + SLOT_LABELS[windSlot] + " (kl. " + W.formatClock(Date.parse(forecast.times[windIndex])) + "): " +
+        windText(assessment.wind) + ". <strong>" + RATINGS[assessment.rating].label + "</strong></p>";
+      if (assessment.reasons.length) html += '<p class="selected__reasons">' + e(assessment.reasons.join(". ")) + ".</p>";
+      if (site.maxWind != null && assessment.reasons.join().indexOf("grensen for stedet") === -1) html += '<p class="selected__reasons">Stedets egen grense: ' + site.maxWind + " m/s.</p>";
+    } else if (windOn) {
+      html += '<p class="selected__wind muted">Ingen vindvarsel for stedet på dette tidspunktet.</p>';
     }
     if (site.text) html += '<p class="selected__text">' + e(site.text) + "</p>";
     html += '<a class="btn btn--primary btn--wide" href="' + e(site.url) + '">Se hele stedet</a>';
@@ -208,23 +220,32 @@
   var windLegendEl = document.getElementById("wind-legend");
   var originalOrder = Array.prototype.slice.call(listEl.children);
 
+  // Overskrift i listen for steder uten nivå når nivåfilteret er på.
+  var unknownHeadingEl = document.createElement("li");
+  unknownHeadingEl.className = "results__group";
+  unknownHeadingEl.hidden = true;
+
   function update() {
     var assessments = assessAll();
-    var count = 0;
+    var windOn = !!(forecast && !stale && windSlot !== "off");
+    var counts = { match: 0, unknown: 0, no: 0 };
+    var matchById = {};
     sites.forEach(function (site) {
-      var ok = matches(site);
-      if (ok) count++;
+      var match = matches(site);
+      matchById[site.id] = match;
+      counts[match]++;
       var assessment = assessments && assessments[site.id];
       var marker = markers[site.id];
       if (marker) {
-        marker.setIcon(markerIcon(site, assessment, ok, site.id === selectedId));
-        markerState[site.id] = { ok: ok, rating: assessment ? assessment.rating : null, selected: site.id === selectedId };
+        marker.setIcon(markerIcon(site, assessment, match, site.id === selectedId));
+        markerState[site.id] = { match: match, rating: assessment ? assessment.rating : null, selected: site.id === selectedId };
         var order = assessment ? 3 - RATINGS[assessment.rating].order : 0;
-        marker.setZIndexOffset(site.id === selectedId ? 1000 : (ok ? 500 : 0) + order * 10);
+        var base = { match: 500, unknown: 250, no: 0 }[match];
+        marker.setZIndexOffset(site.id === selectedId ? 1000 : base + order * 10);
       }
       var li = listEl.querySelector('[data-id="' + site.id + '"]');
       if (li) {
-        li.hidden = !ok;
+        li.hidden = match === "no";
         var button = li.querySelector("button");
         button.classList.toggle("results__item--selected", site.id === selectedId);
         li.querySelector(".directions").innerHTML = directionBadges(site);
@@ -234,30 +255,45 @@
           windEl.className = "results__wind";
           button.appendChild(windEl);
         }
-        windEl.hidden = !assessment;
+        windEl.hidden = !assessment && !(assessments && windOn);
         windEl.innerHTML = assessment
           ? '<span class="wind-dot wind-dot--' + assessment.rating + '"></span>' + windText(assessment.wind) + " · " + RATINGS[assessment.rating].label
-          : "";
+          : "Ingen vindvarsel for stedet";
       }
-      if (site.id === selectedId) showCard(site, assessment);
+      if (site.id === selectedId) showCard(site, assessment, windOn);
     });
 
     cluster.refreshClusters();
 
-    // Med vind på sorteres listen etter vurdering, ellers alfabetisk som fra bygget.
+    // Steder uten nivå kommer til slutt. Med vind på sorteres hver gruppe etter vurdering, ellers alfabetisk som fra bygget.
     var items = originalOrder.slice();
-    if (assessments) {
-      items.sort(function (a, b) {
-        var ra = assessments[a.getAttribute("data-id")], rb = assessments[b.getAttribute("data-id")];
-        return (ra ? RATINGS[ra.rating].order : 9) - (rb ? RATINGS[rb.rating].order : 9) || originalOrder.indexOf(a) - originalOrder.indexOf(b);
-      });
-    }
-    items.forEach(function (li) { listEl.appendChild(li); });
+    var group = function (li) { return matchById[li.getAttribute("data-id")] === "unknown" ? 1 : 0; };
+    items.sort(function (a, b) {
+      var ra = assessments && assessments[a.getAttribute("data-id")], rb = assessments && assessments[b.getAttribute("data-id")];
+      return group(a) - group(b) ||
+        (ra ? RATINGS[ra.rating].order : 9) - (rb ? RATINGS[rb.rating].order : 9) ||
+        originalOrder.indexOf(a) - originalOrder.indexOf(b);
+    });
+    if (unknownHeadingEl.parentNode) listEl.removeChild(unknownHeadingEl);
+    var headingPlaced = false;
+    items.forEach(function (li) {
+      if (group(li) && !headingPlaced) { listEl.appendChild(unknownHeadingEl); headingPlaced = true; }
+      listEl.appendChild(li);
+    });
+    unknownHeadingEl.hidden = !counts.unknown;
+    unknownHeadingEl.innerHTML = counts.unknown
+      ? '<h3 class="results__group-title">Nivå ikke satt (' + counts.unknown + ")</h3>" +
+        '<p class="muted">Nivå er ikke registrert for disse stedene ennå, så de kan passe eller ikke for ' + filter.level + ". Vurder selv.</p>"
+      : "";
     if (windLegendEl) windLegendEl.hidden = !assessments;
 
     var filtered = filter.direction || filter.level || filter.category;
-    titleEl.textContent = (count === 1 ? "1 flysted" : count + " flysteder") + (filtered ? " passer" : "");
-    noResultsEl.hidden = count !== 0;
+    var title = filtered
+      ? (counts.match === 1 ? "1 flysted passer filtrene" : counts.match + " flysteder passer filtrene")
+      : counts.match + " flysteder";
+    if (counts.unknown) title += ", " + counts.unknown + " uten nivå";
+    titleEl.textContent = title;
+    noResultsEl.hidden = counts.match + counts.unknown !== 0;
   }
 
   // Setter et filter og markerer riktig knapp. Ukjente verdier (f.eks. fra en gammel lenke) gir «Alle».
@@ -272,7 +308,7 @@
 
   function setWind(value) {
     var buttons = document.querySelectorAll("button[data-wind]");
-    if (!buttons.length) return;
+    if (!buttons.length || stale) return;
     var match = Array.prototype.find.call(buttons, function (b) { return b.getAttribute("data-wind") === value; }) ||
       Array.prototype.find.call(buttons, function (b) { return b.getAttribute("data-wind") === "0"; });
     windSlot = match.getAttribute("data-wind");
@@ -294,7 +330,7 @@
   function writeHash() {
     var params = new URLSearchParams();
     ["direction", "level", "category"].forEach(function (type) { if (filter[type]) params.set(type, filter[type]); });
-    if (forecast && windSlot !== "0") params.set("wind", windSlot);
+    if (forecast && !stale && windSlot !== "0") params.set("wind", windSlot);
     if (selectedId) params.set("site", selectedId);
     var hash = params.toString();
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
