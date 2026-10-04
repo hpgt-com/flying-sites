@@ -42,7 +42,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 
 ## Stedsside – fast mal i denne rekkefølgen
 1. Navn, én–to setninger kort fortalt, tagger (kategori og sesong).
-2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler.
+2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler. I bildevisningen kan man zoome med knip, dobbelttrykk/dobbeltklikk og musehjul, og dra for å flytte; sveip bytter bilde når bildet ikke er zoomet.
 3. **Før du starter**: bare farer som gjelder hele stedet. Rød boks. Hvis ingen: «Ingen spesielle farer registrert for stedet.»
 4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Maks vind (bare når `wind_limits.max_wind` er satt), Høyde (start moh, landing moh, forskjell), Luftrom: bare taket over start, det laveste faste luftrommet over startstedet, som tagger (navn, klasse, nedre grense i ft, ca. moh regnet om fra fot), og under: dato for siste henting, og «Sjekk alltid IPPC før du flyr.» på egen linje. Bare luftrom ved takeoff vises. Nærliggende luftrom (TMA, CTR osv.) vises ikke, piloter sjekker dem i IPPC. Nærliggende og militære områder hentes, men vises ikke.
 5. **Start**: Parkering, Veien opp (med km og høydemeter fra GPX), Tid (bevegelsestid fra GPX). Deretter kort tekst om startområdet og én linje per retningsgruppe med retningsmerker i rosens farger og eventuelle kategori-tagger (PG/SPG).
