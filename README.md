@@ -55,6 +55,7 @@ Andre kommandoer:
 - Endringer går via en branch og en pull request. PR-sjekken bygger siden og stopper ugyldige stedsfiler.
 - Luftrom hentes automatisk den 1. hver måned. Endringer kommer som en PR som gjennomgås før de publiseres.
 - Dependabot foreslår oppdateringer av pakker og Actions én gang i måneden.
+- Sikkerhet (Content-Security-Policy, CodeQL, dependency review, zizmor, innstillinger i GitHub): se [SECURITY.md](SECURITY.md).
 
 ## Kilder
 

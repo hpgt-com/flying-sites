@@ -2,6 +2,12 @@
 <html lang="nb">
 <head>
 <meta charset="utf-8">
+{#- Sikkerhet. GitHub Pages lar oss ikke sette HTTP-headere, så policyen står som meta-tag (da virker ikke
+    frame-ancestors). Skript bare fra siden selv. Bilder fra kartflisene (Kartverket, OpenTopoMap,
+    thermal.kk7.ch) og Yr-meteogrammet. Stiler tillater inline, fordi Leaflet og kartmarkørene setter
+    style på elementene. Ny ekstern kilde (kartlag, bilde, skript) må legges til her, ellers blokkeres den. -#}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://www.yr.no; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {%- set pageTitle = (name + " – " if name else "") + site.title -%}
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
@@ -22,20 +28,12 @@
 {#- Fargemodus settes før siden tegnes, så den ikke blinker lys først. Valget (auto, light, dark) lagres
     i nettleseren av menyen (common.js). Auto følger innstillingen på enheten. Det samme gjelder
     fargeblindvennlige farger (data-cvd). -#}
-<script>
-(function () {
-  var d = document.documentElement, choice = "auto";
-  try { choice = localStorage.getItem("theme") || "auto"; } catch (e) {}
-  var dark = choice === "dark" || (choice === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
-  d.setAttribute("data-theme", dark ? "dark" : "light");
-  d.setAttribute("data-theme-choice", choice);
-  try { if (localStorage.getItem("cvd") === "on") d.setAttribute("data-cvd", "on"); } catch (e) {}
-})();
-</script>
+<script src="/assets/js/theme-init.js"></script>
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+{#- Fontene ligger på siden selv (Fontsource, se eleventy.config.js), så besøkende ikke sender IP-adressen til Google. -#}
+<link rel="preload" href="/assets/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/fonts.css">
 <link rel="stylesheet" href="/assets/leaflet/leaflet.css">
 <link rel="stylesheet" href="/assets/css/styles.css">
 {% for style in styles %}<link rel="stylesheet" href="{{ style }}">

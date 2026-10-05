@@ -17,6 +17,13 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
+  // Fontene fra Fontsource (SIL OFL 1.1), bare latin og vektene som brukes. @font-face står i src/assets/css/fonts.css.
+  for (const [pkg, weights] of [["barlow", [400, 500, 600]], ["barlow-condensed", [500, 600, 700]]]) {
+    for (const w of weights) {
+      eleventyConfig.addPassthroughCopy({ [`node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}-normal.woff2`]: `assets/fonts/${pkg}-latin-${w}-normal.woff2` });
+    }
+    eleventyConfig.addPassthroughCopy({ [`node_modules/@fontsource/${pkg}/LICENSE`]: `assets/fonts/LICENSE-${pkg}.txt` });
+  }
   // Luftrom fra openAIP til kartlaget (npm run airspace). Lastes først når noen slår på et luftromslag.
   eleventyConfig.addPassthroughCopy({ "src/_data/cache/airspace/region.geojson": "assets/airspace.geojson" });
 
