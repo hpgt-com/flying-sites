@@ -314,8 +314,8 @@ p { margin: 0; }
 /* Vindroser i kartet */
 .rose-marker { background: none; border: none; }
 .rose-marker__ring {
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -338,7 +338,7 @@ p { margin: 0; }
 /* Nivå ikke satt mens nivåfilteret er på: kan passe, så bare litt nedtonet. */
 .rose-marker--unknown > * { opacity: 0.6; }
 /* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
-.site-cluster__ring { border-radius: 9px !important; width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
+.site-cluster__ring { border-radius: 10px !important; width: 40px; height: 40px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
 .leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
 .leaflet-cluster-spider-leg { transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in; }
 /* Valgt sted: større, og en mørk ring utenpå (hvit luft mellom), så vurderingsfargen på ringen beholdes.
@@ -910,19 +910,35 @@ body:has(.lightbox[open]) { overflow: hidden; }
 }
 .filter__note { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 .rose-marker__ring { position: relative; overflow: visible; }
-.rose-marker__ring--ok { border: 3px solid var(--wind-ok); }
-.rose-marker__ring--maybe { border: 3px solid var(--wind-maybe); }
-.rose-marker__ring--high { border: 3px solid var(--wind-high); }
-.rose-marker__ring--no { border: 3px solid var(--wind-no); }
+.rose-marker__ring--ok { border: 3.5px solid var(--wind-ok); }
+.rose-marker__ring--maybe { border: 3.5px solid var(--wind-maybe); }
+.rose-marker__ring--high { border: 3.5px solid var(--wind-high); }
+.rose-marker__ring--no { border: 3.5px solid var(--wind-no); }
 /* Tynn mørk kant utenpå vindringen, så også gul og grå skiller seg fra kartet (minst 3:1). */
 .rose-marker__ring--ok, .rose-marker__ring--maybe, .rose-marker__ring--high, .rose-marker__ring--no {
   box-shadow: 0 0 0 1px rgba(28, 43, 51, 0.85), 0 1px 4px rgba(28, 43, 51, 0.45);
 }
 /* Ikke bare farge: steder som ikke passer eller har for mye vind, vises litt mindre. */
 .rose-marker__ring--high, .rose-marker__ring--no { transform: scale(0.85); }
-/* Med vind på er ringen hovedsignalet: resten av rosen dempes, sektoren vinden kommer fra står fullt. */
-.rose-marker__ring--ok .rose .sector:not(.sector--wind), .rose-marker__ring--maybe .rose .sector:not(.sector--wind),
-.rose-marker__ring--high .rose .sector:not(.sector--wind), .rose-marker__ring--no .rose .sector:not(.sector--wind) { opacity: 0.55; }
+/* Rosen i markørene (markerRose i home.js): sektorer fra midten, dempet når vind er på, og sektoren
+   vinden kommer fra i vurderingsfargen helt ut til ringen. */
+.mrose__primary { fill: var(--dir-primary); }
+.mrose__possible { fill: var(--possible); }
+.mrose--wind .mrose__primary, .mrose--wind .mrose__possible { opacity: 0.75; }
+.mrose__wind { stroke: var(--white); stroke-width: 1; }
+.mrose__wind--ok { fill: var(--wind-ok); }
+.mrose__wind--maybe { fill: var(--wind-maybe); }
+.mrose__wind--high { fill: var(--wind-high); }
+.mrose__wind--no { fill: var(--wind-no); }
+.mrose__center { fill: #1C2B33; }
+/* Fargelinjen i statuskortet: fordelingen av vurderingene. */
+.wind-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 2px 0; background: var(--line); }
+.wind-bar__part { display: block; }
+.wind-summary__wind { font-weight: 600; }
+.wind-summary__counts { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 13px; }
+.wind-summary__counts > span { display: inline-flex; align-items: center; }
+.wind-summary__counts .wind-dot { width: 10px; height: 10px; margin-right: 5px; }
+.wind-summary__missing { font-size: 13px; color: var(--muted); }
 /* Sektoren vinden kommer fra: løftet ut og fylt med vurderingsfargen (roseSvg i common.js). */
 .rose .sector--wind { stroke: var(--map-ink); stroke-width: 3; stroke-linejoin: round; }
 .rose .sector--wind-ok { fill: var(--wind-ok); }

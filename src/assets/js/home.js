@@ -149,11 +149,21 @@
     var wind = "Vind i området: mest " + FS.DIRECTION_LABELS[sum.dir] + ", " +
       (Math.round(sum.minSpeed) === Math.round(sum.maxSpeed) ? Math.round(sum.speed) : Math.round(sum.minSpeed) + "–" + Math.round(sum.maxSpeed)) + " m/s" +
       (sum.gust != null ? ", kast opptil " + Math.round(sum.gust) + " m/s" : "") + ".";
-    var line = parts.length === 1 && sum.total > 1
-      ? "Alle " + sum.total + " steder: " + parts[0].replace(/^\d+ /, "") + "."
-      : plural(sum.total, "sted", "steder") + ": " + parts.join(", ") + ".";
-    if (sum.missing) line += " " + plural(sum.missing, "sted", "steder") + " mangler varsel og er ikke vurdert.";
-    summaryEl.innerHTML = "<p><strong>" + FS.escapeHtml(wind) + "</strong></p><p>" + FS.escapeHtml(line) + "</p>" +
+    // Som i prototypen: vindlinje, fargelinje med fordelingen og antall per vurdering med fargede prikker.
+    // Detaljene (kast, stedets egen grense, mangler varsel) står i merkelappen på linjen.
+    var detail = plural(sum.total, "sted", "steder") + ": " + parts.join(", ") + "." +
+      (sum.missing ? " " + plural(sum.missing, "sted", "steder") + " mangler varsel og er ikke vurdert." : "");
+    var order = [["ok", "kan passe"], ["maybe", c.maybe === 1 ? "usikkert" : "usikre"], ["high", "for mye vind"], ["no", "feil retning"]];
+    var bar = order.map(function (o) {
+      return c[o[0]] ? '<span class="wind-bar__part wind-dot--' + o[0] + '" style="flex-grow:' + c[o[0]] + '"></span>' : "";
+    }).join("");
+    var chips = order.map(function (o) {
+      return c[o[0]] ? '<span><span class="wind-dot wind-dot--' + o[0] + '"></span>' + c[o[0]] + " " + o[1] + "</span>" : "";
+    }).join("");
+    summaryEl.innerHTML = '<p class="wind-summary__wind">' + FS.escapeHtml(wind) + "</p>" +
+      '<div class="wind-bar" role="img" aria-label="' + FS.escapeHtml(detail) + '" title="' + FS.escapeHtml(detail) + '">' + bar + "</div>" +
+      '<p class="wind-summary__counts">' + chips + "</p>" +
+      (sum.missing ? '<p class="wind-summary__missing">' + plural(sum.missing, "sted", "steder") + " mangler varsel</p>" : "") +
       (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">Ingen steder kan passe på dette tidspunktet. ' + FS.escapeHtml(noneReason(sum)) + "</p>" : "");
   }
   // Den viktigste grunnen til at ingen steder passer, i én setning.
@@ -201,17 +211,34 @@
   // Pilen står på siden vinden kommer fra og peker inn mot starten, som vinden som blåser inn i rosen.
   // Nedtoning og valgt sted ligger i className, så det overlever når markøren tas ut av og inn i en klynge.
   // match: "match", "unknown" (nivå ikke satt), "nowind" (mangler varsel) eller "no", se matches().
+  // Rosen i markøren (som i prototypen, 46 px med ring, så den er lett å se): hvit skive, sektorer for hoved- og mulige retninger fra midten,
+  // og med vind på er sektoren vinden kommer fra fylt med vurderingsfargen helt ut til ringen. Ringen
+  // rundt (CSS) har vurderingsfargen. Resten av rosen er litt dempet når vind er på.
+  var MR = 16, MR_IN = 12.5;
+  function wedge(i, radius) {
+    var a0 = (i * 45 - 22.5 - 90) * Math.PI / 180, a1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
+    return "M" + MR + " " + MR + " L" + (MR + radius * Math.cos(a0)).toFixed(2) + " " + (MR + radius * Math.sin(a0)).toFixed(2) +
+      " A" + radius + " " + radius + " 0 0 1 " + (MR + radius * Math.cos(a1)).toFixed(2) + " " + (MR + radius * Math.sin(a1)).toFixed(2) + " Z";
+  }
+  function markerRose(site, assessment) {
+    var windCode = assessment ? W.directionCode(assessment.wind.dir) : null;
+    var svg = '<svg class="mrose' + (assessment ? " mrose--wind" : "") + '" width="40" height="40" viewBox="0 0 32 32" aria-hidden="true">';
+    FS.DIRECTIONS.forEach(function (code, i) {
+      var type = FS.directionType(site, code);
+      if (type !== "none" && code !== windCode) svg += '<path class="mrose__' + type + '" d="' + wedge(i, MR_IN) + '"></path>';
+    });
+    if (windCode) svg += '<path class="mrose__wind mrose__wind--' + assessment.rating + '" d="' + wedge(FS.DIRECTIONS.indexOf(windCode), MR) + '"></path>';
+    return svg + '<circle class="mrose__center" cx="16" cy="16" r="2.2"></circle></svg>';
+  }
   function markerIcon(site, assessment, match, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
-    // Sektoren vinden kommer fra løftes ut i vurderingsfargen (roseSvg i common.js), i stedet for en vindpil.
-    var wind = assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null;
     return L.divIcon({
       className: "rose-marker" + (match === "no" ? " rose-marker--dimmed" : WEAK[match] ? " rose-marker--unknown" : "") +
         (selected ? " rose-marker--selected" : ""),
-      html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 32, false, wind) + "</span>" +
+      html: '<span class="rose-marker__ring' + ring + '">' + markerRose(site, assessment) + "</span>" +
         '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + "</span>",
-      iconSize: [38, 38],
-      iconAnchor: [19, 19],
+      iconSize: [46, 46],
+      iconAnchor: [23, 23],
     });
   }
 
@@ -237,12 +264,12 @@
       className: "rose-marker site-cluster" + (shown === "no" ? " rose-marker--dimmed" : shown === "unknown" ? " rose-marker--unknown" : "") +
         (selected ? " rose-marker--selected" : ""),
       html: '<span class="rose-marker__ring site-cluster__ring' + ring + '">' + (shown === "no" ? children.length : counts[shown]) + "</span>",
-      iconSize: [36, 36],
-      iconAnchor: [18, 18],
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
     });
   }
   var cluster = L.markerClusterGroup({
-    maxClusterRadius: 32,
+    maxClusterRadius: 40,
     showCoverageOnHover: false,
     spiderfyDistanceMultiplier: 1.6,
     iconCreateFunction: clusterIcon,
