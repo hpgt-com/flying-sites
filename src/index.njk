@@ -48,8 +48,8 @@ scripts:
         {#- Forslag som bryter: tone ned steder der varselet sier «Passer ikke» eller «For mye vind» (home.js). -#}
         <button type="button" class="suggest-switch" data-suggest aria-pressed="false">Bare steder som kan passe nå</button>
         <details class="wind-rules">
-          <summary>Hvordan vurderes vinden?</summary>
-          <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden og retning nær kanten gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
+          <summary>Hvordan vurderes vind og regn?</summary>
+          <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden, retning nær kanten og litt nedbør (fra {{ windRules.rainMaybe | formatNumber(1) }} mm neste time) gir «usikkert». Regn ({{ windRules.rainNo | formatNumber(1) }} mm eller mer neste time) gir «passer ikke». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
         </details>
       </div>
       {% endif %}

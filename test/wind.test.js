@@ -72,6 +72,31 @@ test("retning rundt nord regnes riktig (355° og 5° er N)", () => {
   assert.equal(W.directionCode(360), "N");
 });
 
+test("regn fra rainNo gir «Passer ikke», også når vinden passer", () => {
+  const r = rate({ dir: 247, speed: 4, gust: 6, rain: rules.rainNo });
+  assert.equal(r.rating, "no");
+  assert.match(r.reasons[0], /^Regn meldt \(0,5 mm\)$/);
+});
+
+test("litt nedbør gir høyst «Usikkert», og ingen eller manglende nedbør endrer ingenting", () => {
+  const r = rate({ dir: 247, speed: 4, gust: 6, rain: rules.rainMaybe });
+  assert.equal(r.rating, "maybe");
+  assert.match(r.reasons.join(), /Litt nedbør meldt \(0,1 mm\)/);
+  assert.equal(rate({ dir: 247, speed: 4, gust: 6, rain: 0 }).rating, "ok");
+  assert.equal(rate({ dir: 247, speed: 4, gust: 6, rain: null }).rating, "ok");
+});
+
+test("for mye vind går foran regn", () => {
+  assert.equal(rate({ dir: 247, speed: rules.maxWind + 1, gust: 12, rain: 2 }).rating, "high");
+});
+
+test("nedbør leses fra varselet, og eldre varsel uten nedbør gir rain null", () => {
+  const forecast = { times: ["2026-10-05T12:00:00Z"], sites: { a: [[247, 4, 6, 1.2]], b: [[247, 4, 6]] } };
+  assert.equal(W.windAt(forecast, "a", 0).rain, 1.2);
+  assert.equal(W.windAt(forecast, "b", 0).rain, null);
+  assert.equal(W.formatRain(1.24), "1,2 mm");
+});
+
 test("varsel eldre enn maxForecastAgeHours er for gammelt", () => {
   const now = Date.parse("2026-10-04T12:00:00Z");
   const fetched = (h) => ({ fetched: new Date(now - h * 3600000).toISOString() });
@@ -137,7 +162,7 @@ test("klokkeslett vises i norsk tid", () => {
 
 test("steder uten varsel eller med hull i varselet gir ingen vind", () => {
   const forecast = { sites: { a: [[200, 4, 5], null] } };
-  assert.deepEqual(W.windAt(forecast, "a", 0), { dir: 200, speed: 4, gust: 5 });
+  assert.deepEqual(W.windAt(forecast, "a", 0), { dir: 200, speed: 4, gust: 5, rain: null });
   assert.equal(W.windAt(forecast, "a", 1), null);
   assert.equal(W.windAt(forecast, "b", 0), null);
   assert.equal(W.windAt(forecast, "a", -1), null);

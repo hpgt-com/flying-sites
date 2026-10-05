@@ -1,4 +1,4 @@
-// Vindvurdering fra MET-varselet: hvilket tidspunkt i varselet som gjelder, om varselet er for gammelt,
+// Vind- og regnvurdering fra MET-varselet: hvilket tidspunkt i varselet som gjelder, om varselet er for gammelt,
 // og en grov vurdering per start. Ren logikk uten DOM, så den kan testes (test/wind.test.js).
 // Lastes som vanlig skript på forsiden og stedssidene og legges på window.FlyingSitesWind.
 // Reglene ligger i src/_data/windRules.json. Vurderingen sier aldri «OK å fly».
@@ -96,6 +96,9 @@
       return result("high", [hasOwnLimit ? "Over grensen for stedet (" + limit + " m/s)" : "Over " + limit + " m/s"]);
     }
     if (wind.gust != null && wind.gust > rules.maxGust) return result("high", ["Kast over " + rules.maxGust + " m/s"]);
+    // Regn: man flyr ikke med våt vinge. Mye regn neste time gir «Passer ikke», litt regn høyst «Usikkert».
+    // Mangler nedbør i varselet, påvirker det ikke vurderingen.
+    if (wind.rain != null && wind.rain >= rules.rainNo) return result("no", ["Regn meldt (" + formatRain(wind.rain) + ")"]);
 
     var type = directionType(site, directionCode(wind.dir));
     if (type === "none") return result("no", ["Retningen passer ikke for stedet"]);
@@ -108,17 +111,24 @@
       directionType(site, directionCode(wind.dir + rules.sectorMargin)) !== "primary") {
       reasons.push("Nær kanten av retningene stedet passer for");
     }
+    if (wind.rain != null && wind.rain >= rules.rainMaybe) reasons.push("Litt nedbør meldt (" + formatRain(wind.rain) + ")");
     if (wind.speed < rules.minWind) reasons.push("Svak vind, retningen er usikker");
     if (wind.gust == null) reasons.push("Varselet mangler kast");
     else if (wind.gust - wind.speed > rules.maxGustSpread) reasons.push("Kast mer enn " + rules.maxGustSpread + " m/s over middelvinden");
     return result(reasons.length ? "maybe" : "ok", reasons);
   }
 
-  // Vind for et sted på en indeks i varselet, eller null når stedet mangler varsel (hentingen feilet).
+  // «0,3 mm» med norsk desimaltegn.
+  function formatRain(mm) {
+    return (Math.round(mm * 10) / 10).toFixed(1).replace(".", ",") + " mm";
+  }
+
+  // Vind (og nedbør neste time) for et sted på en indeks i varselet, eller null når stedet mangler varsel
+  // (hentingen feilet). rain er null når varselet ikke har nedbør (eldre varsel eller langt fram i tid).
   function windAt(forecast, id, index) {
     var series = forecast && forecast.sites && forecast.sites[id];
     var row = series && index >= 0 ? series[index] : null;
-    return row ? { dir: row[0], speed: row[1], gust: row[2] } : null;
+    return row ? { dir: row[0], speed: row[1], gust: row[2], rain: row[3] != null ? row[3] : null } : null;
   }
 
   globalThis.FlyingSitesWind = {
@@ -130,5 +140,6 @@
     directionCode: directionCode,
     rateWind: rateWind,
     windAt: windAt,
+    formatRain: formatRain,
   };
 })();

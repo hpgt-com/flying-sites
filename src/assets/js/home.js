@@ -114,7 +114,7 @@
     var list = Object.keys(assessments).map(function (id) { return assessments[id]; });
     if (!list.length) return null;
     var dirs = {}, speeds = [], maxGust = null;
-    var counts = { ok: 0, maybe: 0, high: 0, no: 0 }, highByGust = 0, highByLocal = 0;
+    var counts = { ok: 0, maybe: 0, high: 0, no: 0 }, highByGust = 0, highByLocal = 0, noByRain = 0;
     list.forEach(function (a) {
       var code = W.directionCode(a.wind.dir);
       dirs[code] = (dirs[code] || 0) + 1;
@@ -125,10 +125,11 @@
         if (/^Kast/.test(a.reasons[0] || "")) highByGust++;
         else if (/stedet/.test(a.reasons[0] || "")) highByLocal++;
       }
+      if (a.rating === "no" && /^Regn/.test(a.reasons[0] || "")) noByRain++;
     });
     speeds.sort(function (x, y) { return x - y; });
     var mainDir = Object.keys(dirs).sort(function (x, y) { return dirs[y] - dirs[x]; })[0];
-    return { counts: counts, total: list.length, missing: sites.length - list.length, highByGust: highByGust, highByLocal: highByLocal,
+    return { counts: counts, total: list.length, missing: sites.length - list.length, highByGust: highByGust, highByLocal: highByLocal, noByRain: noByRain,
       dir: mainDir, speed: speeds[Math.floor(speeds.length / 2)], minSpeed: speeds[0], maxSpeed: speeds[speeds.length - 1], gust: maxGust };
   }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
@@ -145,7 +146,8 @@
       if (sum.highByLocal) why.push(sum.highByLocal + " over stedets egen grense");
       parts.push(c.high + " for mye vind" + (why.length ? " (" + why.join(", ") + ")" : ""));
     }
-    if (c.no) parts.push(c.no + " feil retning");
+    if (c.no - sum.noByRain) parts.push((c.no - sum.noByRain) + " feil retning");
+    if (sum.noByRain) parts.push(sum.noByRain + " regn");
     var wind = "Vind i området: mest " + FS.DIRECTION_LABELS[sum.dir] + ", " +
       (Math.round(sum.minSpeed) === Math.round(sum.maxSpeed) ? Math.round(sum.speed) : Math.round(sum.minSpeed) + "–" + Math.round(sum.maxSpeed)) + " m/s" +
       (sum.gust != null ? ", kast opptil " + Math.round(sum.gust) + " m/s" : "") + ".";
@@ -153,12 +155,14 @@
     // Detaljene (kast, stedets egen grense, mangler varsel) står i merkelappen på linjen.
     var detail = plural(sum.total, "sted", "steder") + ": " + parts.join(", ") + "." +
       (sum.missing ? " " + plural(sum.missing, "sted", "steder") + " mangler varsel og er ikke vurdert." : "");
-    var order = [["ok", "kan passe"], ["maybe", c.maybe === 1 ? "usikkert" : "usikre"], ["high", "for mye vind"], ["no", "feil retning"]];
+    // [vurdering, antall, tekst]. «Passer ikke» deles i feil retning og regn, så årsaken synes.
+    var order = [["ok", c.ok, "kan passe"], ["maybe", c.maybe, c.maybe === 1 ? "usikkert" : "usikre"], ["high", c.high, "for mye vind"],
+      ["no", c.no - sum.noByRain, "feil retning"], ["no", sum.noByRain, "regn"]];
     var bar = order.map(function (o) {
-      return c[o[0]] ? '<span class="wind-bar__part wind-dot--' + o[0] + '" style="flex-grow:' + c[o[0]] + '"></span>' : "";
+      return o[1] ? '<span class="wind-bar__part wind-dot--' + o[0] + '" style="flex-grow:' + o[1] + '"></span>' : "";
     }).join("");
     var chips = order.map(function (o) {
-      return c[o[0]] ? '<span><span class="wind-dot wind-dot--' + o[0] + '"></span>' + c[o[0]] + " " + o[1] + "</span>" : "";
+      return o[1] ? '<span><span class="wind-dot wind-dot--' + o[0] + '"></span>' + o[1] + " " + o[2] + "</span>" : "";
     }).join("");
     summaryEl.innerHTML = '<p class="wind-summary__wind">' + FS.escapeHtml(wind) + "</p>" +
       '<div class="wind-bar" role="img" aria-label="' + FS.escapeHtml(detail) + '" title="' + FS.escapeHtml(detail) + '">' + bar + "</div>" +
@@ -169,6 +173,7 @@
   // Den viktigste grunnen til at ingen steder passer, i én setning.
   function noneReason(sum) {
     var c = sum.counts;
+    if (sum.noByRain >= c.high && sum.noByRain >= c.no - sum.noByRain) return "Det er meldt regn.";
     if (c.high >= c.no) {
       return sum.highByGust > c.high / 2
         ? "Kastene er for kraftige (grensen er " + rules.maxGust + " m/s)."
@@ -179,7 +184,8 @@
 
   function windText(wind) {
     return FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
-      (wind.gust != null ? ", kast " + Math.round(wind.gust) : ", kast ukjent");
+      (wind.gust != null ? ", kast " + Math.round(wind.gust) : ", kast ukjent") +
+      (wind.rain != null && wind.rain >= rules.rainMaybe ? ", regn " + W.formatRain(wind.rain) : "");
   }
 
   // Vurdering for alle stedene på valgt tidspunkt: { id: { wind, rating, reasons } }, eller null når vind er av

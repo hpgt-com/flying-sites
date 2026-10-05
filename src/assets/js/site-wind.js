@@ -38,7 +38,8 @@
     }
     var rating = W.rateWind(data.site, wind, data.rules);
     var text = FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
-      (wind.gust != null ? ", kast " + Math.round(wind.gust) : "");
+      (wind.gust != null ? ", kast " + Math.round(wind.gust) : "") +
+      (wind.rain != null && wind.rain >= data.rules.rainMaybe ? ", regn " + W.formatRain(wind.rain) : "");
     show(rating.rating, [
       ["span", "Vind nå, kl. " + W.formatClock(Date.parse(forecast.times[index])), "site-wind__time"],
       ["strong", W.RATINGS[rating.rating].label + ": " + text],

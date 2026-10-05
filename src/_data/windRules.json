@@ -4,5 +4,7 @@
   "maxGustSpread": 4,
   "minWind": 2,
   "sectorMargin": 10,
+  "rainMaybe": 0.1,
+  "rainNo": 0.5,
   "maxForecastAgeHours": 6
 }
