@@ -180,7 +180,8 @@
     hintTimer = setTimeout(function () { hint.classList.remove("is-visible"); }, 1200);
   }, true);
 
-  FS.fitWhenVisible(map, mapEl, function () {
+  // Zoomer slik at hele stedet vises: starter, landing, parkering, gangruter og retningsbuer.
+  function fitAll() {
     if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false });
     else map.setView([data.launch.lat, data.launch.lon], 14, { animate: false });
     // Buene holdes minst ARC_MIN_PX store og kan da bli større enn innholdet. Får de ikke plass,
@@ -195,7 +196,31 @@
       if (inner.contains(arcBounds)) break;
       map.fitBounds(arcBounds.extend(L.latLngBounds(bounds)), { paddingTopLeft: [90, 60], paddingBottomRight: [60, 50], maxZoom: 15, animate: false });
     }
+  }
+  FS.fitWhenVisible(map, mapEl, fitAll);
+
+  // Knapp under zoomknappene som går tilbake til utsnittet med hele stedet.
+  var ResetControl = L.Control.extend({
+    options: { position: "topleft" },
+    onAdd: function () {
+      var bar = L.DomUtil.create("div", "leaflet-bar map-reset");
+      var button = L.DomUtil.create("a", "", bar);
+      button.href = "#";
+      button.setAttribute("role", "button");
+      button.title = "Vis hele stedet";
+      button.setAttribute("aria-label", "Vis hele stedet");
+      button.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M3 11l9-7 9 7"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>';
+      L.DomEvent.disableClickPropagation(bar);
+      L.DomEvent.on(button, "click", function (ev) {
+        L.DomEvent.preventDefault(ev);
+        map.closePopup();
+        fitAll();
+      });
+      return bar;
+    },
   });
+  new ResetControl().addTo(map);
 
   // --- Høydeprofil ---
   var profileEl = document.getElementById("elevation-profile");
