@@ -474,8 +474,13 @@
     if (button) select(button.getAttribute("data-select"), "list");
   });
 
-  // Kommer man tilbake til en fane som har stått åpen, sjekkes alderen på varselet på nytt.
-  function recheck() { if (checkStale()) { update(); writeHash(); } }
+  // Kommer man tilbake til en fane som har stått åpen, og hvert minutt: tegn på nytt når varselet er
+  // blitt for gammelt, eller når valgt tidspunkt peker på en annen time i varselet (timeskifte for
+  // «nå», «om 3 t» og «om 6 t», midnatt for «i morgen»).
+  function recheck() {
+    if (checkStale()) { update(); writeHash(); return; }
+    if (forecast && !stale && windSlot !== "off" && W.slotIndex(forecast.times, windSlot, Date.now()) !== windIndex) update();
+  }
   document.addEventListener("visibilitychange", function () { if (!document.hidden) recheck(); });
   setInterval(recheck, 60 * 1000);
 
