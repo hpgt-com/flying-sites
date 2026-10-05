@@ -59,7 +59,7 @@ Andre kommandoer:
 
 ## Kilder
 
-- Kart: [Kartverket](https://www.kartverket.no/) og [OpenTopoMap](https://opentopomap.org)
+- Kart: [Kartverket](https://www.kartverket.no/), [OpenTopoMap](https://opentopomap.org) og satellittbilde fra [Sentinel-2 cloudless](https://s2maps.eu) (EOX, CC BY-NC-SA 4.0)
 - Høyder til gangruter: Kartverket
 - Vindvarsel: [MET Norge](https://api.met.no/) og [Yr](https://www.yr.no/)
 - Luftrom: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)

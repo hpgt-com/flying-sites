@@ -16,7 +16,7 @@ Siden er statisk (Eleventy på GitHub Pages), uten innlogging, skjema eller data
 
 **Siden**
 - Content-Security-Policy som meta-tag i `src/_includes/base.njk`: skript bare fra siden selv (ingen
-  inline-skript), bilder bare fra kartflisene (Kartverket, OpenTopoMap, thermal.kk7.ch) og Yr.
+  inline-skript), bilder bare fra kartflisene (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) og Yr.
   GitHub Pages kan ikke sette egne HTTP-headere, så `frame-ancestors` og andre header-only-regler er ikke med.
 - `Referrer-Policy: strict-origin-when-cross-origin`.
 - Leaflet, markercluster og fontene ligger på siden selv. Ingen skript eller fonter fra CDN.

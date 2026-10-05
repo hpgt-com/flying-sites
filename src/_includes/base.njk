@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 {#- Sikkerhet. GitHub Pages lar oss ikke sette HTTP-headere, så policyen står som meta-tag (da virker ikke
-    frame-ancestors). Skript bare fra siden selv. Bilder fra kartflisene (Kartverket, OpenTopoMap,
+    frame-ancestors). Skript bare fra siden selv. Bilder fra kartflisene (Kartverket, OpenTopoMap, EOX,
     thermal.kk7.ch) og Yr-meteogrammet. Stiler tillater inline, fordi Leaflet og kartmarkørene setter
     style på elementene. Ny ekstern kilde (kartlag, bilde, skript) må legges til her, ellers blokkeres den. -#}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://www.yr.no; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://www.yr.no; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {%- set pageTitle = (name + " – " if name else "") + site.title -%}

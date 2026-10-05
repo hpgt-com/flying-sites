@@ -70,6 +70,7 @@
 /* Mørkt kart: kartflisene inverteres og fargetonen snus tilbake, så vann blir mørkt og skog forblir grønn.
    Bare bakgrunnskartet, ikke luftrom, termikk eller symbolene. */
 [data-theme="dark"] .base-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.7); }
+[data-theme="dark"] .photo-tiles { filter: brightness(0.85); }
 [data-theme="dark"] .leaflet-container { background: #1E2A30; }
 [data-theme="dark"] .meteogram img { background: #020A14; }
 
