@@ -37,6 +37,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/assets/leaflet/leaflet.css">
 <link rel="stylesheet" href="/assets/css/styles.css">
+{% for style in styles %}<link rel="stylesheet" href="{{ style }}">
+{% endfor %}
 </head>
 <body class="{{ bodyClass }}">
 {{ content | safe }}

@@ -1,0 +1,63 @@
+{
+  "type": "FeatureCollection",
+  "camera": {
+    "center": [
+      16.389,
+      68.8044
+    ],
+    "zoom": 13.6,
+    "pitch": 58,
+    "bearing": 250
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "label",
+        "title": "Toppen",
+        "text": "Hovedstarten. Stort startområde på toppen. Fint underlag om vinteren, steinete om sommeren.",
+        "source": "stedsfilen"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.36667,
+          68.80389
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "label",
+        "style": "hazard",
+        "title": "Trakteffekt ved masta",
+        "text": "Ved masta på toppen av alpinsenteret trakter vinden, og den er ofte sterkere der enn ellers på fjellet.",
+        "source": "farer i stedsfilen"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.37694,
+          68.80604
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "label",
+        "title": "Landing på myra",
+        "text": "Stor myr ved parkeringsplassen ved alpinsenteret, så landing og bil ligger samme sted.",
+        "source": "landing i stedsfilen"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.40667,
+          68.80194
+        ]
+      }
+    }
+  ]
+}

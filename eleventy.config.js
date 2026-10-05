@@ -17,6 +17,9 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
+  // MapLibre til 3D-visningen av steder med tegning (<id>-drawing.geojson). Lastes bare på 3D-sidene.
+  eleventyConfig.addPassthroughCopy({ "node_modules/maplibre-gl/dist/maplibre-gl.js": "assets/maplibre/maplibre-gl.js" });
+  eleventyConfig.addPassthroughCopy({ "node_modules/maplibre-gl/dist/maplibre-gl.css": "assets/maplibre/maplibre-gl.css" });
   // Luftrom fra openAIP til kartlaget (npm run airspace). Lastes først når noen slår på et luftromslag.
   eleventyConfig.addPassthroughCopy({ "src/_data/cache/airspace/region.geojson": "assets/airspace.geojson" });
 
@@ -38,6 +41,12 @@ export default function (eleventyConfig) {
     }
     return sites.sort((a, b) => a.data.name.localeCompare(b.data.name, "nb"));
   });
+
+  // Steder med tegning får en 3D-side (src/3d.njk).
+  eleventyConfig.addCollection("sites3d", (api) =>
+    api.getFilteredByGlob("src/flysteder/*/index.md")
+      .filter((s) => fs.existsSync(`src/flysteder/${s.data.id}/${s.data.id}-drawing.geojson`))
+      .sort((a, b) => a.data.name.localeCompare(b.data.name, "nb")));
 
   eleventyConfig.addGlobalData("DIRECTIONS", DIRECTIONS);
 
