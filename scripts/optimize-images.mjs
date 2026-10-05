@@ -4,7 +4,7 @@
 //   npm run images -- <id> <felt> <fil> [--replace]  Importerer et nytt bilde, f.eks.
 //   npm run images -- sollifjellet launch "C:/Users/deg/Downloads/IMG_1234.jpg"
 //
-// Felt: overview, launch, landing, air. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
+// Felt: launch, landing, air. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
 // kameraet rettes opp, og metadata (EXIF, GPS) fjernes. Importen skriver aldri i stedsfilen, den skriver
 // bare ut linjen som skal inn under `images:`.
 
@@ -15,7 +15,7 @@ import { MAX_ORIGINAL_BYTES, MAX_ORIGINAL_SIDE } from "../lib/images.js";
 
 const SITES_DIR = "src/flysteder";
 const IMAGE_FILE = /\.(jpe?g|png|webp)$/i;
-const FIELDS = ["overview", "launch", "landing", "air"];
+const FIELDS = ["launch", "landing", "air"];
 
 // På Windows holder sharp-cachen filen åpen, så den kan ikke skrives over. Vi leser alt inn i minnet.
 sharp.cache(false);

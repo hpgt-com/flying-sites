@@ -58,11 +58,9 @@ launches:
   categories: null
   text: Først og fremst et sted for hangflyging.
 images:
-  overview: hinnstein-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

@@ -60,11 +60,9 @@ launches:
   categories: null
   text: Mulig, men se Før du starter.
 images:
-  overview: storbakkan-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

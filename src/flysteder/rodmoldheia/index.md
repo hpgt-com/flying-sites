@@ -83,11 +83,9 @@ launches:
   categories: null
   text: Veststarten gir de beste boblene, fra ca. kl. 13 og utover.
 images:
-  overview: rodmoldheia-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

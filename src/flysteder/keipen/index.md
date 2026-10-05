@@ -60,11 +60,9 @@ launches:
   categories: null
   text: Nedre start opp mot skogkanten over Kasfjord er litt ulendt, men går greit i litt vind.
 images:
-  overview: keipen-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

@@ -40,11 +40,9 @@ hazards:
   text: Kan gi hærjing, flaks og kollaps.
 launches: []
 images:
-  overview: null
   launch: null
   landing: null
   air: null
-  overview_credit: null
 reviewed:
   by: null
   date: null

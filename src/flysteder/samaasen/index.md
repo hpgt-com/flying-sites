@@ -52,11 +52,9 @@ launches:
   categories: null
   text: Greit hang, med muligheter for å komme seg høyt.
 images:
-  overview: samaasen-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

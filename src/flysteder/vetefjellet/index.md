@@ -86,11 +86,9 @@ launches:
   categories: null
   text: Mulig, men se østlig vind og synk på Storlitinden-siden.
 images:
-  overview: vetefjellet-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

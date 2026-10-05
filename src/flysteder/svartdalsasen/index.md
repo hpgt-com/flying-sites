@@ -48,11 +48,9 @@ launches:
   categories: null
   text: Hang og termisk hang.
 images:
-  overview: svartdalsasen-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

@@ -56,11 +56,9 @@ launches:
   categories: null
   text: Godt skjermet li som kan gi utrolig bra termikk om sommeren.
 images:
-  overview: steinsasen-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

@@ -63,11 +63,9 @@ launches:
   categories: null
   text: Subbhang i de rette forholdene. Du kan henge i svært svak vind, helst S–SØ.
 images:
-  overview: blahatten-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

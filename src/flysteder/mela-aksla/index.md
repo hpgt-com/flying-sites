@@ -51,11 +51,9 @@ airspace: []
 hazards: []
 launches: []
 images:
-  overview: null
   launch: null
   landing: null
   air: null
-  overview_credit: null
 reviewed:
   by: null
   date: null

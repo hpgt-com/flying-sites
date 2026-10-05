@@ -70,7 +70,7 @@ export default {
         images[field] = await processImage(dir, data.id, field, file, {
           alt: IMAGE_ALT[field],
           outputDir: data.eleventy.directories.output,
-          // Småbilder i tre kolonner nederst. Oversiktsbildet (images.overview) vises ikke lenger, kartet viser det samme.
+          // Småbilder i tre kolonner nederst.
           sizes: "(min-width: 1024px) 220px, (min-width: 640px) 33vw, 100vw",
         });
       }
