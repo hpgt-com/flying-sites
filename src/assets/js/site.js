@@ -266,7 +266,8 @@
     grade: profileEl.querySelector('[data-readout="grade"]'),
   };
   var summaryEl = profileEl.querySelector(".profile__summary");
-  var positionMarker = L.circleMarker([0, 0], { radius: 8, color: ACCENT, weight: 4, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false });
+  // Markøren for posisjonen langs ruten er mørk, ikke oransje (forbeholdt fare og vind).
+  var positionMarker = L.circleMarker([0, 0], { radius: 8, color: "#1C2B33", weight: 4, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false });
 
   // Marger i grafen, i piksler.
   var HEIGHT = 150, LEFT = 46, RIGHT = 12, TOP = 14, BOTTOM = 26;

@@ -203,11 +203,12 @@
   // match: "match", "unknown" (nivå ikke satt), "nowind" (mangler varsel) eller "no", se matches().
   function markerIcon(site, assessment, match, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
-    var arrow = assessment ? '<span class="wind-arrow" style="transform: rotate(' + assessment.wind.dir + 'deg)"></span>' : "";
+    // Sektoren vinden kommer fra løftes ut i vurderingsfargen (roseSvg i common.js), i stedet for en vindpil.
+    var wind = assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null;
     return L.divIcon({
       className: "rose-marker" + (match === "no" ? " rose-marker--dimmed" : WEAK[match] ? " rose-marker--unknown" : "") +
         (selected ? " rose-marker--selected" : ""),
-      html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 32, false) + arrow + "</span>" +
+      html: '<span class="rose-marker__ring' + ring + '">' + FS.roseSvg(site, 32, false, wind) + "</span>" +
         '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + "</span>",
       iconSize: [38, 38],
       iconAnchor: [19, 19],
@@ -273,7 +274,7 @@
   function showCard(site, assessment, windOn) {
     var e = FS.escapeHtml;
     var html =
-      '<div class="selected__top">' + FS.roseSvg(site, 84, true) +
+      '<div class="selected__top">' + FS.roseSvg(site, 84, true, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null) +
       '<div class="selected__info"><h2 class="selected__name">' + e(site.name) + "</h2>" +
       (site.elevation != null ? '<p class="selected__elev">Start ' + site.elevation + " moh</p>" : "") +
       '<div class="directions">' + directionBadges(site) + "</div>" +
