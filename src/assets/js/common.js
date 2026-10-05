@@ -124,6 +124,70 @@
     return roseSvg(site, 30, false) + (count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : "");
   }
 
+  // --- Retningsbuer ---
+  // Hvilke sider av fjellet stedet passer for: én gul bue per retning i wind_directions, med en pil ut.
+  // Mørk gul er hovedretning, lys gul mulig. Brukes i kartet på stedssiden (ovenfra) og i 3D-visningen.
+  // Har startene egne posisjoner (launches[].lat/lon), får hver retningsgruppe (starter med samme
+  // retninger) sin egen bue der startene ligger: midt mellom dem, med radius til lengste start +
+  // ARC_RADIUS_PLACED_M, så buen strekker seg langs siden mellom dem. Uten egne posisjoner er det én bue
+  // rundt hovedstarten, eller rundt direction_arc i tegningen (<id>-drawing.geojson).
+  // data: { launch, launches, wind_directions, drawing }. Koordinatene er [lon, lat].
+  var ARC_COLORS = { primary: "#F2B705", possible: "#F8DC7A" };
+  var ARC_RADIUS_M = 250, ARC_RADIUS_PLACED_M = 110, ARC_ARROW_M = 70;
+  var BEARINGS = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
+
+  // Punkt `meters` fra [lon, lat] i retning `bearing` (grader, 0 er nord). Godt nok på korte avstander.
+  function offset(from, bearing, meters) {
+    var b = bearing * Math.PI / 180;
+    return [from[0] + Math.sin(b) * meters / (111320 * Math.cos(from[1] * Math.PI / 180)), from[1] + Math.cos(b) * meters / 110540];
+  }
+  function distanceM(a, b) { return Math.hypot((a[1] - b[1]) * 110540, (a[0] - b[0]) * 111320 * Math.cos(a[1] * Math.PI / 180)); }
+
+  function arcGroups(data) {
+    var wind = data.wind_directions || {}, arcConfig = data.drawing && data.drawing.direction_arc;
+    var all = DIRECTIONS.filter(function (d) { return (wind.primary || []).indexOf(d) !== -1 || (wind.possible || []).indexOf(d) !== -1; });
+    var placed = (data.launches || []).some(function (l) { return l.lat != null && l.lon != null; });
+    if (arcConfig || !placed) {
+      return [{ center: (arcConfig && arcConfig.center) || [data.launch.lon, data.launch.lat],
+        radius: (arcConfig && arcConfig.radius) || ARC_RADIUS_M, directions: all }];
+    }
+    var groups = {};
+    launchPoints(data).forEach(function (p) {
+      var key = p.directions.join(",");
+      (groups[key] = groups[key] || { directions: p.directions, points: [] }).points.push([p.lon, p.lat]);
+    });
+    return Object.keys(groups).map(function (key) {
+      var g = groups[key], n = g.points.length;
+      var center = [g.points.reduce(function (s, q) { return s + q[0]; }, 0) / n, g.points.reduce(function (s, q) { return s + q[1]; }, 0) / n];
+      var spread = Math.max.apply(null, g.points.map(function (q) { return distanceM(q, center); }));
+      return { center: center, radius: spread + ARC_RADIUS_PLACED_M, directions: g.directions };
+    });
+  }
+
+  // [{ direction, label, color, pts, bearing, center, radius, mid, tip }], én per retning og gruppe.
+  // options.minRadius og options.arrow (meter) lar kartet holde buen synlig når man zoomer ut.
+  function directionArcs(data, options) {
+    var wind = data.wind_directions || {}, arcs = [], o = options || {};
+    var arrow = o.arrow || ARC_ARROW_M;
+    arcGroups(data).forEach(function (g) {
+      var radius = Math.max(g.radius, o.minRadius || 0);
+      g.directions.forEach(function (d) {
+        var pts = [];
+        for (var az = BEARINGS[d] - 22.5; az <= BEARINGS[d] + 22.5 + 0.01; az += 3) pts.push(offset(g.center, az, radius));
+        var type = (wind.primary || []).indexOf(d) !== -1 ? "primary" : "possible";
+        arcs.push({ direction: d, label: DIRECTION_LABELS[d], color: ARC_COLORS[type], pts: pts, bearing: BEARINGS[d],
+          center: g.center, radius: radius, mid: offset(g.center, BEARINGS[d], radius), tip: offset(g.center, BEARINGS[d], radius + arrow) });
+      });
+    });
+    return arcs;
+  }
+
+  // Pilspiss ved `tip` i retning `bearing`, som trekant i meter: [[lon, lat], ...].
+  function arrowHead(tip, bearing, size) {
+    var base = offset(tip, bearing + 180, size);
+    return [tip, offset(base, bearing + 90, size * 0.6), offset(base, bearing - 90, size * 0.6), tip];
+  }
+
   // --- Luftromslag ---
   // Fire grupper med av/på i kartets lagvelger, som i IPPC. Alle er av til å begynne med, og
   // luftrommene (fra openAIP, se scripts/update-airspace.mjs) lastes først når en gruppe slås på.
@@ -313,6 +377,9 @@
     roseSvg: roseSvg,
     launchPoints: launchPoints,
     launchRoseHtml: launchRoseHtml,
+    directionArcs: directionArcs,
+    arrowHead: arrowHead,
+    offset: offset,
     createMap: createMap,
     addAirspaceLayers: addAirspaceLayers,
     fitWhenVisible: fitWhenVisible,

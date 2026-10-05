@@ -82,9 +82,70 @@
     bounds.push([p.lat, p.lon]);
   });
 
+  // --- Retningsbuer ---
+  // Hvilke sider av fjellet stedet passer for, sett ovenfra: gule buer med pil og retning, som de gule
+  // strekene på de tegnede oversiktsbildene. Regnes ut fra stedsfilen (directionArcs i common.js).
+  // Under rosene, så startene kan trykkes på.
+  var arcPane = map.createPane("arcs");
+  arcPane.style.zIndex = 450;
+  arcPane.style.pointerEvents = "none";
+  var ll = function (p) { return [p[1], p[0]]; };
+  // Buen holdes minst ARC_MIN_PX stor på skjermen, og pil og retningsmerke regnes i piksler, så den
+  // er lesbar også når man zoomer ut. Tegnes på nytt når zoomen endres.
+  var ARC_MIN_PX = 60;
+  var arcLayer = L.layerGroup().addTo(map);
+  function metersPerPixel() { return 40075016 * Math.cos(data.launch.lat * Math.PI / 180) / (256 * Math.pow(2, map.getZoom())); }
+  function drawArcs() {
+    arcLayer.clearLayers();
+    var mpp = metersPerPixel();
+    FS.directionArcs(data, { minRadius: ARC_MIN_PX * mpp, arrow: 26 * mpp }).forEach(function (arc) {
+      var line = arc.pts.map(ll), stem = [arc.mid, FS.offset(arc.center, arc.bearing, arc.radius + 16 * mpp)].map(ll);
+      var head = FS.arrowHead(arc.tip, arc.bearing, 12 * mpp).map(ll);
+      var opts = { pane: "arcs", interactive: false, lineCap: "round", lineJoin: "round" };
+      L.polyline(line, Object.assign({ color: "#1C2B33", weight: 9 }, opts)).addTo(arcLayer);
+      L.polyline(stem, Object.assign({ color: "#1C2B33", weight: 6 }, opts)).addTo(arcLayer);
+      L.polyline(line, Object.assign({ color: arc.color, weight: 5.5 }, opts)).addTo(arcLayer);
+      L.polyline(stem, Object.assign({ color: arc.color, weight: 3 }, opts)).addTo(arcLayer);
+      L.polygon(head, Object.assign({ color: "#1C2B33", weight: 1.5, fillColor: arc.color, fillOpacity: 1 }, opts)).addTo(arcLayer);
+      L.marker(ll(FS.offset(arc.center, arc.bearing, arc.radius + 40 * mpp)), {
+        icon: L.divIcon({ className: "arc-label-anchor", html: '<span class="arc-label">' + arc.label + "</span>", iconSize: [0, 0] }),
+        interactive: false, keyboard: false, pane: "arcs",
+      }).addTo(arcLayer);
+    });
+  }
+  map.on("zoomend", drawArcs);
+  // Kartet skal også få plass til buene når det zoomer til innholdet.
+  FS.directionArcs(data).forEach(function (arc) { arc.pts.forEach(function (p) { bounds.push(ll(p)); }); });
+
+  // --- Punkter fra tegningen (<id>-drawing.geojson) ---
+  // Nummererte punkter med tittel og tekst når man trykker. Fare er en lys firkant med rød kant.
+  var labels = ((data.drawing && data.drawing.features) || []).filter(function (f) {
+    return f.properties && f.properties.kind === "label" && f.properties.title;
+  });
+  labels.forEach(function (f, i) {
+    var p = f.properties, n = i + 1, hazard = p.style === "hazard";
+    L.marker(ll(f.geometry.coordinates), {
+      icon: L.divIcon({ className: "drawing-pin" + (hazard ? " drawing-pin--hazard" : ""), html: String(n), iconSize: [26, 26], iconAnchor: [13, 36] }),
+      title: n + ". " + p.title, alt: n + ". " + p.title, zIndexOffset: 1100,
+    }).bindPopup("<strong>" + FS.escapeHtml(n + ". " + p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""))
+      .addTo(map);
+  });
+
   FS.fitWhenVisible(map, mapEl, function () {
-    if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 });
-    else map.setView([data.launch.lat, data.launch.lon], 14);
+    if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false });
+    else map.setView([data.launch.lat, data.launch.lon], 14, { animate: false });
+    // Buene holdes minst ARC_MIN_PX store og kan da bli større enn innholdet. Får de ikke plass,
+    // zoomes det ut til de er med, med plass til retningsmerkene (høyst to ganger).
+    for (var i = 0; i < 3; i++) {
+      drawArcs();
+      if (!arcLayer.getLayers().length) break;
+      var arcBounds = L.latLngBounds([]);
+      arcLayer.eachLayer(function (layer) { arcBounds.extend(layer.getBounds ? layer.getBounds() : layer.getLatLng()); });
+      // Retningsmerkene står utenfor buen, og zoomknappene dekker venstre hjørne, så det trengs mer luft.
+      var inner = L.latLngBounds(map.containerPointToLatLng([90, 60]), map.containerPointToLatLng(map.getSize().subtract([60, 50])));
+      if (inner.contains(arcBounds)) break;
+      map.fitBounds(arcBounds.extend(L.latLngBounds(bounds)), { paddingTopLeft: [90, 60], paddingBottomRight: [60, 50], maxZoom: 15, animate: false });
+    }
   });
 
   // --- Høydeprofil ---
