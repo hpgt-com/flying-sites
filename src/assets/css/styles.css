@@ -436,7 +436,7 @@ p { margin: 0; }
 .home__left, .home__right { display: contents; }
 .home .topbar { order: 1; }
 .home__intro { order: 2; display: flex; flex-direction: column; gap: 6px; }
-.home__intro h1 { font-size: 40px; }
+.home__intro h1 { font-size: 32px; }
 .filters { order: 3; }
 .home__map { order: 4; display: flex; flex-direction: column; gap: 10px; }
 .home__legend { order: 5; margin-top: -12px; }
@@ -934,18 +934,44 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
 body.has-fullscreen-map { overflow: hidden; }
 /* «Vis bare steder som kan passe» under vindtidspunktet (home.js). Egen linje, så den ikke blandes med tidspunktene. */
-.pill--suggest { display: block; margin-top: 8px; }
-.pill--suggest[aria-pressed="true"]::before { content: "✓ "; }
-.pill--suggest:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Segmentert linje (vindtidspunkt, nivå, kategori): alle valgene på én rad med felles ramme. */
+.segmented { display: flex; border: 1px solid var(--rose-border); border-radius: 10px; overflow: hidden; background: var(--card); }
+.segmented button {
+  flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 4px; font: 500 15px/1.1 var(--font-body); color: var(--text);
+  background: transparent; border: 0; border-left: 1px solid var(--line); cursor: pointer; white-space: nowrap;
+}
+.segmented button:first-child { border-left: 0; }
+.segmented button[aria-pressed="true"] { background: var(--fjord); color: var(--on-color); font-weight: 600; }
+/* «Bare steder som kan passe» som bryter (av/på), ikke en stor knapp. aria-pressed styres av home.js. */
+.switch {
+  position: relative; display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; min-height: 44px; padding: 0 0 0 48px;
+  font: 500 15px/1.3 var(--font-body); color: var(--text); background: none; border: 0; cursor: pointer; text-align: left;
+}
+.switch::before { content: ""; position: absolute; left: 0; top: 50%; width: 38px; height: 22px; margin-top: -11px; border-radius: 11px; background: var(--line); transition: background 0.15s; }
+.switch::after { content: ""; position: absolute; left: 3px; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
+.switch[aria-pressed="true"]::before { background: var(--fjord); }
+.switch[aria-pressed="true"]::after { transform: translateX(16px); }
+.switch:disabled { opacity: 0.45; cursor: not-allowed; }
+.switch:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; border-radius: 4px; }
 /* Oppsummering av vinden og vurderingene under vindvalget (home.js). */
-.wind-summary { padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+/* Statuskortet for kartet på forsiden: antall som vises, vindoppsummering og varseltidspunkt (home.js).
+   Over kartet på mobil, halvgjennomsiktig oppå kartet på PC. */
+.map-info {
+  display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--card); background: color-mix(in srgb, var(--card) 86%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 14px; line-height: 1.45;
+}
+.map-info__count { margin: 0; font-weight: 700; }
+.map-info__status { margin: 0; font-size: 13px; color: var(--muted); }
+.map-info__status:empty { display: none; }
+.wind-summary { font-size: 14px; line-height: 1.45; }
 .wind-summary p { margin: 0; }
 .wind-summary p + p { margin-top: 4px; }
 .wind-summary__none { color: var(--hazard-text); font-weight: 600; }
 .wind-summary[hidden] { display: none; }
 /* Regelteksten for vindvurderingen bak «Hvordan vurderes vinden?». */
 .wind-rules summary { font-size: 14px; color: var(--link); cursor: pointer; min-height: 32px; display: flex; align-items: center; }
-/* Retning, nivå og kategori: på mobil bak en knapp med antall valgte (home.js), på PC alltid synlige. */
+/* Nivå og kategori: på mobil bak en knapp med antall valgte (home.js), på PC alltid synlige. Kompasset står alltid synlig. */
 .filters-more { display: none; flex-direction: column; gap: 16px; }
 .filters-more.is-open { display: flex; }
 .filters-toggle {
@@ -956,9 +982,27 @@ body.has-fullscreen-map { overflow: hidden; }
 .filters-toggle[aria-expanded="true"]::after { content: "▴"; }
 .filters-toggle__count { font-size: 13px; font-weight: 600; color: var(--on-color); background: var(--fjord); border-radius: 999px; padding: 2px 8px; }
 @media (min-width: 1100px) {
+  /* PC brukes med mus: mindre kontroller og tettere avstand, så listen kommer høyere opp. Mobil
+     beholder trykkflater på 44 px. */
+  .home__left { gap: 16px; }
+  .home__intro h1 { font-size: 30px; }
+  .filters { gap: 12px; }
+  .filter { gap: 6px; }
+  .filter__title { font-size: 13px; }
+  .search-input { min-height: 38px; }
+  .segmented button { min-height: 32px; font-size: 14px; }
+  .switch { min-height: 30px; font-size: 14px; }
+  .compass { width: 168px; gap: 6px; }
+  .compass button { height: 40px; font-size: 16px; border-radius: 9px; border-width: 1.5px; }
+  .compass .compass__all { font-size: 13px; }
+  .results__list { gap: 6px; }
+  .results__item { min-height: 0; padding: 7px 10px; gap: 4px; border-width: 1.5px; }
+  .results__name { font-size: 16px; }
+  .results .direction { font-size: 12px; padding: 0 5px; min-width: 22px; }
+  .results h2 { font-size: 20px; }
   .filters-toggle { display: none; }
   .filters-more { display: flex; }
-  /* Oppsummeringen av vinden oppå kartet, til høyre for zoomknappene. */
+  /* Statuskortet oppå kartet, til høyre for zoomknappene. */
   .home__map { position: relative; }
-  .home__map .wind-summary { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
+  .home__map .map-info { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
 }

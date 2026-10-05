@@ -314,6 +314,7 @@
   var listEl = document.getElementById("results-list");
   var titleEl = document.getElementById("results-title");
   var noResultsEl = document.getElementById("no-results");
+  var mapCountEl = document.getElementById("map-count");
   var windLegendEl = document.getElementById("wind-legend");
   var originalOrder = Array.prototype.slice.call(listEl.children);
 
@@ -405,6 +406,12 @@
     if (counts.nowind) title += ", " + counts.nowind + " uten varsel";
     if (counts.unknown) title += ", " + counts.unknown + " uten nivå";
     titleEl.textContent = title;
+    var shown = counts.match + counts.unknown + counts.nowind;
+    if (mapCountEl) {
+      mapCountEl.textContent = shown === sites.length
+        ? "Viser alle " + sites.length + " flysteder"
+        : "Viser " + shown + " av " + sites.length + " flysteder";
+    }
     noResultsEl.hidden = counts.match + counts.unknown + counts.nowind !== 0;
     var sum = assessments ? summarize(assessments) : null;
     renderSummary(sum);
@@ -418,13 +425,14 @@
     updateFiltersToggle();
   }
 
-  // Knappen for retning, nivå og kategori på mobil: viser hvor mange som er valgt, og åpner/lukker dem.
+  // Knappen for nivå og kategori på mobil: viser hvor mange som er valgt, og åpner/lukker dem.
+  // Kompasset for retning står alltid synlig.
   var filtersToggle = document.getElementById("filters-toggle");
   var filtersMore = document.getElementById("filters-more");
   function updateFiltersToggle() {
     if (!filtersToggle) return;
-    var n = ["direction", "level", "category"].filter(function (t) { return filter[t]; }).length;
-    filtersToggle.innerHTML = "Retning, nivå og kategori" + (n ? ' <span class="filters-toggle__count">' + n + " valgt</span>" : "");
+    var n = ["level", "category"].filter(function (t) { return filter[t]; }).length;
+    filtersToggle.innerHTML = "Nivå og kategori" + (n ? ' <span class="filters-toggle__count">' + n + " valgt</span>" : "");
   }
   if (filtersToggle) {
     filtersToggle.addEventListener("click", function () {
@@ -500,7 +508,8 @@
     var match = find(value) || find("");
     value = match.getAttribute("data-value");
     filter[type] = value;
-    buttons.forEach(function (b) { b.setAttribute("aria-pressed", b === match ? "true" : "false"); });
+    // Alle knapper med samme verdi markeres, i tilfelle samme filter finnes flere steder på siden.
+    buttons.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-value") === value ? "true" : "false"); });
   }
 
   function setWind(value) {
@@ -521,7 +530,7 @@
     suggestButton.hidden = !forecast || stale;
     suggestButton.disabled = !windOn;
     suggestButton.setAttribute("aria-pressed", String(suggest && windOn));
-    suggestButton.textContent = "Vis bare steder som kan passe" + (windSlot === "tomorrow" ? " i morgen kl. 12" : windOn ? " " + SLOT_LABELS[windSlot] : "");
+    suggestButton.textContent = "Bare steder som kan passe" + (windSlot === "tomorrow" ? " i morgen kl. 12" : windOn ? " " + SLOT_LABELS[windSlot] : "");
     suggestButton.title = windOn ? "" : "Velg et tidspunkt for vind først";
   }
 
