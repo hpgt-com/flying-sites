@@ -1,5 +1,5 @@
 // Vindvarsel fra MET (api.met.no, samme kilde som Yr) for hver start, til vindvurderingen på forsiden.
-// Hentes ved hver bygging. Workflowen bygger siden hver time, så varselet er aldri mer enn rundt en time gammelt.
+// Hentes ved hver bygging. Workflowen bygger siden to ganger i timen, men GitHub kan forsinke eller hoppe over planlagte kjøringer, så varselet kan være eldre (se maxForecastAgeHours).
 // Lokalt mellomlagres det i .cache/ i 30 minutter, så `npm start` ikke spør MET ved hver endring.
 // Feiler hentingen for et sted, mangler bare det stedet. Feiler alle, blir det ingen vindvurdering,
 // og resten av siden bygges som vanlig.
