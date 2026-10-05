@@ -16,7 +16,11 @@ const site = {
     elevation: { launch_masl: 560, difference_m: 320 },
     derived: {
       routes: [{ name: null, lengthKm: 1.5, elevationGain: 330, url: "/flysteder/testfjell/testfjell-route.gpx", line: [[68.79, 16.42], [68.8, 16.4]] }],
-      drawing: { type: "FeatureCollection", features: [{ type: "Feature", properties: { kind: "label", title: "Masta", text: "Trakteffekt" }, geometry: { type: "Point", coordinates: [16.41, 68.805] } }] },
+      drawing: { type: "FeatureCollection", features: [
+        { type: "Feature", properties: { kind: "label", title: "Masta", text: "Sendemast på toppen" }, geometry: { type: "Point", coordinates: [16.41, 68.805] } },
+        { type: "Feature", properties: { kind: "label", title: "Trakteffekt", text: "Farlig i sterk vind", style: "hazard" }, geometry: { type: "Point", coordinates: [16.411, 68.805] } },
+        { type: "Feature", properties: { kind: "area", title: "Rotorsone", style: "hazard" }, geometry: { type: "Polygon", coordinates: [[[16.41, 68.8], [16.42, 68.8], [16.42, 68.81], [16.41, 68.8]]] } },
+      ] },
     },
   },
 };
@@ -32,13 +36,14 @@ test("GeoJSON har lisens og alle typer, med [lon, lat]", () => {
   assert.equal(kinds("parking").length, 1);
   assert.deepEqual(kinds("route")[0].geometry.coordinates[0], [16.42, 68.79]);
   assert.equal(kinds("route")[0].properties.gpx_url, "https://flysteder.hpgt.com/flysteder/testfjell/testfjell-route.gpx");
+  assert.equal(kinds("drawing_label").length, 1);
   assert.equal(kinds("drawing_label")[0].properties.name, "Masta");
   assert.equal(geo.features[0].properties.site_url, "https://flysteder.hpgt.com/flysteder/testfjell/");
 });
 
 test("stedstekster og farer er ikke med", () => {
   const json = JSON.stringify(geo);
-  assert.doesNotMatch(json, /Tekst som ikke skal med|Uten posisjon|Skal ikke med|Rotor/);
+  assert.doesNotMatch(json, /Tekst som ikke skal med|Uten posisjon|Skal ikke med|Rotor|Trakteffekt|Farlig|hazard/);
 });
 
 test("KML er gyldig og har én mappe per sted, med tegn escapet", () => {

@@ -537,15 +537,9 @@ p { margin: 0; }
 .site-page__left, .site-page__right { display: contents; }
 
 .block { display: flex; flex-direction: column; gap: 12px; margin: 0; }
-.block--title { order: 1; gap: 10px; }
-.block--hazards { order: 3; }
-.block--facts { order: 4; }
-.block--launch { order: 5; }
-.block--landing { order: 6; }
-.block--weather { order: 7; }
-.block--map { order: 2; }
-.block--images { order: 9; }
-.block--log { order: 10; }
+/* Rekkefølgen i HTML er rekkefølgen på mobil (venstre kolonne, så høyre), så skjermlesere og tastatur
+   følger det man ser. Ingen `order` her. */
+.block--title { gap: 10px; }
 
 .block--title h1 { font-size: 50px; line-height: 0.95; }
 .lead { font-size: 18px; line-height: 1.45; color: var(--muted); }
@@ -686,7 +680,6 @@ p { margin: 0; }
   }
   .site-page__left { display: flex; flex-direction: column; gap: 40px; }
   .site-page__right { display: flex; flex-direction: column; gap: 36px; padding-top: 8px; }
-  .block { order: 0; }
   .block--title h1 { font-size: 60px; }
   .map--site { height: 440px; }
 }
