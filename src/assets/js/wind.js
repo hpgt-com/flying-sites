@@ -1,6 +1,6 @@
 // Vindvurdering fra MET-varselet: hvilket tidspunkt i varselet som gjelder, om varselet er for gammelt,
 // og en grov vurdering per start. Ren logikk uten DOM, så den kan testes (test/wind.test.js).
-// Lastes som vanlig skript på forsiden og legges på window.FlyingSitesWind.
+// Lastes som vanlig skript på forsiden og stedssidene og legges på window.FlyingSitesWind.
 // Reglene ligger i src/_data/windRules.json. Vurderingen sier aldri «OK å fly».
 (function () {
   "use strict";

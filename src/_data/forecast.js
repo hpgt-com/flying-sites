@@ -1,4 +1,4 @@
-// Vindvarsel fra MET (api.met.no, samme kilde som Yr) for hver start, til vindvurderingen på forsiden.
+// Vindvarsel fra MET (api.met.no, samme kilde som Yr) for hver start, til vindvurderingen på forsiden og «Vind nå» på stedssidene.
 // Hentes ved hver bygging. Workflowen bygger siden to ganger i timen, men GitHub kan forsinke eller hoppe over planlagte kjøringer, så varselet kan være eldre (se maxForecastAgeHours).
 // Lokalt mellomlagres det i .cache/ i 30 minutter, så `npm start` ikke spør MET ved hver endring.
 // Feiler hentingen for et sted, mangler bare det stedet. Feiler alle, blir det ingen vindvurdering,

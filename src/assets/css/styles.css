@@ -12,6 +12,10 @@
   --possible: #8FBCC7;
   --hazard-bg: #FBE3DA;
   --hazard-text: #6B1A0B;
+  --notice-bg: #FFF3D1;
+  --notice-line: #E0A82E;
+  --notice-text: #4A3510;
+  --notice-icon: #B7791F;
   --parking: #2F6FB5;
   --white: #FFFFFF;
   --surface: #E6ECEB;
@@ -46,6 +50,10 @@
   --possible: #3F7482;
   --hazard-bg: #3A1E16;
   --hazard-text: #F6C9B8;
+  --notice-bg: #33290F;
+  --notice-line: #B7891F;
+  --notice-text: #F3E2B3;
+  --notice-icon: #E0A82E;
   --parking: #4A86CC;
   --surface: #223038;
   --rose-border: #5C7076;
@@ -597,17 +605,17 @@ p { margin: 0; }
   max-width: 640px;
   margin: 0 auto;
 }
-.site-page__columns { display: flex; flex-direction: column; gap: 32px; }
-.site-page__left, .site-page__right { display: contents; }
+.site-page__grid { display: flex; flex-direction: column; gap: 32px; }
+.site-page__main, .site-page__aside { display: flex; flex-direction: column; gap: 32px; }
 
 .block { display: flex; flex-direction: column; gap: 12px; margin: 0; }
-/* Rekkefølgen i HTML er rekkefølgen på mobil (venstre kolonne, så høyre), så skjermlesere og tastatur
-   følger det man ser. Ingen `order` her. */
+/* Rekkefølgen i HTML er rekkefølgen på mobil (tittel, Før du starter, innhold, høyre kolonne), så skjermlesere
+   og tastatur følger det man ser. Ingen `order` her. */
 .block--title { gap: 10px; }
 
 .block--title h1 { font-size: 50px; line-height: 0.95; }
 .title-elev { font-family: var(--font-body); font-size: 18px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-/* Adkomst som tall øverst i Start (site.njk). */
+/* Adkomst som tall øverst i Adkomst (site.njk). */
 .access-stats { display: flex; flex-wrap: wrap; gap: 8px; }
 .access-stats > div { flex: 1 1 90px; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
 .access-stats strong { font: 700 28px/1 var(--font-heading); }
@@ -619,29 +627,27 @@ p { margin: 0; }
 /* Oversiktstegningene er små, så de vises i egen størrelse og strekkes ikke. */
 .meteogram figcaption { font-size: 14px; line-height: 1.4; color: var(--muted); }
 
-.block--hazards {
-  background: var(--hazard-bg);
-  color: var(--hazard-text);
+/* Før du starter: viktig informasjon til piloten, i rolig ravfarge og ikke rødt (rødt er for «for mye vind»). */
+.block--notice {
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  border: 1px solid var(--notice-line);
+  border-left-width: 6px;
   border-radius: 14px;
-  padding: 18px;
-  gap: 14px;
+  padding: 16px 18px;
+  gap: 12px;
 }
-/* Snarvei under tittelen til «Før du starter», som står under kartet. */
-.hazard-jump {
-  align-self: flex-start; display: inline-flex; align-items: flex-start; gap: 8px; min-height: 44px; padding: 10px 14px; box-sizing: border-box; line-height: 1.35;
-  background: var(--hazard-bg); color: var(--hazard-text); border: 1.5px solid #C62828; border-radius: 999px;
-  font-weight: 700; text-decoration: none;
+.block--notice-empty { background: var(--card); color: var(--text); border-color: var(--line); }
+.block--notice h2 { display: flex; align-items: center; gap: 10px; font-size: 26px; }
+.notice-icon {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--notice-icon); color: #FFFFFF; font: 700 16px/1 var(--font-body);
 }
-.hazard-jump:hover { text-decoration: underline; }
-.hazard-jump svg { flex-shrink: 0; margin-top: 1px; }
-.hazard-jump strong { font-weight: 700; }
-.hazard-jump > span { font-weight: 600; }
-.hazard-jump__more { white-space: nowrap; opacity: 0.8; }
-#h-hazards { scroll-margin-top: 16px; }
-.block--hazards h2 { display: flex; align-items: center; gap: 8px; }
+.block--notice-empty .notice-icon { background: var(--muted); }
 .hazard { display: flex; flex-direction: column; gap: 3px; }
-.hazard strong { font-size: 17px; }
-.hazard span { font-size: 16px; line-height: 1.45; }
+.hazard strong { font-size: 16px; }
+.hazard span { font-size: 15px; line-height: 1.45; }
 
 .rose-facts { display: flex; gap: 16px; align-items: center; }
 .facts { margin: 0; }
@@ -649,6 +655,9 @@ p { margin: 0; }
 .facts > div:last-child { border-bottom: 1px solid var(--line); }
 .facts dt { font-size: 14px; color: var(--muted); }
 .facts dd { margin: 0; }
+/* Nivå, kategori og sesong hver for seg, på én linje. */
+.facts > .facts__trio { flex-direction: row; flex-wrap: wrap; gap: 10px 24px; }
+.facts__trio > div { display: flex; flex-direction: column; gap: 4px; }
 .elevations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .elevations > span { display: flex; flex-direction: column; gap: 2px; }
 .elevations .muted { font-size: 13px; }
@@ -710,11 +719,31 @@ p { margin: 0; }
 .profile__summary { font-size: 14px; line-height: 1.45; color: var(--muted); }
 
 
-.image-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.image-grid figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+/* Bildet fra luften stort øverst, start og landing under. */
+.image-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.image-grid figure { margin: 0; position: relative; }
+.image-grid figure:first-child, .image-grid figure:last-child:nth-child(2) { grid-column: 1 / -1; }
 .image-grid picture { display: block; }
 .image-grid img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; }
-.image-grid figcaption { font-size: 15px; font-weight: 600; }
+.image-grid figure:first-child img { aspect-ratio: 16 / 10; }
+.image-grid figcaption {
+  position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 6px;
+  background: rgba(28, 43, 51, 0.78); color: #FFFFFF; font-size: 13px; font-weight: 600; pointer-events: none;
+}
+.images-missing { font-size: 14px; color: var(--muted); }
+
+/* Vind nå (site-wind.js), med samme farger som vurderingen på forsiden. */
+.site-wind {
+  display: flex; flex-direction: column; gap: 3px; padding: 10px 14px;
+  background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--wind-no); border-radius: 10px;
+}
+.site-wind strong { font-size: 16px; }
+.site-wind span { font-size: 14px; line-height: 1.45; color: var(--muted); }
+.site-wind .site-wind__time { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.site-wind--ok { border-left-color: var(--wind-ok); }
+.site-wind--maybe { border-left-color: var(--wind-maybe); }
+.site-wind--high { border-left-color: var(--wind-high); }
+.site-wind--none { border-left-color: var(--line); }
 
 .big-btn {
   min-height: 52px;
@@ -749,20 +778,23 @@ p { margin: 0; }
 .metadata dd { margin: 0; }
 .page-footer .disclaimer { font-size: 13px; }
 
-@media (min-width: 640px) {
-  .image-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
 @media (min-width: 1024px) {
   .site-page { max-width: 1200px; padding: 16px 40px 64px; gap: 28px; }
-  .site-page__columns {
+  /* To kolonner. Før du starter står øverst til høyre ved siden av tittelen, og innholdet til venstre
+     starter rett under tittelen selv om boksen er høyere (den spenner over to rader). */
+  .site-page__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 400px;
-    gap: 56px;
+    grid-template-areas: "title notice" "main notice" "main aside" "footer aside";
+    grid-template-rows: auto auto 1fr auto;
+    gap: 0 56px;
     align-items: start;
   }
-  .site-page__left { display: flex; flex-direction: column; gap: 40px; }
-  .site-page__right { display: flex; flex-direction: column; gap: 36px; padding-top: 8px; }
+  .site-page__grid > .block--title { grid-area: title; }
+  .site-page__grid > .block--notice { grid-area: notice; }
+  .site-page__main { grid-area: main; gap: 40px; padding-top: 32px; }
+  .site-page__aside { grid-area: aside; gap: 36px; padding-top: 28px; }
+  .site-page__grid > .page-footer { grid-area: footer; margin-top: 40px; }
   .block--title h1 { font-size: 60px; }
   .map--site { height: 440px; }
 }
@@ -962,7 +994,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .drawing-pin { width: 26px; height: 26px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   background: #1C2B33; color: #FFFFFF; border: 2px solid #FFFFFF; font: 700 14px/1 var(--font-body); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5); cursor: pointer; }
 /* Fare: lys firkant med rød kant, som «Før du starter»-boksen, så den ikke forveksles med de oransje startene. */
-.drawing-pin--hazard { background: #FBE3DA; color: #6B1A0B; border: 2.5px solid #C62828; border-radius: 5px; }
+.drawing-pin--hazard { background: #FFF3D1; color: #4A3510; border: 2.5px solid #B7791F; border-radius: 5px; }
 .drawing-pin--legend { width: 20px; height: 20px; font-size: 12px; cursor: default; }
 .drawing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .drawing-list li { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; border: 2px solid transparent; }

@@ -40,7 +40,7 @@ parking:
   source: gpx
 access:
   parking_text: Ved alpinsenteret, rett ved landingen.
-  route_text: Heisen når alpinbakken er åpen. Ellers til fots langs gangruten i kartet.
+  route_text: Heisen når alpinbakken er åpen, ellers gangruten.
   routes:
   - file: sollifjellet-route.gpx
     name: null
@@ -80,16 +80,16 @@ airspace:
   source: IPPC
 hazards:
 - title: Trakteffekt over toppen av alpinsenteret
-  text: Ved masta på toppen av alpinsenteret trakter vinden, og den er ofte sterkere der enn ellers på fjellet.
-- title: Bølgevind i S–SØ
-  text: Kan oppstå med vind fra S–SØ og mye høydevind fra samme retning. Viser Yr mye vind og kraftige kast på Sætertinden, kommer bølgevinden ned ved Sollifjellet.
+  text: Ved masta og ved heisen trakter vinden, og den er ofte sterkere der enn ellers på fjellet. Punkt 2 i kartet.
+- title: Bølgevind
+  text: Stedet er utsatt for bølgevind, særlig med vind fra S–SØ og mye høydevind fra samme retning. Viser Yr mye vind og kraftige kast på Sætertinden, er det et tegn på at bølgevind kan slå ned rundt Sollifjellet.
 launches:
 - directions:
   - S
   - SE
   - E
   categories: null
-  text: Som regel fra toppen av Sollifjellet.
+  text: Som regel fra toppen.
 - directions:
   - S
   - SE
@@ -98,7 +98,7 @@ launches:
   lat: 68.80604
   lon: 16.37694
   source: lokalkunnskap
-  text: Eventuelt fra toppen av alpinsenteret, ved masta og bua. Se trakteffekten under Før du starter.
+  text: Eventuelt fra masta på toppen av alpinsenteret (trakteffekt, se Før du starter).
 - directions:
   - N
   - NE
@@ -135,7 +135,7 @@ reviewed:
   date: '2026-09-24'
 ---
 
-Klubbens mest brukte sted, og det flys året rundt. Heisen tar deg opp når alpinbakken er åpen, ellers går vi. Mye brukt til skliturer.
+Et av klubbens mest brukte steder. Her flys det året rundt, til alt fra korte skliturer til termikk og fine XC-turer.
 
 ## Start
 
@@ -143,4 +143,4 @@ Stort startområde på toppen. Fint underlag om vinteren, steinete om sommeren.
 
 ## Landing
 
-Stor myr ved parkeringsplassen ved alpinsenteret, så landing og bil ligger samme sted.
+Stor myr ved parkeringsplassen, så landing og bil ligger samme sted.
