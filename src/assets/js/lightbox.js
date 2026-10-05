@@ -39,12 +39,25 @@
     return width ? "(max-width: " + width + "px) 100vw, " + width + "px" : "100vw";
   }
 
+  // Mobiler henter aldri mer enn 1600 px, heller ikke på tvers der skjermen har mange piksler, for å spare
+  // mobildata. Store skjermer og retina på PC får 2400 px, så bildet blir skarpt over hele skjermen.
+  var PHONE_MAX_WIDTH = 1600;
+  var isPhone = Math.min(screen.width, screen.height) < 768;
+  function srcsetFor(link, attribute) {
+    var set = link.getAttribute(attribute) || "";
+    if (!isPhone) return set;
+    var kept = set.split(/,\s*/).filter(function (candidate) {
+      return !(parseInt(candidate.split(" ").pop(), 10) > PHONE_MAX_WIDTH);
+    });
+    return kept.length ? kept.join(", ") : set;
+  }
+
   // Henter neste og forrige bilde i forkant, i samme størrelse som visningen vil velge.
   function preload(index) {
     var link = links[(index + links.length) % links.length];
     var img = new Image();
     img.sizes = sizesFor(link);
-    img.srcset = link.getAttribute("data-srcset-webp");
+    img.srcset = srcsetFor(link, "data-srcset-webp");
   }
 
   function show(index) {
@@ -52,8 +65,8 @@
     var link = links[current];
     var thumb = link.querySelector("img");
     source.sizes = image.sizes = sizesFor(link);
-    source.srcset = link.getAttribute("data-srcset-webp");
-    image.srcset = link.getAttribute("data-srcset-jpeg");
+    source.srcset = srcsetFor(link, "data-srcset-webp");
+    image.srcset = srcsetFor(link, "data-srcset-jpeg");
     image.src = link.getAttribute("href");
     image.alt = thumb ? thumb.alt : "";
     text.textContent = link.getAttribute("data-caption") || "";
