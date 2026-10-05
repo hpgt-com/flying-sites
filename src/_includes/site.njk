@@ -104,6 +104,12 @@ scripts:
           {% if landings | rejectattr("primary") | list | length %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}
           {% if parking.length %}<li><span class="symbol symbol--parking">P</span>Parkering</li>{% endif %}
           {% if routes.length %}<li><span class="symbol symbol--route"></span>Gangrute</li>{% endif %}
+          {% if wind_directions.primary.length %}<li><span class="symbol drawing-swatch drawing-swatch--arrow"></span>Retningene stedet passer for</li>{% endif %}
+          {% if wind_directions.possible.length %}<li><span class="symbol drawing-swatch drawing-swatch--possible"></span>Mulig retning</li>{% endif %}
+          {%- set hasPins = false %}{% set hasHazard = false %}
+          {%- if derived.drawing %}{% for f in derived.drawing.features %}{% if f.properties.kind == "label" %}{% set hasPins = true %}{% if f.properties.style == "hazard" %}{% set hasHazard = true %}{% endif %}{% endif %}{% endfor %}{% endif %}
+          {% if hasPins %}<li><span class="drawing-pin drawing-pin--legend">1</span>Punkt, trykk for å lese</li>{% endif %}
+          {% if hasHazard %}<li><span class="drawing-pin drawing-pin--hazard drawing-pin--legend">!</span>Fare</li>{% endif %}
         </ul>
         <div class="buttons">
           {% for p in parking %}
@@ -300,5 +306,6 @@ scripts:
   wind_directions: wind_directions,
   landings: landings,
   parking: parking,
-  routes: derived.routes
+  routes: derived.routes,
+  drawing: derived.drawing
 } | json | safe }}</script>

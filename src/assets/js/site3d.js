@@ -17,9 +17,6 @@
 
   // Farger på det som er tegnet inn. Fare er rød som farer-boksen, flyvei er aksentfargen.
   var STYLE_COLORS = { flight: "#C24A12", hazard: "#C62828", info: "#2E5E6E", launch: "#F2B705", landing: "#1C2B33" };
-  // Retningsbuen: mørk gul for hovedretning, lys gul for mulig, som de gule strekene på de tegnede oversiktsbildene.
-  var ARROW_COLORS = { primary: "#F2B705", possible: "#F8DC7A" };
-  var BEARINGS = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
 
   // Høyder fra Terrain Tiles (AWS Open Data, gratis og uten nøkkel). I Norge bygger de på Kartverkets
   // høydedata. To kilder, så terrenget og skyggeleggingen ikke deler mellomlager (anbefalt av MapLibre).
@@ -146,42 +143,9 @@
   // Uten egne posisjoner er det én bue rundt hovedstarten, eller rundt direction_arc i tegningen.
   // To visninger (UTKAST, velges med knappene over kartet): «løftet» svever over terrenget og synes fra
   // alle vinkler, «på bakken» ligger på terrenget og skjules bak topper.
-  var ARC_RADIUS_M = 250, ARC_RADIUS_PLACED_M = 110, ARC_LIFT_M = 30;
-  function distanceM(a, b) { return Math.hypot((a[1] - b[1]) * 110540, (a[0] - b[0]) * 111320 * Math.cos(a[1] * Math.PI / 180)); }
-  function arcGroups() {
-    var arcConfig = data.drawing.direction_arc;
-    var all = FS.DIRECTIONS.filter(function (d) {
-      return (windDirections.primary || []).indexOf(d) !== -1 || (windDirections.possible || []).indexOf(d) !== -1;
-    });
-    var placed = (data.launches || []).some(function (l) { return l.lat != null && l.lon != null; });
-    if (arcConfig || !placed) {
-      return [{ center: (arcConfig && arcConfig.center) || [data.launch.lon, data.launch.lat],
-        radius: (arcConfig && arcConfig.radius) || ARC_RADIUS_M, directions: all }];
-    }
-    // Starter med samme retninger hører til samme gruppe. Midten er midt mellom dem, og radiusen er
-    // stor nok til at buen når forbi alle.
-    var groups = {};
-    launchPoints.forEach(function (p) {
-      var key = p.directions.join(",");
-      (groups[key] = groups[key] || { directions: p.directions, points: [] }).points.push([p.lon, p.lat]);
-    });
-    return Object.keys(groups).map(function (key) {
-      var g = groups[key], n = g.points.length;
-      var center = [g.points.reduce(function (s, q) { return s + q[0]; }, 0) / n, g.points.reduce(function (s, q) { return s + q[1]; }, 0) / n];
-      var spread = Math.max.apply(null, g.points.map(function (q) { return distanceM(q, center); }));
-      return { center: center, radius: spread + ARC_RADIUS_PLACED_M, directions: g.directions };
-    });
-  }
-  var arcs = [];
-  arcGroups().forEach(function (g) {
-    g.directions.forEach(function (d) {
-      var pts = [];
-      for (var az = BEARINGS[d] - 22.5; az <= BEARINGS[d] + 22.5 + 0.01; az += 3) pts.push(offset(g.center, az, g.radius));
-      var type = (windDirections.primary || []).indexOf(d) !== -1 ? "primary" : "possible";
-      arcs.push({ direction: d, color: ARROW_COLORS[type], pts: pts, bearing: BEARINGS[d], center: g.center, radius: g.radius,
-        mid: offset(g.center, BEARINGS[d], g.radius), tip: offset(g.center, BEARINGS[d], g.radius + 70) });
-    });
-  });
+  // Buene regnes ut i common.js (directionArcs), likt med kartet på stedssiden.
+  var ARC_LIFT_M = 30;
+  var arcs = FS.directionArcs(data);
   // Retningene på bakken er markører (følger terrenget). I løftet visning tegnes de i SVG-laget.
   var groundLabels = arcs.map(function (arc) {
     return marker("arc-label", FS.DIRECTION_LABELS[arc.direction], offset(arc.center, arc.bearing, arc.radius + 115), null, null);
