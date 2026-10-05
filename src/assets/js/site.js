@@ -51,34 +51,28 @@
     bounds.push([landing.lat, landing.lon]);
   });
 
-  // --- Starter som vindroser ---
-  // Hvilke roser som tegnes, står i launchPoints() i common.js (samme i 3D-visningen).
-  // Starter som ligger så tett at rosene ville overlappet, slås sammen til én rose med alle retningene
-  // og antallet starter. Zoomer man inn, eller trykker på den, deles de opp.
-  var windDirections = data.wind_directions || { primary: [], possible: [] };
-  function launchIcon(directions, count) {
+  // --- Starter som blå prikker ---
+  // Retningene vises med de gule buene, så startene er bare prikker, som er lettere å se.
+  // Hvilke starter som tegnes, står i launchPoints() i common.js. Starter som ligger så tett at
+  // prikkene ville overlappet, slås sammen til én prikk med antallet. Zoomer man inn, eller trykker
+  // på den, deles de opp. Retningene står i merkelappen når man holder over eller trykker.
+  function launchIcon(count) {
     return L.divIcon({
-      className: "map-symbol map-symbol--launch",
-      html: FS.launchRoseHtml(directions, windDirections, count),
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
+      className: "map-symbol map-symbol--launch-dot",
+      html: count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : "",
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
   }
   var launchLayer = L.markerClusterGroup({
-    maxClusterRadius: 40,
+    maxClusterRadius: 24,
     showCoverageOnHover: false,
     spiderfyDistanceMultiplier: 1.8,
-    iconCreateFunction: function (cluster) {
-      var directions = [];
-      cluster.getAllChildMarkers().forEach(function (m) {
-        m.options.directions.forEach(function (d) { if (directions.indexOf(d) === -1) directions.push(d); });
-      });
-      return launchIcon(directions, cluster.getChildCount());
-    },
+    iconCreateFunction: function (cluster) { return launchIcon(cluster.getChildCount()); },
   }).addTo(map);
   FS.launchPoints(data).forEach(function (p) {
-    L.marker([p.lat, p.lon], { icon: launchIcon(p.directions, 1), title: p.label, alt: p.label, zIndexOffset: 1000, directions: p.directions })
-      .bindTooltip(p.label, { direction: "top", offset: [0, -18] })
+    L.marker([p.lat, p.lon], { icon: launchIcon(1), title: p.label, alt: p.label, zIndexOffset: 1000 })
+      .bindTooltip(p.label, { direction: "top", offset: [0, -10] })
       .addTo(launchLayer);
     bounds.push([p.lat, p.lon]);
   });
@@ -186,7 +180,8 @@
     hintTimer = setTimeout(function () { hint.classList.remove("is-visible"); }, 1200);
   }, true);
 
-  FS.fitWhenVisible(map, mapEl, function () {
+  // Zoomer slik at hele stedet vises: starter, landing, parkering, gangruter og retningsbuer.
+  function fitAll() {
     if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false });
     else map.setView([data.launch.lat, data.launch.lon], 14, { animate: false });
     // Buene holdes minst ARC_MIN_PX store og kan da bli større enn innholdet. Får de ikke plass,
@@ -201,6 +196,70 @@
       if (inner.contains(arcBounds)) break;
       map.fitBounds(arcBounds.extend(L.latLngBounds(bounds)), { paddingTopLeft: [90, 60], paddingBottomRight: [60, 50], maxZoom: 15, animate: false });
     }
+  }
+  FS.fitWhenVisible(map, mapEl, fitAll);
+
+  // Knapp under zoomknappene som går tilbake til utsnittet med hele stedet.
+  var ResetControl = L.Control.extend({
+    options: { position: "topleft" },
+    onAdd: function () {
+      var bar = L.DomUtil.create("div", "leaflet-bar map-reset");
+      var button = L.DomUtil.create("a", "", bar);
+      button.href = "#";
+      button.setAttribute("role", "button");
+      button.title = "Vis hele stedet";
+      button.setAttribute("aria-label", "Vis hele stedet");
+      button.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M3 11l9-7 9 7"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>';
+      L.DomEvent.disableClickPropagation(bar);
+      L.DomEvent.on(button, "click", function (ev) {
+        L.DomEvent.preventDefault(ev);
+        map.closePopup();
+        fitAll();
+      });
+      return bar;
+    },
+  });
+  new ResetControl().addTo(map);
+
+  // Fullskjerm: kartet legges over hele siden, siden det er lite i to kolonner. Esc eller knappen
+  // igjen lukker. Ikke nettleserens fullskjerm, så det også virker på iPhone.
+  var ICON_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>';
+  var ICON_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"></path></svg>';
+  var fullscreenButton = null;
+  // Utsnittet tilpasses når kartet bytter størrelse, så hele stedet fyller flaten.
+  function setFullscreen(on, keepView) {
+    mapEl.classList.toggle("map--fullscreen", on);
+    document.body.classList.toggle("has-fullscreen-map", on);
+    fullscreenButton.innerHTML = on ? ICON_SHRINK : ICON_EXPAND;
+    var label = on ? "Lukk fullskjerm" : "Vis kartet i fullskjerm";
+    fullscreenButton.title = label;
+    fullscreenButton.setAttribute("aria-label", label);
+    fullscreenButton.setAttribute("aria-pressed", String(on));
+    if (keepView) return;
+    map.invalidateSize();
+    map.closePopup();
+    fitAll();
+  }
+  var FullscreenControl = L.Control.extend({
+    options: { position: "topleft" },
+    onAdd: function () {
+      var bar = L.DomUtil.create("div", "leaflet-bar map-reset");
+      fullscreenButton = L.DomUtil.create("a", "", bar);
+      fullscreenButton.href = "#";
+      fullscreenButton.setAttribute("role", "button");
+      L.DomEvent.disableClickPropagation(bar);
+      L.DomEvent.on(fullscreenButton, "click", function (ev) {
+        L.DomEvent.preventDefault(ev);
+        setFullscreen(!mapEl.classList.contains("map--fullscreen"));
+      });
+      return bar;
+    },
+  });
+  new FullscreenControl().addTo(map);
+  setFullscreen(false, true);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && mapEl.classList.contains("map--fullscreen")) setFullscreen(false);
   });
 
   // --- Høydeprofil ---

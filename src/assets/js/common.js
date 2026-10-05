@@ -115,15 +115,6 @@
     return points;
   }
 
-  // Vindrose for en start, med antall når flere starter er slått sammen.
-  function launchRoseHtml(directions, windDirections, count) {
-    var site = {
-      primary: (windDirections.primary || []).filter(function (d) { return directions.indexOf(d) !== -1; }),
-      possible: (windDirections.possible || []).filter(function (d) { return directions.indexOf(d) !== -1; }),
-    };
-    return roseSvg(site, 30, false) + (count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : "");
-  }
-
   // --- Retningsbuer ---
   // Hvilke sider av fjellet stedet passer for: én gul bue per retning i wind_directions, med en pil ut.
   // Mørk gul er hovedretning, lys gul mulig. Brukes i kartet på stedssiden (ovenfra) og i 3D-visningen.
@@ -376,7 +367,6 @@
     directionType: directionType,
     roseSvg: roseSvg,
     launchPoints: launchPoints,
-    launchRoseHtml: launchRoseHtml,
     directionArcs: directionArcs,
     arrowHead: arrowHead,
     offset: offset,

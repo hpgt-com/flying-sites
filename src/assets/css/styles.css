@@ -366,15 +366,15 @@ p { margin: 0; }
    kartet i mørk modus. Start: vindrose med oransje ring, som på forsiden. Landing: målskive, grå når
    den er alternativ. Formene skiller seg, så ingenting er bare farge. */
 .map-symbol { display: inline-flex !important; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; box-sizing: border-box; }
-.map-symbol--launch { position: relative; background: #FFFFFF; border: 3px solid var(--accent); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.45); }
-.map-symbol--launch .rose .sector { stroke: #FFFFFF; stroke-width: 4; }
-.map-symbol--launch .rose .sector--none { fill: #DCE4E4; }
+/* Start: prikk i samme petrolblå som hovedretningen i vindrosen, med hvit kant. Rund, så den skiller
+   seg fra parkering (blå firkant med P). */
+.map-symbol--launch-dot { position: relative; background: var(--dir-primary); border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px #1C2B33, 0 1px 4px rgba(28, 43, 51, 0.5); }
 /* Antall starter når flere ligger så tett at de er slått sammen til én rose. */
 .map-symbol__count {
   position: absolute; top: -8px; right: -10px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center; border-radius: 999px;
-  /* Hvit med oransje kant som startene, så den ikke forveksles med de mørke nummerpunktene fra tegningen. */
-  background: #FFFFFF; color: #1C2B33; border: 2px solid var(--accent); font: 700 12px/1 var(--font-body);
+  /* Hvit med blå kant som startene, så den ikke forveksles med de mørke nummerpunktene fra tegningen. */
+  background: #FFFFFF; color: #1C2B33; border: 2px solid var(--dir-primary); font: 700 12px/1 var(--font-body);
 }
 .map-symbol--landing {
   --target: #1C2B33;
@@ -384,7 +384,7 @@ p { margin: 0; }
 }
 .map-symbol--alt { --target: #7F9396; }
 .map-legend .map-symbol { width: 20px; height: 20px; }
-.map-legend .map-symbol--launch { border-width: 2px; }
+.map-legend .map-symbol--launch-dot { width: 16px; height: 16px; border-width: 2px; }
 .map-legend .map-symbol--landing { border-width: 2px; box-shadow: 0 0 0 1px var(--line); }
 
 .map-legend {
@@ -599,6 +599,7 @@ p { margin: 0; }
 }
 .launch-list li:last-child { border-bottom: 1px solid var(--line); }
 .launch-list__badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.launch-list__texts { display: flex; flex-direction: column; gap: 6px; }
 
 .meteogram { margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .meteogram img { display: block; width: 100%; height: auto; background: var(--white); border: 1px solid var(--line); border-radius: 10px; }
@@ -884,3 +885,8 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .map-hint { position: absolute; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center;
   background: rgba(28, 43, 51, 0.55); color: #FFFFFF; font-weight: 600; font-size: 17px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
 .map-hint.is-visible { opacity: 1; }
+/* «Vis hele stedet» under zoomknappene (site.js). */
+.map-reset a { display: flex !important; align-items: center; justify-content: center; color: var(--text); }
+/* Fullskjerm: kartet legges over hele siden (site.js). Ikke nettleserens fullskjerm, så det også virker på iPhone. */
+.map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
+body.has-fullscreen-map { overflow: hidden; }

@@ -59,11 +59,9 @@ launches:
   categories: null
   text: Øststarten, med passe helning og mose og gress.
 images:
-  overview: nupen-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

@@ -97,11 +97,9 @@ launches:
   categories: null
   text: Hang på baksiden er mulig. Pass på rotoren på vei ned.
 images:
-  overview: storlitinden-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

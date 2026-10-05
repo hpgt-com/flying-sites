@@ -120,18 +120,16 @@ launches:
   lat: 68.80576
   lon: 16.36962
   source: lokalkunnskap
-  text: Lenger opp på ryggen, på baksiden av fjellet. Se oversiktsbildet.
+  text: Lenger opp på ryggen, på baksiden av fjellet.
 - directions:
   - W
   - SW
   categories: null
   text: Ikke egnet, men mulig i svak vind med krabbevinkel fra toppen eller i bakvind. Går lettere med ski om vinteren.
 images:
-  overview: sollifjellet-overview.jpg
   launch: sollifjellet-launch.jpg
   landing: sollifjellet-landing.jpg
   air: sollifjellet-air.jpg
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: Kristoffer D. Hofstad
   date: '2026-09-24'

@@ -35,7 +35,7 @@ scripts:
         <h2 id="h-map">Kart</h2>
         <div id="site-map" class="map map--site" role="region" aria-label="Kart over {{ name }} med start, landing, parkering og gangrute"></div>
         <ul class="map-legend" aria-label="Tegnforklaring for kartet">
-          <li><span class="map-symbol map-symbol--launch">{{ m.rose(wind_directions, 16, false) }}</span>Start, med retningene den passer for</li>
+          <li><span class="map-symbol map-symbol--launch-dot"></span>Start</li>
           {% if landings.length %}<li><span class="map-symbol map-symbol--landing"></span>Landing</li>{% endif %}
           {% if landings | rejectattr("primary") | list | length %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}
           {% if parking.length %}<li><span class="symbol symbol--parking">P</span>Parkering</li>{% endif %}
@@ -131,13 +131,14 @@ scripts:
         {% if launchText %}<div class="prose">{{ launchText | safe }}</div>{% endif %}
         {% if launches.length %}
         <ul class="launch-list" aria-label="Starter per vindretning">
-          {% for launch in launches %}
+          {#- Starter med samme retninger er slått sammen til én linje (groupLaunches i flysteder.11tydata.js). -#}
+          {% for group in derived.launchGroups %}
           <li>
             <span class="launch-list__badges">
-              {% for code in launch.directions %}{{ m.directionBadge(code, wind_directions) }}{% endfor %}
-              {% for c in launch.categories or [] %}{{ m.tag(c) }}{% endfor %}
+              {% for code in group.directions %}{{ m.directionBadge(code, wind_directions) }}{% endfor %}
+              {% for c in group.categories %}{{ m.tag(c) }}{% endfor %}
             </span>
-            <span>{{ launch.text }}</span>
+            <span class="launch-list__texts">{% for t in group.texts %}<span>{{ t }}</span>{% endfor %}</span>
           </li>
           {% endfor %}
         </ul>

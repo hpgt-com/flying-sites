@@ -58,11 +58,9 @@ launches:
   categories: null
   text: NV er ideell. Hang fra nedre start krever minst 3 m/s.
 images:
-  overview: kilhusasen-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

@@ -50,11 +50,9 @@ launches:
   categories: null
   text: Dekker mer sørlige vinder enn Trastad. Etter start kan man dreie nordover mot Daleskallen og henge der.
 images:
-  overview: dale-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

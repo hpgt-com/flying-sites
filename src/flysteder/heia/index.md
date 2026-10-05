@@ -65,11 +65,9 @@ launches:
   categories: null
   text: Det kan flys hang på baksiden.
 images:
-  overview: heia-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

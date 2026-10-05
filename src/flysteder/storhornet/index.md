@@ -63,11 +63,9 @@ launches:
   categories: null
   text: Stedet dekker mange retninger fra de tre startene.
 images:
-  overview: storhornet-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null

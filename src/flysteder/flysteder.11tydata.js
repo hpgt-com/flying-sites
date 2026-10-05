@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { processRoute } from "../../lib/gpx.js";
 import { lastModified } from "../../lib/git.js";
-import { sourceLabel } from "../../lib/format.js";
+import { sourceLabel, groupLaunches } from "../../lib/format.js";
 import { processImage } from "../../lib/images.js";
 import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
 import { readDrawing } from "../../lib/drawing.js";
@@ -70,7 +70,7 @@ export default {
         images[field] = await processImage(dir, data.id, field, file, {
           alt: IMAGE_ALT[field],
           outputDir: data.eleventy.directories.output,
-          // Småbilder i tre kolonner nederst. Oversiktsbildet (images.overview) vises ikke lenger, kartet viser det samme.
+          // Småbilder i tre kolonner nederst.
           sizes: "(min-width: 1024px) 220px, (min-width: 640px) 33vw, 100vw",
         });
       }
@@ -87,6 +87,7 @@ export default {
         lastModified: lastModified(inputPath),
         sources: describeSources(data, routes, airspace),
         intro: readIntro(inputPath),
+        launchGroups: groupLaunches(data.launches),
         // Tegningen til 3D-visningen, eller null. Valideres i lib/validation.js.
         drawing: (() => { try { return readDrawing(dir, data.id); } catch { return null; } })(),
       };

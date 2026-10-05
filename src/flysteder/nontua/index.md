@@ -58,11 +58,9 @@ launches:
   categories: null
   text: Mulig i lite vind. Bedre NV-start 500 m vestover mot Høgfjellet.
 images:
-  overview: nontua-overview.jpg
   launch: null
   landing: null
   air: null
-  overview_credit: Gammel flystedsoversikt
 reviewed:
   by: null
   date: null
