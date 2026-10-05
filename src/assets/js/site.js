@@ -222,6 +222,46 @@
   });
   new ResetControl().addTo(map);
 
+  // Fullskjerm: kartet legges over hele siden, siden det er lite i to kolonner. Esc eller knappen
+  // igjen lukker. Ikke nettleserens fullskjerm, så det også virker på iPhone.
+  var ICON_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>';
+  var ICON_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"></path></svg>';
+  var fullscreenButton = null;
+  // Utsnittet tilpasses når kartet bytter størrelse, så hele stedet fyller flaten.
+  function setFullscreen(on, keepView) {
+    mapEl.classList.toggle("map--fullscreen", on);
+    document.body.classList.toggle("has-fullscreen-map", on);
+    fullscreenButton.innerHTML = on ? ICON_SHRINK : ICON_EXPAND;
+    var label = on ? "Lukk fullskjerm" : "Vis kartet i fullskjerm";
+    fullscreenButton.title = label;
+    fullscreenButton.setAttribute("aria-label", label);
+    fullscreenButton.setAttribute("aria-pressed", String(on));
+    if (keepView) return;
+    map.invalidateSize();
+    map.closePopup();
+    fitAll();
+  }
+  var FullscreenControl = L.Control.extend({
+    options: { position: "topleft" },
+    onAdd: function () {
+      var bar = L.DomUtil.create("div", "leaflet-bar map-reset");
+      fullscreenButton = L.DomUtil.create("a", "", bar);
+      fullscreenButton.href = "#";
+      fullscreenButton.setAttribute("role", "button");
+      L.DomEvent.disableClickPropagation(bar);
+      L.DomEvent.on(fullscreenButton, "click", function (ev) {
+        L.DomEvent.preventDefault(ev);
+        setFullscreen(!mapEl.classList.contains("map--fullscreen"));
+      });
+      return bar;
+    },
+  });
+  new FullscreenControl().addTo(map);
+  setFullscreen(false, true);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && mapEl.classList.contains("map--fullscreen")) setFullscreen(false);
+  });
+
   // --- Høydeprofil ---
   var profileEl = document.getElementById("elevation-profile");
   var routes = data.routes || [];
