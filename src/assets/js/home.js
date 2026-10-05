@@ -419,7 +419,7 @@
   }
 
   // Knappen for nivå og kategori på mobil: viser hvor mange som er valgt, og åpner/lukker dem.
-  // Retningen står alltid synlig på en egen rad på mobil.
+  // Kompasset for retning står alltid synlig.
   var filtersToggle = document.getElementById("filters-toggle");
   var filtersMore = document.getElementById("filters-more");
   function updateFiltersToggle() {
@@ -501,7 +501,7 @@
     var match = find(value) || find("");
     value = match.getAttribute("data-value");
     filter[type] = value;
-    // Alle knapper med samme verdi markeres, så retningsraden (mobil) og kompasset (PC) holdes like.
+    // Alle knapper med samme verdi markeres, i tilfelle samme filter finnes flere steder på siden.
     buttons.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-value") === value ? "true" : "false"); });
   }
 

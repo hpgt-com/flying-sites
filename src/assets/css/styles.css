@@ -945,15 +945,7 @@ body.has-fullscreen-map { overflow: hidden; }
 .wind-summary[hidden] { display: none; }
 /* Regelteksten for vindvurderingen bak «Hvordan vurderes vinden?». */
 .wind-rules summary { font-size: 14px; color: var(--link); cursor: pointer; min-height: 32px; display: flex; align-items: center; }
-/* Mobil: retningene på én rad (ni like kolonner), kompasset skjult. Nivå og kategori bak en knapp med
-   antall valgte (home.js). PC: kompasset og alle filtrene synlige, raden og knappen skjult. */
-.direction-row { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
-.direction-row button {
-  min-height: 44px; padding: 0; font: 600 14px/1 var(--font-body); color: var(--text); cursor: pointer;
-  background: var(--card); border: 1px solid var(--rose-border); border-radius: 8px;
-}
-.direction-row button[aria-pressed="true"] { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
-.filter--compass { display: none; }
+/* Nivå og kategori: på mobil bak en knapp med antall valgte (home.js), på PC alltid synlige. Kompasset står alltid synlig. */
 .filters-more { display: none; flex-direction: column; gap: 16px; }
 .filters-more.is-open { display: flex; }
 .filters-toggle {
@@ -964,8 +956,7 @@ body.has-fullscreen-map { overflow: hidden; }
 .filters-toggle[aria-expanded="true"]::after { content: "▴"; }
 .filters-toggle__count { font-size: 13px; font-weight: 600; color: var(--on-color); background: var(--fjord); border-radius: 999px; padding: 2px 8px; }
 @media (min-width: 1100px) {
-  .filters-toggle, .filter--direction-row { display: none; }
-  .filter--compass { display: flex; }
+  .filters-toggle { display: none; }
   .filters-more { display: flex; }
   /* Oppsummeringen av vinden oppå kartet, til høyre for zoomknappene. */
   .home__map { position: relative; }

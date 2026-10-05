@@ -45,20 +45,8 @@ scripts:
         </details>
       </div>
       {% endif %}
-      {#- Mobil: retningene på én rad, alltid synlig, siden det er filteret man bytter oftest. Samme
-          data-filter som kompasset, så de holdes like (setFilter i home.js). På PC vises kompasset. -#}
-      <div class="filter filter--direction-row">
-        <span class="filter__title" id="f-direction-row">Vindretning</span>
-        <div class="direction-row" role="group" aria-labelledby="f-direction-row">
-          {% for code in ["", "N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}
-          <button type="button" data-filter="direction" data-value="{{ code }}" aria-pressed="{{ 'false' if code else 'true' }}"{% if code %} aria-label="{{ code | directionWord | capitalizeFirst }}"{% endif %}>{{ (code | directionLabel) if code else "Alle" }}</button>
-          {% endfor %}
-        </div>
-      </div>
-      {#- Mobil: nivå og kategori bak en knapp med antall valgte (home.js). På PC vises alt, og knappen er skjult. -#}
-      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">Nivå og kategori</button>
-      <div class="filters-more" id="filters-more">
-      <div class="filter filter--compass">
+      {#- Kompasset står alltid synlig, også på mobil: store knapper, og det er filteret man bytter oftest. -#}
+      <div class="filter">
         <span class="filter__title" id="f-direction">Vindretning</span>
         <div class="compass" role="group" aria-labelledby="f-direction">
           {% for code in ["NW", "N", "NE", "W", null, "E", "SW", "S", "SE"] %}
@@ -66,6 +54,9 @@ scripts:
           {% endfor %}
         </div>
       </div>
+      {#- Mobil: nivå og kategori bak en knapp med antall valgte (home.js). På PC vises alt, og knappen er skjult. -#}
+      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">Nivå og kategori</button>
+      <div class="filters-more" id="filters-more">
       <div class="filter">
         <span class="filter__title" id="f-level">Nivå</span>
         <div class="pills" role="group" aria-labelledby="f-level">
