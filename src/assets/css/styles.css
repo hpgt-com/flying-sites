@@ -938,7 +938,17 @@ body.has-fullscreen-map { overflow: hidden; }
 .pill--suggest[aria-pressed="true"]::before { content: "✓ "; }
 .pill--suggest:disabled { opacity: 0.45; cursor: not-allowed; }
 /* Oppsummering av vinden og vurderingene under vindvalget (home.js). */
-.wind-summary { padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+/* Statuskortet for kartet på forsiden: antall som vises, vindoppsummering og varseltidspunkt (home.js).
+   Over kartet på mobil, halvgjennomsiktig oppå kartet på PC. */
+.map-info {
+  display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--card); background: color-mix(in srgb, var(--card) 86%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 14px; line-height: 1.45;
+}
+.map-info__count { margin: 0; font-weight: 700; }
+.map-info__status { margin: 0; font-size: 13px; color: var(--muted); }
+.map-info__status:empty { display: none; }
+.wind-summary { font-size: 14px; line-height: 1.45; }
 .wind-summary p { margin: 0; }
 .wind-summary p + p { margin-top: 4px; }
 .wind-summary__none { color: var(--hazard-text); font-weight: 600; }
@@ -958,7 +968,7 @@ body.has-fullscreen-map { overflow: hidden; }
 @media (min-width: 1100px) {
   .filters-toggle { display: none; }
   .filters-more { display: flex; }
-  /* Oppsummeringen av vinden oppå kartet, til høyre for zoomknappene. */
+  /* Statuskortet oppå kartet, til høyre for zoomknappene. */
   .home__map { position: relative; }
-  .home__map .wind-summary { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
+  .home__map .map-info { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
 }

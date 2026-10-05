@@ -314,6 +314,7 @@
   var listEl = document.getElementById("results-list");
   var titleEl = document.getElementById("results-title");
   var noResultsEl = document.getElementById("no-results");
+  var mapCountEl = document.getElementById("map-count");
   var windLegendEl = document.getElementById("wind-legend");
   var originalOrder = Array.prototype.slice.call(listEl.children);
 
@@ -405,6 +406,12 @@
     if (counts.nowind) title += ", " + counts.nowind + " uten varsel";
     if (counts.unknown) title += ", " + counts.unknown + " uten nivå";
     titleEl.textContent = title;
+    var shown = counts.match + counts.unknown + counts.nowind;
+    if (mapCountEl) {
+      mapCountEl.textContent = shown === sites.length
+        ? "Viser alle " + sites.length + " flysteder"
+        : "Viser " + shown + " av " + sites.length + " flysteder";
+    }
     noResultsEl.hidden = counts.match + counts.unknown + counts.nowind !== 0;
     var sum = assessments ? summarize(assessments) : null;
     renderSummary(sum);
