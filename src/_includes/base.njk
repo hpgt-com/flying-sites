@@ -9,6 +9,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://www.yr.no; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{#- Mobilnettlesere gjør ellers «Sollifjellet 567 moh» om til en kartlenke (tror det er en adresse),
+    og tall til telefonlenker. Siden lenker selv der det trengs. -#}
+<meta name="format-detection" content="telephone=no, address=no, email=no, date=no">
 {%- set pageTitle = (name + " – " if name else "") + site.title -%}
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
 {%- set ownImage = (derived.images.air or derived.images.launch or derived.images.landing) if (derived and derived.images) else null -%}
