@@ -418,13 +418,14 @@
     updateFiltersToggle();
   }
 
-  // Knappen for retning, nivå og kategori på mobil: viser hvor mange som er valgt, og åpner/lukker dem.
+  // Knappen for nivå og kategori på mobil: viser hvor mange som er valgt, og åpner/lukker dem.
+  // Retningen står alltid synlig på en egen rad på mobil.
   var filtersToggle = document.getElementById("filters-toggle");
   var filtersMore = document.getElementById("filters-more");
   function updateFiltersToggle() {
     if (!filtersToggle) return;
-    var n = ["direction", "level", "category"].filter(function (t) { return filter[t]; }).length;
-    filtersToggle.innerHTML = "Retning, nivå og kategori" + (n ? ' <span class="filters-toggle__count">' + n + " valgt</span>" : "");
+    var n = ["level", "category"].filter(function (t) { return filter[t]; }).length;
+    filtersToggle.innerHTML = "Nivå og kategori" + (n ? ' <span class="filters-toggle__count">' + n + " valgt</span>" : "");
   }
   if (filtersToggle) {
     filtersToggle.addEventListener("click", function () {
@@ -500,7 +501,8 @@
     var match = find(value) || find("");
     value = match.getAttribute("data-value");
     filter[type] = value;
-    buttons.forEach(function (b) { b.setAttribute("aria-pressed", b === match ? "true" : "false"); });
+    // Alle knapper med samme verdi markeres, så retningsraden (mobil) og kompasset (PC) holdes like.
+    buttons.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-value") === value ? "true" : "false"); });
   }
 
   function setWind(value) {
