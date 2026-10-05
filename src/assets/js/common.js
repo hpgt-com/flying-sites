@@ -24,12 +24,23 @@
     return "none";
   }
 
-  function roseSvg(site, size, labels) {
-    var viewBox = labels ? "-12 -12 184 184" : "18 18 124 124";
+  // wind (valgfri): { code, rating } fra vindvurderingen. Sektoren vinden kommer fra «løftes» litt ut og
+  // fylles med vurderingsfargen, så man ser om vinden treffer en startretning uten en egen pil.
+  var LIFT = 8;
+  function roseSvg(site, size, labels, wind) {
+    var viewBox = labels ? "-12 -12 184 184" : wind ? (18 - LIFT) + " " + (18 - LIFT) + " " + (124 + 2 * LIFT) + " " + (124 + 2 * LIFT) : "18 18 124 124";
     var svg = '<svg class="rose" width="' + size + '" height="' + size + '" viewBox="' + viewBox + '" aria-hidden="true">';
+    var lifted = "";
     DIRECTIONS.forEach(function (code, i) {
+      if (wind && wind.code === code) {
+        var a = i * 45 * Math.PI / 180;
+        lifted = '<path d="' + ROSE_PATHS[i] + '" class="sector sector--wind sector--wind-' + wind.rating + '" transform="translate(' +
+          (Math.sin(a) * LIFT).toFixed(1) + " " + (-Math.cos(a) * LIFT).toFixed(1) + ')"></path>';
+        return;
+      }
       svg += '<path d="' + ROSE_PATHS[i] + '" class="sector sector--' + directionType(site, code) + '"></path>';
     });
+    svg += lifted;
     svg += '<circle cx="80" cy="80" r="9" class="rose__center"></circle>';
     if (labels) {
       svg += '<text x="80" y="2" text-anchor="middle">N</text><text x="80" y="168" text-anchor="middle">S</text>' +
