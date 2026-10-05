@@ -39,15 +39,17 @@
     return width ? "(max-width: " + width + "px) 100vw, " + width + "px" : "100vw";
   }
 
-  // Mobiler henter aldri mer enn 1600 px, heller ikke på tvers der skjermen har mange piksler, for å spare
-  // mobildata. Store skjermer og retina på PC får 2400 px, så bildet blir skarpt over hele skjermen.
-  var PHONE_MAX_WIDTH = 1600;
-  var isPhone = Math.min(screen.width, screen.height) < 768;
+  // Nettleseren velger størrelse ut fra skjermen og pikseltettheten, så nye mobiler med høyere oppløsning
+  // får skarpere bilder av seg selv. Unntak: har brukeren slått på datasparing, eller er nettet tregt
+  // (2G/3G), hentes høyst 1600 px. Nettleseren sier fra om dette der den kan (navigator.connection).
+  var SAVE_DATA_MAX_WIDTH = 1600;
+  var connection = navigator.connection || {};
+  var limitData = !!connection.saveData || /(^|-)(2g|3g)$/.test(connection.effectiveType || "");
   function srcsetFor(link, attribute) {
     var set = link.getAttribute(attribute) || "";
-    if (!isPhone) return set;
+    if (!limitData) return set;
     var kept = set.split(/,\s*/).filter(function (candidate) {
-      return !(parseInt(candidate.split(" ").pop(), 10) > PHONE_MAX_WIDTH);
+      return !(parseInt(candidate.split(" ").pop(), 10) > SAVE_DATA_MAX_WIDTH);
     });
     return kept.length ? kept.join(", ") : set;
   }
