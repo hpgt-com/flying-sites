@@ -270,10 +270,18 @@
 
   // --- Kort for valgt sted ---
   var cardEl = document.getElementById("selected");
-  var emptyCardHtml = cardEl.innerHTML;
+  // Tom tilstand bygges med DOM-metoder (ikke innerHTML fra siden selv), så ingen tekst tolkes som HTML.
+  var EMPTY_CARD_TEXT = "Trykk på et flysted i kartet eller i listen for å se mer.";
+  function resetCard() {
+    var p = document.createElement("p");
+    p.className = "muted selected__empty";
+    p.textContent = EMPTY_CARD_TEXT;
+    cardEl.replaceChildren(p);
+    cardEl.classList.remove("selected--active");
+  }
   function showCard(site, assessment, windOn) {
     var e = FS.escapeHtml;
-    var html =
+    var html = '<button type="button" class="selected__close" data-close-card aria-label="Lukk kortet for ' + e(site.name) + '">×</button>' +
       '<div class="selected__top">' + FS.roseSvg(site, 84, true, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null) +
       '<div class="selected__info"><h2 class="selected__name">' + e(site.name) + "</h2>" +
       (site.elevation != null ? '<p class="selected__elev">Start ' + site.elevation + " moh</p>" : "") +
@@ -545,6 +553,35 @@
     writeHash();
   });
 
+  // Lukk kortet for valgt sted (på PC ligger det oppå kartet).
+  cardEl.addEventListener("click", function (ev) {
+    if (!ev.target.closest("[data-close-card]")) return;
+    selectedId = null;
+    resetCard();
+    update();
+    writeHash();
+  });
+
+  // --- Faner: Flysteder, Vær, Info ---
+  // Bytter innholdet i venstrekolonnen (på mobil over kartet). Kartet står alltid. Piltaster flytter mellom fanene.
+  var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.home-tabs [role="tab"]'));
+  function showTab(button, focus) {
+    tabButtons.forEach(function (b) {
+      var on = b === button;
+      b.setAttribute("aria-selected", String(on));
+      b.tabIndex = on ? 0 : -1;
+      document.getElementById(b.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) button.focus();
+  }
+  tabButtons.forEach(function (b, i) {
+    b.addEventListener("click", function () { showTab(b); });
+    b.addEventListener("keydown", function (ev) {
+      var step = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
+      if (step) { ev.preventDefault(); showTab(tabButtons[(i + step + tabButtons.length) % tabButtons.length], true); }
+    });
+  });
+
   // --- Tilstand i adressen ---
   // Filtrene, søket, vindtidspunktet og valgt sted lagres i adressen (#direction=NW&level=PP3&wind=3&q=solli&site=sollifjellet),
   // så tilbakeknappen og delte lenker gir samme visning. replaceState, så hvert klikk ikke blir et steg i historikken.
@@ -568,8 +605,7 @@
     var site = params.get("site");
     selectedId = sites.some(function (s) { return s.id === site; }) ? site : null;
     if (!selectedId) {
-      cardEl.innerHTML = emptyCardHtml;
-      cardEl.classList.remove("selected--active");
+      resetCard();
     }
     update();
     writeHash(); // rydder bort ukjente verdier fra adressen

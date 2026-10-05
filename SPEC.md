@@ -42,9 +42,11 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
   - Varselet hentes per sted. Feiler ett sted, står det «Ingen vindvarsel for stedet» der, og resten får vurdering. Feiler alle, vises ikke vindvalget.
   - Kartet viser farget ring, og sektoren i rosen vinden kommer fra løftes litt ut og fylles med vurderingsfargen (ingen egen vindpil), også i rosen i kortet for valgt sted, listen sorteres etter vurdering. Bare et forslag, aldri «OK å fly».
 - Liste over steder som passer filteret, med starthøyde (moh) til høyre for navnet når den er registrert. Kortet for valgt sted viser også starthøyden.
-- «Før du drar»: NOTAM og luftrom (https://ippc.no), Tårn (egen side `/luftrom/` med telefonnumre til tårnene, fra `src/_data/towers.json`, tårn uten nummer vises ikke), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.
-- Nederst: ansvarsfraskrivelse og kreditering av Lars Sletten. Krediteringen står bare her, ikke på hver stedsside.
-- Desktop: tre kolonner (filtre og liste | kart | valgt sted, forklaring, «Før du drar»).
+- **Faner** øverst i venstrekolonnen: **Flysteder** (søk, vind, filtre og liste, med en kort linje om at det er en grov guide), **Vær** (lenker til Flybart, XCC, Yr og Windy; målt vind fra værstasjoner i kartet kommer her) og **Info** («Før du drar», ansvarsfraskrivelse, kreditering og åpne data). Kartet står alltid. Piltaster flytter mellom fanene.
+- «Før du drar» (fanen Info): NOTAM og luftrom (https://ippc.no), Tårn (egen side `/luftrom/` med telefonnumre til tårnene, fra `src/_data/towers.json`, tårn uten nummer vises ikke), Flybart (https://flybart.net/), XCC flymet (http://xcc.no/xccflymet.html). Én linje om NLF sin tommelfingerregel på 5–6 m/s.
+- Ansvarsfraskrivelse og kreditering av Lars Sletten (fanen Info). Krediteringen står bare her, ikke på hver stedsside.
+- Desktop: to kolonner (venstrekolonne med faner | kart). Ingen høyrekolonne: statuskortet ligger øverst til venstre i kartet, kortet for valgt sted nederst til høyre (vises når et sted er valgt, lukkes med ×), og tegnforklaringen som en halvgjennomsiktig linje nederst til venstre. Mobil: faner, filtre, kart, valgt sted, tegnforklaring, liste.
+- Markører med vind på: ringen i vurderingsfargen er hovedsignalet, resten av rosen er dempet, og sektoren vinden kommer fra er løftet ut i vurderingsfargen. Klynger er avrundede firkanter, så de ikke ligner de nummererte punktene på stedssidene.
 
 ## Stedsside – fast mal i denne rekkefølgen
 1. Navn med starthøyde («Sollifjellet 567 moh»), én–to setninger kort fortalt, tagger (kategori og sesong).
