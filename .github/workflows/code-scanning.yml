@@ -15,9 +15,12 @@ on:
 permissions:
   contents: read
 
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       security-events: write # laste opp funnene

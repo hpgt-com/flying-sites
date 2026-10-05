@@ -10,9 +10,12 @@ on:
 permissions:
   contents: read
 
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -36,6 +39,7 @@ jobs:
   # Stopper PR-er som legger til npm-pakker eller Actions med kjente sårbarheter (moderat eller høyere).
   dependency-review:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,6 +51,7 @@ jobs:
   # Sjekker workflowene for vanlige sikkerhetsfeil i GitHub Actions (rettigheter, injeksjon, tokens).
   workflow-security:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
