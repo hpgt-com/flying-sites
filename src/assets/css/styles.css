@@ -732,6 +732,26 @@ p { margin: 0; }
 }
 .images-missing { font-size: 14px; color: var(--muted); }
 
+/* Høyre kolonne: hver del i et hvitt kort (Fakta, Vær, Bilder, Logg og mer), som i prototypen. */
+.site-page__aside > .block {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  gap: 12px;
+}
+.site-page__aside > .block > h2 { font-size: 24px; }
+.site-page__aside .facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+/* Vær: meteogrammet i egen ramme og lenkene kompakt på én linje, med beskrivelsen til høyre. */
+.block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.block--weather .meteogram img { border: 0; border-radius: 6px; }
+.block--weather .link-list { gap: 6px; }
+.block--weather .link-row, .block--weather .link-row:last-child {
+  min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px;
+}
+.block--weather .link-row > span { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 10px; flex: 1; min-width: 0; }
+.block--weather .link-row__subtitle { font-size: 13px; text-align: right; }
+
 /* Vind nå (site-wind.js), med samme farger som vurderingen på forsiden. */
 .site-wind {
   display: flex; flex-direction: column; gap: 3px; padding: 10px 14px;
