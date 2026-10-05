@@ -530,7 +530,7 @@
     suggestButton.hidden = !forecast || stale;
     suggestButton.disabled = !windOn;
     suggestButton.setAttribute("aria-pressed", String(suggest && windOn));
-    suggestButton.textContent = "Vis bare steder som kan passe" + (windSlot === "tomorrow" ? " i morgen kl. 12" : windOn ? " " + SLOT_LABELS[windSlot] : "");
+    suggestButton.textContent = "Bare steder som kan passe" + (windSlot === "tomorrow" ? " i morgen kl. 12" : windOn ? " " + SLOT_LABELS[windSlot] : "");
     suggestButton.title = windOn ? "" : "Velg et tidspunkt for vind først";
   }
 

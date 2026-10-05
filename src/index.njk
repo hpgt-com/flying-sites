@@ -17,7 +17,6 @@ scripts:
 
     <div class="home__intro">
       <h1>Hvor står vinden i dag?</h1>
-      <p class="muted">Filtrer på vindretning, nivå og kategori, og trykk på et flysted i kartet.</p>
     </div>
 
     <div class="filters" id="filters">
@@ -31,13 +30,14 @@ scripts:
       {% if forecast %}
       <div class="filter">
         <span class="filter__title" id="f-wind">Vind fra varsel</span>
-        <div class="pills" role="group" aria-labelledby="f-wind">
-          {% for value, label in [["off", "Av"], ["0", "Nå"], ["3", "Om 3 t"], ["6", "Om 6 t"], ["tomorrow", "I morgen kl. 12"]] %}
-          <button type="button" class="pill" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}">{{ label }}</button>
+        {#- Segmentert linje, så alle tidspunktene står på én rad. -#}
+        <div class="segmented" role="group" aria-labelledby="f-wind">
+          {% for value, label, full in [["off", "Av", "Av"], ["0", "Nå", "Nå"], ["3", "+3 t", "Om 3 timer"], ["6", "+6 t", "Om 6 timer"], ["tomorrow", "I morgen", "I morgen kl. 12"]] %}
+          <button type="button" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}"{% if full != label %} aria-label="{{ full }}" title="{{ full }}"{% endif %}>{{ label }}</button>
           {% endfor %}
         </div>
-        {#- Forslag: tone ned steder der varselet sier «Passer ikke» eller «For mye vind» (home.js). -#}
-        <button type="button" class="pill pill--suggest" data-suggest aria-pressed="false">Vis bare steder som kan passe nå</button>
+        {#- Forslag som bryter: tone ned steder der varselet sier «Passer ikke» eller «For mye vind» (home.js). -#}
+        <button type="button" class="switch" data-suggest aria-pressed="false">Bare steder som kan passe nå</button>
         <details class="wind-rules">
           <summary>Hvordan vurderes vinden?</summary>
           <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden og retning nær kanten gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
@@ -58,17 +58,17 @@ scripts:
       <div class="filters-more" id="filters-more">
       <div class="filter">
         <span class="filter__title" id="f-level">Nivå</span>
-        <div class="pills" role="group" aria-labelledby="f-level">
+        <div class="segmented" role="group" aria-labelledby="f-level">
           {% for value in ["", "PP2", "PP3", "PP4", "PP5"] %}
-          <button type="button" class="pill" data-filter="level" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or "Alle" }}</button>
+          <button type="button" data-filter="level" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or "Alle" }}</button>
           {% endfor %}
         </div>
       </div>
       <div class="filter">
         <span class="filter__title" id="f-category">Kategori</span>
-        <div class="pills" role="group" aria-labelledby="f-category">
+        <div class="segmented" role="group" aria-labelledby="f-category">
           {% for value in ["", "PG", "SPG", "PPG"] %}
-          <button type="button" class="pill" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or "Alle" }}</button>
+          <button type="button" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or "Alle" }}</button>
           {% endfor %}
         </div>
       </div>
