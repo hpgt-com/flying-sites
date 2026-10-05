@@ -55,7 +55,7 @@ GitHub høsten 2026.
     main er fortsatt sperret.
 - [ ] **Advanced Security**: Private vulnerability reporting, Dependency graph, Dependabot alerts,
   Dependabot security updates, Secret scanning og Push protection på. Code scanning skal stå på
-  Advanced (vår `codeql.yml`), ikke Default setup.
+  Advanced (vår `code-scanning.yml`), ikke Default setup.
 - [ ] **Actions → General**, Workflow permissions: «Read repository contents and packages permissions»,
   og «Allow GitHub Actions to create and approve pull requests» på (trengs av luftrom-workflowen).
 - [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» på.

@@ -1,6 +1,6 @@
-name: CodeQL
+name: Code scanning
 
-# Statisk analyse av JavaScript (nettsiden og byggeskriptene) og workflowene. Funnene havner under
+# Statisk analyse (i dag med CodeQL) av JavaScript (nettsiden og byggeskriptene) og workflowene. Funnene havner under
 # Security → Code scanning. Kjører på PR-er, på main og én gang i uken, så nye regler også fanger
 # gammel kode. Gratis for offentlige repoer.
 
