@@ -72,8 +72,16 @@
       className: "base-tiles",
       attribution: 'Kartdata: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     });
+    // Satellittbilde fra Sentinel-2 cloudless (EOX), fritt for ikke-kommersiell bruk (CC BY-NC-SA 4.0) uten nøkkel.
+    // 10 m oppløsning, så flisene finnes bare til zoom 14 og forstørres over det. Ikke invertert i mørkt tema.
+    var satellite = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {
+      maxNativeZoom: 14,
+      maxZoom: 18,
+      className: "photo-tiles",
+      attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless</a> av <a href="https://eox.at">EOX IT Services GmbH</a> (inneholder modifiserte Copernicus Sentinel-data 2024, <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>)',
+    });
     topo.addTo(map);
-    map.layersControl = L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo }, null, { position: "topright" }).addTo(map);
+    map.layersControl = L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo, "Satellitt (Sentinel-2)": satellite }, null, { position: "topright" }).addTo(map);
     // Termikk fra thermal.kk7.ch: statistikk fra loggede flyturer, ikke et varsel. Av som standard.
     // Flisene er i TMS-rekkefølge, og src skal oppgi domenet vårt (vilkår på thermal.kk7.ch).
     ["skyways_all_all", "thermals_all_all"].forEach(function (name, i) {
