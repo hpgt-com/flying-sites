@@ -33,16 +33,30 @@ Siden er statisk (Eleventy på GitHub Pages), uten innlogging, skjema eller data
 
 ## Innstillinger i GitHub (gjøres av en med admin-tilgang)
 
-Disse kan ikke ligge i repoet. Gå gjennom dem når noen får eller mister tilgang.
+Disse kan ikke ligge i repoet. Gå gjennom dem når noen får eller mister tilgang. Menynavnene er fra
+GitHub høsten 2026.
 
-- [ ] **Tofaktorautentisering** påkrevd i organisasjonen: Organization → Settings → Authentication security.
-- [ ] **Ruleset for `main`**: Settings → Rules → Rulesets → New branch ruleset, mål `main`:
-  PR påkrevd, statussjekkene `bygg`, `avhengigheter` og `workflows` må være grønne, blokker force-push
-  og sletting. Krev ikke godkjenning fra en annen person så lenge én person merger alene.
-- [ ] **Code security**: Settings → Code security: Dependency graph, Dependabot alerts, Secret scanning,
-  Push protection og Private vulnerability reporting på.
-- [ ] **Actions**: Settings → Actions → General: «Workflow permissions» = Read repository contents.
-  «Allow GitHub Actions to create and approve pull requests» på (trengs av luftrom-workflowen).
-- [ ] **Pages**: Settings → Pages: Source = GitHub Actions, «Enforce HTTPS» på.
-- [ ] **Tilgang**: færrest mulig med skrive- og admin-tilgang (Settings → Collaborators and teams), og
-  gå gjennom installerte GitHub-apper.
+**Organisasjonen** (hpgt-com → Settings)
+- [ ] **Authentication security**: «Require two-factor authentication for everyone in the organization».
+- [ ] **Member privileges**: Base permissions = Read.
+- [ ] Minst to eiere, eller en felles e-post styret har tilgang til, så klubben ikke står uten admin.
+
+**Repoet** (flying-sites → Settings)
+- [ ] **Rulesets → New branch ruleset**, navn «Beskytt main», Enforcement status = Active,
+  Target = Include default branch:
+  - Restrict deletions og Block force pushes.
+  - Require a pull request before merging, Required approvals = 0 så lenge én person merger alene.
+  - Require status checks to pass: `bygg`, `workflows` og `avhengigheter`, med kilde GitHub Actions.
+    «Require branches to be up to date» av. En sjekk kan bare velges når den har kjørt nylig.
+  - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
+    (når CodeQL har kjørt på main).
+  - Bypass list: Repository admin, «For pull requests only». PR-er fra luftrom-workflowen lages med
+    GitHub-tokenet og starter ikke PR-sjekken, så de må merges med «Bypass rules». Direkte push til
+    main er fortsatt sperret.
+- [ ] **Advanced Security**: Private vulnerability reporting, Dependency graph, Dependabot alerts,
+  Dependabot security updates, Secret scanning og Push protection på. Code scanning skal stå på
+  Advanced (vår `codeql.yml`), ikke Default setup.
+- [ ] **Actions → General**, Workflow permissions: «Read repository contents and packages permissions»,
+  og «Allow GitHub Actions to create and approve pull requests» på (trengs av luftrom-workflowen).
+- [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» på.
+- [ ] **Collaborators and teams** og **GitHub Apps**: færrest mulig med skrive- og admin-tilgang.
