@@ -97,7 +97,7 @@ export default function (eleventyConfig) {
     // Stedstekstene er ren Markdown, uten malspråk.
     markdownTemplateEngine: false,
     htmlTemplateEngine: "njk",
-    templateFormats: ["md", "njk"],
+    templateFormats: ["md", "njk", "11ty.js"],
     pathPrefix: process.env.PATH_PREFIX || "/",
   };
 }

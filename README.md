@@ -65,10 +65,19 @@ Andre kommandoer:
 - Termikk: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)
 - Stedsbeskrivelser: den gamle flystedsoversikten til Lars Sletten, Flightlog og lokalkunnskap i klubben
 
+## Åpne data
+
+Flystedene publiseres også som åpne datafiler, laget ved hver bygging, så de alltid er oppdatert:
+
+- **GeoJSON:** <https://flysteder.hpgt.com/flysteder.geojson> (QGIS, Leaflet, MapLibre og andre kart)
+- **KML:** <https://flysteder.hpgt.com/flysteder.kml> (Google Earth, norgeskart.no, kartapper)
+
+Filene inneholder starter med retninger, landinger, parkering, gangruter og klubbens punkter i kartet, men ikke stedstekstene. De lages i `lib/export.js`. Lisens: CC BY 4.0 med kreditering «Flysteder: HPGT flysteder (https://flysteder.hpgt.com)», se [LICENSE_DATA.md](LICENSE_DATA.md).
+
 ## Lisens
 
 Koden (maler, skript, CSS og JavaScript) er MIT-lisensiert, se [LICENSE](LICENSE).
 
-Innholdet tilhører klubben og dem som har bidratt, og er ikke omfattet av MIT-lisensen. Det gjelder tekstene om flystedene, bildene, tegningene og gangrutene i `src/flysteder/`. Bildene kan vise personer og er delt til bruk på denne siden. Ta kontakt med HPGT før du bruker innhold herfra andre steder.
+Innholdet tilhører klubben og dem som har bidratt, og er ikke omfattet av MIT-lisensen (de åpne datafilene har egen lisens, se over). Det gjelder tekstene om flystedene, bildene, tegningene og gangrutene i `src/flysteder/`. Bildene kan vise personer og er delt til bruk på denne siden. Ta kontakt med HPGT før du bruker innhold herfra andre steder.
 
 Data fra andre kilder følger lisensene deres, se [Kilder](#kilder).
