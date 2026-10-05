@@ -23,8 +23,8 @@ Siden er statisk (Eleventy på GitHub Pages), uten innlogging, skjema eller data
 - Bilder publiseres uten EXIF-metadata (`lib/images.js`).
 
 **Repoet og publiseringen**
-- Alle endringer går via PR. «Sjekk PR» kjører tester og bygging, dependency review (stopper pakker med
-  kjente sårbarheter) og zizmor (sikkerhetsfeil i workflowene).
+- Alle endringer går via PR. «PR check» kjører tester og bygging (`build`), dependency review (`dependency-review`,
+  stopper pakker med kjente sårbarheter) og zizmor (`workflow-security`, sikkerhetsfeil i workflowene).
 - CodeQL analyserer JavaScript og workflowene på PR-er, main og hver uke.
 - Actions er låst til commit-SHA og oppdateres av Dependabot. Workflowene har bare lesetilgang som
   standard. Publiseringsrettighetene (`pages`, `id-token`) har bare publiseringsjobben.
@@ -46,7 +46,7 @@ GitHub høsten 2026.
   Target = Include default branch:
   - Restrict deletions og Block force pushes.
   - Require a pull request before merging, Required approvals = 0 så lenge én person merger alene.
-  - Require status checks to pass: `bygg`, `workflows` og `avhengigheter`, med kilde GitHub Actions.
+  - Require status checks to pass: `build`, `dependency-review` og `workflow-security`, med kilde GitHub Actions.
     «Require branches to be up to date» av. En sjekk kan bare velges når den har kjørt nylig.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
     (når CodeQL har kjørt på main).

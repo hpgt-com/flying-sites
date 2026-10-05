@@ -1,4 +1,4 @@
-name: Sjekk PR
+name: PR check
 
 # Bygger siden for hver PR mot main, så en ugyldig stedsfil eller en feil i malene stoppes før
 # den kommer på main og stopper publiseringen. Publiserer ingenting.
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  bygg:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -34,7 +34,7 @@ jobs:
           FORECAST_OFFLINE: "1"
 
   # Stopper PR-er som legger til npm-pakker eller Actions med kjente sårbarheter (moderat eller høyere).
-  avhengigheter:
+  dependency-review:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -45,7 +45,7 @@ jobs:
           fail-on-severity: moderate
 
   # Sjekker workflowene for vanlige sikkerhetsfeil i GitHub Actions (rettigheter, injeksjon, tokens).
-  workflows:
+  workflow-security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

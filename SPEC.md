@@ -7,9 +7,9 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Publiseres på **GitHub Pages** via GitHub Actions ved push til `main`. Eget domene `flysteder.hpgt.com` settes i Pages-innstillingene (CNAME).
 - `actions/checkout` med `fetch-depth: 0`, så «sist endret» per sted kan hentes fra Git.
 - Kart: **Leaflet**, installert via npm og servert fra egen side. Standard bakgrunn: Kartverkets åpne topografiske kart. Alternativt lag: OpenTopoMap. Kreditering av kartkilder.
-- PR-sjekken (`sjekk.yml`) kjører testene (`npm test`) og bygger siden. Bygget skal feile hvis en stedsfil er ugyldig (manglende `name`, ugyldig retningskode, ukjent nøkkel, bilde som ikke finnes).
+- PR-sjekken (`pr-check.yml`, jobben `build`) kjører testene (`npm test`) og bygger siden. Bygget skal feile hvis en stedsfil er ugyldig (manglende `name`, ugyldig retningskode, ukjent nøkkel, bilde som ikke finnes).
 - Automatiske importer (Kartverket-høyder, luftrom fra openAIP) skriver aldri i stedsfilene, bare i `src/_data/cache/`.
-- Luftrom hentes fra openAIP (CC BY-NC 4.0) med `npm run airspace`, i ett kall for hele regionen (openAIP har streng fartsgrense), og lagres per start og som `region.geojson` til kartlaget. Hentes og av workflowen «Oppdater luftrom» den 1. hver måned. Endringer kommer som PR og gjennomgås før merge. Nøkkelen ligger som repository secret `OPENAIP_API_KEY`. Stedsfilens `airspace` brukes bare til steder som ikke er hentet ennå, og til merknader (`note`).
+- Luftrom hentes fra openAIP (CC BY-NC 4.0) med `npm run airspace`, i ett kall for hele regionen (openAIP har streng fartsgrense), og lagres per start og som `region.geojson` til kartlaget. Hentes og av workflowen «Update airspace» (`airspace.yml`) den 1. hver måned. Endringer kommer som PR og gjennomgås før merge. Nøkkelen ligger som repository secret `OPENAIP_API_KEY`. Stedsfilens `airspace` brukes bare til steder som ikke er hentet ennå, og til merknader (`note`).
 
 ## Innhold
 - Én mappe per sted: `src/flysteder/<id>/index.md` med front matter + tekst, og bilder/GPX i samme mappe.

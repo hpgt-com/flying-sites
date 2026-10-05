@@ -1,4 +1,4 @@
-name: Bygg og publiser
+name: Build and deploy
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   schedule:
     - cron: "5 * * * *"
 
-# Byggejobben får bare lese. Rettighetene til å publisere (pages, id-token) har bare publiseringsjobben,
+# Byggejobben (build) får bare lese. Rettighetene til å publisere (pages, id-token) har bare deploy-jobben,
 # som ikke kjører kode fra repoet. Actions er låst til commit-SHA (Dependabot oppdaterer dem).
 permissions:
   contents: read
@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  bygg:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,8 +52,8 @@ jobs:
         with:
           path: _site
 
-  publiser:
-    needs: bygg
+  deploy:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       pages: write
