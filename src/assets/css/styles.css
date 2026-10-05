@@ -341,11 +341,11 @@ p { margin: 0; }
 .site-cluster__ring { width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
 .leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
 .leaflet-cluster-spider-leg { transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in; }
+/* Valgt sted: større, og en mørk ring utenpå (hvit luft mellom), så vurderingsfargen på ringen beholdes.
+   Ikke oransje/rød, som er forbeholdt fare og vind. */
 .rose-marker--selected .rose-marker__ring {
   transform: scale(1.25);
-  border-color: var(--text);
-  outline: 3px solid var(--accent);
-  outline-offset: 1px;
+  box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--text), 0 1px 6px rgba(28, 43, 51, 0.45);
 }
 
 /* Kartikoner på stedssiden */
@@ -671,8 +671,8 @@ p { margin: 0; }
 .profile__line { fill: none; stroke: var(--text); stroke-width: 2; }
 .profile__steep { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
 .profile__cursor-line { stroke: var(--text); stroke-width: 1; stroke-dasharray: 3 3; }
-.profile__cursor { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
-.profile__slider { width: 100%; margin: 0; height: 32px; accent-color: var(--accent); }
+.profile__cursor { fill: var(--text); stroke: var(--card); stroke-width: 2; }
+.profile__slider { width: 100%; margin: 0; height: 32px; accent-color: var(--fjord); }
 .profile__values { display: flex; gap: 18px; flex-wrap: wrap; font-size: 15px; }
 .profile__values strong { font-weight: 600; }
 .profile__legend { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
