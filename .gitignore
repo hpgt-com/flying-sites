@@ -17,3 +17,6 @@ PROMPT.md
 *.pem
 *.key
 *.p12
+
+# Skjermbilder fra lokal testing havner ikke i rotmappen (bildene til stedene ligger under src/).
+/*.png

@@ -89,6 +89,15 @@ test("«nå» finner timen som gjelder, og +3/+6 timer fra den", () => {
   assert.equal(W.slotIndex(times, "off", now), -1);
 });
 
+test("«nå» flytter seg til neste time ved timeskifte (forsiden tegner da på nytt)", () => {
+  const times = hourly("2026-10-04T10:00:00Z", 48);
+  // 11.50 og 12.10 UTC: samme valg, men en annen time i varselet.
+  assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T11:50:00Z")), 1);
+  assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T12:10:00Z")), 2);
+  assert.equal(W.slotIndex(times, "3", Date.parse("2026-10-04T11:50:00Z")), 4);
+  assert.equal(W.slotIndex(times, "3", Date.parse("2026-10-04T12:10:00Z")), 5);
+});
+
 test("utløpt varsel gir ingen «nå», selv om siste time ligger i fortiden", () => {
   const times = hourly("2026-10-01T10:00:00Z", 48);
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T12:00:00Z")), -1);
