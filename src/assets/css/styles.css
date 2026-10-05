@@ -895,3 +895,9 @@ body.has-fullscreen-map { overflow: hidden; }
 .pill--suggest { display: block; margin-top: 8px; }
 .pill--suggest[aria-pressed="true"]::before { content: "✓ "; }
 .pill--suggest:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Oppsummering av vinden og vurderingene under vindvalget (home.js). */
+.wind-summary { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+.wind-summary p { margin: 0; }
+.wind-summary p + p { margin-top: 4px; }
+.wind-summary__none { color: var(--hazard-text); font-weight: 600; }
+.wind-summary[hidden] { display: none; }

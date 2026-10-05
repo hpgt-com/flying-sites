@@ -81,6 +81,66 @@
     forecastStatusEl.innerHTML = text;
   }
 
+  // --- Oppsummering ---
+  // Vinden i området (vanligste retning, median middelvind, høyeste kast) og hvor mange steder som får
+  // hver vurdering, med den vanligste årsaken. Forklarer hvorfor ingen steder passer en dag med mye vind.
+  var summaryEl = document.getElementById("wind-summary");
+  function summarize(assessments) {
+    var list = Object.keys(assessments).map(function (id) { return assessments[id]; });
+    if (!list.length) return null;
+    var dirs = {}, speeds = [], maxGust = null;
+    var counts = { ok: 0, maybe: 0, high: 0, no: 0 }, highByGust = 0, highByLocal = 0;
+    list.forEach(function (a) {
+      var code = W.directionCode(a.wind.dir);
+      dirs[code] = (dirs[code] || 0) + 1;
+      speeds.push(a.wind.speed);
+      if (a.wind.gust != null && (maxGust == null || a.wind.gust > maxGust)) maxGust = a.wind.gust;
+      counts[a.rating]++;
+      if (a.rating === "high") {
+        if (/^Kast/.test(a.reasons[0] || "")) highByGust++;
+        else if (/stedet/.test(a.reasons[0] || "")) highByLocal++;
+      }
+    });
+    speeds.sort(function (x, y) { return x - y; });
+    var mainDir = Object.keys(dirs).sort(function (x, y) { return dirs[y] - dirs[x]; })[0];
+    return { counts: counts, total: list.length, highByGust: highByGust, highByLocal: highByLocal,
+      dir: mainDir, speed: speeds[Math.floor(speeds.length / 2)], minSpeed: speeds[0], maxSpeed: speeds[speeds.length - 1], gust: maxGust };
+  }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  function renderSummary(sum) {
+    if (!summaryEl) return;
+    summaryEl.hidden = !sum;
+    if (!sum) { summaryEl.innerHTML = ""; return; }
+    var c = sum.counts, parts = [];
+    if (c.ok) parts.push(plural(c.ok, "kan passe", "kan passe"));
+    if (c.maybe) parts.push(plural(c.maybe, "usikkert", "usikre"));
+    if (c.high) {
+      var why = [];
+      if (sum.highByGust) why.push(sum.highByGust + " på grunn av kast");
+      if (sum.highByLocal) why.push(sum.highByLocal + " over stedets egen grense");
+      parts.push(c.high + " for mye vind" + (why.length ? " (" + why.join(", ") + ")" : ""));
+    }
+    if (c.no) parts.push(c.no + " feil retning");
+    var wind = "Vind i området: mest " + FS.DIRECTION_LABELS[sum.dir] + ", " +
+      (Math.round(sum.minSpeed) === Math.round(sum.maxSpeed) ? Math.round(sum.speed) : Math.round(sum.minSpeed) + "–" + Math.round(sum.maxSpeed)) + " m/s" +
+      (sum.gust != null ? ", kast opptil " + Math.round(sum.gust) + " m/s" : "") + ".";
+    var line = parts.length === 1 && sum.total > 1
+      ? "Alle " + sum.total + " steder: " + parts[0].replace(/^\d+ /, "") + "."
+      : plural(sum.total, "sted", "steder") + ": " + parts.join(", ") + ".";
+    summaryEl.innerHTML = "<p><strong>" + FS.escapeHtml(wind) + "</strong></p><p>" + FS.escapeHtml(line) + "</p>" +
+      (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">Ingen steder kan passe på dette tidspunktet. ' + FS.escapeHtml(noneReason(sum)) + "</p>" : "");
+  }
+  // Den viktigste grunnen til at ingen steder passer, i én setning.
+  function noneReason(sum) {
+    var c = sum.counts;
+    if (c.high >= c.no) {
+      return sum.highByGust > c.high / 2
+        ? "Kastene er for kraftige (grensen er " + rules.maxGust + " m/s)."
+        : "Det er for mye vind (grensen er " + rules.maxWind + " m/s, lavere på noen steder).";
+    }
+    return "Vindretningen passer ikke for startene våre.";
+  }
+
   function windText(wind) {
     return FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
       (wind.gust != null ? ", kast " + Math.round(wind.gust) : ", kast ukjent");
@@ -299,6 +359,12 @@
     if (counts.unknown) title += ", " + counts.unknown + " uten nivå";
     titleEl.textContent = title;
     noResultsEl.hidden = counts.match + counts.unknown !== 0;
+    var sum = assessments ? summarize(assessments) : null;
+    renderSummary(sum);
+    // Tomt resultat med forslag på: si hvorfor, ikke bare at ingen passer.
+    noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0
+      ? "Ingen flysteder kan passe på dette tidspunktet. " + noneReason(sum) + " Slå av «Vis bare steder som kan passe» for å se alle."
+      : "Ingen flysteder passer filtrene.";
   }
 
   // Setter et filter og markerer riktig knapp. Ukjente verdier (f.eks. fra en gammel lenke) gir «Alle».
