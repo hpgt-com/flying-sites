@@ -21,9 +21,12 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pages: read # configure-pages leser innstillingene for Pages
@@ -58,6 +61,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

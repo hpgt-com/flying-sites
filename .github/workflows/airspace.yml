@@ -14,9 +14,12 @@ permissions:
   contents: write
   pull-requests: write
 
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       # Tokenet beholdes, fordi jobben pusher en gren for PR-en. Den laster ikke opp artefakter.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
