@@ -67,7 +67,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 7. **Vær**: Yr-meteogram (`https://www.yr.no/nb/innhold/<yr_id>/meteogram.svg`, med `?mode=dark` i mørk modus, kreditering «Varsel fra Yr, levert av NRK og Meteorologisk institutt»), lenker til Yr, Windy (pin på startkoordinat: `https://www.windy.com/<lat>/<lon>?<lat>,<lon>,12`), Flybart, XCC flymet, IPPC.
 8. **Bilder**: faste plasser for Start, Landing, Fra luften. Tom plass viser «Mangler bilde. Har du et herfra? Send det inn.»
 9. **Logg og mer**: Flightlog (`https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id=<id>`), Paraglidingearth (`https://www.paraglidingearth.com/?site=<pgearth_id>`, bare når `pgearth_id` er satt, ellers utelatt).
-10. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje, skilt med «|»), ansvarsfraskrivelse.
+10. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git; er endringen gjort av en KI-assistent eller bot, vises den som merget PR-en, se `lib/git.js`), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje, skilt med «|»), ansvarsfraskrivelse.
 - Desktop: to kolonner. Venstre: tittel, kart, Før du starter, start, landing. Høyre: Fakta, Vær, Bilder, Logg og mer. På mobil står blokkene i samme rekkefølge som i HTML (venstre kolonne, så høyre), uten CSS `order`, så skjermlesere og tastatur følger det man ser.
 
 ## Deling og søk
