@@ -1,0 +1,57 @@
+name: PR check
+
+# Bygger siden for hver PR mot main, så en ugyldig stedsfil eller en feil i malene stoppes før
+# den kommer på main og stopper publiseringen. Publiserer ingenting.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # Valideringen av stedsfilene skjer i byggingen. Vindvarselet hoppes over, så PR-er ikke spør MET.
+      - run: npm run build
+        env:
+          FORECAST_OFFLINE: "1"
+
+  # Stopper PR-er som legger til npm-pakker eller Actions med kjente sårbarheter (moderat eller høyere).
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  # Sjekker workflowene for vanlige sikkerhetsfeil i GitHub Actions (rettigheter, injeksjon, tokens).
+  workflow-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          # Funnene skrives i loggen og stopper sjekken. Ikke opplasting til Code scanning (krever mer rettigheter).
+          advanced-security: false

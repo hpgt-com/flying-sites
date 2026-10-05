@@ -1,4 +1,4 @@
-name: Oppdater luftrom
+name: Update airspace
 
 # Henter luftrom fra openAIP for alle flystedene én gang i måneden (AIRAC-syklusen er 28 dager).
 # Endringer kommer som en PR, så noen ser over diffen før det publiseres. Uten endringer skjer ingenting.
@@ -15,10 +15,11 @@ permissions:
   pull-requests: write
 
 jobs:
-  luftrom:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Tokenet beholdes, fordi jobben pusher en gren for PR-en. Den laster ikke opp artefakter.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -40,7 +41,7 @@ jobs:
             echo "Ingen endringer i luftrom."
             exit 0
           fi
-          branch="luftrom/$(date +%Y-%m-%d)"
+          branch="airspace/$(date +%Y-%m-%d)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
