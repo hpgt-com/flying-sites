@@ -1,4 +1,4 @@
-// Vindvarsel fra MET (api.met.no, samme kilde som Yr) for hver start, til vindvurderingen på forsiden og «Vind nå» på stedssidene.
+// Vindvarsel fra MET (api.met.no, samme kilde som Yr) for hver start, til vind- og regnvurderingen på forsiden og «Vind nå» på stedssidene.
 // Hentes ved hver bygging. Workflowen bygger siden to ganger i timen, men GitHub kan forsinke eller hoppe over planlagte kjøringer, så varselet kan være eldre (se maxForecastAgeHours).
 // Lokalt mellomlagres det i .cache/ i 30 minutter, så `npm start` ikke spør MET ved hver endring.
 // Feiler hentingen for et sted, mangler bare det stedet. Feiler alle, blir det ingen vindvurdering,
@@ -26,7 +26,9 @@ async function fetchSite(launch, altitude) {
   const data = await response.json();
   return data.properties.timeseries.slice(0, HOURS).map((t) => {
     const d = t.data.instant.details;
-    return [t.time, Math.round(d.wind_from_direction), d.wind_speed, d.wind_speed_of_gust ?? null];
+    // Nedbør neste time i mm (null når varselet ikke har den, lenger ut i tid).
+    const rain = t.data.next_1_hours?.details?.precipitation_amount ?? null;
+    return [t.time, Math.round(d.wind_from_direction), d.wind_speed, d.wind_speed_of_gust ?? null, rain];
   });
 }
 
@@ -64,7 +66,7 @@ export default async function () {
   const times = series[0].map((row) => row[0]);
   const sites = {};
   for (const [id, rows] of Object.entries(fetched)) {
-    const byTime = new Map(rows.map(([time, dir, speed, gust]) => [time, [dir, speed, gust]]));
+    const byTime = new Map(rows.map(([time, dir, speed, gust, rain]) => [time, [dir, speed, gust, rain]]));
     sites[id] = times.map((time) => byTime.get(time) ?? null);
   }
   const forecast = { fetched: new Date().toISOString(), source: "MET Norge", times, sites };
