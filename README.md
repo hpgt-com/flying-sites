@@ -18,7 +18,7 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 | Hvor | Hva |
 |---|---|
 | `src/flysteder/<id>/index.md` | Ett flysted: strukturerte data øverst (front matter), tekst under |
-| `src/flysteder/<id>/` | Bilder (`<id>-overview.jpg`, `-launch`, `-landing`, `-air`), gangruter (`<id>-route.gpx`) og tegning til 3D-visningen (`<id>-drawing.geojson`, se `lib/drawing.js`) |
+| `src/flysteder/<id>/` | Bilder (`<id>-overview.jpg`, `-launch`, `-landing`, `-air`), gangruter (`<id>-route.gpx`) og tegning til kartet (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`) |
 | `src/_data/` | Tårn (`towers.json`), felles vindgrenser (`windRules.json`), vindvarsel (`forecast.js`) og mellomlagret luftrom |
 | `src/_includes/` | Sidemaler for forsiden og stedssidene |
 | `src/assets/` | CSS, JavaScript og bilder |

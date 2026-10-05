@@ -60,7 +60,6 @@ export default {
       }
       const images = {};
       const IMAGE_ALT = {
-        overview: `Oversiktsbilde over ${data.name} med starter og landing tegnet inn`,
         launch: `Startområdet på ${data.name}`,
         landing: `Landingen ved ${data.name}`,
         air: `${data.name} sett fra luften`,
@@ -71,8 +70,8 @@ export default {
         images[field] = await processImage(dir, data.id, field, file, {
           alt: IMAGE_ALT[field],
           outputDir: data.eleventy.directories.output,
-          // Oversikten fyller venstre kolonne. De andre er småbilder i tre kolonner nederst.
-          sizes: field === "overview" ? "(min-width: 1024px) 700px, 100vw" : "(min-width: 1024px) 220px, (min-width: 640px) 33vw, 100vw",
+          // Småbilder i tre kolonner nederst. Oversiktsbildet (images.overview) vises ikke lenger, kartet viser det samme.
+          sizes: "(min-width: 1024px) 220px, (min-width: 640px) 33vw, 100vw",
         });
       }
 
