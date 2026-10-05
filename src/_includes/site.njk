@@ -3,7 +3,9 @@ layout: base.njk
 bodyClass: page-site
 scripts:
   - /assets/leaflet-markercluster/leaflet.markercluster.js
+  - /assets/js/wind.js
   - /assets/js/site.js
+  - /assets/js/site-wind.js
   - /assets/js/lightbox.js
 ---
 {%- import "macros.njk" as m with context -%}
@@ -16,25 +18,36 @@ scripts:
     <span class="topbar__end">{% if region %}<span class="topbar__region">{{ region }}</span>{% endif %}{{ m.siteMenu() }}</span>
   </header>
 
-  <div class="site-page__columns">
-    <div class="site-page__left">
+  <div class="site-page__grid">
+    {# 1. Navn og kort fortalt. Kategori og sesong står i Fakta. «Ikke gjennomgått» står her, fordi det er en advarsel. #}
+    <section class="block block--title" aria-labelledby="site-name">
+      <h1 id="site-name">{{ name }}{% if elevation and elevation.launch_masl %} <span class="title-elev">{{ elevation.launch_masl }} moh</span>{% endif %}</h1>
+      {% if intro %}<div class="lead">{{ intro | safe }}</div>{% endif %}
+      {% if notReviewed %}<div class="tags">{{ m.tag("Ikke gjennomgått ennå", "warning") }}</div>{% endif %}
+    </section>
 
-      {# 1. Navn, kort fortalt, tagger #}
-      <section class="block block--title" aria-labelledby="site-name">
-        <h1 id="site-name">{{ name }}{% if elevation and elevation.launch_masl %} <span class="title-elev">{{ elevation.launch_masl }} moh</span>{% endif %}</h1>
-        {% if intro %}<div class="lead">{{ intro | safe }}</div>{% endif %}
-        <div class="tags">
-          {% for c in categories %}{{ m.tag(c) }}{% endfor %}
-          {% if season %}{{ m.tag(season) }}{% endif %}
-          {% if notReviewed %}{{ m.tag("Ikke gjennomgått ennå", "warning") }}{% endif %}
-        </div>
-        {#- Snarvei til farene under kartet, med navnet på de to første, så de synes øverst på siden. -#}
-        {% if hazards.length %}
-        <a class="hazard-jump" href="#h-hazards"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span><strong>Før du starter:</strong> {% for h in hazards %}{% if loop.index <= 2 %}{{ h.title }}{% if not loop.last and loop.index < 2 %} · {% endif %}{% endif %}{% endfor %}{% if hazards.length > 2 %} <span class="hazard-jump__more">+ {{ hazards.length - 2 }} til</span>{% endif %}</span></a>
-        {% endif %}
-      </section>
+    {#- Før du starter: øverst til høyre på PC (ved siden av tittelen), rett etter tittelen på mobil.
+        Rolig ravfarge: dette er viktig informasjon til piloten, ikke en alarm. -#}
+    <section class="block block--notice{% if not hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
+      <h2 id="h-hazards"><span class="notice-icon" aria-hidden="true">!</span>Før du starter</h2>
+      {% for hazard in hazards %}
+      <div class="hazard">
+        <strong>{{ hazard.title }}</strong>
+        <span>{{ hazard.text }}</span>
+      </div>
+      {% else %}
+      {#- Uten gjennomgang betyr tom liste bare at ingen har lagt inn farer, ikke at det ikke finnes noen. -#}
+      {% if notReviewed %}
+      <p><strong>Farene er ikke gjennomgått ennå.</strong> At ingen er registrert, betyr ikke at stedet er uten farer. Spør klubben eller lokale piloter før du flyr her.</p>
+      {% else %}
+      <p>Ingen spesielle farer registrert for stedet.</p>
+      {% endif %}
+      {% endfor %}
+    </section>
 
-      {# 2. Kart øverst: start, retningsbuer, punkter, landing, parkering og gangrute. Så høydeprofil. #}
+    <div class="site-page__main">
+
+      {# 2. Kart: start, retningsbuer, punkter, landing, parkering og gangrute #}
       <section class="block block--map" aria-labelledby="h-map">
         <h2 id="h-map">Kart</h2>
         <div id="site-map" class="map map--site" role="region" aria-label="Kart over {{ name }} med start, landing, parkering og gangrute"></div>
@@ -81,27 +94,9 @@ scripts:
 
       </section>
 
-      {# 3. Før du starter #}
-      <section class="block block--hazards" aria-labelledby="h-hazards">
-        <h2 id="h-hazards"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Før du starter</h2>
-        {% for hazard in hazards %}
-        <div class="hazard">
-          <strong>{{ hazard.title }}</strong>
-          <span>{{ hazard.text }}</span>
-        </div>
-        {% else %}
-        {#- Uten gjennomgang betyr tom liste bare at ingen har lagt inn farer, ikke at det ikke finnes noen. -#}
-        {% if notReviewed %}
-        <p><strong>Farene er ikke gjennomgått ennå.</strong> At ingen er registrert, betyr ikke at stedet er uten farer. Spør klubben eller lokale piloter før du flyr her.</p>
-        {% else %}
-        <p>Ingen spesielle farer registrert for stedet.</p>
-        {% endif %}
-        {% endfor %}
-      </section>
-
-      {# 4. Start #}
-      <section class="block block--launch" aria-labelledby="h-launch">
-        <h2 id="h-launch">Start</h2>
+      {# 3. Adkomst: parkering, veien opp og høydeprofil, rett etter kartet der gangruten vises #}
+      <section class="block block--access" aria-labelledby="h-access">
+        <h2 id="h-access">Adkomst</h2>
         {#- Adkomst som tall når stedet har én gangrute: lengde, høydemeter og tid til fots. -#}
         {% set oneRoute = routes[0] if routes.length == 1 else null %}
         {% if oneRoute %}
@@ -139,7 +134,7 @@ scripts:
           </div>
           {% endif %}
         </dl>
-        {#- Høydeprofilen hører til gangruten, så den står her og ikke under kartet (farene kommer da rett etter kartet). -#}
+        {#- Høydeprofilen hører til gangruten. Glidebryteren viser posisjonen i kartet like over. -#}
         {% if routes | selectattr("profile") | list | length %}
         <div class="profile" id="elevation-profile">
           <h3>Høydeprofil</h3>
@@ -161,6 +156,11 @@ scripts:
           <p class="profile__summary"></p>
         </div>
         {% endif %}
+      </section>
+
+      {# 4. Start #}
+      <section class="block block--launch" aria-labelledby="h-launch">
+        <h2 id="h-launch">Start</h2>
         {% set launchText = content | section("Start") %}
         {% if launchText %}<div class="prose">{{ launchText | safe }}</div>{% endif %}
         {% if launches.length %}
@@ -188,7 +188,7 @@ scripts:
 
     </div>
 
-    <div class="site-page__right">
+    <div class="site-page__aside">
       {# 6. Fakta #}
       <section class="block block--facts" aria-labelledby="h-facts">
         <h2 id="h-facts">Fakta</h2>
@@ -197,16 +197,24 @@ scripts:
           {{ m.legend(wind_directions) }}
         </div>
         <dl class="facts">
-          <div>
-            <dt>Nivå</dt>
-            <dd class="tags">
-              {% if level %}{{ m.tag(level) }}{% else %}{{ m.tag("Nivå ikke satt", "missing") }}{% endif %}
-              {% if training_site %}{{ m.tag("Kursplass") }}{% endif %}
-            </dd>
-          </div>
-          <div>
-            <dt>Kategori</dt>
-            <dd class="tags">{% for c in categories %}{{ m.tag(c) }}{% else %}{{ m.tag("Ikke satt", "missing") }}{% endfor %}</dd>
+          <div class="facts__trio">
+            <div>
+              <dt>Nivå</dt>
+              <dd class="tags">
+                {% if level %}{{ m.tag(level) }}{% else %}{{ m.tag("Ikke satt", "missing") }}{% endif %}
+                {% if training_site %}{{ m.tag("Kursplass") }}{% endif %}
+              </dd>
+            </div>
+            <div>
+              <dt>Kategori</dt>
+              <dd class="tags">{% for c in categories %}{{ m.tag(c) }}{% else %}{{ m.tag("Ikke satt", "missing") }}{% endfor %}</dd>
+            </div>
+            {% if season %}
+            <div>
+              <dt>Sesong</dt>
+              <dd class="tags">{{ m.tag(season) }}</dd>
+            </div>
+            {% endif %}
           </div>
           {% if wind_limits and wind_limits.max_wind %}
           <div>
@@ -223,7 +231,7 @@ scripts:
             </dd>
           </div>
           <div>
-            <dt>Luftrom</dt>
+            <dt>Luftrom over start</dt>
             <dd class="airspace">
               {% if derived.airspace %}
               {#- Hentet automatisk fra openAIP (npm run airspace). Viser bare taket over start: det laveste faste
@@ -264,38 +272,44 @@ scripts:
       {# 7. Vær #}
       <section class="block block--weather" aria-labelledby="h-weather">
         <h2 id="h-weather">Vær</h2>
+        {#- Vinden nå for starten, fra MET-varselet som forsiden bruker (site-wind.js). Skjult uten varsel. -#}
+        <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
         {% if external.yr_id %}
         <figure class="meteogram">
           <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/{{ external.yr_id }}" target="_blank" rel="noopener"><span class="visually-hidden">Værvarsel på Yr (åpnes i ny fane)</span><img src="https://www.yr.no/nb/innhold/{{ external.yr_id }}/meteogram.svg" data-src-dark="https://www.yr.no/nb/innhold/{{ external.yr_id }}/meteogram.svg?mode=dark" alt="Meteogram fra Yr for {{ name }}" loading="lazy"></a>
-          <figcaption>Varsel fra Yr, levert av NRK og Meteorologisk institutt.</figcaption>
+          <figcaption>Varsel fra Yr, levert av NRK og Meteorologisk institutt. Trykk for time for time.</figcaption>
         </figure>
         {% else %}
         <div class="placeholder placeholder--short">Yr-sted er ikke lagt inn for {{ name }} ennå.</div>
         {% endif %}
         <nav class="link-list" aria-label="Værtjenester">
-          {% if external.yr_id %}{{ m.linkRow("https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/" ~ external.yr_id, "Værvarsel på Yr", "Time for time, 10 dager og langtidsvarsel") }}{% endif %}
           {{ m.linkRow("https://www.windy.com/" ~ launch.lat ~ "/" ~ launch.lon ~ "?" ~ launch.lat ~ "," ~ launch.lon ~ ",12", "Windy", "Vind i høyden og flere værmodeller") }}
           {{ m.linkRow("https://flybart.net/", "Flybart", "Værstasjoner i området samlet på ett sted") }}
           {{ m.linkRow("http://xcc.no/xccflymet.html", "XCC flymet", "Værstasjonene til Egil Fonn") }}
-          {{ m.linkRow("https://ippc.no", "NOTAM og luftrom", "IPPC. Sjekk alltid selv før du flyr") }}
         </nav>
       </section>
 
-      {# 8. Bilder: små bilder som åpnes i full størrelse #}
+      {#- 8. Bilder: fra luften stort øverst (samme som forhåndsbildet når siden deles), start og landing under.
+          Mangler noen, vises bare de som finnes, og én linje om å sende inn bilder. -#}
+      {%- set shown = [] -%}
+      {%- for field, caption in [["air", "Fra luften"], ["launch", "Start"], ["landing", "Landing"]] -%}
+      {%- if derived.images[field] %}{% set shown = (shown.push({ image: derived.images[field], caption: caption }), shown) %}{% endif -%}
+      {%- endfor %}
       <section class="block block--images" aria-labelledby="h-images">
         <h2 id="h-images">Bilder</h2>
+        {% if shown.length %}
         <div class="image-grid">
-          {% for field, caption in [["launch", "Start"], ["landing", "Landing"], ["air", "Fra luften"]] %}
+          {% for item in shown %}
           <figure>
-            {% if derived.images[field] %}
-            {{ m.lightboxLink(derived.images[field], caption) }}
-            {% else %}
-            <div class="placeholder">Mangler bilde. Har du et herfra? Send det inn.</div>
-            {% endif %}
-            <figcaption>{{ caption }}</figcaption>
+            {{ m.lightboxLink(item.image, item.caption) }}
+            <figcaption>{{ item.caption }}</figcaption>
           </figure>
           {% endfor %}
         </div>
+        {% endif %}
+        {% if shown.length < 3 %}
+        <p class="images-missing">{% if shown.length %}Flere bilder trengs. {% else %}Ingen bilder ennå. {% endif %}Har du bilder herfra? <a href="{{ site.suggestChangeUrl }}?template=endring.yml&title={{ ('Bilder: ' ~ name) | urlencode }}&site={{ id | urlencode }}" target="_blank" rel="noopener">Send dem inn{{ m.external() }}</a></p>
+        {% endif %}
       </section>
       {# 9. Logg og mer #}
       <section class="block block--log" aria-labelledby="h-log">
@@ -311,9 +325,8 @@ scripts:
         {% endif %}
       </section>
     </div>
-  </div>
 
-  {# 10. Bunn #}
+    {# 10. Bunn #}
   <footer class="page-footer">
     <a class="btn btn--white" href="{{ site.suggestChangeUrl }}?template=endring.yml&title={{ ('Endring: ' ~ name) | urlencode }}&site={{ id | urlencode }}" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"></path></svg>Foreslå endring{{ m.external() }}</a>
     <dl class="metadata">
@@ -327,6 +340,8 @@ scripts:
     <p class="disclaimer">Opplysningene er veiledende, og hver pilot vurderer selv om stedet og forholdene er OK.</p>
   </footer>
 </div>
+  </div>
+</div>
 
 <script type="application/json" id="site-data">{{ {
   name: name,
@@ -338,3 +353,13 @@ scripts:
   routes: derived.routes,
   drawing: derived.drawing
 } | json | safe }}</script>
+{#- Varselet for denne starten, til «vind nå» i Vær (site-wind.js). Bare dette stedet, så siden holder seg liten. -#}
+{% if forecast and forecast.sites and forecast.sites[id] %}
+<script type="application/json" id="site-wind-data">{{ {
+  fetched: forecast.fetched,
+  times: forecast.times,
+  series: forecast.sites[id],
+  rules: windRules,
+  site: { id: id, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null) }
+} | json | safe }}</script>
+{% endif %}

@@ -39,12 +39,27 @@
     return width ? "(max-width: " + width + "px) 100vw, " + width + "px" : "100vw";
   }
 
+  // Nettleseren velger størrelse ut fra skjermen og pikseltettheten, så nye mobiler med høyere oppløsning
+  // får skarpere bilder av seg selv. Unntak: har brukeren slått på datasparing, eller er nettet tregt
+  // (2G/3G), hentes høyst 1600 px. Nettleseren sier fra om dette der den kan (navigator.connection).
+  var SAVE_DATA_MAX_WIDTH = 1600;
+  var connection = navigator.connection || {};
+  var limitData = !!connection.saveData || /(^|-)(2g|3g)$/.test(connection.effectiveType || "");
+  function srcsetFor(link, attribute) {
+    var set = link.getAttribute(attribute) || "";
+    if (!limitData) return set;
+    var kept = set.split(/,\s*/).filter(function (candidate) {
+      return !(parseInt(candidate.split(" ").pop(), 10) > SAVE_DATA_MAX_WIDTH);
+    });
+    return kept.length ? kept.join(", ") : set;
+  }
+
   // Henter neste og forrige bilde i forkant, i samme størrelse som visningen vil velge.
   function preload(index) {
     var link = links[(index + links.length) % links.length];
     var img = new Image();
     img.sizes = sizesFor(link);
-    img.srcset = link.getAttribute("data-srcset-webp");
+    img.srcset = srcsetFor(link, "data-srcset-webp");
   }
 
   function show(index) {
@@ -52,8 +67,8 @@
     var link = links[current];
     var thumb = link.querySelector("img");
     source.sizes = image.sizes = sizesFor(link);
-    source.srcset = link.getAttribute("data-srcset-webp");
-    image.srcset = link.getAttribute("data-srcset-jpeg");
+    source.srcset = srcsetFor(link, "data-srcset-webp");
+    image.srcset = srcsetFor(link, "data-srcset-jpeg");
     image.src = link.getAttribute("href");
     image.alt = thumb ? thumb.alt : "";
     text.textContent = link.getAttribute("data-caption") || "";

@@ -163,7 +163,7 @@
 
   // --- Tegningen (<id>-drawing.geojson) ---
   // Linjer og områder (flyvei, startkant, fare) under punktene. Farger som i lib/drawing.js.
-  var STYLE_COLORS = { flight: ACCENT, hazard: "#C62828", info: "#2E5E6E", launch: "#F2B705", landing: "#1C2B33" };
+  var STYLE_COLORS = { flight: ACCENT, hazard: "#B7791F", info: "#2E5E6E", launch: "#F2B705", landing: "#1C2B33" };
   var features = (data.drawing && data.drawing.features) || [];
   features.forEach(function (f) {
     var p = f.properties || {};

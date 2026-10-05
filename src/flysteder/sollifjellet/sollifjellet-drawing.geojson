@@ -6,7 +6,7 @@
       "properties": {
         "kind": "label",
         "title": "Toppen",
-        "text": "Hovedstarten. Stort startområde på toppen. Fint underlag om vinteren, steinete om sommeren.",
+        "text": "Hovedstarten.",
         "source": "stedsfilen"
       },
       "geometry": {
@@ -22,8 +22,8 @@
       "properties": {
         "kind": "label",
         "style": "hazard",
-        "title": "Trakteffekt ved masta",
-        "text": "Ved masta på toppen av alpinsenteret trakter vinden, og den er ofte sterkere der enn ellers på fjellet.",
+        "title": "Masta og heisen",
+        "text": "Trakteffekt, se Før du starter.",
         "source": "farer i stedsfilen"
       },
       "geometry": {
@@ -38,8 +38,8 @@
       "type": "Feature",
       "properties": {
         "kind": "label",
-        "title": "Landing på myra",
-        "text": "Stor myr ved parkeringsplassen ved alpinsenteret, så landing og bil ligger samme sted.",
+        "title": "Myra",
+        "text": "Landing og parkering.",
         "source": "landing i stedsfilen"
       },
       "geometry": {
