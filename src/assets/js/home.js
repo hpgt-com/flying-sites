@@ -5,7 +5,19 @@
   var FS = window.FlyingSites;
   var sites = FS.readJson("sites-data") || [];
   var LEVELS = ["PP2", "PP3", "PP4", "PP5"];
-  var filter = { direction: "", level: "", category: "" };
+  var filter = { direction: "", level: "", category: "", q: "" };
+
+  // --- Søk etter navn ---
+  // Små bokstaver, uten aksenter, og æ/ø/å skrevet som ae/o/a, så «saeter», «sæter» og «Sæter» finner
+  // Sætertinden. Mellomrom og bindestrek teller ikke. Treff hvor som helst i navnet («solli» → Sollifjellet).
+  function searchKey(s) {
+    return String(s || "").toLowerCase()
+      .replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\s\-–]+/g, "");
+  }
+  sites.forEach(function (site) { site.searchKey = searchKey(site.name); });
+  function nameMatches(site) { return !filter.q || site.searchKey.indexOf(searchKey(filter.q)) !== -1; }
   var selectedId = null;
   var markers = {};
 
@@ -18,6 +30,7 @@
   // for seg under «Mangler varsel – ikke vurdert», så det ikke ser ut som de er vurdert.
   var suggest = false;
   function matches(site, assessment, windAssessed) {
+    if (!nameMatches(site)) return "no";
     if (suggest && assessment && (assessment.rating === "no" || assessment.rating === "high")) return "no";
     if (filter.direction && site.primary.indexOf(filter.direction) === -1 && site.possible.indexOf(filter.direction) === -1) return "no";
     if (filter.category && site.categories.indexOf(filter.category) === -1) return "no";
@@ -259,6 +272,7 @@
     var html =
       '<div class="selected__top">' + FS.roseSvg(site, 84, true) +
       '<div class="selected__info"><h2 class="selected__name">' + e(site.name) + "</h2>" +
+      (site.elevation != null ? '<p class="selected__elev">Start ' + site.elevation + " moh</p>" : "") +
       '<div class="directions">' + directionBadges(site) + "</div>" +
       '<div class="tags">' + tags(site) + "</div></div></div>";
     if (assessment) {
@@ -381,7 +395,7 @@
     });
     if (windLegendEl) windLegendEl.hidden = !assessments;
 
-    var filtered = filter.direction || filter.level || filter.category || (suggest && assessments);
+    var filtered = filter.direction || filter.level || filter.category || filter.q || (suggest && assessments);
     var title = filtered
       ? (counts.match === 1 ? "1 flysted passer filtrene" : counts.match + " flysteder passer filtrene")
       : counts.match + " flysteder";
@@ -394,7 +408,69 @@
     // Tomt resultat med forslag på: si hvorfor, ikke bare at ingen passer.
     noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0
       ? "Ingen flysteder kan passe på dette tidspunktet. " + noneReason(sum) + " Slå av «Vis bare steder som kan passe» for å se alle."
-      : "Ingen flysteder passer filtrene.";
+      : filter.q && !sites.some(nameMatches)
+        ? "Ingen flysteder heter noe med «" + filter.q.trim() + "»."
+        : "Ingen flysteder passer filtrene.";
+    renderSearchHits();
+  }
+
+  // Søkefeltet filtrerer mens man skriver, sammen med de andre filtrene. Kartet zoomer til treffene
+  // (litt forsinket, så det ikke hopper for hver bokstav). Enter med ett treff velger stedet, Esc tømmer.
+  var searchEl = document.getElementById("site-search");
+  var searchHitsEl = document.getElementById("search-hits");
+  var searchTimer = null;
+  var MAX_HITS = 6;
+  // Opptil MAX_HITS treff som knapper under feltet. Flere treff: bare antallet, de står i listen.
+  function renderSearchHits() {
+    if (!searchHitsEl) return;
+    var hits = filter.q.trim() ? visibleMatches() : [];
+    searchHitsEl.hidden = !filter.q.trim();
+    if (!hits.length) { searchHitsEl.innerHTML = filter.q.trim() ? '<p class="muted">Ingen treff.</p>' : ""; return; }
+    searchHitsEl.innerHTML = hits.length > MAX_HITS
+      ? '<p class="muted">' + hits.length + " treff, se listen under kartet.</p>"
+      : hits.map(function (s) {
+          return '<button type="button" class="pill" data-select="' + FS.escapeHtml(s.id) + '">' + FS.escapeHtml(s.name) + "</button>";
+        }).join("");
+  }
+  function visibleMatches() {
+    return sites.filter(function (s) { var li = listEl.querySelector('[data-id="' + s.id + '"]'); return li && !li.hidden; });
+  }
+  function fitToMatches() {
+    var hits = visibleMatches();
+    if (!filter.q || !hits.length) return;
+    if (hits.length === 1) map.setView([hits[0].lat, hits[0].lon], Math.max(map.getZoom(), 12));
+    else map.fitBounds(hits.map(function (s) { return [s.lat, s.lon]; }), { padding: [40, 40], maxZoom: 12 });
+  }
+  function setSearch(value) {
+    filter.q = value || "";
+    if (searchEl && searchEl.value !== filter.q) searchEl.value = filter.q;
+  }
+  if (searchEl) {
+    searchEl.addEventListener("input", function () {
+      setSearch(searchEl.value);
+      update();
+      writeHash();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(fitToMatches, 350);
+    });
+    searchEl.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && searchEl.value) {
+        ev.preventDefault();
+        setSearch("");
+        update();
+        writeHash();
+      } else if (ev.key === "Enter") {
+        ev.preventDefault();
+        var hits = visibleMatches();
+        if (hits.length === 1) { clearTimeout(searchTimer); select(hits[0].id, "list"); }
+      }
+    });
+  }
+  if (searchHitsEl) {
+    searchHitsEl.addEventListener("click", function (ev) {
+      var button = ev.target.closest("button[data-select]");
+      if (button) { clearTimeout(searchTimer); select(button.getAttribute("data-select"), "list"); }
+    });
   }
 
   // Setter et filter og markerer riktig knapp. Ukjente verdier (f.eks. fra en gammel lenke) gir «Alle».
@@ -440,13 +516,14 @@
   });
 
   // --- Tilstand i adressen ---
-  // Filtrene, vindtidspunktet og valgt sted lagres i adressen (#direction=NW&level=PP3&wind=3&site=sollifjellet),
+  // Filtrene, søket, vindtidspunktet og valgt sted lagres i adressen (#direction=NW&level=PP3&wind=3&q=solli&site=sollifjellet),
   // så tilbakeknappen og delte lenker gir samme visning. replaceState, så hvert klikk ikke blir et steg i historikken.
   function writeHash() {
     var params = new URLSearchParams();
     ["direction", "level", "category"].forEach(function (type) { if (filter[type]) params.set(type, filter[type]); });
     if (forecast && !stale && windSlot !== "0") params.set("wind", windSlot);
     if (suggest && windSlot !== "off") params.set("forslag", "1");
+    if (filter.q.trim()) params.set("q", filter.q.trim());
     if (selectedId) params.set("site", selectedId);
     var hash = params.toString();
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
@@ -457,6 +534,7 @@
     ["direction", "level", "category"].forEach(function (type) { setFilter(type, params.get(type) || ""); });
     setWind(params.get("wind") || "0");
     setSuggest(params.get("forslag") === "1");
+    setSearch(params.get("q") || "");
     var site = params.get("site");
     selectedId = sites.some(function (s) { return s.id === site; }) ? site : null;
     if (!selectedId) {

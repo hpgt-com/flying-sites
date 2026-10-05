@@ -449,6 +449,17 @@ p { margin: 0; }
 .map--home { height: min(70vh, 560px); }
 
 .filters { display: flex; flex-direction: column; gap: 16px; }
+/* Søkefeltet øverst i filtrene. 16px skrift, så iPhone ikke zoomer inn når feltet får fokus. */
+.search-input {
+  width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 14px 0 40px;
+  font: inherit; font-size: 16px; color: var(--text); background: var(--card);
+  border: 1px solid var(--rose-border); border-radius: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%237F9396' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 14px center;
+}
+.search-hits { display: flex; flex-wrap: wrap; gap: 6px; }
+.search-hits .pill { min-height: 40px; }
+.search-input:focus-visible { outline: 3px solid var(--fjord); outline-offset: 1px; border-color: var(--fjord); }
 .filter { display: flex; flex-direction: column; gap: 8px; }
 .filter__title { font-size: 14px; font-weight: 600; color: var(--muted); }
 .compass {
@@ -505,7 +516,10 @@ p { margin: 0; }
 }
 .results__item:hover { border-color: var(--rose-border); }
 .results__item--selected { border-color: var(--text); }
+.results__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .results__name { font-weight: 600; font-size: 17px; }
+.results__elev { font-size: 14px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.selected__elev { margin: -2px 0 0; font-size: 14px; color: var(--muted); }
 .results .direction { font-size: 13px; padding: 1px 6px; min-width: 26px; }
 .results .direction--none { padding: 0 5px; }
 .results__group { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }

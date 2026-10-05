@@ -21,6 +21,13 @@ scripts:
     </div>
 
     <div class="filters" id="filters">
+      {#- Søk etter navn. Filtrerer listen og kartet mens man skriver (home.js). -#}
+      <div class="filter filter--search" role="search">
+        <label class="filter__title" for="site-search">Søk etter flysted</label>
+        <input type="search" id="site-search" class="search-input" placeholder="Navn, f.eks. Sollifjellet" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-describedby="search-hits">
+        {#- Treffene rett under feltet, så de synes mens man skriver, også på mobil der listen ligger langt nede. -#}
+        <div class="search-hits" id="search-hits" aria-live="polite" hidden></div>
+      </div>
       {% if forecast %}
       <div class="filter">
         <span class="filter__title" id="f-wind">Vind fra varsel</span>
@@ -70,7 +77,8 @@ scripts:
         {% for s in collections.sites %}
         <li data-id="{{ s.data.id }}">
           <button type="button" class="results__item" data-select="{{ s.data.id }}">
-            <span class="results__name">{{ s.data.name }}</span>
+            {#- Starthøyden til høyre for navnet, når den er registrert. -#}
+            <span class="results__head"><span class="results__name">{{ s.data.name }}</span>{% if s.data.elevation and s.data.elevation.launch_masl %}<span class="results__elev">{{ s.data.elevation.launch_masl }} moh</span>{% endif %}</span>
             <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
           </button>
         </li>
