@@ -55,6 +55,9 @@
     pitch: camera.pitch,
     bearing: camera.bearing,
     maxPitch: 85,
+    // Skjermer med svært høy oppløsning tegner ellers 3D-terrenget i opptil 3× størrelse, som gjør
+    // kartet hakkete på maskiner uten god grafikk. 2× er skarpt nok.
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
     attributionControl: { compact: true },
   });
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
@@ -98,10 +101,11 @@
   var labels = (data.drawing.features || []).filter(function (f) { return f.properties && f.properties.kind === "label" && f.properties.title; });
   labels.forEach(function (f, i) {
     var p = f.properties, n = i + 1, hazard = p.style === "hazard";
+    // Punktet står litt over stedet (anchor bottom), så det ikke dekker en start på samme sted.
     marker("drawing-pin" + (hazard ? " drawing-pin--hazard" : ""), String(n), f.geometry.coordinates, n + ". " + p.title, function () {
       showInfo(n + ". " + p.title, [p.text]);
       selectListItem(n);
-    });
+    }, { anchor: "bottom", offset: [0, -10] });
   });
   function selectListItem(n) {
     document.querySelectorAll(".drawing-list li").forEach(function (li) { li.classList.toggle("is-selected", li.getAttribute("data-n") === String(n)); });
@@ -134,28 +138,53 @@
   }
 
   // --- Retningsbuen ---
-  // Hvilken side av fjellet stedet passer for: en gul bue rundt toppen, én bit per retning i
-  // wind_directions, med en pil ut og retningen ved spissen. Mørk gul er hovedretning, lys gul mulig.
-  // Regnes ut fra stedsfilen. Midten og radiusen kan settes i tegningen (direction_arc), ellers er
-  // midten hovedstarten og radiusen ARC_RADIUS_M.
+  // Hvilke sider av fjellet stedet passer for: gule buer med en pil og retningen per retning i
+  // wind_directions. Mørk gul er hovedretning, lys gul mulig. Regnes ut fra stedsfilen.
+  // Har startene egne posisjoner (launches[].lat/lon), får hver retningsgruppe sin egen bue der startene
+  // for den gruppen ligger, så for eksempel N–NØ på siden av fjellet havner der og ikke på toppen. Ligger
+  // flere starter med samme retninger et stykke fra hverandre, strekker buen seg langs siden mellom dem.
+  // Uten egne posisjoner er det én bue rundt hovedstarten, eller rundt direction_arc i tegningen.
   // To visninger (UTKAST, velges med knappene over kartet): «løftet» svever over terrenget og synes fra
   // alle vinkler, «på bakken» ligger på terrenget og skjules bak topper.
-  var ARC_RADIUS_M = 250, ARC_LIFT_M = 30;
-  var arcConfig = data.drawing.direction_arc || {};
-  var arcCenter = arcConfig.center || [data.launch.lon, data.launch.lat];
-  var arcRadius = arcConfig.radius || ARC_RADIUS_M;
-  var arcs = FS.DIRECTIONS.filter(function (d) {
-    return (windDirections.primary || []).indexOf(d) !== -1 || (windDirections.possible || []).indexOf(d) !== -1;
-  }).map(function (d) {
-    var pts = [];
-    for (var az = BEARINGS[d] - 22.5; az <= BEARINGS[d] + 22.5 + 0.01; az += 1.5) pts.push(offset(arcCenter, az, arcRadius));
-    var type = (windDirections.primary || []).indexOf(d) !== -1 ? "primary" : "possible";
-    return { direction: d, color: ARROW_COLORS[type], pts: pts, bearing: BEARINGS[d],
-      mid: offset(arcCenter, BEARINGS[d], arcRadius), tip: offset(arcCenter, BEARINGS[d], arcRadius + 70) };
+  var ARC_RADIUS_M = 250, ARC_RADIUS_PLACED_M = 110, ARC_LIFT_M = 30;
+  function distanceM(a, b) { return Math.hypot((a[1] - b[1]) * 110540, (a[0] - b[0]) * 111320 * Math.cos(a[1] * Math.PI / 180)); }
+  function arcGroups() {
+    var arcConfig = data.drawing.direction_arc;
+    var all = FS.DIRECTIONS.filter(function (d) {
+      return (windDirections.primary || []).indexOf(d) !== -1 || (windDirections.possible || []).indexOf(d) !== -1;
+    });
+    var placed = (data.launches || []).some(function (l) { return l.lat != null && l.lon != null; });
+    if (arcConfig || !placed) {
+      return [{ center: (arcConfig && arcConfig.center) || [data.launch.lon, data.launch.lat],
+        radius: (arcConfig && arcConfig.radius) || ARC_RADIUS_M, directions: all }];
+    }
+    // Starter med samme retninger hører til samme gruppe. Midten er midt mellom dem, og radiusen er
+    // stor nok til at buen når forbi alle.
+    var groups = {};
+    launchPoints.forEach(function (p) {
+      var key = p.directions.join(",");
+      (groups[key] = groups[key] || { directions: p.directions, points: [] }).points.push([p.lon, p.lat]);
+    });
+    return Object.keys(groups).map(function (key) {
+      var g = groups[key], n = g.points.length;
+      var center = [g.points.reduce(function (s, q) { return s + q[0]; }, 0) / n, g.points.reduce(function (s, q) { return s + q[1]; }, 0) / n];
+      var spread = Math.max.apply(null, g.points.map(function (q) { return distanceM(q, center); }));
+      return { center: center, radius: spread + ARC_RADIUS_PLACED_M, directions: g.directions };
+    });
+  }
+  var arcs = [];
+  arcGroups().forEach(function (g) {
+    g.directions.forEach(function (d) {
+      var pts = [];
+      for (var az = BEARINGS[d] - 22.5; az <= BEARINGS[d] + 22.5 + 0.01; az += 3) pts.push(offset(g.center, az, g.radius));
+      var type = (windDirections.primary || []).indexOf(d) !== -1 ? "primary" : "possible";
+      arcs.push({ direction: d, color: ARROW_COLORS[type], pts: pts, bearing: BEARINGS[d], center: g.center, radius: g.radius,
+        mid: offset(g.center, BEARINGS[d], g.radius), tip: offset(g.center, BEARINGS[d], g.radius + 70) });
+    });
   });
   // Retningene på bakken er markører (følger terrenget). I løftet visning tegnes de i SVG-laget.
   var groundLabels = arcs.map(function (arc) {
-    return marker("arc-label", FS.DIRECTION_LABELS[arc.direction], offset(arcCenter, arc.bearing, arcRadius + 115), null, null);
+    return marker("arc-label", FS.DIRECTION_LABELS[arc.direction], offset(arc.center, arc.bearing, arc.radius + 115), null, null);
   });
 
   var arcMode = /(^|[#&])linje=bakke\b/.test(location.hash) ? "ground" : "lifted";
@@ -179,16 +208,19 @@
   // Løftet: tegnes i et SVG-lag over kartet. Hvert punkt plasseres på terrenget (map.project) og løftes
   // ARC_LIFT_M meter rett opp, regnet om til piksler med den lokale målestokken og vinkelen. Løftet jevnes
   // ut langs buen, så linjen ikke blir bølgete der terrenget er ujevnt.
+  // Målestokken regnes i tre punkter per bue (start, midt, slutt) og interpoleres, så hver bue koster få
+  // projeksjoner per bilde. Det holder kartet jevnt også på tregere maskiner.
   function liftedPoints(lls) {
     var sin = Math.sin(map.getPitch() * Math.PI / 180);
     var base = lls.map(function (ll) { return map.project(ll); });
-    var lift = lls.map(function (ll, i) {
-      var e = map.project(offset(ll, 90, 50)), n = map.project(offset(ll, 0, 50)), p = base[i];
+    function liftAt(i) {
+      var p = base[i], e = map.project(offset(lls[i], 90, 50)), n = map.project(offset(lls[i], 0, 50));
       return ARC_LIFT_M * Math.max(Math.hypot(e.x - p.x, e.y - p.y), Math.hypot(n.x - p.x, n.y - p.y)) / 50 * sin;
-    });
+    }
+    var last = base.length - 1, mid = Math.floor(last / 2), l0 = liftAt(0), lm = liftAt(mid), l1 = liftAt(last);
     return base.map(function (p, i) {
-      var w = lift.slice(Math.max(0, i - 4), i + 5), avg = w.reduce(function (x, y) { return x + y; }, 0) / w.length;
-      return [p.x, p.y - avg];
+      var lift = i <= mid ? l0 + (lm - l0) * (mid ? i / mid : 0) : lm + (l1 - lm) * ((i - mid) / (last - mid));
+      return [p.x, p.y - lift];
     });
   }
   function svgPath(points) { return "M" + points.map(function (q) { return q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" L"); }
@@ -197,8 +229,9 @@
     // Alle konturer først, så linjene, så det ikke blir mørke hakk der to retninger møtes.
     var casings = "", lines = "", tops = "";
     arcs.forEach(function (arc) {
-      var pts = liftedPoints(arc.pts.concat([arc.mid, offset(arcCenter, arc.bearing, arcRadius + 60)]));
-      var a = pts[pts.length - 2], b = pts[pts.length - 1], d = svgPath(pts.slice(0, -2));
+      var pts = liftedPoints(arc.pts);
+      var tipPts = liftedPoints([arc.mid, offset(arc.center, arc.bearing, arc.radius + 60)]);
+      var a = tipPts[0], b = tipPts[1], d = svgPath(pts);
       var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
       var tip = [a[0] + ux * 30, a[1] + uy * 30], stem = [a[0] + ux * 18, a[1] + uy * 18];
       var head = [tip, [stem[0] - uy * 8, stem[1] + ux * 8], [stem[0] + uy * 8, stem[1] - ux * 8]];
@@ -215,7 +248,12 @@
     overlay.setAttribute("class", "arc-overlay");
     overlay.setAttribute("aria-hidden", "true");
     map.getContainer().appendChild(overlay);
-    map.on("render", drawOverlay);
+    var pending = false;
+    map.on("render", function () {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(function () { pending = false; drawOverlay(); });
+    });
   }
 
   // Tegningen legges inn så snart stilen er klar, ikke ved «load», som venter på alle kartflisene.
@@ -258,7 +296,7 @@
     var arcLines = arcs.map(function (arc) { return { type: "Feature", properties: { color: arc.color }, geometry: { type: "LineString", coordinates: arc.pts } }; });
     var arcHeads = [];
     arcs.forEach(function (arc) {
-      var stem = [arc.mid, offset(arcCenter, arc.bearing, arcRadius + 70)];
+      var stem = [arc.mid, arc.tip];
       arcLines.push({ type: "Feature", properties: { color: arc.color, stem: true }, geometry: { type: "LineString", coordinates: stem } });
       arcHeads.push({ type: "Feature", properties: { color: arc.color }, geometry: { type: "Polygon", coordinates: arrowHead(stem, 32) } });
     });

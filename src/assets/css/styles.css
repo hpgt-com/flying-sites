@@ -886,7 +886,8 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* Nummererte punkter i kartet og i listen under. */
 .drawing-pin { width: 26px; height: 26px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   background: #1C2B33; color: #FFFFFF; border: 2px solid #FFFFFF; font: 700 14px/1 var(--font-body); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5); cursor: pointer; }
-.drawing-pin--hazard { background: #C62828; }
+/* Fare: lys firkant med rød kant, som «Før du starter»-boksen, så den ikke forveksles med de oransje startene. */
+.drawing-pin--hazard { background: #FBE3DA; color: #6B1A0B; border: 2.5px solid #C62828; border-radius: 5px; }
 .drawing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .drawing-list li { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; border: 2px solid transparent; }
 .drawing-list li.is-selected { border-color: var(--text); background: var(--card); }
