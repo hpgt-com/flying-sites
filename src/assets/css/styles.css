@@ -757,12 +757,12 @@ p { margin: 0; }
 /* Vær: meteogrammet i egen ramme og lenkene kompakt på én linje, med beskrivelsen til høyre. */
 .block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
 .block--weather .meteogram img { border: 0; border-radius: 6px; }
-.block--weather .link-list, .link-list--compact { gap: 6px; }
-.block--weather .link-row, .block--weather .link-row:last-child, .link-list--compact .link-row, .link-list--compact .link-row:last-child {
+.block--weather .link-list { gap: 6px; }
+.block--weather .link-row, .block--weather .link-row:last-child {
   min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card);
 }
-.block--weather .link-row > span, .link-list--compact .link-row > span { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 10px; flex: 1; min-width: 0; }
-.block--weather .link-row__subtitle, .link-list--compact .link-row__subtitle { font-size: 13px; text-align: right; }
+.block--weather .link-row > span { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 10px; flex: 1; min-width: 0; }
+.block--weather .link-row__subtitle { font-size: 13px; text-align: right; }
 
 /* Vind nå (site-wind.js), med samme farger som vurderingen på forsiden. */
 .site-wind {
@@ -795,6 +795,9 @@ p { margin: 0; }
 .big-btn--dark { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
 .big-btn--dark:hover { background: var(--fjord); color: var(--on-color); }
 .big-btn--empty { background: transparent; border-style: dashed; color: var(--muted); font-weight: 500; }
+.big-btn--two-line { min-height: 60px; }
+.big-btn--two-line > span { display: flex; flex-direction: column; gap: 1px; }
+.big-btn--two-line small { font-size: 13px; font-weight: 500; color: var(--muted); }
 
 .page-footer { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; border-top: 1px solid var(--line); }
 .metadata {

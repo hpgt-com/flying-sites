@@ -46,10 +46,6 @@ parking:
 access:
   parking_text: Ved alpinsenteret, rett ved landingen.
   route_text: Heisen når alpinbakken er åpen, ellers gangruten.
-  links:
-  - title: Sollifjellet alpinsenter
-    text: Åpningstider for heisen
-    url: https://sollifjellet.no/
   routes:
   - file: sollifjellet-route.gpx
     name: null
@@ -146,6 +142,10 @@ images:
   launch: sollifjellet-launch.jpg
   landing: sollifjellet-landing.jpg
   air: sollifjellet-air.jpg
+links:
+- title: Sollifjellet alpinsenter
+  text: Åpningstider for heisen
+  url: https://sollifjellet.no/
 reviewed:
   by: Kristoffer D. Hofstad
   date: '2026-09-24'
@@ -155,10 +155,10 @@ Et av klubbens mest brukte steder. Her flys det året rundt, til alt fra korte s
 
 ## Start
 
-Stort startområde på toppen. Fint underlag om vinteren, steinete om sommeren. SPG starter fra toppen av Sollifjellet, eller fra toppen av alpinsenteret ved masta eller ved siden av heisen. Der er høyden best, og man er ikke i veien for dem som står i bakken.
+Stort startområde på toppen, med fint underlag om vinteren og noe steinete om sommeren. SPG starter primært på venstre side av heisen og lander på en egen landingsplass i skogen (se «SPG-landing» i kartet).
 
 ## Landing
 
 Stor myr ved parkeringsplassen, så landing og bil ligger samme sted.
 
-SPG har egen landing (grå målskive i kartet), siden man ikke flyr helt ned. Unntaket er når alpinsenteret gir lov til å fly i selve bakken.
+SPG lander på en egen landingsplass i skogen utenfor alpinanlegget (grå målskive i kartet). I selve bakken flyr man bare når alpinsenteret gir lov.

@@ -55,7 +55,8 @@ scripts:
         <ul class="map-legend" aria-label="Tegnforklaring for kartet">
           <li><span class="map-symbol map-symbol--launch-dot"></span>Start</li>
           {% if landings.length %}<li><span class="map-symbol map-symbol--landing"></span>Landing</li>{% endif %}
-          {% if landings | rejectattr("primary") | list | length %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}
+          {#- Andre landinger med eget navn (for eksempel «SPG-landing») står med navnet, ellers «Alternativ landing». -#}
+          {% for l in landings | rejectattr("primary") %}{% if l.name and l.name != "Landing" %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>{{ l.name }}</li>{% elif loop.first %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}{% endfor %}
           {% if parking.length %}<li><span class="symbol symbol--parking">P</span>Parkering</li>{% endif %}
           {% if routes.length %}<li><span class="symbol symbol--route"></span>Gangrute</li>{% endif %}
           {% if wind_directions.primary.length %}<li><span class="symbol drawing-swatch drawing-swatch--arrow"></span>Retningene stedet passer for</li>{% endif %}
@@ -135,11 +136,6 @@ scripts:
           </div>
           {% endif %}
         </dl>
-        {% if access.links and access.links.length %}
-        <nav class="link-list link-list--compact" aria-label="Lenker om adkomst">
-          {% for l in access.links %}{{ m.linkRow(l.url, l.title, l.text or "") }}{% endfor %}
-        </nav>
-        {% endif %}
         {#- Høydeprofilen hører til gangruten. Glidebryteren viser posisjonen i kartet like over. -#}
         {% if routes | selectattr("profile") | list | length %}
         <div class="profile" id="elevation-profile">
@@ -332,6 +328,10 @@ scripts:
         {% if external.pgearth_id %}
         <a class="big-btn" href="https://www.paraglidingearth.com/?site={{ external.pgearth_id }}" target="_blank" rel="noopener">{{ name }} på Paraglidingearth{{ m.external() }}</a>
         {% endif %}
+        {#- Andre lenker for stedet (links i stedsfilen), for eksempel alpinsenteret med åpningstider for heisen. -#}
+        {% for l in links %}
+        <a class="big-btn big-btn--two-line" href="{{ l.url }}" target="_blank" rel="noopener"><span>{{ l.title }}{% if l.text %}<small>{{ l.text }}</small>{% endif %}</span>{{ m.external() }}</a>
+        {% endfor %}
       </section>
     </div>
 
