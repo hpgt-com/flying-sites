@@ -75,11 +75,33 @@
     counter.textContent = links.length > 1 ? "(" + (current + 1) + " av " + links.length + ")" : "";
     resetZoom();
     if (!dialog.open) dialog.showModal();
+    fit();
     if (links.length > 1) {
       preload(current + 1);
       preload(current - 1);
     }
   }
+
+  // Bildet får en fast størrelse i piksler som passer skjermen nå: så stort som mulig, men aldri større
+  // enn bildets egen bredde (små bilder strekkes ikke). Regnes ut på nytt når mobilen snus eller vinduet
+  // endrer størrelse. Uten dette beholder bildet størrelsen det fikk da det ble åpnet.
+  function fit() {
+    var link = links[current];
+    var w = Number(link.getAttribute("data-width")) || image.naturalWidth;
+    var h = Number(link.getAttribute("data-height")) || image.naturalHeight;
+    if (!w || !h) { image.style.width = image.style.height = ""; return; }
+    var s = Math.min(dialog.clientWidth / w, dialog.clientHeight / h, 1);
+    image.style.width = Math.floor(w * s) + "px";
+    image.style.height = Math.floor(h * s) + "px";
+  }
+  image.addEventListener("load", function () { if (dialog.open) fit(); });
+  window.addEventListener("resize", function () {
+    if (!dialog.open) return;
+    resetZoom();
+    // Nettleseren velger bildestørrelse på nytt for den nye skjermbredden.
+    source.sizes = image.sizes = sizesFor(links[current]);
+    fit();
+  });
 
   links.forEach(function (link, index) {
     link.addEventListener("click", function (ev) {

@@ -28,22 +28,22 @@
 {#- Fargemodus settes før siden tegnes, så den ikke blinker lys først. Valget (auto, light, dark) lagres
     i nettleseren av menyen (common.js). Auto følger innstillingen på enheten. Det samme gjelder
     fargeblindvennlige farger (data-cvd). -#}
-<script src="/assets/js/theme-init.js"></script>
+<script src="{{ "/assets/js/theme-init.js" | asset }}"></script>
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}
 {#- Fontene ligger på siden selv (Fontsource, se eleventy.config.js), så besøkende ikke sender IP-adressen til Google. -#}
 <link rel="preload" href="/assets/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/fonts.css">
-<link rel="stylesheet" href="/assets/leaflet/leaflet.css">
-<link rel="stylesheet" href="/assets/css/styles.css">
-{% for style in styles %}<link rel="stylesheet" href="{{ style }}">
+<link rel="stylesheet" href="{{ "/assets/css/fonts.css" | asset }}">
+<link rel="stylesheet" href="{{ "/assets/leaflet/leaflet.css" | asset }}">
+<link rel="stylesheet" href="{{ "/assets/css/styles.css" | asset }}">
+{% for style in styles %}<link rel="stylesheet" href="{{ style | asset }}">
 {% endfor %}
 </head>
 <body class="{{ bodyClass }}">
 {{ content | safe }}
-<script src="/assets/leaflet/leaflet.js"></script>
-<script src="/assets/js/common.js"></script>
-{% for script in scripts %}<script src="{{ script }}"></script>
+<script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>
+<script src="{{ "/assets/js/common.js" | asset }}"></script>
+{% for script in scripts %}<script src="{{ script | asset }}"></script>
 {% endfor %}
 </body>
 </html>
