@@ -1,14 +1,5 @@
 {
   "type": "FeatureCollection",
-  "camera": {
-    "center": [
-      16.389,
-      68.8044
-    ],
-    "zoom": 13.6,
-    "pitch": 58,
-    "bearing": 250
-  },
   "features": [
     {
       "type": "Feature",

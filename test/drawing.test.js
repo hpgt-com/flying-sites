@@ -5,8 +5,7 @@ import fs from "node:fs";
 import { validateDrawing } from "../lib/drawing.js";
 
 const launch = { lat: 68.80389, lon: 16.36667 };
-const camera = { center: [16.389, 68.8044], zoom: 13.6, pitch: 58, bearing: 250 };
-const drawing = (features, cam = camera) => ({ type: "FeatureCollection", camera: cam, features });
+const drawing = (features) => ({ type: "FeatureCollection", features });
 const feature = (properties, geometry) => ({ type: "Feature", properties, geometry });
 
 test("tegningen for Sollifjellet er gyldig", () => {
@@ -52,12 +51,4 @@ test("byttet lon og lat stopper bygget", () => {
     feature({ kind: "label", title: "Feil" }, { type: "Point", coordinates: [68.806, 16.377] }),
   ]), launch);
   assert.match(errors[0], /mer enn 10 km fra starten/);
-});
-
-test("camera må ha gyldige verdier", () => {
-  const errors = validateDrawing(drawing([], { center: [16.389, 68.8044], zoom: 25, pitch: 90 }), launch);
-  assert.match(errors.join("\n"), /camera.zoom/);
-  assert.match(errors.join("\n"), /camera.pitch/);
-  assert.match(errors.join("\n"), /camera.bearing/);
-  assert.match(validateDrawing(drawing([], null), launch)[0], /mangler `camera`/);
 });

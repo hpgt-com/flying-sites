@@ -11,7 +11,8 @@
   // Gangruten må synes både på lyst og mørkt kart (mørk modus, se styles.css).
   function inkColor() { return FS.isDark() ? "#F3F5F4" : "#1C2B33"; }
   var INK = inkColor();
-  var map = FS.createMap(mapEl, { scrollWheelZoom: false });
+  // Musehjulet zoomer bare med Ctrl/Cmd, se «Zoom med musehjulet» under.
+  var map = FS.createMap(mapEl, { scrollWheelZoom: true });
   var bounds = [];
   var routeLines = [];
 
@@ -117,19 +118,73 @@
   // Kartet skal også få plass til buene når det zoomer til innholdet.
   FS.directionArcs(data).forEach(function (arc) { arc.pts.forEach(function (p) { bounds.push(ll(p)); }); });
 
-  // --- Punkter fra tegningen (<id>-drawing.geojson) ---
-  // Nummererte punkter med tittel og tekst når man trykker. Fare er en lys firkant med rød kant.
-  var labels = ((data.drawing && data.drawing.features) || []).filter(function (f) {
-    return f.properties && f.properties.kind === "label" && f.properties.title;
+  // --- Tegningen (<id>-drawing.geojson) ---
+  // Linjer og områder (flyvei, startkant, fare) under punktene. Farger som i lib/drawing.js.
+  var STYLE_COLORS = { flight: ACCENT, hazard: "#C62828", info: "#2E5E6E", launch: "#F2B705", landing: "#1C2B33" };
+  var features = (data.drawing && data.drawing.features) || [];
+  features.forEach(function (f) {
+    var p = f.properties || {};
+    var color = STYLE_COLORS[p.style] || (p.kind === "area" ? STYLE_COLORS.hazard : STYLE_COLORS.flight);
+    var layer = null;
+    if (p.kind === "path") {
+      var line = f.geometry.coordinates.map(ll);
+      L.polyline(line, { pane: "arcs", color: "#1C2B33", weight: 7, opacity: 0.8, interactive: false }).addTo(map);
+      layer = L.polyline(line, { color: color, weight: 4, dashArray: p.dashed ? "8 7" : null, lineCap: "round" }).addTo(map);
+      if (p.arrow && line.length > 1) {
+        var c = f.geometry.coordinates, a = c[c.length - 2], b = c[c.length - 1];
+        var bearing = Math.atan2((b[0] - a[0]) * Math.cos(b[1] * Math.PI / 180), b[1] - a[1]) * 180 / Math.PI;
+        L.polygon(FS.arrowHead(b, bearing, 40).map(ll), { color: "#1C2B33", weight: 1.5, fillColor: color, fillOpacity: 1, interactive: false }).addTo(map);
+      }
+    } else if (p.kind === "area") {
+      layer = L.polygon(f.geometry.coordinates[0].map(ll), { color: color, weight: 2.5, fillColor: color, fillOpacity: 0.2 }).addTo(map);
+    }
+    if (layer && p.title) layer.bindPopup("<strong>" + FS.escapeHtml(p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""));
   });
-  labels.forEach(function (f, i) {
+
+  // Nummererte punkter, med samme nummer som listen under kartet. Trykk på et punkt viser teksten og
+  // markerer den i listen. Trykk i listen flytter kartet dit og viser teksten. Fare er en lys firkant med rød kant.
+  var labels = features.filter(function (f) { return f.properties && f.properties.kind === "label" && f.properties.title; });
+  var pinMarkers = labels.map(function (f, i) {
     var p = f.properties, n = i + 1, hazard = p.style === "hazard";
-    L.marker(ll(f.geometry.coordinates), {
+    return L.marker(ll(f.geometry.coordinates), {
       icon: L.divIcon({ className: "drawing-pin" + (hazard ? " drawing-pin--hazard" : ""), html: String(n), iconSize: [26, 26], iconAnchor: [13, 36] }),
       title: n + ". " + p.title, alt: n + ". " + p.title, zIndexOffset: 1100,
-    }).bindPopup("<strong>" + FS.escapeHtml(n + ". " + p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""))
+    }).bindPopup("<strong>" + FS.escapeHtml(n + ". " + p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""), { offset: [0, -24] })
+      .on("click", function () { selectPoint(n); })
       .addTo(map);
   });
+  function selectPoint(n) {
+    document.querySelectorAll(".drawing-list li").forEach(function (li) { li.classList.toggle("is-selected", li.getAttribute("data-n") === String(n)); });
+  }
+  document.querySelectorAll(".drawing-list button[data-n]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var n = Number(button.getAttribute("data-n")), m = pinMarkers[n - 1];
+      if (!m) return;
+      selectPoint(n);
+      mapEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      map.setView(m.getLatLng(), Math.max(map.getZoom(), 15));
+      m.openPopup();
+    });
+  });
+
+  // --- Zoom med musehjulet ---
+  // Musehjulet ruller siden som vanlig. Med Ctrl (eller Cmd på Mac) zoomer det kartet, som i Google Maps.
+  // Uten Ctrl vises et kort hint. Zoomknappene og +/- på tastaturet (når kartet har fokus) virker som før.
+  var hint = document.createElement("div");
+  hint.className = "map-hint";
+  hint.setAttribute("aria-hidden", "true");
+  hint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "Hold ⌘ og rull for å zoome kartet" : "Hold Ctrl og rull for å zoome kartet";
+  mapEl.appendChild(hint);
+  var hintTimer = null;
+  // Fanges før Leaflet ser hendelsen (capture), så Leaflets egen zoom bare får rullingen med Ctrl/Cmd.
+  // Leaflet hindrer da også nettleseren i å zoome hele siden.
+  mapEl.addEventListener("wheel", function (ev) {
+    if (ev.ctrlKey || ev.metaKey) { hint.classList.remove("is-visible"); return; }
+    ev.stopPropagation();
+    hint.classList.add("is-visible");
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(function () { hint.classList.remove("is-visible"); }, 1200);
+  }, true);
 
   FS.fitWhenVisible(map, mapEl, function () {
     if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false });
