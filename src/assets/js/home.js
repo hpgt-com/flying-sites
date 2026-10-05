@@ -270,7 +270,15 @@
 
   // --- Kort for valgt sted ---
   var cardEl = document.getElementById("selected");
-  var emptyCardHtml = cardEl.innerHTML;
+  // Tom tilstand bygges med DOM-metoder (ikke innerHTML fra siden selv), så ingen tekst tolkes som HTML.
+  var EMPTY_CARD_TEXT = "Trykk på et flysted i kartet eller i listen for å se mer.";
+  function resetCard() {
+    var p = document.createElement("p");
+    p.className = "muted selected__empty";
+    p.textContent = EMPTY_CARD_TEXT;
+    cardEl.replaceChildren(p);
+    cardEl.classList.remove("selected--active");
+  }
   function showCard(site, assessment, windOn) {
     var e = FS.escapeHtml;
     var html = '<button type="button" class="selected__close" data-close-card aria-label="Lukk kortet for ' + e(site.name) + '">×</button>' +
@@ -549,8 +557,7 @@
   cardEl.addEventListener("click", function (ev) {
     if (!ev.target.closest("[data-close-card]")) return;
     selectedId = null;
-    cardEl.innerHTML = emptyCardHtml;
-    cardEl.classList.remove("selected--active");
+    resetCard();
     update();
     writeHash();
   });
@@ -598,8 +605,7 @@
     var site = params.get("site");
     selectedId = sites.some(function (s) { return s.id === site; }) ? site : null;
     if (!selectedId) {
-      cardEl.innerHTML = emptyCardHtml;
-      cardEl.classList.remove("selected--active");
+      resetCard();
     }
     update();
     writeHash(); // rydder bort ukjente verdier fra adressen
