@@ -33,6 +33,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
   - «Kan passe»: ellers. Det som mangler eller er usikkert, gjør aldri vurderingen bedre.
   - Kortet viser vind, klokkeslett, vurdering og årsaken. Under vindvalget står hvilket klokkeslett som vises og når varselet ble hentet. Klokkeslett og «I morgen kl. 12» er alltid norsk tid.
   - Er varselet hentet for mer enn `maxForecastAgeHours` (3 t) siden, skjules vindvalget, og siden sier at varselet er for gammelt. Dekker varselet ikke valgt tidspunkt, vises ingen vurdering.
+  - **Forslag fra varselet**: knappen «Vis bare steder som kan passe nå» (teksten følger valgt tidspunkt) under tidsvalget toner ned steder der vurderingen er «Passer ikke» eller «For mye vind», som når man velger en retning i kompasset, og fjerner dem fra listen. «Kan passe», «Usikkert» og steder uten varsel blir stående. Virker sammen med de andre filtrene, er av som standard og bare tilgjengelig når vind er på. Lagres i adressen som `forslag=1`.
   - Varselet hentes per sted. Feiler ett sted, står det «Ingen vindvarsel for stedet» der, og resten får vurdering. Feiler alle, vises ikke vindvalget.
   - Kartet viser farget ring og en vindpil som står på siden vinden kommer fra og peker inn mot starten, listen sorteres etter vurdering. Bare et forslag, aldri «OK å fly».
 - Liste over steder som passer filteret.

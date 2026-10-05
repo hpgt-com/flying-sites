@@ -12,7 +12,12 @@
   // "match", "unknown" eller "no". Nivåfilteret viser steder for valgt nivå og lavere (en PP3-pilot kan
   // fly PP2-steder). Steder uten registrert nivå skjules ikke, men får "unknown" og vises for seg, siden
   // de fleste stedene ikke har nivå ennå og et tomt resultat ellers ville sett ut som «ingen steder».
-  function matches(site) {
+  // Med forslag fra varselet på («Vis bare steder som kan passe») tones steder der vurderingen er
+  // «Passer ikke» eller «For mye vind» ned, som når man velger en retning. «Kan passe» og «Usikkert» blir
+  // stående. Steder uten varsel blir også stående, så ingen forsvinner fordi hentingen feilet.
+  var suggest = false;
+  function matches(site, assessment) {
+    if (suggest && assessment && (assessment.rating === "no" || assessment.rating === "high")) return "no";
     if (filter.direction && site.primary.indexOf(filter.direction) === -1 && site.possible.indexOf(filter.direction) === -1) return "no";
     if (filter.category && site.categories.indexOf(filter.category) === -1) return "no";
     if (filter.level && !site.level) return "unknown";
@@ -231,10 +236,10 @@
     var counts = { match: 0, unknown: 0, no: 0 };
     var matchById = {};
     sites.forEach(function (site) {
-      var match = matches(site);
+      var assessment = assessments && assessments[site.id];
+      var match = matches(site, assessment);
       matchById[site.id] = match;
       counts[match]++;
-      var assessment = assessments && assessments[site.id];
       var marker = markers[site.id];
       if (marker) {
         marker.setIcon(markerIcon(site, assessment, match, site.id === selectedId));
@@ -287,7 +292,7 @@
       : "";
     if (windLegendEl) windLegendEl.hidden = !assessments;
 
-    var filtered = filter.direction || filter.level || filter.category;
+    var filtered = filter.direction || filter.level || filter.category || (suggest && assessments);
     var title = filtered
       ? (counts.match === 1 ? "1 flysted passer filtrene" : counts.match + " flysteder passer filtrene")
       : counts.match + " flysteder";
@@ -315,10 +320,24 @@
     buttons.forEach(function (b) { b.setAttribute("aria-pressed", b === match ? "true" : "false"); });
   }
 
+  // Forslagsknappen virker bare når vind er på. Teksten følger valgt tidspunkt («nå», «om 3 t» …).
+  var suggestButton = document.querySelector("button[data-suggest]");
+  function setSuggest(on) {
+    suggest = !!(on && suggestButton && forecast && !stale);
+    if (!suggestButton) return;
+    var windOn = windSlot !== "off";
+    suggestButton.hidden = !forecast || stale;
+    suggestButton.disabled = !windOn;
+    suggestButton.setAttribute("aria-pressed", String(suggest && windOn));
+    suggestButton.textContent = "Vis bare steder som kan passe" + (windSlot === "tomorrow" ? " i morgen kl. 12" : windOn ? " " + SLOT_LABELS[windSlot] : "");
+    suggestButton.title = windOn ? "" : "Velg et tidspunkt for vind først";
+  }
+
   document.getElementById("filters").addEventListener("click", function (ev) {
-    var button = ev.target.closest("button[data-filter], button[data-wind]");
+    var button = ev.target.closest("button[data-filter], button[data-wind], button[data-suggest]");
     if (!button) return;
-    if (button.hasAttribute("data-wind")) setWind(button.getAttribute("data-wind"));
+    if (button.hasAttribute("data-suggest")) setSuggest(!suggest);
+    else if (button.hasAttribute("data-wind")) { setWind(button.getAttribute("data-wind")); setSuggest(suggest); }
     else setFilter(button.getAttribute("data-filter"), button.getAttribute("data-value"));
     update();
     writeHash();
@@ -331,6 +350,7 @@
     var params = new URLSearchParams();
     ["direction", "level", "category"].forEach(function (type) { if (filter[type]) params.set(type, filter[type]); });
     if (forecast && !stale && windSlot !== "0") params.set("wind", windSlot);
+    if (suggest && windSlot !== "off") params.set("forslag", "1");
     if (selectedId) params.set("site", selectedId);
     var hash = params.toString();
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
@@ -340,6 +360,7 @@
     var params = new URLSearchParams(location.hash.slice(1));
     ["direction", "level", "category"].forEach(function (type) { setFilter(type, params.get(type) || ""); });
     setWind(params.get("wind") || "0");
+    setSuggest(params.get("forslag") === "1");
     var site = params.get("site");
     selectedId = sites.some(function (s) { return s.id === site; }) ? site : null;
     if (!selectedId) {
