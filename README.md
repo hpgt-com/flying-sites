@@ -51,7 +51,7 @@ Andre kommandoer:
 ## Publisering
 
 - Alt som merges til `main` publiseres automatisk til GitHub Pages.
-- Siden bygges også hver time, så vindvurderingen på forsiden har ferskt varsel.
+- Siden bygges også to ganger i timen, så vindvurderingen på forsiden har ferskt varsel. GitHub kan forsinke eller hoppe over planlagte kjøringer. Er varselet over 6 timer gammelt, slås vindvurderingen av. Kjør «Build and deploy» manuelt under Actions for å hente nytt varsel med en gang.
 - Endringer går via en branch og en pull request. PR-sjekken bygger siden og stopper ugyldige stedsfiler.
 - Luftrom hentes automatisk den 1. hver måned. Endringer kommer som en PR som gjennomgås før de publiseres.
 - Dependabot foreslår oppdateringer av pakker og Actions én gang i måneden.

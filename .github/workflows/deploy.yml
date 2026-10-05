@@ -4,10 +4,13 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Bygg hver time, så vindvurderingen på forsiden har ferskt varsel fra MET.
+  # Bygg to ganger i timen, så vindvurderingen på forsiden har ferskt varsel fra MET.
+  # GitHub garanterer ikke planlagte kjøringer: de kan bli forsinket i timevis eller hoppet over når det er
+  # mye last, særlig rundt hel time. Derfor skjeve minutter, og varselet godtas til det er 6 timer gammelt
+  # (maxForecastAgeHours i src/_data/windRules.json).
   # GitHub slår av planlagte kjøringer etter 60 dager uten aktivitet i repoet.
   schedule:
-    - cron: "5 * * * *"
+    - cron: "17,47 * * * *"
 
 # Byggejobben (build) får bare lese. Rettighetene til å publisere (pages, id-token) har bare deploy-jobben,
 # som ikke kjører kode fra repoet. Actions er låst til commit-SHA (Dependabot oppdaterer dem).
