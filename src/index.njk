@@ -39,11 +39,16 @@ scripts:
         {#- Forslag: tone ned steder der varselet sier «Passer ikke» eller «For mye vind» (home.js). -#}
         <button type="button" class="pill pill--suggest" data-suggest aria-pressed="false">Vis bare steder som kan passe nå</button>
         <p class="filter__note" id="forecast-status" aria-live="polite"></p>
-        {#- Oppsummering av vinden og vurderingene for valgt tidspunkt (home.js). -#}
-        <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
-        <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden og retning nær kanten gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
+        <details class="wind-rules">
+          <summary>Hvordan vurderes vinden?</summary>
+          <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden og retning nær kanten gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
+        </details>
       </div>
       {% endif %}
+      {#- På mobil er retning, nivå og kategori skjult bak en knapp med antall valgte filtre (home.js), så
+          kartet og resultatene kommer tidligere. På PC vises de alltid, og knappen er skjult. -#}
+      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">Retning, nivå og kategori</button>
+      <div class="filters-more" id="filters-more">
       <div class="filter">
         <span class="filter__title" id="f-direction">Vindretning</span>
         <div class="compass" role="group" aria-labelledby="f-direction">
@@ -68,6 +73,7 @@ scripts:
           {% endfor %}
         </div>
       </div>
+      </div>
     </div>
 
     <section class="results" aria-labelledby="results-title">
@@ -88,6 +94,8 @@ scripts:
   </div>
 
   <main class="home__map">
+    {#- Oppsummering av vinden og vurderingene for valgt tidspunkt (home.js). Over kartet på mobil, oppå kartet på PC. -#}
+    <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
     <div id="home-map" class="map map--home" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" role="region" aria-label="Kart over flysteder. Hver start er en vindrose."></div>
   </main>
 

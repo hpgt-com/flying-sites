@@ -576,6 +576,13 @@ p { margin: 0; }
 .block--title { gap: 10px; }
 
 .block--title h1 { font-size: 50px; line-height: 0.95; }
+.title-elev { font-family: var(--font-body); font-size: 18px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+/* Adkomst som tall øverst i Start (site.njk). */
+.access-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.access-stats > div { flex: 1 1 90px; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.access-stats strong { font: 700 28px/1 var(--font-heading); }
+.access-stats span { font-size: 15px; color: var(--muted); }
+.access-stats small { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
 .lead { font-size: 18px; line-height: 1.45; color: var(--muted); }
 .lead p + p { margin-top: 8px; }
 
@@ -921,9 +928,9 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .map-hint { position: absolute; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center;
   background: rgba(28, 43, 51, 0.55); color: #FFFFFF; font-weight: 600; font-size: 17px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
 .map-hint.is-visible { opacity: 1; }
-/* «Vis hele stedet» under zoomknappene (site.js). */
+/* «Vis hele stedet»/«Vis alle flysteder» og fullskjerm under zoomknappene (addViewControls i common.js). */
 .map-reset a { display: flex !important; align-items: center; justify-content: center; color: var(--text); }
-/* Fullskjerm: kartet legges over hele siden (site.js). Ikke nettleserens fullskjerm, så det også virker på iPhone. */
+/* Fullskjerm: kartet legges over hele siden (common.js). Ikke nettleserens fullskjerm, så det også virker på iPhone. */
 .map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
 body.has-fullscreen-map { overflow: hidden; }
 /* «Vis bare steder som kan passe» under vindtidspunktet (home.js). Egen linje, så den ikke blandes med tidspunktene. */
@@ -931,8 +938,27 @@ body.has-fullscreen-map { overflow: hidden; }
 .pill--suggest[aria-pressed="true"]::before { content: "✓ "; }
 .pill--suggest:disabled { opacity: 0.45; cursor: not-allowed; }
 /* Oppsummering av vinden og vurderingene under vindvalget (home.js). */
-.wind-summary { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+.wind-summary { padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
 .wind-summary p { margin: 0; }
 .wind-summary p + p { margin-top: 4px; }
 .wind-summary__none { color: var(--hazard-text); font-weight: 600; }
 .wind-summary[hidden] { display: none; }
+/* Regelteksten for vindvurderingen bak «Hvordan vurderes vinden?». */
+.wind-rules summary { font-size: 14px; color: var(--link); cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+/* Retning, nivå og kategori: på mobil bak en knapp med antall valgte (home.js), på PC alltid synlige. */
+.filters-more { display: none; flex-direction: column; gap: 16px; }
+.filters-more.is-open { display: flex; }
+.filters-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 16px;
+  font: inherit; font-weight: 600; color: var(--text); background: var(--card); border: 1px solid var(--rose-border); border-radius: 10px; cursor: pointer;
+}
+.filters-toggle::after { content: "▾"; margin-left: auto; color: var(--muted); }
+.filters-toggle[aria-expanded="true"]::after { content: "▴"; }
+.filters-toggle__count { font-size: 13px; font-weight: 600; color: var(--on-color); background: var(--fjord); border-radius: 999px; padding: 2px 8px; }
+@media (min-width: 1100px) {
+  .filters-toggle { display: none; }
+  .filters-more { display: flex; }
+  /* Oppsummeringen av vinden oppå kartet, til høyre for zoomknappene. */
+  .home__map { position: relative; }
+  .home__map .wind-summary { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
+}

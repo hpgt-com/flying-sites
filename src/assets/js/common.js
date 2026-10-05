@@ -70,6 +70,63 @@
   // Leaflet må vite kartets størrelse før det zoomer til innholdet. Elementet kan ha null
   // størrelse når skriptet kjører (skjult fane, layout ikke ferdig), så vi venter på første
   // reelle størrelse og holder kartet oppdatert når den endres.
+  // Knapper under zoomknappene: «Vis hele …» (hus) går tilbake til utsnittet fit() gir, og fullskjerm
+  // legger kartet over hele siden. Ikke nettleserens fullskjerm, så det også virker på iPhone. Esc eller
+  // knappen igjen lukker. Utsnittet tilpasses når kartet bytter størrelse. Brukes på forsiden og stedssiden.
+  var ICON_HOME = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>';
+  var ICON_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>';
+  var ICON_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"></path></svg>';
+  function controlButton(onClick) {
+    var bar = L.DomUtil.create("div", "leaflet-bar map-reset");
+    var button = L.DomUtil.create("a", "", bar);
+    button.href = "#";
+    button.setAttribute("role", "button");
+    L.DomEvent.disableClickPropagation(bar);
+    L.DomEvent.on(button, "click", function (ev) { L.DomEvent.preventDefault(ev); onClick(); });
+    return { bar: bar, button: button };
+  }
+  function addViewControls(map, mapEl, fit, resetLabel) {
+    var Reset = L.Control.extend({
+      options: { position: "topleft" },
+      onAdd: function () {
+        var c = controlButton(function () { map.closePopup(); fit(); });
+        c.button.title = resetLabel;
+        c.button.setAttribute("aria-label", resetLabel);
+        c.button.innerHTML = ICON_HOME;
+        return c.bar;
+      },
+    });
+    new Reset().addTo(map);
+
+    var fullscreenButton = null;
+    function setFullscreen(on, keepView) {
+      mapEl.classList.toggle("map--fullscreen", on);
+      document.body.classList.toggle("has-fullscreen-map", on);
+      fullscreenButton.innerHTML = on ? ICON_SHRINK : ICON_EXPAND;
+      var label = on ? "Lukk fullskjerm" : "Vis kartet i fullskjerm";
+      fullscreenButton.title = label;
+      fullscreenButton.setAttribute("aria-label", label);
+      fullscreenButton.setAttribute("aria-pressed", String(on));
+      if (keepView) return;
+      map.invalidateSize();
+      map.closePopup();
+      fit();
+    }
+    var Fullscreen = L.Control.extend({
+      options: { position: "topleft" },
+      onAdd: function () {
+        var c = controlButton(function () { setFullscreen(!mapEl.classList.contains("map--fullscreen")); });
+        fullscreenButton = c.button;
+        return c.bar;
+      },
+    });
+    new Fullscreen().addTo(map);
+    setFullscreen(false, true);
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && mapEl.classList.contains("map--fullscreen")) setFullscreen(false);
+    });
+  }
+
   function fitWhenVisible(map, element, fit) {
     var done = false;
     map.setView([68.8, 16.4], 9);
@@ -373,6 +430,7 @@
     createMap: createMap,
     addAirspaceLayers: addAirspaceLayers,
     fitWhenVisible: fitWhenVisible,
+    addViewControls: addViewControls,
     escapeHtml: escapeHtml,
     formatNumber: formatNumber,
     readJson: readJson,
