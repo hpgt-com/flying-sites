@@ -72,6 +72,12 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Mobil først, lesbart ute i sollys, knapper minst 44 px høye. Mørk modus: valg i menyen oppe til høyre på alle sider med Auto, Lys og Mørk. Auto (standard) følger innstillingen på enheten (`prefers-color-scheme`), valget lagres i nettleseren (localStorage). Skriptet i `<head>` setter `data-theme` før siden tegnes; egne fargeverdier under `:root[data-theme="dark"]`, mørkt kart ved at bakgrunnskartet inverteres med CSS-filter (luftrom, termikk og symboler beholder fargene), popuper og lagvelger forblir lyse.
 - Designreferanse: `referanse/prototype/` (prototype-HTML fra designfasen, ikke kjørbar som den er). `referanse/` ligger bare lokalt og er ikke med i repoet (se `.gitignore`), fordi uttrekket fra den gamle oversikten inneholder originaltekster.
 
+## Åpne data
+- `/flysteder.geojson` og `/flysteder.kml` lages ved hver bygging (`lib/export.js`, `src/flysteder.geojson.11ty.js`, `src/flysteder.kml.11ty.js`), så de alltid følger stedsfilene. Lenket nederst på forsiden.
+- Innhold: hovedstart (retninger, nivå, kategorier, høyde, høydeforskjell, gjennomgått), starter med egen posisjon, landinger, parkering, gangruter (lengde, høydemeter, GPX-lenke) og tegningene, med `site_id`, `site_url` og `source` per objekt. Retningsbuene er ikke med som geometri; retningene står som egenskaper. Stedstekster, farer og grunneierforhold er ikke med.
+- Lisens CC BY 4.0, kreditering «Flysteder: HPGT flysteder (https://flysteder.hpgt.com)» (`LICENSE_DATA.md`).
+- Senere: veipunktfil for instrumenter (`.cup`/`.wpt`) på samme måte.
+
 ## Senere (fase 2)
 - Minste vind per sted, vindvurdering også på stedssiden. (Maks vind per sted finnes: `wind_limits.max_wind`, vises under Fakta.)
 - Engelsk versjon, video fra YouTube.
