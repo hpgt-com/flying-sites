@@ -598,11 +598,15 @@ p { margin: 0; }
 }
 /* Snarvei under tittelen til «Før du starter», som står under kartet. */
 .hazard-jump {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 14px; box-sizing: border-box;
+  align-self: flex-start; display: inline-flex; align-items: flex-start; gap: 8px; min-height: 44px; padding: 10px 14px; box-sizing: border-box; line-height: 1.35;
   background: var(--hazard-bg); color: var(--hazard-text); border: 1.5px solid #C62828; border-radius: 999px;
   font-weight: 700; text-decoration: none;
 }
 .hazard-jump:hover { text-decoration: underline; }
+.hazard-jump svg { flex-shrink: 0; margin-top: 1px; }
+.hazard-jump strong { font-weight: 700; }
+.hazard-jump > span { font-weight: 600; }
+.hazard-jump__more { white-space: nowrap; opacity: 0.8; }
 #h-hazards { scroll-margin-top: 16px; }
 .block--hazards h2 { display: flex; align-items: center; gap: 8px; }
 .hazard { display: flex; flex-direction: column; gap: 3px; }

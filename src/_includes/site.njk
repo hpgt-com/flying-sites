@@ -28,9 +28,9 @@ scripts:
           {% if season %}{{ m.tag(season) }}{% endif %}
           {% if notReviewed %}{{ m.tag("Ikke gjennomgått ennå", "warning") }}{% endif %}
         </div>
-        {#- Snarvei til farene, som står under kartet. -#}
+        {#- Snarvei til farene under kartet, med navnet på de to første, så de synes øverst på siden. -#}
         {% if hazards.length %}
-        <a class="hazard-jump" href="#h-hazards"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>{{ hazards.length }} {{ "fare" if hazards.length == 1 else "farer" }} å kjenne til før du starter</a>
+        <a class="hazard-jump" href="#h-hazards"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span><strong>Før du starter:</strong> {% for h in hazards %}{% if loop.index <= 2 %}{{ h.title }}{% if not loop.last and loop.index < 2 %} · {% endif %}{% endif %}{% endfor %}{% if hazards.length > 2 %} <span class="hazard-jump__more">+ {{ hazards.length - 2 }} til</span>{% endif %}</span></a>
         {% endif %}
       </section>
 
@@ -79,27 +79,6 @@ scripts:
         </div>
         {% endif %}
 
-        {% if routes | selectattr("profile") | list | length %}
-        <div class="profile" id="elevation-profile">
-          <h3>Høydeprofil</h3>
-          {% if routes.length > 1 %}
-          <div class="pills" role="tablist" aria-label="Velg gangrute">
-            {% for r in routes %}
-            <button type="button" class="pill" role="tab" data-route="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ (r.name or ("rute " ~ loop.index)) | capitalizeFirst }}</button>
-            {% endfor %}
-          </div>
-          {% endif %}
-          <svg class="profile__graph" viewBox="0 0 350 150" preserveAspectRatio="none" role="img" aria-label="Høydeprofil for gangruten"></svg>
-          <input class="profile__slider" type="range" min="0" max="1" value="0" aria-label="Posisjon langs ruten">
-          <div class="profile__values" aria-live="polite">
-            <span><span class="muted">Avstand </span><strong data-readout="distance">0 km</strong></span>
-            <span><span class="muted">Høyde </span><strong data-readout="elevation"></strong></span>
-            <span><span class="muted">Stigning </span><strong data-readout="grade"></strong></span>
-          </div>
-          <div class="profile__legend"><span class="stroke-swatch"></span>Brattere enn 25 %</div>
-          <p class="profile__summary"></p>
-        </div>
-        {% endif %}
       </section>
 
       {# 3. Før du starter #}
@@ -160,6 +139,28 @@ scripts:
           </div>
           {% endif %}
         </dl>
+        {#- Høydeprofilen hører til gangruten, så den står her og ikke under kartet (farene kommer da rett etter kartet). -#}
+        {% if routes | selectattr("profile") | list | length %}
+        <div class="profile" id="elevation-profile">
+          <h3>Høydeprofil</h3>
+          {% if routes.length > 1 %}
+          <div class="pills" role="tablist" aria-label="Velg gangrute">
+            {% for r in routes %}
+            <button type="button" class="pill" role="tab" data-route="{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ (r.name or ("rute " ~ loop.index)) | capitalizeFirst }}</button>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <svg class="profile__graph" viewBox="0 0 350 150" preserveAspectRatio="none" role="img" aria-label="Høydeprofil for gangruten"></svg>
+          <input class="profile__slider" type="range" min="0" max="1" value="0" aria-label="Posisjon langs ruten">
+          <div class="profile__values" aria-live="polite">
+            <span><span class="muted">Avstand </span><strong data-readout="distance">0 km</strong></span>
+            <span><span class="muted">Høyde </span><strong data-readout="elevation"></strong></span>
+            <span><span class="muted">Stigning </span><strong data-readout="grade"></strong></span>
+          </div>
+          <div class="profile__legend"><span class="stroke-swatch"></span>Brattere enn 25 %</div>
+          <p class="profile__summary"></p>
+        </div>
+        {% endif %}
         {% set launchText = content | section("Start") %}
         {% if launchText %}<div class="prose">{{ launchText | safe }}</div>{% endif %}
         {% if launches.length %}
