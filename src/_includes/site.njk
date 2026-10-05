@@ -131,13 +131,14 @@ scripts:
         {% if launchText %}<div class="prose">{{ launchText | safe }}</div>{% endif %}
         {% if launches.length %}
         <ul class="launch-list" aria-label="Starter per vindretning">
-          {% for launch in launches %}
+          {#- Starter med samme retninger er slått sammen til én linje (groupLaunches i flysteder.11tydata.js). -#}
+          {% for group in derived.launchGroups %}
           <li>
             <span class="launch-list__badges">
-              {% for code in launch.directions %}{{ m.directionBadge(code, wind_directions) }}{% endfor %}
-              {% for c in launch.categories or [] %}{{ m.tag(c) }}{% endfor %}
+              {% for code in group.directions %}{{ m.directionBadge(code, wind_directions) }}{% endfor %}
+              {% for c in group.categories %}{{ m.tag(c) }}{% endfor %}
             </span>
-            <span>{{ launch.text }}</span>
+            <span class="launch-list__texts">{% for t in group.texts %}<span>{{ t }}</span>{% endfor %}</span>
           </li>
           {% endfor %}
         </ul>

@@ -120,7 +120,7 @@ launches:
   lat: 68.80576
   lon: 16.36962
   source: lokalkunnskap
-  text: Lenger opp på ryggen, på baksiden av fjellet. Se oversiktsbildet.
+  text: Lenger opp på ryggen, på baksiden av fjellet.
 - directions:
   - W
   - SW

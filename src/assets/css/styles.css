@@ -599,6 +599,7 @@ p { margin: 0; }
 }
 .launch-list li:last-child { border-bottom: 1px solid var(--line); }
 .launch-list__badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.launch-list__texts { display: flex; flex-direction: column; gap: 6px; }
 
 .meteogram { margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .meteogram img { display: block; width: 100%; height: auto; background: var(--white); border: 1px solid var(--line); border-radius: 10px; }
