@@ -273,7 +273,7 @@
   var emptyCardHtml = cardEl.innerHTML;
   function showCard(site, assessment, windOn) {
     var e = FS.escapeHtml;
-    var html =
+    var html = '<button type="button" class="selected__close" data-close-card aria-label="Lukk kortet for ' + e(site.name) + '">×</button>' +
       '<div class="selected__top">' + FS.roseSvg(site, 84, true, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null) +
       '<div class="selected__info"><h2 class="selected__name">' + e(site.name) + "</h2>" +
       (site.elevation != null ? '<p class="selected__elev">Start ' + site.elevation + " moh</p>" : "") +
@@ -543,6 +543,36 @@
     else setFilter(button.getAttribute("data-filter"), button.getAttribute("data-value"));
     update();
     writeHash();
+  });
+
+  // Lukk kortet for valgt sted (på PC ligger det oppå kartet).
+  cardEl.addEventListener("click", function (ev) {
+    if (!ev.target.closest("[data-close-card]")) return;
+    selectedId = null;
+    cardEl.innerHTML = emptyCardHtml;
+    cardEl.classList.remove("selected--active");
+    update();
+    writeHash();
+  });
+
+  // --- Faner: Flysteder, Vær, Info ---
+  // Bytter innholdet i venstrekolonnen (på mobil over kartet). Kartet står alltid. Piltaster flytter mellom fanene.
+  var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.home-tabs [role="tab"]'));
+  function showTab(button, focus) {
+    tabButtons.forEach(function (b) {
+      var on = b === button;
+      b.setAttribute("aria-selected", String(on));
+      b.tabIndex = on ? 0 : -1;
+      document.getElementById(b.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) button.focus();
+  }
+  tabButtons.forEach(function (b, i) {
+    b.addEventListener("click", function () { showTab(b); });
+    b.addEventListener("keydown", function (ev) {
+      var step = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
+      if (step) { ev.preventDefault(); showTab(tabButtons[(i + step + tabButtons.length) % tabButtons.length], true); }
+    });
   });
 
   // --- Tilstand i adressen ---
