@@ -165,14 +165,17 @@ scripts:
         {% set launchText = content | section("Start") %}
         {% if launchText %}<div class="prose">{{ launchText | safe }}</div>{% endif %}
         {% if launches.length %}
-        <ul class="launch-list" aria-label="Starter per vindretning">
+        {#- Kategori (PG/SPG) i egen kolonne mellom retningene og teksten, bare når noen start har kategori. -#}
+        {%- set hasLaunchCategories = false -%}
+        {%- for group in derived.launchGroups %}{% if group.categories.length %}{% set hasLaunchCategories = true %}{% endif %}{% endfor %}
+        <ul class="launch-list{% if hasLaunchCategories %} launch-list--categories{% endif %}" aria-label="Starter per vindretning">
           {#- Starter med samme retninger er slått sammen til én linje (groupLaunches i flysteder.11tydata.js). -#}
           {% for group in derived.launchGroups %}
           <li>
             <span class="launch-list__badges">
               {% for code in group.directions %}{{ m.directionBadge(code, wind_directions) }}{% endfor %}
-              {% for c in group.categories %}{{ m.tag(c) }}{% endfor %}
             </span>
+            {% if hasLaunchCategories %}<span class="launch-list__categories">{% for c in group.categories %}{{ m.tag(c) }}{% endfor %}</span>{% endif %}
             <span class="launch-list__texts">{% for t in group.texts %}<span>{{ t }}</span>{% endfor %}</span>
           </li>
           {% endfor %}

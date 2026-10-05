@@ -88,13 +88,17 @@ launches:
   - S
   - SE
   - E
-  categories: null
+  categories:
+  - PG
+  - SPG
   text: Som regel fra toppen.
 - directions:
   - S
   - SE
   - E
-  categories: null
+  categories:
+  - PG
+  - SPG
   lat: 68.80604
   lon: 16.37694
   source: lokalkunnskap
@@ -102,21 +106,24 @@ launches:
 - directions:
   - N
   - NE
-  categories: null
+  categories:
+  - PG
   lat: 68.80693
   lon: 16.37627
   source: lokalkunnskap
   text: Fra høyresiden i alpinbakken. Ikke legg ut vingen i skitraseen.
 - directions:
   - NW
-  categories: null
+  categories:
+  - PG
   lat: 68.80612
   lon: 16.37473
   source: lokalkunnskap
   text: I alpinanlegget, på veien som fører ned mot NØ-starten.
 - directions:
   - NW
-  categories: null
+  categories:
+  - PG
   lat: 68.80576
   lon: 16.36962
   source: lokalkunnskap
@@ -139,7 +146,7 @@ Et av klubbens mest brukte steder. Her flys det året rundt, til alt fra korte s
 
 ## Start
 
-Stort startområde på toppen. Fint underlag om vinteren, steinete om sommeren.
+Stort startområde på toppen. Fint underlag om vinteren, steinete om sommeren. SPG starter fra toppen eller ved toppen av heisen, der høyden er best og man ikke er i veien for dem som står i bakken.
 
 ## Landing
 

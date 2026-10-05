@@ -686,6 +686,18 @@ p { margin: 0; }
 }
 .launch-list li:last-child { border-bottom: 1px solid var(--line); }
 .launch-list__badges { display: flex; flex-wrap: wrap; gap: 4px; }
+/* Med kategori: på mobil står PG/SPG under retningene, så teksten får plass. Fra 640 px står retninger,
+   kategori og tekst i hver sin kolonne. */
+.launch-list--categories li { grid-template-areas: "dir text" "cat text"; grid-template-rows: auto 1fr; row-gap: 6px; align-items: start; }
+.launch-list--categories .launch-list__badges { grid-area: dir; }
+.launch-list--categories .launch-list__categories { grid-area: cat; }
+.launch-list--categories .launch-list__texts { grid-area: text; }
+.launch-list__categories { display: flex; flex-wrap: wrap; gap: 4px; }
+.launch-list__categories:empty { display: none; }
+@media (min-width: 640px) {
+  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text"; }
+  .launch-list__categories:empty { display: flex; }
+}
 .launch-list__texts { display: flex; flex-direction: column; gap: 6px; }
 
 .meteogram { margin: 0; display: flex; flex-direction: column; gap: 6px; }
