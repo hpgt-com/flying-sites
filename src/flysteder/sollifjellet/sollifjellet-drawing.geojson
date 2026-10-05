@@ -23,7 +23,7 @@
         "kind": "label",
         "style": "hazard",
         "title": "Masta og heisen",
-        "text": "Trakteffekt, se Før du starter.",
+        "text": "Trakteffekt, se «Før du starter».",
         "source": "farer i stedsfilen"
       },
       "geometry": {

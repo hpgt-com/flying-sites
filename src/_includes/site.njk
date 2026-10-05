@@ -135,6 +135,11 @@ scripts:
           </div>
           {% endif %}
         </dl>
+        {% if access.links and access.links.length %}
+        <nav class="link-list link-list--compact" aria-label="Lenker om adkomst">
+          {% for l in access.links %}{{ m.linkRow(l.url, l.title, l.text or "") }}{% endfor %}
+        </nav>
+        {% endif %}
         {#- Høydeprofilen hører til gangruten. Glidebryteren viser posisjonen i kartet like over. -#}
         {% if routes | selectattr("profile") | list | length %}
         <div class="profile" id="elevation-profile">
