@@ -7,6 +7,7 @@ import {
 } from "./lib/format.js";
 import { validateSite } from "./lib/validation.js";
 import { statusSummary } from "./lib/status.js";
+import { assetUrl } from "./lib/assets.js";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPlugin(HtmlBasePlugin);
@@ -53,6 +54,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("directionWord", directionWord);
   eleventyConfig.addFilter("directionType", (code, windDirections) => directionType(windDirections, code));
   eleventyConfig.addFilter("sortDirections", sortDirections);
+  // Versjonsnummer på CSS/JS, så nettlesere henter nye filer etter en endring (lib/assets.js).
+  eleventyConfig.addFilter("asset", assetUrl);
   eleventyConfig.addFilter("formatNumber", formatNumber);
   eleventyConfig.addFilter("formatDate", formatDate);
   eleventyConfig.addFilter("feetToMeters", feetToMeters);
