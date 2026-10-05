@@ -51,34 +51,28 @@
     bounds.push([landing.lat, landing.lon]);
   });
 
-  // --- Starter som vindroser ---
-  // Hvilke roser som tegnes, står i launchPoints() i common.js (samme i 3D-visningen).
-  // Starter som ligger så tett at rosene ville overlappet, slås sammen til én rose med alle retningene
-  // og antallet starter. Zoomer man inn, eller trykker på den, deles de opp.
-  var windDirections = data.wind_directions || { primary: [], possible: [] };
-  function launchIcon(directions, count) {
+  // --- Starter som blå prikker ---
+  // Retningene vises med de gule buene, så startene er bare prikker, som er lettere å se.
+  // Hvilke starter som tegnes, står i launchPoints() i common.js. Starter som ligger så tett at
+  // prikkene ville overlappet, slås sammen til én prikk med antallet. Zoomer man inn, eller trykker
+  // på den, deles de opp. Retningene står i merkelappen når man holder over eller trykker.
+  function launchIcon(count) {
     return L.divIcon({
-      className: "map-symbol map-symbol--launch",
-      html: FS.launchRoseHtml(directions, windDirections, count),
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
+      className: "map-symbol map-symbol--launch-dot",
+      html: count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : "",
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
   }
   var launchLayer = L.markerClusterGroup({
-    maxClusterRadius: 40,
+    maxClusterRadius: 24,
     showCoverageOnHover: false,
     spiderfyDistanceMultiplier: 1.8,
-    iconCreateFunction: function (cluster) {
-      var directions = [];
-      cluster.getAllChildMarkers().forEach(function (m) {
-        m.options.directions.forEach(function (d) { if (directions.indexOf(d) === -1) directions.push(d); });
-      });
-      return launchIcon(directions, cluster.getChildCount());
-    },
+    iconCreateFunction: function (cluster) { return launchIcon(cluster.getChildCount()); },
   }).addTo(map);
   FS.launchPoints(data).forEach(function (p) {
-    L.marker([p.lat, p.lon], { icon: launchIcon(p.directions, 1), title: p.label, alt: p.label, zIndexOffset: 1000, directions: p.directions })
-      .bindTooltip(p.label, { direction: "top", offset: [0, -18] })
+    L.marker([p.lat, p.lon], { icon: launchIcon(1), title: p.label, alt: p.label, zIndexOffset: 1000 })
+      .bindTooltip(p.label, { direction: "top", offset: [0, -10] })
       .addTo(launchLayer);
     bounds.push([p.lat, p.lon]);
   });

@@ -366,15 +366,14 @@ p { margin: 0; }
    kartet i mørk modus. Start: vindrose med oransje ring, som på forsiden. Landing: målskive, grå når
    den er alternativ. Formene skiller seg, så ingenting er bare farge. */
 .map-symbol { display: inline-flex !important; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; box-sizing: border-box; }
-.map-symbol--launch { position: relative; background: #FFFFFF; border: 3px solid var(--accent); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.45); }
-.map-symbol--launch .rose .sector { stroke: #FFFFFF; stroke-width: 4; }
-.map-symbol--launch .rose .sector--none { fill: #DCE4E4; }
+/* Start: blå prikk med hvit kant. Mørkere blå og rund, så den skiller seg fra parkering (blå firkant med P). */
+.map-symbol--launch-dot { position: relative; background: #1B4F9C; border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px #1C2B33, 0 1px 4px rgba(28, 43, 51, 0.5); }
 /* Antall starter når flere ligger så tett at de er slått sammen til én rose. */
 .map-symbol__count {
   position: absolute; top: -8px; right: -10px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center; border-radius: 999px;
-  /* Hvit med oransje kant som startene, så den ikke forveksles med de mørke nummerpunktene fra tegningen. */
-  background: #FFFFFF; color: #1C2B33; border: 2px solid var(--accent); font: 700 12px/1 var(--font-body);
+  /* Hvit med blå kant som startene, så den ikke forveksles med de mørke nummerpunktene fra tegningen. */
+  background: #FFFFFF; color: #1C2B33; border: 2px solid #1B4F9C; font: 700 12px/1 var(--font-body);
 }
 .map-symbol--landing {
   --target: #1C2B33;
@@ -384,7 +383,7 @@ p { margin: 0; }
 }
 .map-symbol--alt { --target: #7F9396; }
 .map-legend .map-symbol { width: 20px; height: 20px; }
-.map-legend .map-symbol--launch { border-width: 2px; }
+.map-legend .map-symbol--launch-dot { width: 16px; height: 16px; border-width: 2px; }
 .map-legend .map-symbol--landing { border-width: 2px; box-shadow: 0 0 0 1px var(--line); }
 
 .map-legend {
