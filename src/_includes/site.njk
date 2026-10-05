@@ -135,11 +135,6 @@ scripts:
           </div>
           {% endif %}
         </dl>
-        {% if access.links and access.links.length %}
-        <nav class="link-list link-list--compact" aria-label="Lenker om adkomst">
-          {% for l in access.links %}{{ m.linkRow(l.url, l.title, l.text or "") }}{% endfor %}
-        </nav>
-        {% endif %}
         {#- Høydeprofilen hører til gangruten. Glidebryteren viser posisjonen i kartet like over. -#}
         {% if routes | selectattr("profile") | list | length %}
         <div class="profile" id="elevation-profile">
@@ -332,6 +327,10 @@ scripts:
         {% if external.pgearth_id %}
         <a class="big-btn" href="https://www.paraglidingearth.com/?site={{ external.pgearth_id }}" target="_blank" rel="noopener">{{ name }} på Paraglidingearth{{ m.external() }}</a>
         {% endif %}
+        {#- Andre lenker for stedet (links i stedsfilen), for eksempel alpinsenteret med åpningstider for heisen. -#}
+        {% for l in links %}
+        <a class="big-btn big-btn--two-line" href="{{ l.url }}" target="_blank" rel="noopener"><span>{{ l.title }}{% if l.text %}<small>{{ l.text }}</small>{% endif %}</span>{{ m.external() }}</a>
+        {% endfor %}
       </section>
     </div>
 

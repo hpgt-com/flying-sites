@@ -46,10 +46,6 @@ parking:
 access:
   parking_text: Ved alpinsenteret, rett ved landingen.
   route_text: Heisen når alpinbakken er åpen, ellers gangruten.
-  links:
-  - title: Sollifjellet alpinsenter
-    text: Åpningstider for heisen
-    url: https://sollifjellet.no/
   routes:
   - file: sollifjellet-route.gpx
     name: null
@@ -146,6 +142,10 @@ images:
   launch: sollifjellet-launch.jpg
   landing: sollifjellet-landing.jpg
   air: sollifjellet-air.jpg
+links:
+- title: Sollifjellet alpinsenter
+  text: Åpningstider for heisen
+  url: https://sollifjellet.no/
 reviewed:
   by: Kristoffer D. Hofstad
   date: '2026-09-24'
