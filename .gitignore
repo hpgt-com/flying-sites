@@ -9,3 +9,11 @@ _site/
 # Brukes ikke av bygget, og uttrekket inneholder originaltekster som ikke skal publiseres.
 referanse/
 PROMPT.md
+
+# Hemmeligheter og nøkler skal aldri inn i repoet (openAIP-nøkkelen ligger som secret i GitHub).
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12

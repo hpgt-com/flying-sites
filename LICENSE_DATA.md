@@ -6,6 +6,6 @@ Du kan bruke, dele og bearbeide dataene, også kommersielt, så lenge du kredite
 
 > Flysteder: HPGT flysteder (https://flysteder.hpgt.com), CC BY 4.0
 
-Filene inneholder bare strukturerte data: posisjoner for starter, landinger og parkering, vindretninger, nivå, kategorier, høyder, gangruter og klubbens egne punkter i kartet. Stedstekstene, farene og grunneierforhold er ikke med. De finnes på stedssidene og omfattes ikke av denne lisensen (se README).
+Filene inneholder bare strukturerte data: posisjoner for starter, landinger og parkering, vindretninger, nivå, kategorier, høyder, gangruter og klubbens egne punkter i kartet. Stedstekstene, farene (også fare-punkter, -linjer og -områder i kartet) og grunneierforhold er ikke med. De finnes på stedssidene og omfattes ikke av denne lisensen (se README).
 
 Dataene er veiledende og ikke for navigasjon. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold. Sjekk alltid stedssiden, IPPC og forholdene selv.
