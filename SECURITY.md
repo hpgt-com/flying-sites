@@ -42,7 +42,7 @@ GitHub høsten 2026.
 - [ ] Minst to eiere, eller en felles e-post styret har tilgang til, så klubben ikke står uten admin.
 
 **Repoet** (flying-sites → Settings)
-- [ ] **Rulesets → New branch ruleset**, navn «Beskytt main», Enforcement status = Active,
+- [ ] **Rulesets → New branch ruleset**, navn «main protection», Enforcement status = Active,
   Target = Include default branch:
   - Restrict deletions og Block force pushes.
   - Require a pull request before merging, Required approvals = 0 så lenge én person merger alene.
