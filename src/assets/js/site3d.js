@@ -187,7 +187,8 @@
     return marker("arc-label", FS.DIRECTION_LABELS[arc.direction], offset(arc.center, arc.bearing, arc.radius + 115), null, null);
   });
 
-  var arcMode = /(^|[#&])linje=bakke\b/.test(location.hash) ? "ground" : "lifted";
+  var hashMode = (location.hash.match(/linje=(bakke|flat)\b/) || [])[1];
+  var arcMode = hashMode === "bakke" ? "ground" : hashMode === "flat" ? "flat" : "lifted";
   var overlay = null;
   function setArcMode(mode) {
     arcMode = mode;
@@ -199,38 +200,63 @@
     groundLabels.forEach(function (m) { m.getElement().hidden = !ground; });
     if (overlay) overlay.style.display = ground ? "none" : "";
     document.querySelectorAll("[data-arc-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-arc-mode") === mode)); });
-    history.replaceState(null, "", ground ? "#linje=bakke" : location.pathname + location.search);
+    history.replaceState(null, "", ground ? "#linje=bakke" : mode === "flat" ? "#linje=flat" : location.pathname + location.search);
+    drawOverlay();
   }
   document.querySelectorAll("[data-arc-mode]").forEach(function (b) {
     b.addEventListener("click", function () { setArcMode(b.getAttribute("data-arc-mode")); });
   });
 
-  // Løftet: tegnes i et SVG-lag over kartet. Hvert punkt plasseres på terrenget (map.project) og løftes
-  // ARC_LIFT_M meter rett opp, regnet om til piksler med den lokale målestokken og vinkelen. Løftet jevnes
-  // ut langs buen, så linjen ikke blir bølgete der terrenget er ujevnt.
-  // Målestokken regnes i tre punkter per bue (start, midt, slutt) og interpoleres, så hver bue koster få
-  // projeksjoner per bilde. Det holder kartet jevnt også på tregere maskiner.
-  function liftedPoints(lls) {
-    var sin = Math.sin(map.getPitch() * Math.PI / 180);
+  // Løftet: tegnes i et SVG-lag over kartet, se liftedPoints().
+  // Hvert punkt plasseres på terrenget (map.project) og løftes, regnet om til piksler med den lokale
+  // målestokken og vinkelen. «Løftet»: ARC_LIFT_M over terrenget, så buen følger bakken. «Flat høyde»:
+  // alle buene for samme startområde ligger i én fast høyde over havet, ARC_LIFT_M over det høyeste
+  // terrenget under dem, så de blir flate ringer. Høydene hentes én gang når terrenget er lastet, og før
+  // det løftes alt like mye.
+  var flatLevels = null; // { "lon,lat"-midten: høyde i kartets meter (med overdrivelsen) }
+  function terrainHeights() {
+    if (flatLevels) return flatLevels;
+    var levels = {}, ok = true;
+    arcs.forEach(function (arc) {
+      var key = arc.center.join(",");
+      arc.pts.concat([arc.mid, arc.center]).forEach(function (ll) {
+        var e = map.queryTerrainElevation(ll);
+        if (e == null) ok = false;
+        else levels[key] = Math.max(levels[key] == null ? -Infinity : levels[key], e);
+      });
+    });
+    if (ok && arcs.length) flatLevels = levels;
+    return ok ? levels : null;
+  }
+  function pxPerMeter(ll, p) {
+    var e = map.project(offset(ll, 90, 50)), n = map.project(offset(ll, 0, 50));
+    return Math.max(Math.hypot(e.x - p.x, e.y - p.y), Math.hypot(n.x - p.x, n.y - p.y)) / 50 * Math.sin(map.getPitch() * Math.PI / 180);
+  }
+  function liftedPoints(lls, center) {
     var base = lls.map(function (ll) { return map.project(ll); });
-    function liftAt(i) {
-      var p = base[i], e = map.project(offset(lls[i], 90, 50)), n = map.project(offset(lls[i], 0, 50));
-      return ARC_LIFT_M * Math.max(Math.hypot(e.x - p.x, e.y - p.y), Math.hypot(n.x - p.x, n.y - p.y)) / 50 * sin;
-    }
-    var last = base.length - 1, mid = Math.floor(last / 2), l0 = liftAt(0), lm = liftAt(mid), l1 = liftAt(last);
+    var levels = arcMode === "flat" ? terrainHeights() : null, exaggeration = (map.getTerrain() || {}).exaggeration || 1;
+    var top = arcMode === "flat" && levels ? levels[center.join(",")] : null;
+    // Målestokken regnes i tre punkter og interpoleres, så hver bue koster få projeksjoner per bilde.
+    var last = base.length - 1, mid = Math.floor(last / 2);
+    var s0 = pxPerMeter(lls[0], base[0]), sm = pxPerMeter(lls[mid], base[mid]), s1 = pxPerMeter(lls[last], base[last]);
     return base.map(function (p, i) {
-      var lift = i <= mid ? l0 + (lm - l0) * (mid ? i / mid : 0) : lm + (l1 - lm) * ((i - mid) / (last - mid));
-      return [p.x, p.y - lift];
+      var scale = i <= mid ? s0 + (sm - s0) * (mid ? i / mid : 0) : sm + (s1 - sm) * ((i - mid) / (last - mid));
+      var lift = ARC_LIFT_M;
+      if (top != null) {
+        var e = map.queryTerrainElevation(lls[i]);
+        if (e != null) lift = (top - e) / exaggeration + ARC_LIFT_M;
+      }
+      return [p.x, p.y - lift * scale];
     });
   }
   function svgPath(points) { return "M" + points.map(function (q) { return q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" L"); }
   function drawOverlay() {
-    if (!overlay || arcMode !== "lifted") return;
+    if (!overlay || arcMode === "ground") return;
     // Alle konturer først, så linjene, så det ikke blir mørke hakk der to retninger møtes.
     var casings = "", lines = "", tops = "";
     arcs.forEach(function (arc) {
-      var pts = liftedPoints(arc.pts);
-      var tipPts = liftedPoints([arc.mid, offset(arc.center, arc.bearing, arc.radius + 60)]);
+      var pts = liftedPoints(arc.pts, arc.center);
+      var tipPts = liftedPoints([arc.mid, offset(arc.center, arc.bearing, arc.radius + 60)], arc.center);
       var a = tipPts[0], b = tipPts[1], d = svgPath(pts);
       var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
       var tip = [a[0] + ux * 30, a[1] + uy * 30], stem = [a[0] + ux * 18, a[1] + uy * 18];
