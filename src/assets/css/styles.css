@@ -333,9 +333,10 @@ p { margin: 0; }
   font: 700 14px/1 var(--font-heading); color: #1C2B33; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .map--names .rose-marker__name { display: block; }
 [data-theme="dark"] .rose-marker__name { color: #F3F5F4; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
-.rose-marker--dimmed { opacity: 0.25; }
+/* Nedtoning på innholdet, ikke på selve markøren: Leaflet setter opacity: 1 direkte på markøren. */
+.rose-marker--dimmed > * { opacity: 0.25; }
 /* Nivå ikke satt mens nivåfilteret er på: kan passe, så bare litt nedtonet. */
-.rose-marker--unknown { opacity: 0.6; }
+.rose-marker--unknown > * { opacity: 0.6; }
 /* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
 .site-cluster__ring { width: 36px; height: 36px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
 .leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
@@ -890,3 +891,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* Fullskjerm: kartet legges over hele siden (site.js). Ikke nettleserens fullskjerm, så det også virker på iPhone. */
 .map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
 body.has-fullscreen-map { overflow: hidden; }
+/* «Vis bare steder som kan passe» under vindtidspunktet (home.js). Egen linje, så den ikke blandes med tidspunktene. */
+.pill--suggest { display: block; margin-top: 8px; }
+.pill--suggest[aria-pressed="true"]::before { content: "✓ "; }
+.pill--suggest:disabled { opacity: 0.45; cursor: not-allowed; }

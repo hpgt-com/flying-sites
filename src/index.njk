@@ -29,6 +29,8 @@ scripts:
           <button type="button" class="pill" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}">{{ label }}</button>
           {% endfor %}
         </div>
+        {#- Forslag: tone ned steder der varselet sier «Passer ikke» eller «For mye vind» (home.js). -#}
+        <button type="button" class="pill pill--suggest" data-suggest aria-pressed="false">Vis bare steder som kan passe nå</button>
         <p class="filter__note" id="forecast-status" aria-live="polite"></p>
         <p class="filter__note">Grov vurdering fra MET-varselet for starten: over {{ windRules.maxWind }} m/s (eller stedets egen grense) eller kast over {{ windRules.maxGust }} m/s er for mye. Svak vind, manglende kast, kast mer enn {{ windRules.maxGustSpread }} m/s over middelvinden og retning nær kanten gir «usikkert». Varselet ser ikke lokale forhold. Sjekk alltid selv.</p>
       </div>
