@@ -55,7 +55,8 @@ scripts:
         <ul class="map-legend" aria-label="Tegnforklaring for kartet">
           <li><span class="map-symbol map-symbol--launch-dot"></span>Start</li>
           {% if landings.length %}<li><span class="map-symbol map-symbol--landing"></span>Landing</li>{% endif %}
-          {% if landings | rejectattr("primary") | list | length %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}
+          {#- Andre landinger med eget navn (for eksempel «SPG-landing») står med navnet, ellers «Alternativ landing». -#}
+          {% for l in landings | rejectattr("primary") %}{% if l.name and l.name != "Landing" %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>{{ l.name }}</li>{% elif loop.first %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>Alternativ landing</li>{% endif %}{% endfor %}
           {% if parking.length %}<li><span class="symbol symbol--parking">P</span>Parkering</li>{% endif %}
           {% if routes.length %}<li><span class="symbol symbol--route"></span>Gangrute</li>{% endif %}
           {% if wind_directions.primary.length %}<li><span class="symbol drawing-swatch drawing-swatch--arrow"></span>Retningene stedet passer for</li>{% endif %}
