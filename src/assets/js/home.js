@@ -260,9 +260,12 @@
   function toggleNames() { mapEl.classList.toggle("map--names", map.getZoom() >= NAMES_ZOOM); }
   map.on("zoomend", toggleNames);
 
-  FS.fitWhenVisible(map, mapEl, function () {
-    if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
-  });
+  function fitAllSites() {
+    if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], animate: false });
+  }
+  FS.fitWhenVisible(map, mapEl, fitAllSites);
+  // «Vis alle flysteder» og fullskjerm under zoomknappene, som på stedssiden.
+  FS.addViewControls(map, mapEl, fitAllSites, "Vis alle flysteder");
 
   // --- Kort for valgt sted ---
   var cardEl = document.getElementById("selected");
@@ -412,6 +415,23 @@
         ? "Ingen flysteder heter noe med «" + filter.q.trim() + "»."
         : "Ingen flysteder passer filtrene.";
     renderSearchHits();
+    updateFiltersToggle();
+  }
+
+  // Knappen for retning, nivå og kategori på mobil: viser hvor mange som er valgt, og åpner/lukker dem.
+  var filtersToggle = document.getElementById("filters-toggle");
+  var filtersMore = document.getElementById("filters-more");
+  function updateFiltersToggle() {
+    if (!filtersToggle) return;
+    var n = ["direction", "level", "category"].filter(function (t) { return filter[t]; }).length;
+    filtersToggle.innerHTML = "Retning, nivå og kategori" + (n ? ' <span class="filters-toggle__count">' + n + " valgt</span>" : "");
+  }
+  if (filtersToggle) {
+    filtersToggle.addEventListener("click", function () {
+      var open = filtersToggle.getAttribute("aria-expanded") !== "true";
+      filtersToggle.setAttribute("aria-expanded", String(open));
+      filtersMore.classList.toggle("is-open", open);
+    });
   }
 
   // Søkefeltet filtrerer mens man skriver, sammen med de andre filtrene. Kartet zoomer til treffene

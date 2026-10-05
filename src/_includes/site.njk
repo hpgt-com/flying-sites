@@ -21,7 +21,7 @@ scripts:
 
       {# 1. Navn, kort fortalt, tagger #}
       <section class="block block--title" aria-labelledby="site-name">
-        <h1 id="site-name">{{ name }}</h1>
+        <h1 id="site-name">{{ name }}{% if elevation and elevation.launch_masl %} <span class="title-elev">{{ elevation.launch_masl }} moh</span>{% endif %}</h1>
         {% if intro %}<div class="lead">{{ intro | safe }}</div>{% endif %}
         <div class="tags">
           {% for c in categories %}{{ m.tag(c) }}{% endfor %}
@@ -123,6 +123,15 @@ scripts:
       {# 4. Start #}
       <section class="block block--launch" aria-labelledby="h-launch">
         <h2 id="h-launch">Start</h2>
+        {#- Adkomst som tall når stedet har én gangrute: lengde, høydemeter og tid til fots. -#}
+        {% set oneRoute = routes[0] if routes.length == 1 else null %}
+        {% if oneRoute %}
+        <div class="access-stats" aria-label="Gangruten">
+          <div><strong>{{ oneRoute.lengthKm | formatNumber(1) }}</strong> <span>km</span><small>Gangrute</small></div>
+          {% if oneRoute.elevationGain %}<div><strong>{{ (oneRoute.elevationGain / 10) | round * 10 }}</strong> <span>m</span><small>Stigning</small></div>{% endif %}
+          {% if oneRoute.walkTimeMin %}<div><strong>{{ oneRoute.walkTimeMin }}</strong> <span>min</span><small>Til fots</small></div>{% endif %}
+        </div>
+        {% endif %}
         <dl class="row-list">
           <div>
             <dt>Parkering</dt>
@@ -131,12 +140,13 @@ scripts:
           <div>
             <dt>Veien opp</dt>
             <dd>
-              {% if access.route_text %}{{ access.route_text }}{% elif not routes.length %}<span class="missing">Ikke registrert ennå</span>{% endif %}
-              {% for r in routes %}
+              {% if access.route_text %}{{ access.route_text }}{% elif oneRoute %}Følg gangruten i kartet.{% elif not routes.length %}<span class="missing">Ikke registrert ennå</span>{% endif %}
+              {% for r in routes if not oneRoute %}
               <span class="route-stats">{% if routes.length > 1 %}{{ (r.name or ("rute " ~ loop.index)) | capitalizeFirst }}: {% else %}Gangrute: {% endif %}{{ r.lengthKm | formatNumber(1) }} km{% if r.elevationGain %} og ca. {{ (r.elevationGain / 10) | round * 10 }} høydemeter{% endif %}.</span>
               {% endfor %}
             </dd>
           </div>
+          {% if not (oneRoute and oneRoute.walkTimeMin) %}
           <div>
             <dt>Tid</dt>
             <dd>
@@ -148,6 +158,7 @@ scripts:
               {% if not hasTime %}<span class="missing">Ikke registrert ennå</span>{% endif %}
             </dd>
           </div>
+          {% endif %}
         </dl>
         {% set launchText = content | section("Start") %}
         {% if launchText %}<div class="prose">{{ launchText | safe }}</div>{% endif %}
