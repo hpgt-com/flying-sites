@@ -32,11 +32,65 @@
     routeLines.forEach(function (line) { line.setStyle({ color: INK }); });
   });
 
+  // --- Punktene: starter, landing, parkering og nummererte punkter ---
+  // Alle ligger i ett lag. Punkter som ville ligget oppå hverandre, slås sammen til én boks med de
+  // samme symbolene i liten størrelse (prikk med antall starter, målskive, P, nummer), så kartet ikke
+  // blir et rot av symboler oppå hverandre. Trykk på boksen zoomer inn til de skilles. Fra
+  // CLUSTER_OFF_ZOOM vises alt hver for seg, også punkter med nøyaktig samme posisjon (som et nummer
+  // som står på en start: nummeret står da over prikken). Hvilket symbol et punkt er, står i options.kind.
+  var CLUSTER_OFF_ZOOM = 16;
+  var POINT_ORDER = { launch: 0, landing: 1, parking: 2, pin: 3 };
+  function comboIcon(cluster) {
+    var children = cluster.getAllChildMarkers();
+    var launches = children.filter(function (m) { return m.options.kind === "launch"; }).length;
+    if (launches === children.length) return launchIcon(launches);
+    children.sort(function (a, b) {
+      return POINT_ORDER[a.options.kind] - POINT_ORDER[b.options.kind] || (a.options.n || 0) - (b.options.n || 0);
+    });
+    var parts = [], names = [], launchDone = false;
+    children.forEach(function (m) {
+      var o = m.options;
+      if (o.kind === "launch") {
+        if (launchDone) return;
+        launchDone = true;
+        parts.push('<span class="map-combo__launch">' + (launches > 1 ? launches : "") + "</span>");
+        names.push(launches > 1 ? launches + " starter" : "Start");
+        return;
+      }
+      if (o.kind === "landing") parts.push('<span class="map-symbol map-symbol--landing' + (o.alternative ? " map-symbol--alt" : "") + '"></span>');
+      else if (o.kind === "parking") parts.push('<span class="map-icon map-icon--parking">P</span>');
+      else parts.push('<span class="drawing-pin' + (o.hazard ? " drawing-pin--hazard" : "") + '">' + o.n + "</span>");
+      names.push(o.title);
+    });
+    var title = names.join(", ") + ". Trykk for å zoome inn.";
+    return L.divIcon({
+      className: "map-combo-anchor",
+      html: '<span class="map-combo" title="' + FS.escapeHtml(title) + '">' + parts.join("") + "</span>",
+      iconSize: [0, 0],
+    });
+  }
+  var pointLayer = L.markerClusterGroup({
+    // Boksene er bredere enn prikkene, så når man har zoomet langt ut, slås flere sammen.
+    maxClusterRadius: function (zoom) { return zoom <= 13 ? 80 : 32; },
+    disableClusteringAtZoom: CLUSTER_OFF_ZOOM,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: false,
+    spiderfyOnMaxZoom: false,
+    iconCreateFunction: comboIcon,
+  }).addTo(map);
+  // Trykk på boksen zoomer ett steg inn når punktene da skilles, ellers rett til CLUSTER_OFF_ZOOM
+  // (punkter på nesten samme sted), så det ikke trengs mange trykk og kartet ikke zoomer for nært.
+  pointLayer.on("clusterclick", function (ev) {
+    var b = ev.layer.getBounds(), next = map.getZoom() + 1;
+    var spread = map.project(b.getNorthWest(), next).distanceTo(map.project(b.getSouthEast(), next));
+    map.setView(b.getCenter(), spread >= 34 ? next : Math.max(next, CLUSTER_OFF_ZOOM));
+  });
+
   (data.parking || []).forEach(function (p) {
     var name = p.name || "Parkering";
-    L.marker([p.lat, p.lon], { icon: squareIcon("map-icon--parking", "P"), title: name, alt: name })
+    L.marker([p.lat, p.lon], { icon: squareIcon("map-icon--parking", "P"), title: name, alt: name, kind: "parking" })
       .bindTooltip(name, { direction: "top", offset: [0, -10] })
-      .addTo(map);
+      .addTo(pointLayer);
     bounds.push([p.lat, p.lon]);
   });
 
@@ -45,17 +99,18 @@
     var isAlternative = landing.primary === false;
     var name = landing.name || (isAlternative ? "Alternativ landing" : "Landing");
     var icon = L.divIcon({ className: "map-symbol map-symbol--landing" + (isAlternative ? " map-symbol--alt" : ""), iconSize: [26, 26], iconAnchor: [13, 13] });
-    L.marker([landing.lat, landing.lon], { icon: icon, title: name, alt: name })
+    L.marker([landing.lat, landing.lon], { icon: icon, title: name, alt: name, kind: "landing", alternative: isAlternative })
       .bindTooltip(name, { direction: "top", offset: [0, -12] })
-      .addTo(map);
+      .addTo(pointLayer);
     bounds.push([landing.lat, landing.lon]);
   });
 
   // --- Starter som blå prikker ---
   // Retningene vises med de gule buene, så startene er bare prikker, som er lettere å se.
   // Hvilke starter som tegnes, står i launchPoints() i common.js. Starter som ligger så tett at
-  // prikkene ville overlappet, slås sammen til én prikk med antallet. Zoomer man inn, eller trykker
-  // på den, deles de opp. Retningene står i merkelappen når man holder over eller trykker.
+  // prikkene ville overlappet, slås sammen til én prikk med antallet (eller en boks med de andre
+  // punktene, se over). Zoomer man inn, eller trykker på den, deles de opp. Retningene står i
+  // merkelappen når man holder over eller trykker.
   function launchIcon(count) {
     return L.divIcon({
       className: "map-symbol map-symbol--launch-dot",
@@ -64,16 +119,10 @@
       iconAnchor: [10, 10],
     });
   }
-  var launchLayer = L.markerClusterGroup({
-    maxClusterRadius: 24,
-    showCoverageOnHover: false,
-    spiderfyDistanceMultiplier: 1.8,
-    iconCreateFunction: function (cluster) { return launchIcon(cluster.getChildCount()); },
-  }).addTo(map);
   FS.launchPoints(data).forEach(function (p) {
-    L.marker([p.lat, p.lon], { icon: launchIcon(1), title: p.label, alt: p.label, zIndexOffset: 1000 })
+    L.marker([p.lat, p.lon], { icon: launchIcon(1), title: p.label, alt: p.label, zIndexOffset: 1000, kind: "launch" })
       .bindTooltip(p.label, { direction: "top", offset: [0, -10] })
-      .addTo(launchLayer);
+      .addTo(pointLayer);
     bounds.push([p.lat, p.lon]);
   });
 
@@ -142,10 +191,10 @@
     var p = f.properties, n = i + 1, hazard = p.style === "hazard";
     return L.marker(ll(f.geometry.coordinates), {
       icon: L.divIcon({ className: "drawing-pin" + (hazard ? " drawing-pin--hazard" : ""), html: String(n), iconSize: [26, 26], iconAnchor: [13, 36] }),
-      title: n + ". " + p.title, alt: n + ". " + p.title, zIndexOffset: 1100,
+      title: n + ". " + p.title, alt: n + ". " + p.title, zIndexOffset: 1100, kind: "pin", n: n, hazard: hazard,
     }).bindPopup("<strong>" + FS.escapeHtml(n + ". " + p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""), { offset: [0, -24] })
       .on("click", function () { selectPoint(n); })
-      .addTo(map);
+      .addTo(pointLayer);
   });
   function selectPoint(n) {
     document.querySelectorAll(".drawing-list li").forEach(function (li) { li.classList.toggle("is-selected", li.getAttribute("data-n") === String(n)); });
@@ -156,7 +205,9 @@
       if (!m) return;
       selectPoint(n);
       mapEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      map.setView(m.getLatLng(), Math.max(map.getZoom(), 15));
+      // Ligger punktet i en boks, zoomes det inn til det vises for seg.
+      map.setView(m.getLatLng(), Math.max(map.getZoom(), 15), { animate: false });
+      if (pointLayer.getVisibleParent(m) !== m) map.setView(m.getLatLng(), CLUSTER_OFF_ZOOM, { animate: false });
       m.openPopup();
     });
   });

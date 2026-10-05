@@ -369,7 +369,9 @@ p { margin: 0; }
 .map-symbol { display: inline-flex !important; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; box-sizing: border-box; }
 /* Start: prikk i samme petrolblå som hovedretningen i vindrosen, med hvit kant. Rund, så den skiller
    seg fra parkering (blå firkant med P). */
-.map-symbol--launch-dot { position: relative; background: var(--dir-primary); border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px #1C2B33, 0 1px 4px rgba(28, 43, 51, 0.5); }
+/* Ikke position her: Leaflet plasserer markøren med position: absolute, og relative flyttet prikkene
+   (de ble stablet etter hverandre). Antallet plasseres i forhold til markøren. */
+.map-symbol--launch-dot { background: var(--dir-primary); border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px #1C2B33, 0 1px 4px rgba(28, 43, 51, 0.5); }
 /* Antall starter når flere ligger så tett at de er slått sammen til én rose. */
 .map-symbol__count {
   position: absolute; top: -8px; right: -10px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box;
@@ -384,6 +386,24 @@ p { margin: 0; }
   box-shadow: 0 1px 3px rgba(28, 43, 51, 0.45);
 }
 .map-symbol--alt { --target: #7F9396; }
+/* Punkter som ligger oppå hverandre (start, landing, parkering, nummer), slått sammen til én boks med
+   symbolene i liten størrelse. Midtstilt på punktet. Trykk zoomer inn til de skilles (site.js). */
+.map-combo-anchor { background: none; border: 0; }
+.map-combo {
+  position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px; padding: 3px 5px;
+  background: #FFFFFF; border: 2px solid #1C2B33; border-radius: 8px; box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5);
+  white-space: nowrap; cursor: pointer;
+}
+.map-combo > * { width: 20px !important; height: 20px !important; box-shadow: none; flex-shrink: 0; cursor: pointer; }
+.map-combo .map-icon { border-width: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 4px; box-sizing: border-box; }
+.map-combo .drawing-pin { font-size: 12px; border-width: 0; }
+.map-combo .drawing-pin--hazard { border-width: 2px; }
+.map-combo .map-symbol--landing { border-width: 1px; }
+.map-combo__launch {
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; box-sizing: border-box;
+  background: var(--dir-primary); color: #FFFFFF; border: 2px solid #FFFFFF; box-shadow: 0 0 0 1px #1C2B33 !important;
+  font: 700 11px/1 var(--font-body);
+}
 .map-legend .map-symbol { width: 20px; height: 20px; }
 .map-legend .map-symbol--launch-dot { width: 16px; height: 16px; border-width: 2px; }
 .map-legend .map-symbol--landing { border-width: 2px; box-shadow: 0 0 0 1px var(--line); }
