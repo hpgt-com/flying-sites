@@ -24,15 +24,25 @@
     return "none";
   }
 
-  // wind (valgfri): { code, rating } fra vindvurderingen. Sektoren vinden kommer fra «løftes» litt ut og
-  // fylles med vurderingsfargen, så man ser om vinden treffer en startretning uten en egen pil.
+  // wind (valgfri): { code, rating, edge } fra vindvurderingen. Sektoren vinden kommer fra fylles med
+  // vurderingsfargen, så man ser om vinden treffer en startretning uten en egen pil. Med edge (markørene
+  // på forsiden) går den fra midten helt ut til ringen rundt rosen; ellers (kortet) «løftes» den litt ut.
   var LIFT = 8;
   function roseSvg(site, size, labels, wind) {
-    var viewBox = labels ? "-12 -12 184 184" : wind ? (18 - LIFT) + " " + (18 - LIFT) + " " + (124 + 2 * LIFT) + " " + (124 + 2 * LIFT) : "18 18 124 124";
+    var lift = wind && !wind.edge;
+    var viewBox = labels ? "-12 -12 184 184" : lift ? (18 - LIFT) + " " + (18 - LIFT) + " " + (124 + 2 * LIFT) + " " + (124 + 2 * LIFT) : "18 18 124 124";
     var svg = '<svg class="rose" width="' + size + '" height="' + size + '" viewBox="' + viewBox + '" aria-hidden="true">';
     var lifted = "";
     DIRECTIONS.forEach(function (code, i) {
       if (wind && wind.code === code) {
+        if (wind.edge) {
+          // Fra midten og helt ut til kanten (r = 62, der ringen rundt markøren ligger).
+          var b0 = (i * 45 - 22.5 - 90) * Math.PI / 180, b1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
+          lifted = '<path d="M80 80 L' + (80 + 62 * Math.cos(b0)).toFixed(1) + " " + (80 + 62 * Math.sin(b0)).toFixed(1) +
+            " A62 62 0 0 1 " + (80 + 62 * Math.cos(b1)).toFixed(1) + " " + (80 + 62 * Math.sin(b1)).toFixed(1) +
+            ' Z" class="sector sector--wind sector--wind-edge sector--wind-' + wind.rating + '"></path>';
+          return;
+        }
         var a = i * 45 * Math.PI / 180;
         lifted = '<path d="' + ROSE_PATHS[i] + '" class="sector sector--wind sector--wind-' + wind.rating + '" transform="translate(' +
           (Math.sin(a) * LIFT).toFixed(1) + " " + (-Math.cos(a) * LIFT).toFixed(1) + ')"></path>';

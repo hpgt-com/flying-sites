@@ -211,24 +211,10 @@
   // Pilen står på siden vinden kommer fra og peker inn mot starten, som vinden som blåser inn i rosen.
   // Nedtoning og valgt sted ligger i className, så det overlever når markøren tas ut av og inn i en klynge.
   // match: "match", "unknown" (nivå ikke satt), "nowind" (mangler varsel) eller "no", se matches().
-  // Rosen i markøren (som i prototypen, 46 px med ring, så den er lett å se): hvit skive, sektorer for hoved- og mulige retninger fra midten,
-  // og med vind på er sektoren vinden kommer fra fylt med vurderingsfargen helt ut til ringen. Ringen
-  // rundt (CSS) har vurderingsfargen. Resten av rosen er litt dempet når vind er på.
-  var MR = 16, MR_IN = 12.5;
-  function wedge(i, radius) {
-    var a0 = (i * 45 - 22.5 - 90) * Math.PI / 180, a1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
-    return "M" + MR + " " + MR + " L" + (MR + radius * Math.cos(a0)).toFixed(2) + " " + (MR + radius * Math.sin(a0)).toFixed(2) +
-      " A" + radius + " " + radius + " 0 0 1 " + (MR + radius * Math.cos(a1)).toFixed(2) + " " + (MR + radius * Math.sin(a1)).toFixed(2) + " Z";
-  }
+  // Rosen i markøren (46 px med ring, så den er lett å se): samme rose som i kortet og på stedssiden. Med vind
+  // på er sektoren vinden kommer fra fylt med vurderingsfargen helt ut til ringen (roseSvg i common.js).
   function markerRose(site, assessment) {
-    var windCode = assessment ? W.directionCode(assessment.wind.dir) : null;
-    var svg = '<svg class="mrose' + (assessment ? " mrose--wind" : "") + '" width="40" height="40" viewBox="0 0 32 32" aria-hidden="true">';
-    FS.DIRECTIONS.forEach(function (code, i) {
-      var type = FS.directionType(site, code);
-      if (type !== "none" && code !== windCode) svg += '<path class="mrose__' + type + '" d="' + wedge(i, MR_IN) + '"></path>';
-    });
-    if (windCode) svg += '<path class="mrose__wind mrose__wind--' + assessment.rating + '" d="' + wedge(FS.DIRECTIONS.indexOf(windCode), MR) + '"></path>';
-    return svg + '<circle class="mrose__center" cx="16" cy="16" r="2.2"></circle></svg>';
+    return FS.roseSvg(site, 40, false, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating, edge: true } : null);
   }
   function markerIcon(site, assessment, match, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";

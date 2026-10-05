@@ -920,17 +920,8 @@ body:has(.lightbox[open]) { overflow: hidden; }
 }
 /* Ikke bare farge: steder som ikke passer eller har for mye vind, vises litt mindre. */
 .rose-marker__ring--high, .rose-marker__ring--no { transform: scale(0.85); }
-/* Rosen i markørene (markerRose i home.js): sektorer fra midten, dempet når vind er på, og sektoren
-   vinden kommer fra i vurderingsfargen helt ut til ringen. */
-.mrose__primary { fill: var(--dir-primary); }
-.mrose__possible { fill: var(--possible); }
-.mrose--wind .mrose__primary, .mrose--wind .mrose__possible { opacity: 0.75; }
-.mrose__wind { stroke: var(--white); stroke-width: 1; }
-.mrose__wind--ok { fill: var(--wind-ok); }
-.mrose__wind--maybe { fill: var(--wind-maybe); }
-.mrose__wind--high { fill: var(--wind-high); }
-.mrose__wind--no { fill: var(--wind-no); }
-.mrose__center { fill: #1C2B33; }
+/* Sektoren vinden kommer fra i markørene: fra midten helt ut til ringen, uten hvit kant (roseSvg, edge). */
+.rose-marker .rose .sector--wind-edge { stroke: none; }
 /* Fargelinjen i statuskortet: fordelingen av vurderingene. */
 .wind-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 2px 0; background: var(--line); }
 .wind-bar__part { display: block; }
