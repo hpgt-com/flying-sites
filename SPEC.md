@@ -42,7 +42,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 
 ## Stedsside – fast mal i denne rekkefølgen
 1. Navn, én–to setninger kort fortalt, tagger (kategori og sesong).
-2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler. I bildevisningen kan man zoome med knip, dobbelttrykk/dobbeltklikk og musehjul, og dra for å flytte; sveip bytter bilde når bildet ikke er zoomet.
+2. Oversiktsbilde (Lars sine tegnede 3D-bilder der de finnes, trykk for full størrelse). Plassholder hvis det mangler. Har stedet tegning til 3D-visningen, kommer en knapp «Se stedet i 3D (prøveversjon)» under. I bildevisningen kan man zoome med knip, dobbelttrykk/dobbeltklikk og musehjul, og dra for å flytte; sveip bytter bilde når bildet ikke er zoomet.
 3. **Før du starter**: bare farer som gjelder hele stedet. Rød boks. Hvis ingen: «Ingen spesielle farer registrert for stedet.»
 4. **Fakta**: vindrose med forklaring, og rader for Nivå (tagger), Kategori (tagger), Maks vind (bare når `wind_limits.max_wind` er satt), Høyde (start moh, landing moh, forskjell), Luftrom: bare taket over start, det laveste faste luftrommet over startstedet, som tagger (navn, klasse, nedre grense i ft, ca. moh regnet om fra fot), og under: dato for siste henting, og «Sjekk alltid IPPC før du flyr.» på egen linje. Bare luftrom ved takeoff vises. Nærliggende luftrom (TMA, CTR osv.) vises ikke, piloter sjekker dem i IPPC. Nærliggende og militære områder hentes, men vises ikke.
 5. **Start**: Parkering, Veien opp (med km og høydemeter fra GPX), Tid (bevegelsestid fra GPX). Deretter kort tekst om startområdet og én linje per retningsgruppe med retningsmerker i rosens farger og eventuelle kategori-tagger (PG/SPG).
@@ -55,6 +55,17 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 10. **Logg og mer**: Flightlog (`https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id=<id>`), Paraglidingearth (`https://www.paraglidingearth.com/?site=<pgearth_id>`, bare når `pgearth_id` er satt, ellers utelatt).
 11. Bunn: «Foreslå endring» (lenke til skjema), Sist endret (dato og navn fra Git), Gjennomgått (manuelt felt, rødt «Ikke gjennomgått ennå» hvis tomt), Kilder (én linje, skilt med «|»), ansvarsfraskrivelse.
 - Desktop: to kolonner. Venstre: tittel, oversikt, start, landing, kart, bilder. Høyre: Før du starter, Fakta, Vær, Logg og mer.
+
+## 3D-visning (prøveversjon)
+- Mål: det samme som Lars sine tegnede oversiktsbilder (hvilken side av fjellet som passer for hvilken retning, startkant, flyvei, farer, tekster), men tegnet av siden selv, så det kan dreies og zoomes og vedlikeholdes som data i stedet for som bilde.
+- Side `/flysteder/<id>/3d/` for steder med `src/flysteder/<id>/<id>-drawing.geojson` (`src/3d.njk`, `src/assets/js/site3d.js`). `noindex` og ikke i sitemap mens det er prøveversjon. Lenket fra oversiktsbildet på stedssiden.
+- Kart: MapLibre GL med terreng fra Terrain Tiles (AWS Open Data, terrarium, uten nøkkel; i Norge bygger de på Kartverkets høydedata, kontrollert mot kjente høyder: Sollifjellet 563/567 moh, Elgen 498/506 moh), skyggelegging og Kartverkets topokart oppå. Tegningen vises selv om kartflisene ikke svarer.
+- **Retningsbuen** regnes ut fra `wind_directions`, for hele stedet og ikke per start: en gul bue rundt toppen (standard: hovedstarten, 250 m; kan settes med `direction_arc` i tegningen), én bit per retning, med en pil ut og retningen ved spissen. Mørk gul er hovedretning, lys gul mulig.
+- **UTKAST:** to visninger av buen, valgt med knapper over kartet, så klubben kan prøve begge og velge én: «Løftet over bakken» (standard; tegnes i et SVG-lag 30 m over terrenget med skygge på bakken, like tykk på skjermen og synlig fra alle vinkler) og «På bakken» (ligger på terrenget og skjules bak topper). `#linje=bakke` i adressen åpner på bakken.
+- Ellers fra stedsfilen: starter (oransje prikk, trykk for tekstene fra `launches`), landing (målskive), parkering og gangrute. Ingen piler per start.
+- **Tekstene** (`label` i tegningen) vises som nummererte punkter i kartet og med tittel og tekst i en nummerert liste under kartet (rødt nummer med `style: hazard`). Trykk på et nummer viser teksten og markerer den i listen; trykk i listen flytter kartet dit. Ikke tekstbokser i kartet, siden de overlapper når kartet dreies.
+- Tegningen (`lib/drawing.js`, valideres ved bygging): GeoJSON FeatureCollection med `camera` (center, zoom, pitch, bearing), valgfri `direction_arc` (center, radius) og objekter med `kind`: `label` (punkt med title og text), `path` (linje, style launch/flight/hazard/info, dashed, arrow) og `area` (polygon, style hazard/launch/landing/info). Kan tegnes i geojson.io. Med `?rediger` i adressen viser siden koordinatene der man klikker og utsnittet som `camera`.
+- Bare innhold klubben har bekreftet legges i tegningen. Sollifjellet har i dag tre punkter med tekst fra stedsfilen (toppen, trakteffekten ved masta, landingen).
 
 ## Deling og søk
 - Alle sider har Open Graph-tagger (tittel, beskrivelse, bilde, adresse), så lenker får forhåndsvisning på Facebook og Messenger. Stedssider bruker oversiktsbildet og innledningen, andre sider `src/assets/img/share.jpg` (1200×630, skjermbilde av forsiden).

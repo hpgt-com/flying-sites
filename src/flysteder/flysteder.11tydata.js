@@ -5,6 +5,7 @@ import { lastModified } from "../../lib/git.js";
 import { sourceLabel } from "../../lib/format.js";
 import { processImage } from "../../lib/images.js";
 import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
+import { readDrawing } from "../../lib/drawing.js";
 
 // Ingressen (teksten før første ##) som ren tekst, til kortet på forsiden.
 function readIntro(inputPath) {
@@ -87,6 +88,8 @@ export default {
         lastModified: lastModified(inputPath),
         sources: describeSources(data, routes, airspace),
         intro: readIntro(inputPath),
+        // Tegningen til 3D-visningen, eller null. Valideres i lib/validation.js.
+        drawing: (() => { try { return readDrawing(dir, data.id); } catch { return null; } })(),
       };
     },
   },

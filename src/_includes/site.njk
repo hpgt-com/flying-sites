@@ -38,6 +38,7 @@ scripts:
         {% else %}
         <div class="placeholder placeholder--overview">Mangler oversiktsbilde. Har du et herfra? Send det inn.</div>
         {% endif %}
+        {% if derived.drawing %}<a class="btn overview-3d" href="/flysteder/{{ id }}/3d/">Se stedet i 3D (prøveversjon)</a>{% endif %}
       </figure>
 
       {# 5. Start #}

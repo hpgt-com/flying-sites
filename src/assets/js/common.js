@@ -83,6 +83,47 @@
     check();
   }
 
+  // --- Starter på stedssiden og i 3D-visningen ---
+  // Starter med egen posisjon (launches[].lat/lon) får hver sin rose med sine retninger. Hovedstarten
+  // (launch) viser retningene til startene uten egen posisjon, eller alle retningene når ingen har det.
+  // Bare retninger stedet passer for (hovedretning eller mulig) tas med, så linjer som «ikke egnet,
+  // men mulig i svak vind» ikke gir farge. En start uten slike retninger tegnes ikke.
+  // data: { launch, launches, wind_directions }. Gir [{ lat, lon, directions, label, texts }].
+  function launchPoints(data) {
+    var wind = data.wind_directions || {};
+    var all = (wind.primary || []).concat(wind.possible || []);
+    var usable = function (list) { return DIRECTIONS.filter(function (d) { return all.indexOf(d) !== -1 && (list || []).indexOf(d) !== -1; }); };
+    var label = function (dirs) { return "Start " + dirs.map(function (d) { return DIRECTION_LABELS[d]; }).join(", "); };
+    var launches = data.launches || [];
+    var placed = launches.filter(function (l) { return l.lat != null && l.lon != null; });
+    var points = [];
+    if (!placed.length) {
+      points.push({ lat: data.launch.lat, lon: data.launch.lon, directions: usable(all), label: "Start",
+        texts: launches.map(function (l) { return l.text; }).filter(Boolean) });
+    } else {
+      var rest = launches.filter(function (l) { return l.lat == null; });
+      var restDirs = usable([].concat.apply([], rest.map(function (l) { return l.directions || []; })));
+      if (restDirs.length) {
+        points.push({ lat: data.launch.lat, lon: data.launch.lon, directions: restDirs, label: label(restDirs),
+          texts: rest.filter(function (l) { return usable(l.directions).length; }).map(function (l) { return l.text; }).filter(Boolean) });
+      }
+      placed.forEach(function (l) {
+        var dirs = usable(l.directions);
+        if (dirs.length) points.push({ lat: l.lat, lon: l.lon, directions: dirs, label: label(dirs), texts: l.text ? [l.text] : [] });
+      });
+    }
+    return points;
+  }
+
+  // Vindrose for en start, med antall når flere starter er slått sammen.
+  function launchRoseHtml(directions, windDirections, count) {
+    var site = {
+      primary: (windDirections.primary || []).filter(function (d) { return directions.indexOf(d) !== -1; }),
+      possible: (windDirections.possible || []).filter(function (d) { return directions.indexOf(d) !== -1; }),
+    };
+    return roseSvg(site, 30, false) + (count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : "");
+  }
+
   // --- Luftromslag ---
   // Fire grupper med av/på i kartets lagvelger, som i IPPC. Alle er av til å begynne med, og
   // luftrommene (fra openAIP, se scripts/update-airspace.mjs) lastes først når en gruppe slås på.
@@ -270,6 +311,8 @@
     DIRECTION_LABELS: DIRECTION_LABELS,
     directionType: directionType,
     roseSvg: roseSvg,
+    launchPoints: launchPoints,
+    launchRoseHtml: launchRoseHtml,
     createMap: createMap,
     addAirspaceLayers: addAirspaceLayers,
     fitWhenVisible: fitWhenVisible,
