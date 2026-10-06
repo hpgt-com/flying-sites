@@ -35,8 +35,8 @@ access:
 elevation:
   launch_masl: 155
   landing_masl: null
-  difference_m: 160
-  source: flightlog
+  difference_m: null
+  source: Kartverket
 airspace: []
 hazards:
 - title: Grunneier

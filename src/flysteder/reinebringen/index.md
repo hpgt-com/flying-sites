@@ -41,10 +41,10 @@ access:
     elevation_gain_m: 470
     walk_time_min: 30
 elevation:
-  launch_masl: 448
+  launch_masl: 484
   landing_masl: 8
-  difference_m: 440
-  source: flightlog
+  difference_m: 476
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Bratt start

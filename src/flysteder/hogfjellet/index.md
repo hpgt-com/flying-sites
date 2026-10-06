@@ -45,10 +45,10 @@ access:
     elevation_gain_m: 600
     walk_time_min: 50
 elevation:
-  launch_masl: 615
-  landing_masl: 15
-  difference_m: 600
-  source: flightlog
+  launch_masl: 617
+  landing_masl: 27
+  difference_m: 590
+  source: Kartverket
 airspace: []
 hazards:
 - title: Høyspent over landingsjordet

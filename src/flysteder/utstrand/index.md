@@ -30,10 +30,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 20
+  launch_masl: 13
   landing_masl: null
   difference_m: null
-  source: flightlog
+  source: Kartverket
 airspace: []
 hazards:
 - title: Lavt og røft

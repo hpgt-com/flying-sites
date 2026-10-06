@@ -39,10 +39,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 570
+  launch_masl: 564
   landing_masl: 10
-  difference_m: 560
-  source: flightlog
+  difference_m: 554
+  source: Kartverket/flightlog
 airspace: []
 hazards: []
 launches:

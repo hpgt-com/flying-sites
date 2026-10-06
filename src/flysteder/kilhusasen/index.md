@@ -43,10 +43,10 @@ access:
     elevation_gain_m: 160
     walk_time_min: 20
 elevation:
-  launch_masl: 290
-  landing_masl: 20
-  difference_m: 270
-  source: flightlog
+  launch_masl: 280
+  landing_masl: 99
+  difference_m: 181
+  source: Kartverket
 airspace: []
 hazards:
 - title: Hester ved landing

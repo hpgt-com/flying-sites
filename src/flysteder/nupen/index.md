@@ -38,10 +38,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: null
-  landing_masl: null
-  difference_m: 400
-  source: flightlog
+  launch_masl: 267
+  landing_masl: 13
+  difference_m: 254
+  source: Kartverket
 airspace: []
 hazards:
 - title: Start fra parkeringen

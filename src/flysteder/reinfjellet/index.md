@@ -40,10 +40,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 900
-  landing_masl: 0
-  difference_m: 900
-  source: flightlog
+  launch_masl: 893
+  landing_masl: 2
+  difference_m: 891
+  source: Kartverket
 airspace: []
 hazards:
 - title: Maks 5 m/s

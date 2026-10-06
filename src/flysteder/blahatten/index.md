@@ -46,10 +46,10 @@ access:
     elevation_gain_m: 430
     walk_time_min: 60
 elevation:
-  launch_masl: 512
-  landing_masl: 92
-  difference_m: 420
-  source: flightlog
+  launch_masl: 475
+  landing_masl: 218
+  difference_m: 257
+  source: Kartverket
 airspace: []
 hazards:
 - title: Over 5 m/s

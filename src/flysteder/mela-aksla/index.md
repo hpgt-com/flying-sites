@@ -46,7 +46,7 @@ elevation:
   launch_masl: 540
   landing_masl: 3
   difference_m: 537
-  source: flightlog
+  source: Kartverket/flightlog
 airspace: []
 hazards: []
 launches: []

@@ -43,10 +43,10 @@ access:
     elevation_gain_m: null
     walk_time_min: 30
 elevation:
-  launch_masl: 480
-  landing_masl: 10
-  difference_m: 470
-  source: flightlog
+  launch_masl: 475
+  landing_masl: 3
+  difference_m: 472
+  source: Kartverket
 airspace: []
 hazards:
 - title: Krevende forhold

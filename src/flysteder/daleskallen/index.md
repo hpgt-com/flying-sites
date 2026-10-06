@@ -34,10 +34,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 180
+  launch_masl: 176
   landing_masl: 5
-  difference_m: 175
-  source: flightlog
+  difference_m: 171
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Mye vind

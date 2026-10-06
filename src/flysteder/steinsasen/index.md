@@ -37,10 +37,10 @@ access:
   routes: []
   walk_time_min: 45
 elevation:
-  launch_masl: 495
-  landing_masl: 140
-  difference_m: 355
-  source: flightlog
+  launch_masl: 488
+  landing_masl: 131
+  difference_m: 357
+  source: Kartverket
 airspace: []
 hazards:
 - title: Krevende landing i Storvassbotn

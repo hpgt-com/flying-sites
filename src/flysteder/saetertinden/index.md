@@ -54,10 +54,10 @@ access:
     elevation_gain_m: 1100
     walk_time_min: 110
 elevation:
-  launch_masl: 1095
-  landing_masl: null
-  difference_m: null
-  source: flightlog
+  launch_masl: 1089
+  landing_masl: 4
+  difference_m: 1085
+  source: Kartverket
 airspace:
 - name: Evenes CTR
   nearby: true

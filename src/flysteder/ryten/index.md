@@ -41,10 +41,10 @@ access:
     elevation_gain_m: 500
     walk_time_min: 50
 elevation:
-  launch_masl: 543
+  launch_masl: 510
   landing_masl: 0
-  difference_m: 543
-  source: flightlog
+  difference_m: 510
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Løypestreng ved Innersand

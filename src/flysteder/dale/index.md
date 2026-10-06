@@ -35,10 +35,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: null
-  landing_masl: null
-  difference_m: null
-  source: flightlog
+  launch_masl: 75
+  landing_masl: 4
+  difference_m: 71
+  source: Kartverket
 airspace: []
 hazards:
 - title: Turbulens

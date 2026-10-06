@@ -59,10 +59,10 @@ access:
     elevation_gain_m: 510
     walk_time_min: 60
 elevation:
-  launch_masl: 506
+  launch_masl: 497
   landing_masl: 4
-  difference_m: 502
-  source: flightlog
+  difference_m: 493
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Solgangsbris fra nord

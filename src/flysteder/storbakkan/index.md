@@ -40,10 +40,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 324
-  landing_masl: 124
-  difference_m: 200
-  source: flightlog
+  launch_masl: 340
+  landing_masl: 138
+  difference_m: 202
+  source: Kartverket
 airspace: []
 hazards:
 - title: Turbulens i mye vind

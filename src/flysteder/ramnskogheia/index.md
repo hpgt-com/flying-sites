@@ -44,10 +44,10 @@ access:
     elevation_gain_m: 480
     walk_time_min: 60
 elevation:
-  launch_masl: 500
+  launch_masl: 485
   landing_masl: 80
-  difference_m: 420
-  source: flightlog
+  difference_m: 405
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Andøya TMA

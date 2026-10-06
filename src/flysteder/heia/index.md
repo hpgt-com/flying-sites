@@ -46,10 +46,10 @@ access:
     elevation_gain_m: 420
     walk_time_min: 45
 elevation:
-  launch_masl: 478
+  launch_masl: 475
   landing_masl: 70
-  difference_m: 408
-  source: flightlog
+  difference_m: 405
+  source: Kartverket
 airspace: []
 hazards:
 - title: Trang landing
