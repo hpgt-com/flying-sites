@@ -32,14 +32,22 @@ landings:
   lon: 16.3468
   primary: true
   source: manuell
-- name: Landing Sjurdalen
-  lat: 68.81861
-  lon: 16.3675
+- name: Landing ved traktorveien over Kaltdalen/Høgda
+  lat: 68.81828
+  lon: 16.36729
   primary: false
   source: manuell
-parking: []
+parking:
+- name: Parkering Høgda (Kasfjord kirkegård)
+  lat: 68.82759
+  lon: 16.37878
+  source: manuell
+- name: Parkering ved Kasfjord Montessoribarnehage
+  lat: 68.83283
+  lon: 16.3491
+  source: manuell
 access:
-  parking_text: Ved Høgda.
+  parking_text: Ved Kasfjord kirkegård på Høgda, som gir kortest gangavstand til toppen. Alternativt ved Kasfjord Montessoribarnehage.
   route_text: Ta av på kjerreveien sørover inn i dalen, og gå rett opp. Bratt, ca. 45 grader hele veien. Roligere via Sjurdalen.
   routes: []
   walk_time_min: null
@@ -75,4 +83,4 @@ Fine startplasser på alle aktuelle retninger, og topplanding overalt.
 
 ## Landing
 
-Primært på jordet nede i Kasfjord, ved sjøen. Sjurdalen kan også brukes.
+Primært på jordet nede i Kasfjord, ved sjøen. Alternativt ved traktorveien som går inn til hyttefeltet, og på jordene ovenfor Kaltdalen/Høgda.
