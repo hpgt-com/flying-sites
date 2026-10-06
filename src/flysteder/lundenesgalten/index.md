@@ -1,6 +1,6 @@
 ---
-name: Storgalten
-id: storgalten
+name: Lundenesgalten
+id: lundenesgalten
 status: utkast
 region: Harstad og Kvæfjord
 external:
@@ -46,7 +46,7 @@ reviewed:
   date: null
 ---
 
-Også kalt Lundenesgalten, på Grytøya rett nord for Harstad.
+Heter Storgalten i Kartverkets kart. Ligger på Grytøya rett nord for Harstad.
 
 ## Start
 
