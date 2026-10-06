@@ -4,9 +4,9 @@ id: reinebringen
 status: utkast
 region: Lofoten
 external:
-  flightlog_id: null
+  flightlog_id: 7476
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-272770
 level: null
 training_site: false
 categories:

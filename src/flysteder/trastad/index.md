@@ -58,7 +58,7 @@ Et av de mest brukte stedene i Kvæfjord, hogd ut rett over Trastadsenteret. Spe
 
 ## Start
 
-Ligger høyere enn Borkenes-starten, og er lettere å komme seg opp fra.
+Starten er lett å komme seg opp til.
 
 ## Landing
 

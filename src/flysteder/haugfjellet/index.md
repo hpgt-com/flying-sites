@@ -4,9 +4,9 @@ id: haugfjellet
 status: utkast
 region: Bjerkvik
 external:
-  flightlog_id: null
+  flightlog_id: 1687
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-283659
 level: null
 training_site: false
 categories:

@@ -4,9 +4,9 @@ id: nona
 status: utkast
 region: Harstad og Kvæfjord
 external:
-  flightlog_id: null
+  flightlog_id: 9995
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-293736
 level: null
 training_site: false
 categories:
