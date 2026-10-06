@@ -46,7 +46,7 @@ reviewed:
   date: null
 ---
 
-Også kalt Lundenesgalten, på Grytøya rett nord for Harstad.
+Heter Storgalten i Kartverkets kart. Ligger på Grytøya rett nord for Harstad.
 
 ## Start
 
