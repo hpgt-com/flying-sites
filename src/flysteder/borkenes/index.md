@@ -48,9 +48,9 @@ launches:
   categories: null
   text: Samme retninger som Trastad. Mest hang og termisk hang.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

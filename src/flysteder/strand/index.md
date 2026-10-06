@@ -39,9 +39,9 @@ hazards:
   text: Mye sørlig vind kan gi turbulens på grunn av skog og topografi.
 launches: []
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

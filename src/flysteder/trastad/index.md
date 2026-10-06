@@ -50,9 +50,9 @@ launches:
   categories: null
   text: Mest hang og termisk hang. Ikke et sted for skliturer.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

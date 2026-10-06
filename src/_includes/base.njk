@@ -14,7 +14,7 @@
 {% if noAddressDetection %}<meta name="format-detection" content="address=no">{% endif %}
 {%- set pageTitle = (name + " – " if name else "") + site.title -%}
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
-{%- set ownImage = (derived.images.air or derived.images.launch or derived.images.landing) if (derived and derived.images) else null -%}
+{%- set ownImage = (derived.images.overview or derived.images.takeoff or derived.images.landing) if (derived and derived.images) else null -%}
 {%- set shareImage = ownImage.shareUrl if ownImage else "/assets/img/share.jpg" -%}
 <title>{{ pageTitle }}</title>
 {% if pageDescription %}<meta name="description" content="{{ pageDescription }}">{% endif %}

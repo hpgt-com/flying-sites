@@ -60,9 +60,9 @@ launches:
   categories: null
   text: Nedre start opp mot skogkanten over Kasfjord er litt ulendt, men går greit i litt vind.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

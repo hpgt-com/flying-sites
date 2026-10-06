@@ -83,9 +83,9 @@ launches:
   categories: null
   text: Veststarten gir de beste boblene, fra ca. kl. 13 og utover.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

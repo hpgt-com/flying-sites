@@ -2,12 +2,12 @@
 //
 //   npm run images                                   Sjekker alle bilder og retter de som er for store eller har GPS-data.
 //   npm run images -- <id> <felt> <fil> [--replace]  Importerer et nytt bilde, f.eks.
-//   npm run images -- sollifjellet launch "C:/Users/deg/Downloads/IMG_1234.jpg"
+//   npm run images -- sollifjellet takeoff "C:/Users/deg/Downloads/IMG_1234.jpg"
 //   npm run images -- <filer eller mapper> [--replace]  Importerer bilder navngitt etter konvensjonen
 //   npm run images -- "C:/Bilder/Storlitinden_Takeoff_SE_1_DSC04968.jpg"     (se lib/photo-name.js):
 //   npm run images -- "C:/Bilder/flysteder"                                   sted og type leses fra navnet.
 //
-// Felt: launch, landing, air. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
+// Felt: takeoff, landing, overview. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
 // kameraet rettes opp, og metadata (EXIF, GPS) fjernes. Importen skriver aldri i stedsfilen, den skriver
 // bare ut linjen som skal inn under `images:`.
 
@@ -23,7 +23,7 @@ const yaml = createRequire(import.meta.url)("js-yaml");
 
 const SITES_DIR = "src/flysteder";
 const IMAGE_FILE = /\.(jpe?g|png|webp)$/i;
-const FIELDS = ["launch", "landing", "air"];
+const FIELDS = ["takeoff", "landing", "overview"];
 
 // På Windows holder sharp-cachen filen åpen, så den kan ikke skrives over. Vi leser alt inn i minnet.
 sharp.cache(false);

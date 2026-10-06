@@ -56,9 +56,9 @@ launches:
   categories: null
   text: Litt kort start før det bikker bratt utfor.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

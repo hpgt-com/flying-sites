@@ -52,9 +52,9 @@ launches:
   categories: null
   text: Greit hang, med muligheter for å komme seg høyt.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

@@ -55,9 +55,9 @@ hazards:
   text: Jordet som tidligere er brukt til landing har en høyspentlinje omtrent midt over.
 launches: []
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null
