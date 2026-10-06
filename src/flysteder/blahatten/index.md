@@ -1,13 +1,13 @@
 ---
 name: Blåhatten
 id: blahatten
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 369
   pgearth_id: null
   yr_id: 1-287018
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -26,10 +26,15 @@ launch:
   lon: 16.46444
   source: flightlog
 landings:
+- name: Landing ved parkeringen
+  lat: 68.71339
+  lon: 16.50262
+  primary: true
+  source: manuell
 - name: Landing Slettlia
   lat: 68.72494
   lon: 16.47306
-  primary: true
+  primary: false
   source: manuell
 parking:
 - name: Parkering
@@ -47,8 +52,8 @@ access:
     walk_time_min: 60
 elevation:
   launch_masl: 475
-  landing_masl: 218
-  difference_m: 257
+  landing_masl: 79
+  difference_m: 396
   source: Kartverket
 airspace:
 - name: Evenes CTR
@@ -69,8 +74,8 @@ launches:
   categories: null
   text: Subbhang i de rette forholdene. Du kan henge i svært svak vind, helst S–SØ.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Et av de klassiske stedene, med et av de beste hangene på sørlig vind. Toppen er som en gressplen, fin både for start og topplanding.
@@ -81,4 +86,4 @@ Startplassen er perfekt, gressplen overalt.
 
 ## Landing
 
-I Slettlia, men kan gi turbulens i vind. Alternativt på den store myra ved Kilkamhuset, der store kraftlinjer markerer utkanten.
+Hovedlandingen ligger like ved parkeringen. Alternativt i Slettlia, men den kan gi turbulens i vind. Flere myrer har også vært brukt, blant annet den store myra ved Kilkamhuset, der store kraftlinjer markerer utkanten. Se over dem først på grunn av høyspent og kabler i lufta.

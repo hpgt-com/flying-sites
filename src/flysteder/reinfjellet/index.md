@@ -1,13 +1,13 @@
 ---
 name: Reinfjellet
 id: reinfjellet
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 3118
   pgearth_id: null
   yr_id: 1-286567
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -56,8 +56,8 @@ launches:
   categories: null
   text: Litt kort start før det bikker bratt utfor.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Høyt, luftig og bratt, med en av de mest spektakulære startplassene og super utsikt. Du får full uttelling for høydemeterne.
