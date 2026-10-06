@@ -22,9 +22,9 @@ wind_limits:
   max_wind: 6
   source: lokalkunnskap
 launch:
-  lat: 68.78472
-  lon: 16.14444
-  source: flightlog
+  lat: 68.78481
+  lon: 16.14474
+  source: manuell
 landings:
 - name: Landing ved rødt naust
   lat: 68.78234
@@ -36,16 +36,21 @@ landings:
   lon: 16.13527
   primary: false
   source: manuell
-parking: []
+parking:
+- name: Parkering
+  lat: 68.78587
+  lon: 16.14534
+  masl: 146
+  source: manuell
 access:
   parking_text: Ved en bom ved en liten vei til høyre på toppen.
   route_text: Følg veien opp bak Trastad og ta til venstre der grusveien fortsetter. Følg veien et lite stykke og stien til høyre til starten.
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 155
+  launch_masl: 158
   landing_masl: 3
-  difference_m: 152
+  difference_m: 155
   source: Kartverket
 airspace: []
 hazards:
