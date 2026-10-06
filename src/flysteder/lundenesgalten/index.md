@@ -1,6 +1,6 @@
 ---
-name: Storgalten
-id: storgalten
+name: Lundenesgalten
+id: lundenesgalten
 status: utkast
 region: Harstad og Kvæfjord
 external:
