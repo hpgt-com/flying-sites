@@ -1,13 +1,13 @@
 ---
 name: Blåhatten
 id: blahatten
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 369
   pgearth_id: null
   yr_id: 1-287018
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -69,8 +69,8 @@ launches:
   categories: null
   text: Subbhang i de rette forholdene. Du kan henge i svært svak vind, helst S–SØ.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Et av de klassiske stedene, med et av de beste hangene på sørlig vind. Toppen er som en gressplen, fin både for start og topplanding.
