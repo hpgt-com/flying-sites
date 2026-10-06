@@ -1,0 +1,106 @@
+{
+  "source": "openAIP",
+  "fetched": "2026-10-06",
+  "nearbyKm": 10,
+  "launch": {
+    "lat": 68.562,
+    "lon": 17.50297
+  },
+  "airspaces": [
+    {
+      "name": "ENT125 G5",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 660,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": true
+    },
+    {
+      "name": "Evenes TMA2",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 2500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": true,
+      "distanceKm": 0,
+      "byNotam": false
+    },
+    {
+      "name": "EN-D463 Elvegardsmoen",
+      "type": "D",
+      "typeLabel": "Fareområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 250,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 3.9,
+      "byNotam": true
+    },
+    {
+      "name": "Evenes TMA1",
+      "type": "TMA",
+      "typeLabel": "Terminalområde",
+      "class": "D",
+      "lower": {
+        "value": 4500,
+        "unit": "FT",
+        "ref": "MSL"
+      },
+      "upper": {
+        "value": 105,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 6,
+      "byNotam": false
+    },
+    {
+      "name": "ENT124 G4",
+      "type": "MTA",
+      "typeLabel": "Militært øvings- og operasjonsområde",
+      "class": null,
+      "lower": {
+        "value": 0,
+        "unit": "FT",
+        "ref": "GND"
+      },
+      "upper": {
+        "value": 660,
+        "unit": "FL",
+        "ref": "STD"
+      },
+      "overLaunch": false,
+      "distanceKm": 9.5,
+      "byNotam": true
+    }
+  ]
+}
