@@ -27,10 +27,15 @@ launch:
   lon: 16.33889
   source: flightlog
 landings:
+- name: Landing Kasfjord (ca.)
+  lat: 68.83454
+  lon: 16.34596
+  primary: true
+  source: manuell
 - name: Landing Sjurdalen
   lat: 68.81861
   lon: 16.3675
-  primary: true
+  primary: false
   source: manuell
 parking: []
 access:
@@ -40,9 +45,9 @@ access:
   walk_time_min: null
 elevation:
   launch_masl: 564
-  landing_masl: 10
-  difference_m: 554
-  source: Kartverket/flightlog
+  landing_masl: 5
+  difference_m: 559
+  source: Kartverket
 airspace: []
 hazards: []
 launches:
@@ -70,4 +75,4 @@ Fine startplasser på alle aktuelle retninger, og topplanding overalt.
 
 ## Landing
 
-I Sjurdalen, eller i Kasfjord.
+Primært på jordet nede i Kasfjord, ved sjøen. Sjurdalen kan også brukes.
