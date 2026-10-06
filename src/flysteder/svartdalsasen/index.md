@@ -52,7 +52,7 @@ reviewed:
   date: '2026-10-06'
 ---
 
-Blant de beste termikkgeneratorene i området, ofte med hang samtidig. Samme retning som Kilhusåsen, men lengre å gå.
+Blant de beste termikkgeneratorene i området, ofte med hang samtidig. Lite brukt, siden Kilhusåsen gir enklere gange på NV. Har du gått opp hit, send gjerne GPX-sporet til klubben.
 
 ## Start
 
