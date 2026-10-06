@@ -43,7 +43,7 @@ parking:
   masl: 146
   source: manuell
 access:
-  parking_text: Ved en bom ved en liten vei til høyre på toppen.
+  parking_text: Ved en bom ved en liten vei til høyre på toppen. Grunneieren har gitt klubben lov til å kjøre hit, men ikke lenger inn i Trastadmarka.
   route_text: Følg veien opp bak Trastad og ta til venstre der grusveien fortsetter. Følg veien et lite stykke og stien til høyre til starten.
   routes: []
   walk_time_min: null
