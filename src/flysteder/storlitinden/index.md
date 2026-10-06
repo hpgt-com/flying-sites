@@ -1,7 +1,7 @@
 ---
 name: Storlitinden
 id: storlitinden
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 331
@@ -106,8 +106,8 @@ launches:
   categories: null
   text: Hang på baksiden er mulig. Pass på rotoren på vei ned.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Et av klubbens mest brukte steder, med en kort og enkel tur opp fra Kvæfjordeidet. Hang, termikk og skliturer.
