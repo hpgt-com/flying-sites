@@ -22,11 +22,17 @@ launch:
   lat: 68.81222
   lon: 16.09556
   source: flightlog
-landings: []
+landings:
+- name: Landing på jordet ved starten
+  lat: 68.81222
+  lon: 16.09556
+  primary: true
+  source: manuell
 parking:
 - name: Parkering
   lat: 68.81047
   lon: 16.09912
+  masl: 28
   source: manuell
 access:
   parking_text: Like ved starten, ved veien.
@@ -35,8 +41,8 @@ access:
   walk_time_min: null
 elevation:
   launch_masl: 13
-  landing_masl: null
-  difference_m: null
+  landing_masl: 13
+  difference_m: 0
   source: Kartverket
 airspace: []
 hazards:
@@ -56,4 +62,4 @@ Kysthang fra et jorde nedenfor veien, på ca. 20 moh.
 
 ## Landing
 
-Landingsbeskrivelse mangler.
+På det samme jordet som starten.

@@ -32,6 +32,7 @@ parking:
 - name: Parkering
   lat: 68.80965
   lon: 16.52609
+  masl: 176
   source: manuell
 access:
   parking_text: Ved veien på toppen, rett ved starten.

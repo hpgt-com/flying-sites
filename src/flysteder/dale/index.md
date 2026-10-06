@@ -32,6 +32,7 @@ parking:
 - name: Parkering (ca.)
   lat: 68.79613
   lon: 16.11071
+  masl: 12
   source: manuell
 access:
   parking_text: Ved jordet nedenfor veien, der man går opp til starten. Ikke stå i veien for traktor som skal inn på jordet.
