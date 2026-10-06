@@ -294,10 +294,11 @@ scripts:
         </nav>
       </section>
 
-      {#- 8. Bilder: fra luften stort øverst (samme som forhåndsbildet når siden deles), start og landing under.
+      {#- 8. Bilder: oversiktsbildet (Aerial: fra luften, fra landingen mot starten eller utsikt fra starten) stort øverst
+          (samme som forhåndsbildet når siden deles), start og landing under.
           Mangler noen, vises bare de som finnes, og én linje om å sende inn bilder. -#}
       {%- set shown = [] -%}
-      {%- for field, caption in [["air", "Fra luften"], ["launch", "Start"], ["landing", "Landing"]] -%}
+      {%- for field, caption in [["air", "Oversikt"], ["launch", "Start"], ["landing", "Landing"]] -%}
       {%- if derived.images[field] %}{% set shown = (shown.push({ image: derived.images[field], caption: caption }), shown) %}{% endif -%}
       {%- endfor %}
       <section class="block block--images" aria-labelledby="h-images">

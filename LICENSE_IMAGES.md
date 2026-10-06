@@ -1,6 +1,6 @@
 # Lisens for bildene
 
-Bildene av flystedene (start, landing og fra luften) i `src/flysteder/` og på https://flysteder.hpgt.com er
+Bildene av flystedene (start, landing og oversikt) i `src/flysteder/` og på https://flysteder.hpgt.com er
 lisensiert under **Creative Commons Navngivelse-IkkeKommersiell 4.0 Internasjonal (CC BY-NC 4.0)**:
 https://creativecommons.org/licenses/by-nc/4.0/
 

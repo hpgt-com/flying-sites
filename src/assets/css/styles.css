@@ -731,7 +731,7 @@ p { margin: 0; }
 .profile__summary { font-size: 14px; line-height: 1.45; color: var(--muted); }
 
 
-/* Bildet fra luften stort øverst, start og landing under. */
+/* Oversiktsbildet stort øverst, start og landing under. */
 .image-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .image-grid figure { margin: 0; position: relative; }
 .image-grid figure:first-child, .image-grid figure:last-child:nth-child(2) { grid-column: 1 / -1; }

@@ -129,7 +129,7 @@ function setImageInSiteFile(siteId, field, file) {
 }
 
 // Importerer bilder navngitt etter konvensjonen. Siden viser foreløpig ett bilde per type (start, landing,
-// fra luften), så for hver type på hvert sted brukes bildet med lavest nummer. Vanlige landinger går foran
+// oversikt), så for hver type på hvert sted brukes bildet med lavest nummer. Vanlige landinger går foran
 // SPG-landinger. De andre hoppes over.
 async function importNamed(paths, replace) {
   const sites = readSites();
