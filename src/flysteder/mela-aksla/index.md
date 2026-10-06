@@ -75,4 +75,4 @@ Beskrivelse av startområdet mangler.
 
 ## Landing
 
-Ved parkeringen ved Melåa. Det går lavspent- og telefonledninger i master flere steder, så se over landingen først. Alternativ landing ligger litt lenger sør (se kartet).
+Ved parkeringen ved Melåa. Det går lavspent- og telefonledninger i master flere steder, så se over landingen først. Alternativ landing ligger på myra ca. 900 m sør for parkeringen (se kartet).
