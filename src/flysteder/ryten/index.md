@@ -7,7 +7,7 @@ external:
   flightlog_id: 7506
   pgearth_id: null
   yr_id: 1-275166
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -68,7 +68,7 @@ Ved Kvalvika i Flakstad i Lofoten, med landing på stranda.
 
 ## Start
 
-Enkelt å finne startplass på toppen.
+Enkelt å finne startplass på toppen, med mange muligheter for en fin start. Velger man en stupstart, er det PP3.
 
 ## Landing
 
