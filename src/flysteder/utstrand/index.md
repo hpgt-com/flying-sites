@@ -7,7 +7,7 @@ external:
   flightlog_id: 338
   pgearth_id: null
   yr_id: 10-1014999
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -23,10 +23,14 @@ launch:
   lon: 16.09556
   source: flightlog
 landings: []
-parking: []
+parking:
+- name: Parkering
+  lat: 68.81047
+  lon: 16.09912
+  source: manuell
 access:
-  parking_text: null
-  route_text: null
+  parking_text: Like ved starten, ved veien.
+  route_text: Starten ligger på jordet nedenfor veien, et kort stykke fra parkeringen.
   routes: []
   walk_time_min: null
 elevation:
@@ -48,7 +52,7 @@ Subheng rett over havet. Start på 20 moh og, på gode dager, opp i 800 moh over
 
 ## Start
 
-Start på 20 moh.
+Kysthang fra et jorde nedenfor veien, på ca. 20 moh.
 
 ## Landing
 
