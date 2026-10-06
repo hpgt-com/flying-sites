@@ -1,0 +1,71 @@
+---
+name: Reinfjellet
+id: reinfjellet
+status: gjennomgått
+region: Harstad og Kvæfjord
+external:
+  flightlog_id: 3118
+  pgearth_id: null
+  yr_id: 1-286567
+level: PP2
+training_site: false
+categories:
+- PG
+season: Sommer og høst
+wind_directions:
+  primary:
+  - S
+  - SE
+  - E
+  - NE
+  possible: []
+  source: flightlog/lokalkunnskap
+wind_limits:
+  max_wind: 5
+  source: lokalkunnskap
+launch:
+  lat: 68.64833
+  lon: 16.01167
+  source: flightlog
+landings:
+- name: Landing
+  lat: 68.66583
+  lon: 16.08139
+  primary: true
+  source: manuell
+parking: []
+access:
+  parking_text: Ved Tomasneset på østsiden av fjellet.
+  route_text: Følg ryggen mellom Åklovannet og Skjellelvvannet helt opp til toppplatået. Toppen er tøff, flere steder må du vite hvor du setter føttene.
+  routes: []
+  walk_time_min: null
+elevation:
+  launch_masl: 893
+  landing_masl: 2
+  difference_m: 891
+  source: Kartverket
+airspace: []
+hazards:
+- title: Maks 5 m/s
+  text: Termikken kan være kraftig.
+- title: Glatt om høsten
+  text: Det bratte terrenget kan bli livsfarlig når det fryser på. Ta med stegjern, isøks og sikringsutstyr.
+launches:
+- directions:
+  - NE
+  categories: null
+  text: Litt kort start før det bikker bratt utfor.
+reviewed:
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
+---
+
+Høyt, luftig og bratt, med en av de mest spektakulære startplassene og super utsikt. Du får full uttelling for høydemeterne.
+
+## Start
+
+Fin startplass i typisk høyfjellsterreng, mose og noe stein. Det skal lite vind til før det løfter.
+
+## Landing
+
+Landingsbeskrivelse mangler.

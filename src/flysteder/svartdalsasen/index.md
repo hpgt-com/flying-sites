@@ -1,13 +1,13 @@
 ---
 name: Svartdalsåsen
 id: svartdalsasen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 1953
   pgearth_id: null
   yr_id: 10-1093809
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -48,15 +48,15 @@ launches:
   categories: null
   text: Hang og termisk hang.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Blant de beste termikkgeneratorene i området, ofte med hang samtidig. Samme retning som Kilhusåsen, men lengre å gå.
 
 ## Start
 
-Starten er ganske bratt, men ryddet for busker og kratt. Mange flyr hit fra Kilhusåsen.
+Starten er ganske bratt, men ryddet for busker og kratt. Samme nivå som Kilhusåsen, men krever litt grei startteknikk. Mange flyr hit fra Kilhusåsen.
 
 ## Landing
 
