@@ -30,21 +30,40 @@ const sites = fs.readdirSync(SITES_DIR)
     return { id, data: yaml.load(/^---\r?\n([\s\S]*?)\r?\n---/.exec(text)[1]) };
   });
 
-// Sirkel som dekker alle startene, pluss margin.
+// Luftrommene hentes i én eller flere sirkler som til sammen dekker alle startene, pluss margin. openAIP
+// avviser for stor radius (216 km ga 400), så stedene i Lofoten, på Andøya og i Bjerkvik kan ikke dekkes av
+// én sirkel rundt midten av regionen. Hver sirkel har senter i en start og dekker startene innen
+// MAX_RADIUS_KM - MARGIN_KM. Som regel blir det 2–3 kall.
+const MAX_RADIUS_KM = 150;
 const km = (a, b) => {
   const r = Math.PI / 180;
   const h = Math.sin(((b.lat - a.lat) * r) / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(((b.lon - a.lon) * r) / 2) ** 2;
   return 2 * 6371 * Math.asin(Math.sqrt(h));
 };
 const launches = sites.map((s) => s.data.launch);
-const center = {
-  lat: launches.reduce((sum, l) => sum + l.lat, 0) / launches.length,
-  lon: launches.reduce((sum, l) => sum + l.lon, 0) / launches.length,
-};
-const radiusKm = Math.ceil(Math.max(...launches.map((l) => km(center, l))) + MARGIN_KM);
+const circles = [];
+let left = [...launches];
+while (left.length) {
+  // Senter i starten som dekker flest av de gjenværende.
+  const reach = MAX_RADIUS_KM - MARGIN_KM;
+  const center = left.reduce((best, l) => {
+    const n = left.filter((o) => km(l, o) <= reach).length;
+    return n > best.n ? { l, n } : best;
+  }, { l: left[0], n: 0 }).l;
+  const covered = left.filter((o) => km(center, o) <= reach);
+  const radiusKm = Math.ceil(Math.max(...covered.map((o) => km(center, o))) + MARGIN_KM);
+  circles.push({ center, radiusKm });
+  left = left.filter((o) => !covered.includes(o));
+}
 
-console.log(`Henter luftrom innen ${radiusKm} km fra ${center.lat.toFixed(3)}, ${center.lon.toFixed(3)} …`);
-const items = await fetchRegion(center.lat.toFixed(5), center.lon.toFixed(5), radiusKm * 1000, apiKey);
+const byId = new Map();
+for (const { center, radiusKm } of circles) {
+  console.log(`Henter luftrom innen ${radiusKm} km fra ${center.lat.toFixed(3)}, ${center.lon.toFixed(3)} …`);
+  for (const a of await fetchRegion(center.lat.toFixed(5), center.lon.toFixed(5), radiusKm * 1000, apiKey)) {
+    byId.set(a._id ?? JSON.stringify([a.name, a.geometry]), a);
+  }
+}
+const items = [...byId.values()];
 console.log(`${items.length} luftrom i regionen.`);
 
 const describe = (a) =>
@@ -65,6 +84,14 @@ for (const { id, data } of sites) {
   }
   console.log(`\n${data.name}: ${airspaces.length} luftrom${unchanged ? " (uendret)" : before ? " (ENDRET)" : " (ny)"}`);
   for (const a of airspaces) console.log(`  ${describe(a)}`);
+}
+
+// Steder som er fjernet eller har fått ny id, skal ikke ha cache-filer liggende igjen.
+for (const file of fs.readdirSync(CACHE_DIR)) {
+  if (file.endsWith(".json") && !sites.some((s) => `${s.id}.json` === file)) {
+    fs.unlinkSync(path.join(CACHE_DIR, file));
+    console.log(`\nFjernet ${file} (stedet finnes ikke lenger).`);
+  }
 }
 
 // Kartlaget. Skrives bare når innholdet er endret, så datoen i cache-filene ikke gir støy i diffen.
