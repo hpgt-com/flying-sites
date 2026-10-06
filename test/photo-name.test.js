@@ -11,7 +11,7 @@ const sites = [
 
 test("startbilde med retning", () => {
   assert.deepEqual(parsePhotoName("Storlitinden_Takeoff_SE_1_DSC04968.jpg", sites),
-    { siteId: "storlitinden", siteName: "Storlitinden", field: "launch", type: "Takeoff", direction: "SE", nr: 1, original: "DSC04968" });
+    { siteId: "storlitinden", siteName: "Storlitinden", field: "launch", type: "Takeoff", direction: "SE", category: null, nr: 1, original: "DSC04968" });
 });
 
 test("landing og luftbilde uten retning, og originalnavn med understrek", () => {
@@ -43,4 +43,15 @@ test("kjenner igjen navn etter konvensjonen, men ikke vanlige kamerafiler eller 
   assert.equal(looksLikePhotoName("Storlitinden_Takeoff_SE_1_DSC04968.jpg"), true);
   assert.equal(looksLikePhotoName("DSC04968.jpg"), false);
   assert.equal(looksLikePhotoName("sollifjellet-launch.jpg"), false);
+});
+
+test("valgfritt SPG-merke på landing, ikke på andre typer, og PG skrives ikke", () => {
+  const spg = parsePhotoName("Saetertinden_Landing_SPG_1_DSC00978.jpg", sites);
+  assert.equal(spg.category, "SPG");
+  assert.equal(spg.nr, 1);
+  assert.equal(spg.original, "DSC00978");
+  assert.equal(parsePhotoName("Saetertinden_Landing_1_DSC00978.jpg", sites).category, null);
+  assert.throws(() => parsePhotoName("Saetertinden_Aerial_SPG_1_X.jpg", sites), /bare på Landing/);
+  assert.throws(() => parsePhotoName("Saetertinden_Landing_PG_1_X.jpg", sites), /PG er standard/);
+  assert.throws(() => parsePhotoName("Saetertinden_Takeoff_SE_SPG_1_X.jpg", sites), /bare på Landing/);
 });

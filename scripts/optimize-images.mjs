@@ -124,7 +124,8 @@ function setImageInSiteFile(siteId, field, file) {
 }
 
 // Importerer bilder navngitt etter konvensjonen. Siden viser foreløpig ett bilde per type (start, landing,
-// fra luften), så for hver type på hvert sted brukes bildet med lavest nummer. De andre hoppes over.
+// fra luften), så for hver type på hvert sted brukes bildet med lavest nummer. Vanlige landinger går foran
+// SPG-landinger. De andre hoppes over.
 async function importNamed(paths, replace) {
   const sites = readSites();
   const files = paths.flatMap((p) => (fs.statSync(p).isDirectory()
@@ -136,7 +137,9 @@ async function importNamed(paths, replace) {
       const photo = parsePhotoName(path.basename(file), sites);
       const key = `${photo.siteId}/${photo.field}`;
       const current = chosen.get(key);
-      if (!current || photo.nr < current.photo.nr) {
+      const rank = (p) => [p.category ? 1 : 0, p.nr];
+      const better = (a, b) => rank(a)[0] - rank(b)[0] || rank(a)[1] - rank(b)[1];
+      if (!current || better(photo, current.photo) < 0) {
         if (current) skipped.push(current.file);
         chosen.set(key, { file, photo });
       } else skipped.push(file);
@@ -145,7 +148,7 @@ async function importNamed(paths, replace) {
     }
   }
   for (const { file, photo } of chosen.values()) {
-    console.log(`\n${photo.siteName}, ${photo.type}${photo.direction ? " " + photo.direction : ""}:`);
+    console.log(`\n${photo.siteName}, ${photo.type}${photo.direction ? " " + photo.direction : ""}${photo.category ? " " + photo.category : ""}:`);
     const target = await importImage(photo.siteId, photo.field, file, replace, { soft: true });
     if (target) {
       setImageInSiteFile(photo.siteId, photo.field, target);
@@ -153,7 +156,7 @@ async function importNamed(paths, replace) {
     }
   }
   if (skipped.length) {
-    console.log(`\nIkke importert (siden viser foreløpig ett bilde per type, det med lavest nummer):`);
+    console.log(`\nIkke importert (siden viser foreløpig ett bilde per type: lavest nummer, og vanlig landing foran SPG-landing):`);
     for (const f of skipped) console.log(`  ${path.basename(f)}`);
   }
   if (errors.length) {
