@@ -61,7 +61,28 @@ airspace: []
 hazards:
 - title: Ledninger ved landingen
   text: Det går lavspent- og telefonledninger i master flere steder rundt landingen ved parkeringen. Se over landingen før du flyr.
-launches: []
+launches:
+- directions:
+  - N
+  - NE
+  - E
+  - S
+  - SW
+  - W
+  - NW
+  categories:
+  - PG
+  text: Hovedstarten.
+- directions:
+  - SW
+  - W
+  - NW
+  categories:
+  - PG
+  text: Alternativ start for SV, V og NV, der gangruten ender (756 moh).
+  lat: 68.6381
+  lon: 16.12245
+  source: manuell
 reviewed:
   by: null
   date: null
@@ -71,7 +92,7 @@ Kan levere heftig termikk på de rette dagene.
 
 ## Start
 
-Beskrivelse av startområdet mangler.
+Hovedstarten ligger på 540 moh. Gangruten går videre opp til en alternativ start på 756 moh, for SV, V og NV.
 
 ## Landing
 
