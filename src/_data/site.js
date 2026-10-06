@@ -7,5 +7,7 @@ export default {
   // listen og søket, og kartet kan zoomes ut til dem.
   homeRegion: "Harstad og Kvæfjord",
   // Skjema for endringsforslag. Til vi har et eget skjema går det til GitHub-issues.
+  // Besøksstatistikk (GoatCounter): anonym, uten informasjonskapsler. Se src/assets/js/goatcounter.js.
+  goatcounter: "https://hpgt-flysteder.goatcounter.com/count",
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };
