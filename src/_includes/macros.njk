@@ -78,7 +78,7 @@
 
 {#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet. -#}
 {% macro lightboxLink(image, caption) -%}
-<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}">{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span></a>
+<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}"{% if image.credit %} data-credit="{{ image.credit.creator }}" data-credit-url="{{ image.credit.url or '' }}" data-license="{{ image.credit.license }}" data-license-url="{{ image.credit.licenseUrl }}"{% endif %}>{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span></a>
 {%- endmacro %}
 
 {#- Merking av lenker som åpnes i ny fane: ↗-symbol, og tekst som bare skjermlesere leser opp. -#}

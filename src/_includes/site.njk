@@ -312,6 +312,12 @@ scripts:
           {% endfor %}
         </div>
         {% endif %}
+        {#- Fotografene og lisensen, én gang per fotograf. Står også i bildenes metadata og i bildevisningen. -#}
+        {%- set creators = [] -%}{%- set creatorNames = [] -%}
+        {%- for item in shown %}{% if item.image.credit and not (item.image.credit.creator in creatorNames) %}{% set creatorNames = (creatorNames.push(item.image.credit.creator), creatorNames) %}{% set creators = (creators.push(item.image.credit), creators) %}{% endif %}{% endfor %}
+        {% if creators.length %}
+        <p class="images-credit">Foto: {% for c in creators %}{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.creator }}</a>{% else %}{{ c.creator }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %} · <a href="{{ creators[0].licenseUrl }}" target="_blank" rel="noopener">{{ creators[0].license }}</a></p>
+        {% endif %}
         {% if shown.length < 3 %}
         <p class="images-missing">{% if shown.length %}Flere bilder trengs. {% else %}Ingen bilder ennå. {% endif %}Har du bilder herfra? <a href="{{ site.suggestChangeUrl }}?template=endring.yml&title={{ ('Bilder: ' ~ name) | urlencode }}&site={{ id | urlencode }}" target="_blank" rel="noopener">Send dem inn{{ m.external() }}</a></p>
         {% endif %}

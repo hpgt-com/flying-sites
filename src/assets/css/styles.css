@@ -743,6 +743,7 @@ p { margin: 0; }
   background: rgba(28, 43, 51, 0.78); color: #FFFFFF; font-size: 13px; font-weight: 600; pointer-events: none;
 }
 .images-missing { font-size: 14px; color: var(--muted); }
+.images-credit { font-size: 13px; color: var(--muted); }
 
 /* Høyre kolonne: hver del i et hvitt kort (Fakta, Vær, Bilder, Logg og mer), som i prototypen. */
 .site-page__aside > .block {
@@ -917,9 +918,13 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox--zoomed .lightbox__caption { visibility: hidden; }
 .lightbox__caption {
   position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 2;
-  max-width: calc(100% - 24px); padding: 5px 14px; border-radius: 999px; box-sizing: border-box;
+  max-width: calc(100% - 24px); padding: 5px 14px; border-radius: 12px; box-sizing: border-box;
   background: rgba(10, 16, 20, 0.72); font-size: 15px; text-align: center; pointer-events: none;
 }
+/* Fotograf og lisens under bildeteksten. Lenkene skal kunne trykkes, resten av teksten slipper trykk gjennom. */
+.lightbox__credit { display: block; font-size: 12.5px; color: #C9D4D7; }
+.lightbox__credit:empty { display: none; }
+.lightbox__credit a { color: #FFFFFF; pointer-events: auto; }
 .lightbox__counter { color: #B9C6CB; }
 .lightbox__button {
   position: absolute;
