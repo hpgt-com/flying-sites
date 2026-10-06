@@ -16,3 +16,11 @@ test("landingstekst som siste avsnitt regnes med", () => {
   assert.ok(!missing.includes("starttekst"));
   assert.ok(!missing.includes("landingstekst"));
 });
+
+test("sted uten fast landing mangler verken landing eller landingsbilde", () => {
+  const s = { url: "/flysteder/test/", rawInput: "", data: { id: "test", name: "Test", landings: [], no_fixed_landing: true } };
+  const missing = siteStatus(s).missing;
+  assert.ok(!missing.includes("landing"));
+  assert.ok(!missing.includes("landingsbilde"));
+  assert.ok(siteStatus({ ...s, data: { ...s.data, no_fixed_landing: undefined } }).missing.includes("landing"));
+});

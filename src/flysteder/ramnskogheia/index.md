@@ -29,6 +29,7 @@ launch:
   lon: 15.51386
   source: gpx
 landings: []
+no_fixed_landing: true
 parking:
 - name: Parkering Åknes
   lat: 68.989913
