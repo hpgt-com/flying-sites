@@ -19,9 +19,9 @@ wind_directions:
   possible: []
   source: flightlog/lokalkunnskap
 launch:
-  lat: 68.75556
-  lon: 16.42361
-  source: flightlog
+  lat: 68.77571
+  lon: 16.46005
+  source: manuell
 landings:
 - name: Landing
   lat: 68.78833
