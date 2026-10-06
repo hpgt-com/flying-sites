@@ -19,7 +19,8 @@ wind_directions:
   - SW
   - SE
   - E
-  possible: []
+  possible:
+  - NE
   source: flightlog/lokalkunnskap
 launch:
   lat: 68.58694
@@ -79,6 +80,13 @@ launches:
   - E
   categories: null
   text: Krever vind for baklengsstart, eller snø tidlig i sesongen. Alternativ start på ca. 850 moh.
+- directions:
+  - NE
+  - E
+  categories:
+  - PG
+  - SPG
+  text: Fine starter om vinteren for PP2 og SPG2. Om sommeren er det en del stein, og startene er mer tekniske.
 reviewed:
   by: null
   date: null
@@ -88,7 +96,7 @@ Høyt og flott, nesten 1100 moh, med mange fine landinger i Hårvika.
 
 ## Start
 
-Flere av startene passer for PP2 og SPG2, mens andre krever høyere nivå (se Stupstart under Før du starter). Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
+Mot NØ og Ø er det fine starter om vinteren for PP2 og SPG2. Om sommeren er det en del stein der, og startene er mer tekniske. Flere av de andre startene krever høyere nivå (se Stupstart under Før du starter). Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
 
 ## Landing
 
