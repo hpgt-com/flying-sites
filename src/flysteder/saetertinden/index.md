@@ -7,7 +7,7 @@ external:
   flightlog_id: 1599
   pgearth_id: null
   yr_id: 1-330621
-level: PP2
+level: PP3
 training_site: false
 categories:
 - PG
@@ -86,7 +86,7 @@ launches:
   categories:
   - PG
   - SPG
-  text: Fine starter om vinteren for PP2 og SPG2. Om sommeren er det en del stein, og startene er mer tekniske.
+  text: Fine starter om vinteren, som i seg selv er enkle nok for PP2 og SPG2. Om sommeren er det en del stein, og startene er mer tekniske.
 reviewed:
   by: null
   date: null
@@ -96,7 +96,7 @@ Høyt og flott, nesten 1100 moh, med mange fine landinger i Hårvika.
 
 ## Start
 
-Mot NØ og Ø er det fine starter om vinteren for PP2 og SPG2. Om sommeren er det en del stein der, og startene er mer tekniske. Flere av de andre startene krever høyere nivå (se Stupstart under Før du starter). Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
+Sætertinden er PP3, fordi det er en høyfjellsstart. Mot NØ og Ø er det fine starter om vinteren, som i seg selv er enkle nok for PP2 og SPG2. Om sommeren er det en del stein der, og startene er mer tekniske. Flere av de andre startene er stupstarter (se Før du starter). Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
 
 ## Landing
 

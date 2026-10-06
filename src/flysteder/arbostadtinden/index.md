@@ -7,7 +7,7 @@ external:
   flightlog_id: 9348
   pgearth_id: null
   yr_id: 1-290690
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
@@ -85,7 +85,7 @@ Topp på Andørja, med lang tur opp: nesten 1200 høydemeter fra veien.
 
 ## Start
 
-Toppen er stor nok til å starte i de fleste retninger, men primært mot V, NV, N, NØ og Ø, så landingen blir nær veien. Det anbefales å ha litt vind inn på toppen. Ellers må vingen være lett å starte, og du bør kunne kutte liner raskt.
+Høyfjellsstart, derfor PP3. Toppen er stor nok til å starte i de fleste retninger, men primært mot V, NV, N, NØ og Ø, så landingen blir nær veien. Det anbefales å ha litt vind inn på toppen. Ellers må vingen være lett å starte, og du bør kunne kutte liner raskt.
 
 ## Landing
 
