@@ -11,6 +11,7 @@ level: null
 training_site: false
 categories:
 - PG
+- SPG
 season: null
 wind_directions:
   primary:
@@ -18,13 +19,19 @@ wind_directions:
   - NE
   - E
   - NW
-  possible: []
-  source: flightlog
+  possible:
+  - SE
+  source: flightlog/gpx
 launch:
   lat: 68.90856
   lon: 17.34808
   source: gpx
-landings: []
+landings:
+- name: Landing
+  lat: 68.92077
+  lon: 17.3749
+  primary: true
+  source: gpx
 parking:
 - name: Parkering
   lat: 68.92356
@@ -57,6 +64,14 @@ launches:
   categories:
   - PG
   text: Kan starte i alle retninger fra toppen, men primært mot V, NV, N, NØ og Ø med tanke på landing nær veien.
+- directions:
+  - SE
+  categories:
+  - SPG
+  text: SPG har startet mot SØ like sørvest for toppen. Det er trolig mulig å ta av fra flere sider av fjellet.
+  lat: 68.90843
+  lon: 17.34775
+  source: gpx
 links:
 - title: ut.no
   text: Turbeskrivelse til Årbostadtinden
@@ -74,4 +89,4 @@ Toppen er stor nok til å starte i de fleste retninger, men primært mot V, NV, 
 
 ## Landing
 
-Landing på gress nede ved veien. Avklar med bonden før du lander, og se over landingen på forhånd med tanke på ledninger.
+Landing på gress nede ved veien, nordøst for toppen ved sjøen. Landingen passer for både PG og SPG. Avklar med bonden før du lander, og se over landingen på forhånd med tanke på ledninger.
