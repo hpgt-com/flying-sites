@@ -23,12 +23,20 @@ launch:
   lon: 16.53276
   source: flightlog
 landings: []
-parking: []
+parking:
+- name: Parkering
+  lat: 68.880912
+  lon: 16.551769
+  source: gpx
 access:
   parking_text: null
   route_text: null
-  routes: []
-  walk_time_min: null
+  routes:
+  - file: lundenesgalten-route.gpx
+    name: null
+    km: 3.7
+    elevation_gain_m: 750
+    walk_time_min: 55
 elevation:
   launch_masl: 780
   landing_masl: null
