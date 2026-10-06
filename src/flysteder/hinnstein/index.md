@@ -58,9 +58,9 @@ launches:
   categories: null
   text: Først og fremst et sted for hangflyging.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

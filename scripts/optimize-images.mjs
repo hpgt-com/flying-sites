@@ -2,12 +2,12 @@
 //
 //   npm run images                                   Sjekker alle bilder og retter de som er for store eller har GPS-data.
 //   npm run images -- <id> <felt> <fil> [--replace]  Importerer et nytt bilde, f.eks.
-//   npm run images -- sollifjellet launch "C:/Users/deg/Downloads/IMG_1234.jpg"
+//   npm run images -- sollifjellet takeoff "C:/Users/deg/Downloads/IMG_1234.jpg"
 //   npm run images -- <filer eller mapper> [--replace]  Importerer bilder navngitt etter konvensjonen
 //   npm run images -- "C:/Bilder/Storlitinden_Takeoff_SE_1_DSC04968.jpg"     (se lib/photo-name.js):
 //   npm run images -- "C:/Bilder/flysteder"                                   sted og type leses fra navnet.
 //
-// Felt: launch, landing, air. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
+// Felt: takeoff, landing, overview. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
 // kameraet rettes opp, og metadata (EXIF, GPS) fjernes. Importen skriver aldri i stedsfilen, den skriver
 // bare ut linjen som skal inn under `images:`.
 
@@ -17,12 +17,13 @@ import sharp from "sharp";
 import { createRequire } from "node:module";
 import { MAX_ORIGINAL_BYTES, MAX_ORIGINAL_SIDE } from "../lib/images.js";
 import { looksLikePhotoName, parsePhotoName } from "../lib/photo-name.js";
+import { creditFor, exifFor, hasCredit, xmpFor } from "../lib/photo-credit.js";
 
 const yaml = createRequire(import.meta.url)("js-yaml");
 
 const SITES_DIR = "src/flysteder";
 const IMAGE_FILE = /\.(jpe?g|png|webp)$/i;
-const FIELDS = ["launch", "landing", "air"];
+const FIELDS = ["takeoff", "landing", "overview"];
 
 // På Windows holder sharp-cachen filen åpen, så den kan ikke skrives over. Vi leser alt inn i minnet.
 sharp.cache(false);
@@ -48,14 +49,18 @@ function hasGps(exif) {
 const kb = (bytes) => `${Math.round(bytes / 1024)} kB`;
 
 // Skalerer ned, retter rotasjon og fjerner metadata. PNG forblir PNG (tegninger), alt annet blir JPEG.
+// Bare fotograf, copyright, nettside og lisens skrives tilbake (lib/photo-credit.js), fra originalen
+// eller standarden i src/_data/photoCredit.json.
 async function optimize(input, format) {
+  const credit = creditFor(await sharp(input).metadata());
   let pipeline = sharp(input)
     .rotate()
     .resize({ width: MAX_ORIGINAL_SIDE, height: MAX_ORIGINAL_SIDE, fit: "inside", withoutEnlargement: true });
   if (format === ".png") pipeline = pipeline.png({ compressionLevel: 9 });
   else if (format === ".webp") pipeline = pipeline.webp({ quality: 85 });
   else pipeline = pipeline.jpeg({ quality: 85, mozjpeg: true });
-  return pipeline.toBuffer(); // sharp tar ikke med metadata med mindre vi ber om det
+  // sharp tar ikke med metadata med mindre vi ber om det, så GPS og kameradata forsvinner.
+  return pipeline.withExif(exifFor(credit)).withXmp(xmpFor(credit)).toBuffer();
 }
 
 function fail(message) {
@@ -86,7 +91,7 @@ async function importImage(siteId, field, sourcePath, replace, { soft = false } 
   const after = await sharp(output).metadata();
 
   console.log(`${sourcePath}: ${before.width}×${before.height} px, ${kb(input.length)}`);
-  console.log(`→ ${target}: ${after.width}×${after.height} px, ${kb(output.length)}, uten metadata`);
+  console.log(`→ ${target}: ${after.width}×${after.height} px, ${kb(output.length)}, uten GPS og kameradata, med fotograf og lisens`);
   if (after.width < 1000) console.log(`Merk: bildet er bare ${after.width} px bredt og kan se uskarpt ut.`);
   if (soft) return path.basename(target);
   console.log(`\nLegg inn dette under \`images:\` i ${siteDir}/index.md:\n  ${field}: ${path.basename(target)}`);
@@ -124,7 +129,7 @@ function setImageInSiteFile(siteId, field, file) {
 }
 
 // Importerer bilder navngitt etter konvensjonen. Siden viser foreløpig ett bilde per type (start, landing,
-// fra luften), så for hver type på hvert sted brukes bildet med lavest nummer. Vanlige landinger går foran
+// oversikt), så for hver type på hvert sted brukes bildet med lavest nummer. Vanlige landinger går foran
 // SPG-landinger. De andre hoppes over.
 async function importNamed(paths, replace) {
   const sites = readSites();
@@ -177,6 +182,7 @@ async function checkAll(files) {
     if (Math.max(meta.width, meta.height) > MAX_ORIGINAL_SIDE) reasons.push(`${meta.width}×${meta.height} px`);
     if (hasGps(meta.exif)) reasons.push("GPS-posisjon i EXIF");
     if (meta.orientation && meta.orientation > 1) reasons.push("rotert av kameraet");
+    if (!hasCredit(meta)) reasons.push("mangler fotograf og lisens");
     if (!reasons.length) continue;
 
     const output = await optimize(input, path.extname(file).toLowerCase());

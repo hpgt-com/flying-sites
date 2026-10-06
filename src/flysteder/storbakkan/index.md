@@ -60,9 +60,9 @@ launches:
   categories: null
   text: Mulig, men se Før du starter.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

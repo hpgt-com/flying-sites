@@ -60,9 +60,9 @@ export default {
       }
       const images = {};
       const IMAGE_ALT = {
-        launch: `Startområdet på ${data.name}`,
+        takeoff: `Startområdet på ${data.name}`,
         landing: `Landingen ved ${data.name}`,
-        air: `${data.name} sett fra luften`,
+        overview: `Oversiktsbilde av ${data.name}`,
       };
       for (const field of Object.keys(IMAGE_ALT)) {
         const file = data.images?.[field];
@@ -70,9 +70,9 @@ export default {
         images[field] = await processImage(dir, data.id, field, file, {
           alt: IMAGE_ALT[field],
           outputDir: data.eleventy.directories.output,
-          // Bilder-blokken i høyre kolonne (site.njk): fra luften stort over hele kolonnen, start og landing
+          // Bilder-blokken i høyre kolonne (site.njk): oversiktsbildet stort over hele kolonnen, start og landing
           // halvparten under. På mobil er siden høyst 640 px bred.
-          sizes: field === "air" ? "(min-width: 1024px) 400px, (min-width: 640px) 608px, 100vw" : "(min-width: 1024px) 200px, (min-width: 640px) 304px, 50vw",
+          sizes: field === "overview" ? "(min-width: 1024px) 400px, (min-width: 640px) 608px, 100vw" : "(min-width: 1024px) 200px, (min-width: 640px) 304px, 50vw",
         });
       }
 

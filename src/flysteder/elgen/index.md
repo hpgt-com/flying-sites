@@ -92,9 +92,9 @@ launches:
   - SPG
   text: SPG tar primært av på sørsiden av Elgen. Mot Ø og SØ er det stupstart øst for østtoppen.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

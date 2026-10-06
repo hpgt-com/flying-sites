@@ -63,9 +63,9 @@ launches:
   categories: null
   text: Stedet dekker mange retninger fra de tre startene.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

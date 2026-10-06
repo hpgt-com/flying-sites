@@ -79,9 +79,9 @@ launches:
   categories: null
   text: Krever vind for baklengsstart, eller snø tidlig i sesongen. Alternativ start på ca. 850 moh.
 images:
-  launch: null
+  takeoff: null
   landing: null
-  air: null
+  overview: null
 reviewed:
   by: null
   date: null

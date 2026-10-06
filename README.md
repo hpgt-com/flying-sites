@@ -18,7 +18,7 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 | Hvor | Hva |
 |---|---|
 | `src/flysteder/<id>/index.md` | Ett flysted: strukturerte data øverst (front matter), tekst under |
-| `src/flysteder/<id>/` | Bilder (`<id>-launch.jpg`, `-landing`, `-air`), gangruter (`<id>-route.gpx`) og tegning til kartet (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`) |
+| `src/flysteder/<id>/` | Bilder (`<id>-takeoff.jpg`, `-landing`, `-overview`), gangruter (`<id>-route.gpx`) og tegning til kartet (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`) |
 | `src/_data/` | Tårn (`towers.json`), felles vindgrenser (`windRules.json`), vindvarsel (`forecast.js`) og mellomlagret luftrom |
 | `src/_includes/` | Sidemaler for forsiden og stedssidene |
 | `src/assets/` | CSS, JavaScript og bilder |
@@ -80,6 +80,8 @@ Filene inneholder starter med retninger, landinger, parkering, gangruter og klub
 
 Koden (maler, skript, CSS og JavaScript) er MIT-lisensiert, se [LICENSE](LICENSE).
 
-Innholdet tilhører klubben og dem som har bidratt, og er ikke omfattet av MIT-lisensen (de åpne datafilene har egen lisens, se over). Det gjelder tekstene om flystedene, bildene, tegningene og gangrutene i `src/flysteder/`. Bildene kan vise personer og er delt til bruk på denne siden. Ta kontakt med HPGT før du bruker innhold herfra andre steder.
+Innholdet tilhører klubben og dem som har bidratt, og er ikke omfattet av MIT-lisensen (de åpne datafilene har egen lisens, se over). Det gjelder tekstene om flystedene, tegningene og gangrutene i `src/flysteder/`. Ta kontakt med HPGT før du bruker innhold herfra andre steder.
+
+Bildene er lisensiert under CC BY-NC 4.0 med fotografen oppgitt, se [LICENSE_IMAGES.md](LICENSE_IMAGES.md). Fotograf, copyright og lisens står i hvert bilde (EXIF/XMP) og i bildevisningen. Standardfotograf og lisens står i `src/_data/photoCredit.json`.
 
 Data fra andre kilder følger lisensene deres, se [Kilder](#kilder).

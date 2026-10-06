@@ -13,7 +13,7 @@
   dialog.innerHTML =
     '<figure class="lightbox__figure">' +
     '<picture><source type="image/webp" sizes="100vw"><img class="lightbox__image" sizes="100vw" alt=""></picture>' +
-    '<figcaption class="lightbox__caption"><span class="lightbox__text"></span> <span class="lightbox__counter"></span></figcaption>' +
+    '<figcaption class="lightbox__caption"><span class="lightbox__text"></span> <span class="lightbox__counter"></span><span class="lightbox__credit"></span></figcaption>' +
     "</figure>" +
     '<button type="button" class="lightbox__button lightbox__close" aria-label="Lukk bildevisningen">×</button>' +
     '<button type="button" class="lightbox__button lightbox__prev" aria-label="Forrige bilde">‹</button>' +
@@ -24,6 +24,21 @@
   var image = dialog.querySelector("img");
   var text = dialog.querySelector(".lightbox__text");
   var counter = dialog.querySelector(".lightbox__counter");
+  var credit = dialog.querySelector(".lightbox__credit");
+
+  // «Foto: Navn · CC BY-NC 4.0», med lenke til fotografens nettside og lisensen. Bygges med DOM-metoder.
+  function creditLink(textValue, href) {
+    if (!href) return document.createTextNode(textValue);
+    var a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = textValue;
+    return a;
+  }
+  function showCredit(l) {
+    var name = l.getAttribute("data-credit");
+    if (!name) { credit.replaceChildren(); return; }
+    credit.replaceChildren(document.createTextNode("Foto: "), creditLink(name, l.getAttribute("data-credit-url")),
+      document.createTextNode(" · "), creditLink(l.getAttribute("data-license") || "", l.getAttribute("data-license-url")));
+  }
   var current = 0;
   var opener = null;
 
@@ -73,6 +88,7 @@
     image.alt = thumb ? thumb.alt : "";
     text.textContent = link.getAttribute("data-caption") || "";
     counter.textContent = links.length > 1 ? "(" + (current + 1) + " av " + links.length + ")" : "";
+    showCredit(link);
     resetZoom();
     if (!dialog.open) dialog.showModal();
     fit();
