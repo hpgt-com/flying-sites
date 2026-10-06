@@ -1,7 +1,7 @@
 ---
 name: Hinnstein
 id: hinnstein
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 666
@@ -63,8 +63,8 @@ launches:
   categories: null
   text: Først og fremst et sted for hangflyging.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Kanskje klubbens beste hang på sørøstlig vind. Rolig, går høyt, og har suveren utsikt over byen.

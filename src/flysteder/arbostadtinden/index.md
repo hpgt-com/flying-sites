@@ -1,7 +1,7 @@
 ---
 name: Årbostadtinden
 id: arbostadtinden
-status: utkast
+status: gjennomgått
 region: Andørja
 external:
   flightlog_id: 9348
@@ -77,8 +77,8 @@ links:
   text: Turbeskrivelse til Årbostadtinden
   url: https://ut.no/turforslag/1112141/arbostadtinden-1179-moh
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Topp på Andørja, med lang tur opp: nesten 1200 høydemeter fra veien.

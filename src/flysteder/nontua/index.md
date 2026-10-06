@@ -1,7 +1,7 @@
 ---
 name: Nontua
 id: nontua
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 745
@@ -80,8 +80,8 @@ launches:
   categories: null
   text: Mulig i lite vind. Bedre NV-start 500 m vestover mot Høgfjellet.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Et av favorittstedene, med utsikt over Andfjorden og fine skliturer på sommerkvelder. Topplanding overalt.

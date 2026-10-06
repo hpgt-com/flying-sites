@@ -1,7 +1,7 @@
 ---
 name: Elgen
 id: elgen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 356
@@ -104,8 +104,8 @@ launches:
   - SPG
   text: SPG tar primært av på sørsiden av Elgen. Mot Ø og SØ er det stupstart øst for østtoppen.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Ytterst i havgapet, med utsikt mot Grytøya og midnattsola. Fjellet dekker de fleste vindretninger, med egne starter for PG og SPG. Flott for soaring og kveldsturer.

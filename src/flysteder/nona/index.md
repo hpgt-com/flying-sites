@@ -1,7 +1,7 @@
 ---
 name: Nona
 id: nona
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 9995
@@ -72,8 +72,8 @@ links:
   text: Nona, 1012 moh
   url: https://kugo.no/2018/07/nona-1012-moh/
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Høyeste topp på Grytøya nord for Harstad, med lang tur opp: rundt 1000 høydemeter fra veien.

@@ -1,7 +1,7 @@
 ---
 name: Ramnskogheia
 id: ramnskogheia
-status: utkast
+status: gjennomgått
 region: Andøya
 external:
   flightlog_id: 9180
@@ -68,8 +68,8 @@ launches:
   - PG
   text: Startbar i alle retninger. Brattere nordover og en del stein.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Mellom Åknes og Risøyhamn på Andøya, startbar i alle retninger.

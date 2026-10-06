@@ -1,7 +1,7 @@
 ---
 name: Keipen
 id: keipen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 889
@@ -72,8 +72,8 @@ launches:
   lon: 16.34286
   source: manuell
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Et av de eldste flystedene, der det ble fløyet med standard rogallo. Hard og kraftig termikk, og høydegevinster på over 1000 m på hang.

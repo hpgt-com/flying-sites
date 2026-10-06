@@ -1,7 +1,7 @@
 ---
 name: Reinebringen
 id: reinebringen
-status: utkast
+status: gjennomgått
 region: Lofoten
 external:
   flightlog_id: 7476
@@ -62,8 +62,8 @@ launches:
   - SPG
   text: Start på lyng i bratt terreng rett til venstre for stien (sett nedenfra).
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Kjent fjell over Reine i Lofoten, med kort og bratt tur opp trappene.

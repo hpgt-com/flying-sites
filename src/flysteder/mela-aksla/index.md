@@ -1,7 +1,7 @@
 ---
 name: Melå aksla
 id: mela-aksla
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 10554
@@ -84,8 +84,8 @@ launches:
   lon: 16.12245
   source: manuell
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Kan levere heftig termikk på de rette dagene.

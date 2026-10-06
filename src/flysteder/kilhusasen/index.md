@@ -1,7 +1,7 @@
 ---
 name: Kilhusåsen
 id: kilhusasen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 354
@@ -58,8 +58,8 @@ launches:
   categories: null
   text: NV er ideell. Hang fra nedre start krever minst 3 m/s.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Kanskje klubbens aller beste sted målt i flytimer. Lett tilgjengelig for alle.

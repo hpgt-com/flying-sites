@@ -1,7 +1,7 @@
 ---
 name: Vetefjellet
 id: vetefjellet
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 5031
@@ -86,8 +86,8 @@ launches:
   categories: null
   text: Mulig, men se østlig vind og synk på Storlitinden-siden.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 På veien opp mot Storlitinden, til høyre for tinden. Et godt alternativ når vinden dreier fra sør mot øst, og med gode muligheter for topplanding.

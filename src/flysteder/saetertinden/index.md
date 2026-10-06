@@ -1,7 +1,7 @@
 ---
 name: Sætertinden
 id: saetertinden
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 1599
@@ -88,8 +88,8 @@ launches:
   - SPG
   text: Fine starter om vinteren, som i seg selv er enkle nok for PP2 og SPG2. Om sommeren er det en del stein, og startene er mer tekniske.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Høyt og flott, nesten 1100 moh, med mange fine landinger i Hårvika.
