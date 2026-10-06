@@ -35,13 +35,13 @@ parking:
   lat: 68.783847
   lon: 16.329384
   source: manuell
-- name: Vinterparkering
+- name: Parkering Kvæfjordløyper
   lat: 68.77866
   lon: 16.33697
   source: manuell
 access:
-  parking_text: Ved Røde Kors-hytta på Kvæfjordeidet. Om vinteren, eller når den er stengt, er det en alternativ parkering ca. 650 m lenger sør.
-  route_text: Stien fra hytta er lett å finne.
+  parking_text: Ved Røde Kors-hytta på Kvæfjordeidet, eller ved Kvæfjordløyper ca. 650 m lenger sør.
+  route_text: Stien fra hytta er lett å finne. Stien fra Kvæfjordløyper brukes mest om vinteren, fordi den parkeringen brøytes.
   routes:
   - file: storlitinden-route-1.gpx
     name: fra Røde Kors-hytta
@@ -49,7 +49,7 @@ access:
     elevation_gain_m: 430
     walk_time_min: 40
   - file: storlitinden-route-2.gpx
-    name: fra vinterparkeringen
+    name: fra Kvæfjordløyper
     km: 2.7
     elevation_gain_m: 440
     walk_time_min: 50
