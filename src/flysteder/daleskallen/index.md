@@ -1,13 +1,13 @@
 ---
 name: Daleskallen
 id: daleskallen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 2471
   pgearth_id: null
   yr_id: 10-1014998
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -44,6 +44,8 @@ elevation:
   source: Kartverket
 airspace: []
 hazards:
+- title: Lavspent under starten
+  text: Det går en lavspentledning under starten, på oversiden av veien. Vær forsiktig.
 - title: Mye vind
   text: Over 7 m/s kan det bli turbulent. Vær obs på høydevind.
 launches:
@@ -52,8 +54,8 @@ launches:
   categories: null
   text: Glimrende hang og termisk hang.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Knallbra sted på vestlige vinder, og det roligste av de tre stedene ved Dale. Vanlig med flyhøyder over 600 moh.

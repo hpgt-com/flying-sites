@@ -1,13 +1,13 @@
 ---
 name: Dale
 id: dale
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 362
   pgearth_id: null
   yr_id: 1-290495
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -46,6 +46,8 @@ elevation:
   source: Kartverket
 airspace: []
 hazards:
+- title: Lavspent under starten
+  text: Det går en lavspentledning under starten, på oversiden av veien. Vær forsiktig.
 - title: Turbulens
   text: 'Ofte mer alvor i turbulensen enn på Trastad. Over 5 m/s: hold litt ekstra i bremsene.'
 launches:
@@ -55,8 +57,8 @@ launches:
   categories: null
   text: Dekker mer sørlige vinder enn Trastad. Etter start kan man dreie nordover mot Daleskallen og henge der.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Avansert sted som kan være vanskelig å lese. Kan gi enorme høydegevinster i lite vind, men også kraftig turbulens.
