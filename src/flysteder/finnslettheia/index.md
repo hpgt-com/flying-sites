@@ -22,8 +22,17 @@ launch:
   lat: 68.67222
   lon: 16.43333
   source: flightlog
-landings: []
-parking: []
+landings:
+- name: Landing
+  lat: 68.65611
+  lon: 16.42806
+  primary: true
+  source: manuell
+parking:
+- name: Parkering
+  lat: 68.65656
+  lon: 16.42087
+  source: manuell
 access:
   parking_text: null
   route_text: null
@@ -31,9 +40,9 @@ access:
   walk_time_min: null
 elevation:
   launch_masl: 502
-  landing_masl: 140
-  difference_m: 362
-  source: Kartverket/flightlog
+  landing_masl: 138
+  difference_m: 364
+  source: Kartverket
 airspace: []
 hazards: []
 launches: []
@@ -50,4 +59,4 @@ Beskrivelse av startområdet mangler.
 
 ## Landing
 
-Samme landing som Storbakkan.
+Samme landing som Storbakkan, ved foten av kollen.

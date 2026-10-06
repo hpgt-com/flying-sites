@@ -33,7 +33,11 @@ landings:
   lon: 16.42806
   primary: true
   source: manuell
-parking: []
+parking:
+- name: Parkering
+  lat: 68.65656
+  lon: 16.42087
+  source: manuell
 access:
   parking_text: null
   route_text: null
