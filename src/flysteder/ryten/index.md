@@ -4,9 +4,9 @@ id: ryten
 status: utkast
 region: Lofoten
 external:
-  flightlog_id: null
+  flightlog_id: 7506
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-275166
 level: null
 training_site: false
 categories:

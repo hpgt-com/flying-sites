@@ -59,6 +59,27 @@
     return svg + "</svg>";
   }
 
+  // En flis i laget under vises først når flisen over på samme sted er lastet. OpenTopoMap laster ofte raskere
+  // enn Kartverket, så uten dette blinker OpenTopoMap fram før Kartverket legger seg over. Laget under har
+  // maxNativeZoom 17, så på zoom 18 dekker én flis under fire fliser over.
+  function showUnderlayAfter(top, under) {
+    var native = under.options.maxNativeZoom;
+    var ready = {};
+    function underKey(c) {
+      var dz = Math.max(0, c.z - native);
+      return (c.x >> dz) + ":" + (c.y >> dz) + ":" + (c.z - dz);
+    }
+    top.on("tileload tileerror", function (ev) {
+      var key = underKey(ev.coords);
+      ready[key] = true;
+      var tile = under._tiles && under._tiles[key];
+      if (tile) tile.el.style.visibility = "";
+    });
+    under.on("tileloadstart", function (ev) {
+      if (!ready[under._tileCoordsToKey(ev.coords)]) ev.tile.style.visibility = "hidden";
+    });
+  }
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
     var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
@@ -77,7 +98,9 @@
     }
     var openTopo = openTopoLayer();
     // Kartverkets fliser er gjennomsiktige utenfor Norge, så OpenTopoMap under fyller ut resten av verden.
-    var topo = L.layerGroup([openTopoLayer(), kartverket]);
+    var underlay = openTopoLayer();
+    showUnderlayAfter(kartverket, underlay);
+    var topo = L.layerGroup([underlay, kartverket]);
     // Satellittbilde fra Sentinel-2 cloudless (EOX), fritt for ikke-kommersiell bruk (CC BY-NC-SA 4.0) uten nøkkel.
     // 10 m oppløsning, så flisene finnes bare til zoom 14 og forstørres over det. Ikke invertert i mørkt tema.
     var satellite = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {

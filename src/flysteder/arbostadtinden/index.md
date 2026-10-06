@@ -4,9 +4,9 @@ id: arbostadtinden
 status: utkast
 region: Andørja
 external:
-  flightlog_id: null
+  flightlog_id: 9348
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-290690
 level: null
 training_site: false
 categories:
