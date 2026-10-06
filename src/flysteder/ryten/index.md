@@ -25,7 +25,12 @@ launch:
   lat: 68.08705
   lon: 13.09203
   source: gpx
-landings: []
+landings:
+- name: Kvalvika
+  lat: 68.071753
+  lon: 13.083026
+  primary: false
+  source: gpx
 parking:
 - name: Parkering
   lat: 68.088712
@@ -35,11 +40,16 @@ access:
   parking_text: null
   route_text: null
   routes:
-  - file: ryten-route.gpx
-    name: null
+  - file: ryten-route-1.gpx
+    name: fra parkeringen
     km: 3.4
     elevation_gain_m: 500
     walk_time_min: 50
+  - file: ryten-route-2.gpx
+    name: fra landingen i Kvalvika
+    km: 4.5
+    elevation_gain_m: 320
+    walk_time_min: 70
 elevation:
   launch_masl: 510
   landing_masl: 0
@@ -72,4 +82,6 @@ Enkelt å finne startplass på toppen, med mange muligheter for en fin start. Ve
 
 ## Landing
 
-Landing på stranda i Kvalvika, på myrene sør for stranda, på Innersand eller i Bergland. Innersand har en løypestreng, så se opp for den. Snakk med grunneieren før du lander i Bergland.
+Landing på stranda i Kvalvika, på myrene sør for stranda, på Innersand eller i Bergland. Innersand har en løypestreng, så se opp for den. Snakk med grunneieren før du lander i Bergland. Avhengig av vinden lander mange også på den første stranda, eller flyr tilbake mot parkeringen.
+
+Fra landingen i Kvalvika går man tilbake til stien man gikk opp, og følger den ned til parkeringen.
