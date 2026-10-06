@@ -273,7 +273,7 @@
   sites.forEach(function (site) {
     var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, "match", false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
     marker.bindTooltip(site.name, { direction: "top", offset: [0, -14] });
-    marker.on("click", function () { select(site.id, "map"); });
+    marker.on("click", function () { FS.track("kart/valgt/" + site.id, site.name); select(site.id, "map"); });
     cluster.addLayer(marker);
     markers[site.id] = marker;
     if (site.region === homeRegion) bounds.push([site.lat, site.lon]);
@@ -480,6 +480,7 @@
   var searchEl = document.getElementById("site-search");
   var searchHitsEl = document.getElementById("search-hits");
   var searchTimer = null;
+  var missTimer = null;
   var MAX_HITS = 6;
   // Opptil MAX_HITS treff som knapper under feltet. Flere treff: bare antallet, de står i listen.
   function renderSearchHits() {
@@ -513,6 +514,12 @@
       writeHash();
       clearTimeout(searchTimer);
       searchTimer = setTimeout(fitToMatches, 350);
+      // Søk som ikke gir treff, telles når man har sluttet å skrive. Viser hvilke steder folk leter etter.
+      clearTimeout(missTimer);
+      missTimer = setTimeout(function () {
+        var q = filter.q.trim().toLowerCase();
+        if (q.length >= 3 && !visibleMatches().length) FS.track("søk/uten treff/" + q);
+      }, 2000);
     });
     searchEl.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape" && searchEl.value) {
@@ -567,9 +574,13 @@
     suggestButton.title = windOn ? "" : "Velg et tidspunkt for vind først";
   }
 
+  var FILTER_NAMES = { direction: "retning", level: "nivå", category: "kategori" };
   document.getElementById("filters").addEventListener("click", function (ev) {
     var button = ev.target.closest("button[data-filter], button[data-wind], button[data-suggest]");
     if (!button) return;
+    if (button.hasAttribute("data-suggest")) FS.track("filter/bare steder som kan passe/" + (suggest ? "av" : "på"));
+    else if (button.hasAttribute("data-wind")) FS.track("filter/vind fra varsel/" + button.textContent.trim());
+    else FS.track("filter/" + FILTER_NAMES[button.getAttribute("data-filter")] + "/" + (button.getAttribute("data-value") || "alle"));
     if (button.hasAttribute("data-suggest")) setSuggest(!suggest);
     else if (button.hasAttribute("data-wind")) { setWind(button.getAttribute("data-wind")); setSuggest(suggest); }
     else setFilter(button.getAttribute("data-filter"), button.getAttribute("data-value"));
@@ -599,7 +610,7 @@
     if (focus) button.focus();
   }
   tabButtons.forEach(function (b, i) {
-    b.addEventListener("click", function () { showTab(b); });
+    b.addEventListener("click", function () { FS.track("fane/" + b.textContent.trim()); showTab(b); });
     b.addEventListener("keydown", function (ev) {
       var step = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
       if (step) { ev.preventDefault(); showTab(tabButtons[(i + step + tabButtons.length) % tabButtons.length], true); }

@@ -111,6 +111,12 @@
     });
     topo.addTo(map);
     map.layersControl = L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo, "Satellitt (Sentinel-2)": satellite }, null, { position: "topright" }).addTo(map);
+    // Bare når noen velger et lag selv. Leaflet sender også baselayerchange når kartet lastes.
+    map.layersControl.getContainer().addEventListener("change", function (ev) {
+      if (!ev.target.checked) return;
+      var label = ev.target.closest("label");
+      track("kartlag/" + (label ? label.textContent.trim() : "ukjent"));
+    });
     // Termikk fra thermal.kk7.ch: statistikk fra loggede flyturer, ikke et varsel. Av som standard.
     // Flisene er i TMS-rekkefølge, og src skal oppgi domenet vårt (vilkår på thermal.kk7.ch).
     ["skyways_all_all", "thermals_all_all"].forEach(function (name, i) {
@@ -173,7 +179,11 @@
     var Fullscreen = L.Control.extend({
       options: { position: "topleft" },
       onAdd: function () {
-        var c = controlButton(function () { setFullscreen(!mapEl.classList.contains("map--fullscreen")); });
+        var c = controlButton(function () {
+          var on = !mapEl.classList.contains("map--fullscreen");
+          if (on) track("fullskjerm" + location.pathname);
+          setFullscreen(on);
+        });
         fullscreenButton = c.button;
         return c.bar;
       },
@@ -419,6 +429,7 @@
       var button = ev.target.closest("button[data-theme-choice]");
       if (!button) return;
       var choice = button.getAttribute("data-theme-choice");
+      track("innstilling/tema/" + choice);
       try {
         if (choice === "auto") localStorage.removeItem("theme");
         else localStorage.setItem("theme", choice);
@@ -446,6 +457,7 @@
   document.querySelectorAll("[data-cvd-toggle]").forEach(function (button) {
     button.addEventListener("click", function () {
       var on = document.documentElement.getAttribute("data-cvd") !== "on";
+      track("innstilling/fargeblindvennlig/" + (on ? "på" : "av"));
       try {
         if (on) localStorage.setItem("cvd", "on");
         else localStorage.removeItem("cvd");
@@ -474,7 +486,28 @@
     });
   });
 
+  // --- Besøksstatistikk for klikk ---
+  // Telles som hendelser i GoatCounter (src/assets/js/goatcounter.js), med navn som «lenke/flightlog.org/flysteder/ryten/».
+  // Gjør ingenting når skriptet ikke er lastet (lokalt, eller blokkert av adblock).
+  function track(name, title) {
+    var gc = window.goatcounter;
+    if (gc && gc.count) gc.count({ path: name, title: title || name, event: true });
+  }
+
+  // Lenker ut (Flightlog, Yr, Windy, IPPC, veibeskrivelse …) og nedlastinger (GPX, GeoJSON, KML), på alle sider.
+  // Midtklikk (auxclick) åpner i ny fane og telles også.
+  function trackLink(ev) {
+    var a = ev.target.closest && ev.target.closest("a[href]");
+    if (!a) return;
+    var text = a.textContent.trim().replace(/\s+/g, " ");
+    if (a.hasAttribute("download")) track("nedlasting" + a.pathname, text + " (" + location.pathname + ")");
+    else if (a.hostname && a.hostname !== location.hostname) track("lenke/" + a.hostname.replace(/^www\./, "") + location.pathname, text);
+  }
+  document.addEventListener("click", trackLink);
+  document.addEventListener("auxclick", trackLink);
+
   window.FlyingSites = {
+    track: track,
     isDark: isDark,
     EXTERNAL_MARK: EXTERNAL_MARK,
     DIRECTIONS: DIRECTIONS,

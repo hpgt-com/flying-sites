@@ -133,6 +133,7 @@
       if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return; // la «åpne i ny fane» virke som vanlig
       ev.preventDefault();
       opener = link;
+      window.FlyingSites.track("bilder" + location.pathname);
       show(index);
     });
   });
@@ -142,6 +143,7 @@
     button.hidden = false;
     button.addEventListener("click", function () {
       opener = button;
+      window.FlyingSites.track("bilder" + location.pathname);
       show(0);
     });
   });
