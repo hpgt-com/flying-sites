@@ -53,10 +53,6 @@ launches:
   categories:
   - PG
   text: Enkelt å finne startplass på toppen.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

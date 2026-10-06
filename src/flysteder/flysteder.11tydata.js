@@ -4,6 +4,7 @@ import { processRoute } from "../../lib/gpx.js";
 import { lastModified } from "../../lib/git.js";
 import { sourceLabel, groupLaunches } from "../../lib/format.js";
 import { processImage } from "../../lib/images.js";
+import { listSiteImages, featuredImages, imageCaption, imageAlt } from "../../lib/site-images.js";
 import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
 import { readDrawing } from "../../lib/drawing.js";
 
@@ -58,22 +59,22 @@ export default {
           url: `/flysteder/${data.id}/${r.file}`,
         });
       }
-      const images = {};
-      const IMAGE_ALT = {
-        takeoff: `Startområdet på ${data.name}`,
-        landing: `Landingen ved ${data.name}`,
-        overview: `Oversiktsbilde av ${data.name}`,
-      };
-      for (const field of Object.keys(IMAGE_ALT)) {
-        const file = data.images?.[field];
-        if (!file) continue;
-        images[field] = await processImage(dir, data.id, field, file, {
-          alt: IMAGE_ALT[field],
+      // Alle bildene i mappen, funnet ut fra filnavnet (lib/site-images.js), i visningsrekkefølge.
+      // Siden viser første oversiktsbilde, første start og første landing. Resten vises i bildevisningen.
+      const found = listSiteImages(dir, data.id).images;
+      const featured = featuredImages(found);
+      const images = [];
+      for (const [index, img] of found.entries()) {
+        const slot = featured.indexOf(img);
+        const alt = imageAlt(img, data.name);
+        const processed = await processImage(dir, img.file, {
+          alt,
           outputDir: data.eleventy.directories.output,
-          // Bilder-blokken i høyre kolonne (site.njk): oversiktsbildet stort over hele kolonnen, start og landing
+          // Bilder-blokken i høyre kolonne (site.njk): det første bildet stort over hele kolonnen, de to neste
           // halvparten under. På mobil er siden høyst 640 px bred.
-          sizes: field === "overview" ? "(min-width: 1024px) 400px, (min-width: 640px) 608px, 100vw" : "(min-width: 1024px) 200px, (min-width: 640px) 304px, 50vw",
+          sizes: slot === 0 ? "(min-width: 1024px) 400px, (min-width: 640px) 608px, 100vw" : "(min-width: 1024px) 200px, (min-width: 640px) 304px, 50vw",
         });
+        images.push({ ...processed, ...img, index, alt, caption: imageCaption(img), featured: slot !== -1 });
       }
 
       // Luftrom hentet fra openAIP med `npm run airspace`. null hvis stedet ikke er hentet ennå.

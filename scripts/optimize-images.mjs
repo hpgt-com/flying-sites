@@ -1,15 +1,15 @@
 // Bilder til stedsmappene.
 //
 //   npm run images                                   Sjekker alle bilder og retter de som er for store eller har GPS-data.
-//   npm run images -- <id> <felt> <fil> [--replace]  Importerer et nytt bilde, f.eks.
-//   npm run images -- sollifjellet takeoff "C:/Users/deg/Downloads/IMG_1234.jpg"
 //   npm run images -- <filer eller mapper> [--replace]  Importerer bilder navngitt etter konvensjonen
 //   npm run images -- "C:/Bilder/Storlitinden_Takeoff_SE_1_DSC04968.jpg"     (se lib/photo-name.js):
 //   npm run images -- "C:/Bilder/flysteder"                                   sted og type leses fra navnet.
+//   npm run images -- <id> <felt> <fil> [--replace]  Importerer ett bilde uten konvensjonen, f.eks.
+//   npm run images -- sollifjellet takeoff "C:/Users/deg/Downloads/IMG_1234.jpg"   (får neste ledige nummer)
 //
 // Felt: takeoff, landing, overview. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
-// kameraet rettes opp, og metadata (EXIF, GPS) fjernes. Importen skriver aldri i stedsfilen, den skriver
-// bare ut linjen som skal inn under `images:`.
+// kameraet rettes opp, og metadata (EXIF, GPS) fjernes. Bildet lagres i stedsmappen med navnet bygget leter
+// etter (lib/site-images.js), f.eks. storlitinden-takeoff-se-1.jpg. Stedsfilen endres ikke.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -18,12 +18,12 @@ import { createRequire } from "node:module";
 import { MAX_ORIGINAL_BYTES, MAX_ORIGINAL_SIDE } from "../lib/images.js";
 import { looksLikePhotoName, parsePhotoName } from "../lib/photo-name.js";
 import { creditFor, exifFor, hasCredit, xmpFor } from "../lib/photo-credit.js";
+import { IMAGE_FIELDS, listSiteImages, repoImageName } from "../lib/site-images.js";
 
 const yaml = createRequire(import.meta.url)("js-yaml");
 
 const SITES_DIR = "src/flysteder";
 const IMAGE_FILE = /\.(jpe?g|png|webp)$/i;
-const FIELDS = ["takeoff", "landing", "overview"];
 
 // På Windows holder sharp-cachen filen åpen, så den kan ikke skrives over. Vi leser alt inn i minnet.
 sharp.cache(false);
@@ -69,32 +69,37 @@ function fail(message) {
 }
 
 // Gir false i stedet for å avslutte når kalt med { soft: true }, så mange bilder kan importeres i én kjøring.
-async function importImage(siteId, field, sourcePath, replace, { soft = false } = {}) {
+// photo: { siteId, field, direction, category, nr }. Uten nr brukes neste ledige nummer for feltet.
+async function importImage(photo, sourcePath, replace, { soft = false } = {}) {
   const stop = (message) => { if (soft) { console.log(message); return false; } fail(message); };
+  const { siteId, field } = photo;
   const siteDir = path.join(SITES_DIR, siteId);
   if (!fs.existsSync(path.join(siteDir, "index.md"))) fail(`Fant ikke stedet «${siteId}» (${siteDir}/index.md).`);
-  if (!FIELDS.includes(field)) fail(`Ukjent felt «${field}». Bruk ett av: ${FIELDS.join(", ")}.`);
+  if (!IMAGE_FIELDS.includes(field)) fail(`Ukjent felt «${field}». Bruk ett av: ${IMAGE_FIELDS.join(", ")}.`);
   if (!fs.existsSync(sourcePath)) fail(`Fant ikke bildet ${sourcePath}.`);
 
+  const existing = listSiteImages(siteDir, siteId).images;
+  const nr = photo.nr ?? 1 + Math.max(0, ...existing.filter((i) => i.field === field).map((i) => i.nr));
+  const name = repoImageName({ ...photo, nr });
   const format = path.extname(sourcePath).toLowerCase() === ".png" ? ".png" : ".jpg";
-  const target = path.join(siteDir, `${siteId}-${field}${format}`);
-  const others = FIELDS.includes(field) && fs.readdirSync(siteDir).filter((f) => f.startsWith(`${siteId}-${field}.`) && path.join(siteDir, f) !== target);
-  if ((fs.existsSync(target) || others.length) && !replace) {
-    return stop(`${siteId} har allerede et ${field}-bilde. Legg til --replace for å bytte det ut.`);
+  const target = path.join(siteDir, name + format);
+  // Samme bilde med annen filtype regnes også som det samme bildet.
+  const same = fs.readdirSync(siteDir).filter((f) => path.parse(f).name === name).map((f) => path.join(siteDir, f));
+  if (same.length && !replace) {
+    return stop(`${path.basename(same[0])} finnes allerede. Legg til --replace for å bytte det ut.`);
   }
 
   const input = fs.readFileSync(sourcePath);
   const before = await sharp(input).metadata();
   const output = await optimize(input, format);
-  for (const f of others) fs.unlinkSync(path.join(siteDir, f)); // gammelt bilde med annen filtype
+  for (const f of same) if (f !== target) fs.unlinkSync(f);
   fs.writeFileSync(target, output);
   const after = await sharp(output).metadata();
 
   console.log(`${sourcePath}: ${before.width}×${before.height} px, ${kb(input.length)}`);
   console.log(`→ ${target}: ${after.width}×${after.height} px, ${kb(output.length)}, uten GPS og kameradata, med fotograf og lisens`);
   if (after.width < 1000) console.log(`Merk: bildet er bare ${after.width} px bredt og kan se uskarpt ut.`);
-  if (soft) return path.basename(target);
-  console.log(`\nLegg inn dette under \`images:\` i ${siteDir}/index.md:\n  ${field}: ${path.basename(target)}`);
+  return path.basename(target);
 }
 
 function readSites() {
@@ -106,70 +111,38 @@ function readSites() {
     });
 }
 
-// Setter `images.<field>: <fil>` i stedsfilen. Endrer bare den ene linjen (eller legger den til), og sjekker
-// etterpå at front matter fortsatt er gyldig YAML med riktig verdi.
-function setImageInSiteFile(siteId, field, file) {
-  const mdPath = path.join(SITES_DIR, siteId, "index.md");
-  const text = fs.readFileSync(mdPath, "utf8");
-  const end = text.indexOf("\n---", 4);
-  let fm = text.slice(0, end);
-  const line = `  ${field}: ${file}`;
-  if (/^images:\s*$/m.test(fm)) {
-    const block = /^images:\s*\n((?:  .*\n?)*)/m.exec(fm);
-    const fieldLine = new RegExp(`^  ${field}:.*$`, "m");
-    const body = fieldLine.test(block[1]) ? block[1].replace(fieldLine, line) : block[1].replace(/\n?$/, "\n") + line + "\n";
-    fm = fm.replace(block[0], "images:\n" + body.replace(/\n+$/, "\n"));
-  } else {
-    fm = fm.replace(/\n?$/, "\n") + `images:\n${line}`;
-  }
-  const next = fm.replace(/\n+$/, "") + text.slice(end);
-  const parsed = yaml.load(/^---\r?\n([\s\S]*?)\r?\n---/.exec(next)[1]);
-  if (parsed.images?.[field] !== file) throw new Error(`Klarte ikke å oppdatere images.${field} i ${mdPath}. Legg inn linjen selv: ${line}`);
-  fs.writeFileSync(mdPath, next);
-}
-
-// Importerer bilder navngitt etter konvensjonen. Siden viser foreløpig ett bilde per type (start, landing,
-// oversikt), så for hver type på hvert sted brukes bildet med lavest nummer. Vanlige landinger går foran
-// SPG-landinger. De andre hoppes over.
+// Importerer alle bildene navngitt etter konvensjonen. Type, retning, SPG og nummer fra navnet blir med i
+// filnavnet i repoet, så Storlitinden_Takeoff_SE_2_DSC04970.jpg blir storlitinden-takeoff-se-2.jpg.
 async function importNamed(paths, replace) {
   const sites = readSites();
   const files = paths.flatMap((p) => (fs.statSync(p).isDirectory()
     ? fs.readdirSync(p).filter((f) => looksLikePhotoName(f)).map((f) => path.join(p, f))
     : [p]));
-  const errors = [], chosen = new Map(), skipped = [];
+  const errors = [], photos = [], seen = new Map();
   for (const file of files) {
     try {
       const photo = parsePhotoName(path.basename(file), sites);
-      const key = `${photo.siteId}/${photo.field}`;
-      const current = chosen.get(key);
-      const rank = (p) => [p.category ? 1 : 0, p.nr];
-      const better = (a, b) => rank(a)[0] - rank(b)[0] || rank(a)[1] - rank(b)[1];
-      if (!current || better(photo, current.photo) < 0) {
-        if (current) skipped.push(current.file);
-        chosen.set(key, { file, photo });
-      } else skipped.push(file);
+      const name = repoImageName(photo);
+      if (seen.has(name)) throw new Error(`${path.basename(file)} og ${path.basename(seen.get(name))} blir begge ${name}. Gi et av dem et annet nummer.`);
+      seen.set(name, file);
+      photos.push({ file, photo });
     } catch (err) {
       errors.push(err.message);
     }
   }
-  for (const { file, photo } of chosen.values()) {
-    console.log(`\n${photo.siteName}, ${photo.type}${photo.direction ? " " + photo.direction : ""}${photo.category ? " " + photo.category : ""}:`);
-    const target = await importImage(photo.siteId, photo.field, file, replace, { soft: true });
-    if (target) {
-      setImageInSiteFile(photo.siteId, photo.field, target);
-      console.log(`Lagt inn i ${SITES_DIR}/${photo.siteId}/index.md: images.${photo.field}: ${target}`);
-    }
-  }
-  if (skipped.length) {
-    console.log(`\nIkke importert (siden viser foreløpig ett bilde per type: lavest nummer, og vanlig landing foran SPG-landing):`);
-    for (const f of skipped) console.log(`  ${path.basename(f)}`);
-  }
   if (errors.length) {
-    console.error(`\n${errors.length} bilde(r) har feil navn og ble ikke importert:`);
+    console.error(`${errors.length} bilde(r) har feil navn. Ingenting er importert:`);
     for (const e of errors) console.error(`  ${e}`);
     process.exit(1);
   }
+  let imported = 0, skipped = 0;
+  for (const { file, photo } of photos) {
+    console.log(`\n${photo.siteName}, ${photo.type}${photo.direction ? " " + photo.direction : ""}${photo.category ? " " + photo.category : ""} ${photo.nr}:`);
+    if (await importImage(photo, file, replace, { soft: true })) imported++;
+    else skipped++;
+  }
   if (!files.length) console.log("Fant ingen bilder navngitt etter konvensjonen (se lib/photo-name.js).");
+  else console.log(`\n${imported} bilde(r) importert${skipped ? `, ${skipped} fantes fra før (bruk --replace for å bytte dem ut)` : ""}.`);
 }
 
 async function checkAll(files) {
@@ -203,7 +176,7 @@ const positional = args.filter((a) => a !== "--replace");
 // Andre filer (som stedsmappenes egne bilder) sjekkes og krympes.
 const isNamedImport = (p) => fs.existsSync(p) && (fs.statSync(p).isDirectory() || looksLikePhotoName(path.basename(p)));
 if (positional.length === 3 && !fs.existsSync(positional[0])) {
-  await importImage(positional[0], positional[1], positional[2], replace);
+  await importImage({ siteId: positional[0], field: positional[1] }, positional[2], replace);
 } else if (positional.length && positional.every(isNamedImport)) {
   await importNamed(positional, replace);
 } else if (positional.length) {

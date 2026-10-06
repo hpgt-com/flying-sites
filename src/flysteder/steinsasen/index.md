@@ -55,10 +55,6 @@ launches:
   - SW
   categories: null
   text: Godt skjermet li som kan gi utrolig bra termikk om sommeren.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

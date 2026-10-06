@@ -85,10 +85,6 @@ launches:
   - E
   categories: null
   text: Mulig, men se østlig vind og synk på Storlitinden-siden.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

@@ -55,10 +55,6 @@ launches:
   categories:
   - PG
   text: Fine startforhold mot Ø.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

@@ -57,10 +57,6 @@ launches:
   categories:
   - PG
   text: Kan starte i alle retninger fra toppen, men primært mot V, NV, N, NØ og Ø med tanke på landing nær veien.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 links:
 - title: ut.no
   text: Turbeskrivelse til Årbostadtinden

@@ -4,7 +4,12 @@
 (function () {
   "use strict";
 
+  // Rekkefølgen i bildevisningen (data-lightbox-index): alle oversiktsbilder, så start, så landing. Bildene som
+  // ikke vises på siden, er skjulte lenker etter rutenettet.
   var links = Array.prototype.slice.call(document.querySelectorAll("a[data-lightbox]"));
+  links.sort(function (a, b) {
+    return Number(a.getAttribute("data-lightbox-index")) - Number(b.getAttribute("data-lightbox-index"));
+  });
   if (!links.length || typeof HTMLDialogElement !== "function") return;
 
   var dialog = document.createElement("dialog");
@@ -85,12 +90,16 @@
     source.srcset = srcsetFor(link, "data-srcset-webp");
     image.srcset = srcsetFor(link, "data-srcset-jpeg");
     image.src = link.getAttribute("href");
-    image.alt = thumb ? thumb.alt : "";
+    image.alt = thumb ? thumb.alt : link.getAttribute("data-alt") || "";
     text.textContent = link.getAttribute("data-caption") || "";
     counter.textContent = links.length > 1 ? "(" + (current + 1) + " av " + links.length + ")" : "";
     showCredit(link);
     resetZoom();
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) {
+      dialog.showModal();
+      // Fokus på lukkeknappen, ikke på fotografens lenke, som byttes ut når man blar.
+      dialog.querySelector(".lightbox__close").focus();
+    }
     fit();
     if (links.length > 1) {
       preload(current + 1);
@@ -128,6 +137,15 @@
     });
   });
 
+  // «Se alle N bilder» åpner bildevisningen på første bilde.
+  Array.prototype.forEach.call(document.querySelectorAll("[data-lightbox-all]"), function (button) {
+    button.hidden = false;
+    button.addEventListener("click", function () {
+      opener = button;
+      show(0);
+    });
+  });
+
   dialog.querySelector(".lightbox__close").addEventListener("click", function () { dialog.close(); });
   dialog.querySelector(".lightbox__prev").addEventListener("click", function () { show(current - 1); });
   dialog.querySelector(".lightbox__next").addEventListener("click", function () { show(current + 1); });
@@ -140,7 +158,9 @@
     if (ev.target === dialog || ev.target.classList.contains("lightbox__figure")) dialog.close();
   });
 
-  dialog.addEventListener("keydown", function (ev) {
+  // På dokumentet, ikke dialogen: piltastene skal virke selv om fokus har falt ut av visningen.
+  document.addEventListener("keydown", function (ev) {
+    if (!dialog.open) return;
     if (ev.key === "ArrowLeft") show(current - 1);
     else if (ev.key === "ArrowRight") show(current + 1);
   });

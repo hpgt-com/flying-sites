@@ -62,10 +62,6 @@ launches:
   - SE
   categories: null
   text: Subbhang i de rette forholdene. Du kan henge i svært svak vind, helst S–SØ.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

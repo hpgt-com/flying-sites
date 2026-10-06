@@ -138,10 +138,6 @@ launches:
   - SW
   categories: null
   text: Ikke egnet, men mulig i svak vind med krabbevinkel fra toppen eller i bakvind. Går lettere med ski om vinteren.
-images:
-  takeoff: sollifjellet-takeoff.jpg
-  landing: sollifjellet-landing.jpg
-  overview: sollifjellet-overview.jpg
 links:
 - title: Sollifjellet alpinsenter
   text: Åpningstider for heisen

@@ -57,10 +57,6 @@ launches:
   - NW
   categories: null
   text: NV er ideell. Hang fra nedre start krever minst 3 m/s.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null
