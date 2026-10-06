@@ -16,7 +16,7 @@
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
 {#- Første bilde i rekkefølgen: oversiktsbilde nr 1, ellers start eller landing. -#}
 {%- set ownImage = derived.images[0] if (derived and derived.images and derived.images.length) else null -%}
-{%- set shareImage = ownImage.shareUrl if ownImage else "/assets/img/share.jpg" -%}
+{%- set shareImage = ownImage.shareUrl if ownImage else ("/assets/img/share.jpg" | asset) -%}
 <title>{{ pageTitle }}</title>
 {% if pageDescription %}<meta name="description" content="{{ pageDescription }}">{% endif %}
 {#- Forhåndsvisning når lenken deles på Facebook, Messenger osv. Adressene må være absolutte. -#}
