@@ -7,25 +7,27 @@ external:
   flightlog_id: 889
   pgearth_id: 9712
   yr_id: 1-293880
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
 season: Vår
 wind_directions:
   primary:
+  - S
   - SW
   - W
-  possible: []
+  possible:
+  - SE
   source: flightlog/lokalkunnskap
 launch:
   lat: 68.85639
   lon: 16.33556
   source: flightlog
 landings:
-- name: Landing
-  lat: 68.83417
-  lon: 16.34528
+- name: Landing Kasfjord
+  lat: 68.83392
+  lon: 16.3468
   primary: true
   source: manuell
 parking:
@@ -34,7 +36,7 @@ parking:
   lon: 16.355342
   source: gpx
 access:
-  parking_text: null
+  parking_text: Der stien opp starter.
   route_text: null
   routes:
   - file: keipen-route.gpx
@@ -44,21 +46,30 @@ access:
     walk_time_min: 30
 elevation:
   launch_masl: 475
-  landing_masl: 3
-  difference_m: 472
+  landing_masl: 5
+  difference_m: 470
   source: Kartverket
 airspace: []
 hazards:
 - title: Krevende forhold
   text: Sjelden rolig, fordi fjellene på andre siden er høye og bratte. Termikken kan være hard.
-- title: Starter på toppen
-  text: Bratte og kuperte med kort løpeplass. For viderekomne.
+- title: Stupstart på toppen
+  text: Startene på toppen er bratte og kuperte, med kort løpeplass. Derfor PP3.
 launches:
 - directions:
   - SW
   - W
   categories: null
   text: Nedre start opp mot skogkanten over Kasfjord er litt ulendt, men går greit i litt vind.
+- directions:
+  - S
+  - SW
+  categories:
+  - PG
+  text: Alternativ start for S og SV. I SØ blir det litt rotete.
+  lat: 68.85193
+  lon: 16.34286
+  source: manuell
 reviewed:
   by: null
   date: null
@@ -72,4 +83,4 @@ To starter: nedre på markene over Kasfjord, og øvre på toppen av Keipen.
 
 ## Landing
 
-Landing i Kasfjord.
+Landing på jordet i Kasfjord, samme som hovedlandingen for Nontua.
