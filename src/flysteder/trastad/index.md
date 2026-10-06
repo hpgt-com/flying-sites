@@ -53,8 +53,8 @@ hazards:
   text: Jordet rett nedenfor busskuret på Trastad må det ikke landes på. Kontakt noen i klubben om landing før du flyr.
 - title: Rotor fra Kveøya
   text: 'Kveøya ligger på tvers et par km foran, så flygingen foregår i en slags rotor. Over 6 m/s kan det bli farlig turbulens. Mye vindrosser på fjorden: ikke fly.'
-- title: Lavt over skog, hus og ledninger
-  text: Hanget går langt ut over havet, så det kan være teknisk å komme seg ned. Får du ikke løft på hanget, flyr du ganske lavt ned mot jordene ved havet, over skog, hus og ledninger.
+- title: Teknisk nedflyging
+  text: Hanget går langt ut over havet. Uten løft blir det lavt over skog, hus og ledninger ned mot landingen.
 launches:
 - directions:
   - SW
@@ -70,7 +70,7 @@ Et av de mest brukte stedene i Kvæfjord, hogd ut rett over Trastadsenteret. Spe
 
 ## Start
 
-Starten er lett å komme seg opp til. Her flys det bare på hang, og stedet er PP3, fordi det kan være teknisk å komme seg ned til landingen.
+Starten er lett å komme seg opp til. Flys bare på hang.
 
 ## Landing
 
