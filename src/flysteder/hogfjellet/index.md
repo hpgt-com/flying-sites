@@ -54,10 +54,6 @@ hazards:
 - title: Høyspent over landingsjordet
   text: Jordet som tidligere er brukt til landing har en høyspentlinje omtrent midt over.
 launches: []
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

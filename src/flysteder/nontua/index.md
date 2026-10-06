@@ -57,10 +57,6 @@ launches:
   - NW
   categories: null
   text: Mulig i lite vind. Bedre NV-start 500 m vestover mot Høgfjellet.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

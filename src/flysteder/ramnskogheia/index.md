@@ -67,10 +67,6 @@ launches:
   categories:
   - PG
   text: Startbar i alle retninger. Brattere nordover og en del stein.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

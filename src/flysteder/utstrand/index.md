@@ -39,10 +39,6 @@ hazards:
 - title: Lavt og røft
   text: Kan gi hærjing, flaks og kollaps.
 launches: []
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

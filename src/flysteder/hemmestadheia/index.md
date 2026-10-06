@@ -42,10 +42,6 @@ launches:
   - W
   categories: null
   text: Fjellet ligger parallelt med Gullesfjorden, så vinden står sjelden rett på.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

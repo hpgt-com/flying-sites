@@ -47,10 +47,6 @@ launches:
   - NW
   categories: null
   text: Hang og termisk hang.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

@@ -18,7 +18,7 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 | Hvor | Hva |
 |---|---|
 | `src/flysteder/<id>/index.md` | Ett flysted: strukturerte data øverst (front matter), tekst under |
-| `src/flysteder/<id>/` | Bilder (`<id>-takeoff.jpg`, `-landing`, `-overview`), gangruter (`<id>-route.gpx`) og tegning til kartet (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`) |
+| `src/flysteder/<id>/` | Bilder (`<id>-overview-1.jpg`, `<id>-takeoff-se-1.jpg`, `<id>-landing-1.jpg`, `<id>-landing-spg-1.jpg`), gangruter (`<id>-route.gpx`) og tegning til kartet (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`) |
 | `src/_data/` | Tårn (`towers.json`), felles vindgrenser (`windRules.json`), vindvarsel (`forecast.js`) og mellomlagret luftrom |
 | `src/_includes/` | Sidemaler for forsiden og stedssidene |
 | `src/assets/` | CSS, JavaScript og bilder |
@@ -45,7 +45,7 @@ Andre kommandoer:
 | `npm run build` | Bygger siden til `_site/` |
 | `npm test` | Tester vindvurderingen, valideringen og tegningene |
 | `npm run images` | Sjekker alle bilder (størrelse, GPS-data) og krymper dem ved behov |
-| `npm run images -- <filer eller mappe>` | Importerer bilder navngitt etter konvensjonen, f.eks. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (se SPEC), og fører dem inn i stedsfilen |
+| `npm run images -- <filer eller mappe>` | Importerer bilder navngitt etter konvensjonen, f.eks. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (se SPEC). Alle bildene importeres, og bygget finner dem ut fra filnavnet |
 | `npm run images -- <id> <felt> <fil>` | Importerer ett bilde til et sted med riktig navn og størrelse |
 | `npm run airspace` | Henter luftrom fra openAIP (krever `OPENAIP_API_KEY`) |
 

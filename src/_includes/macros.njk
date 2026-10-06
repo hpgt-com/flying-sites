@@ -76,9 +76,10 @@
 </div>
 {%- endmacro %}
 
-{#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet. -#}
-{% macro lightboxLink(image, caption) -%}
-<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}"{% if image.credit %} data-credit="{{ image.credit.creator }}" data-credit-url="{{ image.credit.url or '' }}" data-license="{{ image.credit.license }}" data-license-url="{{ image.credit.licenseUrl }}"{% endif %}>{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span></a>
+{#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet.
+    Med thumb=false lages en skjult lenke uten bilde, som bare finnes i bildevisningen («Se alle N bilder»). -#}
+{% macro lightboxLink(image, caption, thumb=true) -%}
+<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-lightbox-index="{{ image.index }}" data-alt="{{ image.alt }}"{% if not thumb %} hidden tabindex="-1"{% endif %} data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}"{% if image.credit %} data-credit="{{ image.credit.creator }}" data-credit-url="{{ image.credit.url or '' }}" data-license="{{ image.credit.license }}" data-license-url="{{ image.credit.licenseUrl }}"{% endif %}>{% if thumb %}{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span>{% endif %}</a>
 {%- endmacro %}
 
 {#- Merking av lenker som åpnes i ny fane: ↗-symbol, og tekst som bare skjermlesere leser opp. -#}

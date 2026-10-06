@@ -58,10 +58,6 @@ launches:
   - SE
   categories: null
   text: Øststarten, med passe helning og mose og gress.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

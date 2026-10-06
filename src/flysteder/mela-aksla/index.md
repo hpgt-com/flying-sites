@@ -50,10 +50,6 @@ elevation:
 airspace: []
 hazards: []
 launches: []
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

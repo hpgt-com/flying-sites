@@ -294,28 +294,32 @@ scripts:
         </nav>
       </section>
 
-      {#- 8. Bilder: oversiktsbildet (Aerial: fra luften, fra landingen mot starten eller utsikt fra starten) stort øverst
-          (samme som forhåndsbildet når siden deles), start og landing under.
-          Mangler noen, vises bare de som finnes, og én linje om å sende inn bilder. -#}
-      {%- set shown = [] -%}
-      {%- for field, caption in [["overview", "Oversikt"], ["takeoff", "Start"], ["landing", "Landing"]] -%}
-      {%- if derived.images[field] %}{% set shown = (shown.push({ image: derived.images[field], caption: caption }), shown) %}{% endif -%}
-      {%- endfor %}
+      {#- 8. Bilder: første oversiktsbilde (fra luften, fra landingen mot starten eller utsikt fra starten) stort øverst
+          (samme som forhåndsbildet når siden deles), første start og første landing under. Har stedet flere bilder,
+          åpner «Se alle N bilder» bildevisningen med alle, i rekkefølgen oversikt, start, landing.
+          Mangler noen typer, vises bare de som finnes, og én linje om å sende inn bilder. -#}
+      {%- set shown = derived.images | selectattr("featured") | list -%}
+      {%- set extra = derived.images | rejectattr("featured") | list -%}
       <section class="block block--images" aria-labelledby="h-images">
         <h2 id="h-images">Bilder</h2>
         {% if shown.length %}
         <div class="image-grid">
-          {% for item in shown %}
+          {% for image in shown %}
           <figure>
-            {{ m.lightboxLink(item.image, item.caption) }}
-            <figcaption>{{ item.caption }}</figcaption>
+            {{ m.lightboxLink(image, image.caption) }}
+            <figcaption>{{ image.caption }}</figcaption>
           </figure>
           {% endfor %}
         </div>
         {% endif %}
+        {% if extra.length %}
+        {#- Knappen vises av lightbox.js. Uten JavaScript finnes bare bildene over. -#}
+        <button type="button" class="big-btn images-all" data-lightbox-all hidden><span>Se alle {{ derived.images.length }} bilder</span></button>
+        {% for image in extra %}{{ m.lightboxLink(image, image.caption, false) }}{% endfor %}
+        {% endif %}
         {#- Fotografene og lisensen, én gang per fotograf. Står også i bildenes metadata og i bildevisningen. -#}
         {%- set creators = [] -%}{%- set creatorNames = [] -%}
-        {%- for item in shown %}{% if item.image.credit and not (item.image.credit.creator in creatorNames) %}{% set creatorNames = (creatorNames.push(item.image.credit.creator), creatorNames) %}{% set creators = (creators.push(item.image.credit), creators) %}{% endif %}{% endfor %}
+        {%- for image in derived.images %}{% if image.credit and not (image.credit.creator in creatorNames) %}{% set creatorNames = (creatorNames.push(image.credit.creator), creatorNames) %}{% set creators = (creators.push(image.credit), creators) %}{% endif %}{% endfor %}
         {% if creators.length %}
         <p class="images-credit">Foto: {% for c in creators %}{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.creator }}</a>{% else %}{{ c.creator }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %} · <a href="{{ creators[0].licenseUrl }}" target="_blank" rel="noopener">{{ creators[0].license }}</a></p>
         {% endif %}

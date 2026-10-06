@@ -96,10 +96,6 @@ launches:
   - NW
   categories: null
   text: Hang på baksiden er mulig. Pass på rotoren på vei ned.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

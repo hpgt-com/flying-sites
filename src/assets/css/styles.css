@@ -742,6 +742,8 @@ p { margin: 0; }
   position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 6px;
   background: rgba(28, 43, 51, 0.78); color: #FFFFFF; font-size: 13px; font-weight: 600; pointer-events: none;
 }
+.images-all { width: 100%; margin-top: 8px; min-height: 44px; font: inherit; cursor: pointer; }
+.images-all[hidden] { display: none; }
 .images-missing { font-size: 14px; color: var(--muted); }
 .images-credit { font-size: 13px; color: var(--muted); }
 

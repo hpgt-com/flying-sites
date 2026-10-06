@@ -51,10 +51,6 @@ launches:
   - NW
   categories: null
   text: Greit hang, med muligheter for å komme seg høyt.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

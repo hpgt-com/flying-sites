@@ -55,10 +55,6 @@ launches:
   categories:
   - PG
   text: Start på lyng i bratt terreng rett til venstre for stien (sett nedenfra).
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

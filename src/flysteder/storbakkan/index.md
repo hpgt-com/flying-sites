@@ -59,10 +59,6 @@ launches:
   - E
   categories: null
   text: Mulig, men se Før du starter.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null

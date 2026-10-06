@@ -64,10 +64,6 @@ launches:
   - W
   categories: null
   text: Det kan flys hang på baksiden.
-images:
-  takeoff: null
-  landing: null
-  overview: null
 reviewed:
   by: null
   date: null
