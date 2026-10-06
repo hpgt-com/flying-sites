@@ -7,7 +7,7 @@ external:
   flightlog_id: 355
   pgearth_id: null
   yr_id: 1-294135
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
@@ -26,10 +26,15 @@ launch:
   lon: 16.51028
   source: flightlog
 landings:
-- name: Landing
+- name: Landing Medkilabanen
   lat: 68.76222
   lon: 16.54333
   primary: true
+  source: manuell
+- name: Parkeringsplassen ved Medkila skole
+  lat: 68.75897
+  lon: 16.5435
+  primary: false
   source: manuell
 parking:
 - name: Parkering
@@ -52,8 +57,8 @@ elevation:
   source: Kartverket
 airspace: []
 hazards:
-- title: Trang landing
-  text: Landingen rundt Medkilabanen er trang. Pass på lysmastene og kablene mellom dem. Landing ved Medkilaosen er også trang, befaring anbefales.
+- title: Teknisk landing
+  text: Fotballbanen på Medkila kan være trang å lande på, og termisk på rette dager. Pass på lysmastene og kablene mellom dem. Alternativ landing på parkeringsplassen ved Medkila skole har lyktestolper rundt og er vanskelig om det står biler der. Barnehage og barneskole ligger like ved.
 launches:
 - directions:
   - E
@@ -79,4 +84,4 @@ Startplass ved varden. Litt steinete underlag, så pass på linene.
 
 ## Landing
 
-Vanligvis rundt Medkilabanen, eller nede ved Medkilaosen.
+Hovedlandingen er fotballbanen på Medkila (Medkilabanen). Alternativt på parkeringsplassen ved Medkila skole, som også er landingen for Hinnstein. Landing nede ved Medkilaosen er trang, så befaring anbefales.
