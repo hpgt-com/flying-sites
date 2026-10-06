@@ -27,9 +27,9 @@ launch:
   lon: 16.33889
   source: flightlog
 landings:
-- name: Landing Kasfjord (ca.)
-  lat: 68.83454
-  lon: 16.34596
+- name: Landing Kasfjord
+  lat: 68.83392
+  lon: 16.3468
   primary: true
   source: manuell
 - name: Landing Sjurdalen
