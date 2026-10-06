@@ -46,10 +46,19 @@ parking:
   lat: 68.83283
   lon: 16.3491
   source: manuell
+- name: Parkering ved traktorveien over Kaltdalen
+  lat: 68.81808
+  lon: 16.367899
+  source: gpx
 access:
   parking_text: Ved Kasfjord kirkegård på Høgda, som gir kortest gangavstand til toppen. Alternativt ved Kasfjord Montessoribarnehage.
   route_text: Ta av på kjerreveien sørover inn i dalen, og gå rett opp. Bratt, ca. 45 grader hele veien. Roligere via Sjurdalen.
-  routes: []
+  routes:
+  - file: nontua-route.gpx
+    name: fra traktorveien over Kaltdalen
+    km: 1.5
+    elevation_gain_m: 410
+    walk_time_min: 35
   walk_time_min: null
 elevation:
   launch_masl: 564
