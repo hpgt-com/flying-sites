@@ -6,7 +6,7 @@ region: Harstad og Kvæfjord
 external:
   flightlog_id: 1953
   pgearth_id: null
-  yr_id: 10-1093809
+  yr_id: 1-294082
 level: PP2
 training_site: false
 categories:
@@ -52,7 +52,7 @@ reviewed:
   date: '2026-10-06'
 ---
 
-Blant de beste termikkgeneratorene i området, ofte med hang samtidig. Samme retning som Kilhusåsen, men lengre å gå.
+Blant de beste termikkgeneratorene i området, ofte med hang samtidig. Lite brukt, siden Kilhusåsen gir enklere gange på NV. Har du gått opp hit, send gjerne GPX-sporet til klubben.
 
 ## Start
 

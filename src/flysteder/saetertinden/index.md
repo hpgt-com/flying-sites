@@ -47,12 +47,12 @@ access:
   routes:
   - file: saetertinden-route-1.gpx
     name: hovedruta
-    km: 5.9
+    km: 5.6
     elevation_gain_m: 1080
     walk_time_min: 115
   - file: saetertinden-route-2.gpx
     name: via sørsiden
-    km: 5.7
+    km: 4.7
     elevation_gain_m: 1100
     walk_time_min: 110
 elevation:

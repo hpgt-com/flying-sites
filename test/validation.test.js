@@ -30,3 +30,10 @@ test("bare lat eller bare lon stopper bygget", () => {
 test("posisjon langt fra hovedstarten stopper bygget (byttet lat/lon)", () => {
   assert.match(errorsFor([{ directions: ["E"], lat: 16.25, lon: 68.85 }])[0], /km fra launch/);
 });
+
+test("no_fixed_landing sammen med landinger stopper bygget", () => {
+  const data = { name: "Teststed", id: "teststed", status: "utkast", launch: { lat: 68.85, lon: 16.25 },
+    no_fixed_landing: true, landings: [{ name: "Jordet", lat: 68.84, lon: 16.25 }] };
+  const errors = validateSite(data, inputPath, { name: "Teststed" });
+  assert.ok(errors.some((e) => /no_fixed_landing/.test(e)));
+});

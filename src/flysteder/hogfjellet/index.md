@@ -1,7 +1,7 @@
 ---
 name: Høgfjellet
 id: hogfjellet
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 8801
@@ -52,11 +52,11 @@ elevation:
 airspace: []
 hazards:
 - title: Høyspent over landingsjordet
-  text: Jordet som tidligere er brukt til landing har en høyspentlinje omtrent midt over.
+  text: Jordet som tidligere er brukt til landing har en høyspentlinje omtrent midt over. Se over landingen før du flyr.
 launches: []
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Nabo til Nontua, med bratt start.
