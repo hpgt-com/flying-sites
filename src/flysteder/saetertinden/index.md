@@ -7,10 +7,11 @@ external:
   flightlog_id: 1599
   pgearth_id: null
   yr_id: 1-330621
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
+- SPG
 season: Vår og sommer
 wind_directions:
   primary:
@@ -87,7 +88,7 @@ Høyt og flott, nesten 1100 moh, med mange fine landinger i Hårvika.
 
 ## Start
 
-Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
+Flere av startene passer for PP2 og SPG2, mens andre krever høyere nivå (se Stupstart under Før du starter). Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
 
 ## Landing
 
