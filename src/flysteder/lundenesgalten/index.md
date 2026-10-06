@@ -30,12 +30,12 @@ landings:
   primary: true
   source: manuell
 parking:
-- name: Parkering
+- name: Parkering ved Lundenes kirkegård
   lat: 68.880912
   lon: 16.551769
   source: gpx
 access:
-  parking_text: null
+  parking_text: Ved Lundenes kirkegård.
   route_text: null
   routes:
   - file: lundenesgalten-route.gpx
