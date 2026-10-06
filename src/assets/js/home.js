@@ -212,6 +212,9 @@
   var mapEl = document.getElementById("home-map");
   var map = FS.createMap(mapEl);
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
+  // Kartet åpner over startene i hjemregionen (site.homeRegion), ikke over alle stedene, så et sted langt
+  // unna ikke zoomer kartet ut. Stedene utenfor finnes i listen og søket.
+  var homeRegion = mapEl.getAttribute("data-home-region");
   var bounds = [];
 
   // Pilen står på siden vinden kommer fra og peker inn mot starten, som vinden som blåser inn i rosen.
@@ -273,8 +276,10 @@
     marker.on("click", function () { select(site.id, "map"); });
     cluster.addLayer(marker);
     markers[site.id] = marker;
-    bounds.push([site.lat, site.lon]);
+    if (site.region === homeRegion) bounds.push([site.lat, site.lon]);
   });
+  // Uten steder i hjemregionen dekker kartet alle stedene.
+  if (!bounds.length) sites.forEach(function (site) { bounds.push([site.lat, site.lon]); });
   // Stedsnavn under rosene når man har zoomet nært inn.
   var NAMES_ZOOM = 11;
   function toggleNames() { mapEl.classList.toggle("map--names", map.getZoom() >= NAMES_ZOOM); }
@@ -284,8 +289,8 @@
     if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], animate: false });
   }
   FS.fitWhenVisible(map, mapEl, fitAllSites);
-  // «Vis alle flysteder» og fullskjerm under zoomknappene, som på stedssiden.
-  FS.addViewControls(map, mapEl, fitAllSites, "Vis alle flysteder");
+  // «Vis flysteder i Harstad og Kvæfjord» og fullskjerm under zoomknappene, som på stedssiden.
+  FS.addViewControls(map, mapEl, fitAllSites, "Vis flysteder i " + homeRegion);
 
   // --- Kort for valgt sted ---
   var cardEl = document.getElementById("selected");

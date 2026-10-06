@@ -61,17 +61,23 @@
 
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
-    var topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
+    var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
       className: "base-tiles",
       attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
     });
-    var openTopo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      maxZoom: 17,
-      subdomains: "abc",
-      className: "base-tiles",
-      attribution: 'Kartdata: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
-    });
+    function openTopoLayer() {
+      return L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+        maxNativeZoom: 17,
+        maxZoom: 18,
+        subdomains: "abc",
+        className: "base-tiles",
+        attribution: 'Kartdata: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+      });
+    }
+    var openTopo = openTopoLayer();
+    // Kartverkets fliser er gjennomsiktige utenfor Norge, så OpenTopoMap under fyller ut resten av verden.
+    var topo = L.layerGroup([openTopoLayer(), kartverket]);
     // Satellittbilde fra Sentinel-2 cloudless (EOX), fritt for ikke-kommersiell bruk (CC BY-NC-SA 4.0) uten nøkkel.
     // 10 m oppløsning, så flisene finnes bare til zoom 14 og forstørres over det. Ikke invertert i mørkt tema.
     var satellite = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {
