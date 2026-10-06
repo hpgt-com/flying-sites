@@ -7,7 +7,7 @@ external:
   flightlog_id: 745
   pgearth_id: null
   yr_id: 1-293990
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
