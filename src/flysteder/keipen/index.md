@@ -64,9 +64,10 @@ launches:
 - directions:
   - S
   - SW
+  - W
   categories:
   - PG
-  text: Alternativ start for S og SV. I SØ blir det litt rotete.
+  text: Alternativ start, brukes som regel når vinden står litt SV eller S og blir skrå på hovedstarten. Dekker også V. I SØ blir det litt rotete.
   lat: 68.85193
   lon: 16.34286
   source: manuell
