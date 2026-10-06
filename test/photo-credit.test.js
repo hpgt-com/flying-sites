@@ -32,3 +32,13 @@ test("en annen fotograf (fra Lightroom) beholdes, uten standardens nettside", as
 test("bilde uten metadata har ikke fotograf", async () => {
   assert.equal(hasCredit(await sharp(await blank().jpeg().toBuffer()).metadata()), false);
 });
+
+test("tekst fra metadata blir ren tekst, og nettsiden må være http(s)", async () => {
+  const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
+<dc:creator><rdf:Seq><rdf:li>Ola &lt;script&gt;alert(1)&lt;/script&gt; "Nordmann"</rdf:li></rdf:Seq></dc:creator>
+<Iptc4xmpCore:CiUrlWork>javascript:alert(1)</Iptc4xmpCore:CiUrlWork></rdf:Description></rdf:RDF></x:xmpmeta>`;
+  const buf = await blank().jpeg().withXmp(xmp).toBuffer();
+  const c = readCredit(await sharp(buf).metadata());
+  assert.equal(c.creator, "Ola scriptalert(1)/script Nordmann");
+  assert.equal(c.url, undefined);
+});
