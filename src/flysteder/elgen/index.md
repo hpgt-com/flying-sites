@@ -30,10 +30,20 @@ launch:
   lon: 16.28194
   source: flightlog
 landings:
-- name: SPG-landing (ca.)
-  lat: 68.89083
-  lon: 16.3031
+- name: Landing Aun (sør, PG og SPG)
+  lat: 68.88975
+  lon: 16.3043
   primary: true
+  source: manuell
+- name: Landing ved kapellet (nord)
+  lat: 68.91218
+  lon: 16.2699
+  primary: false
+  source: manuell
+- name: Landing i fjæra ved Elgsnes
+  lat: 68.91876
+  lon: 16.26361
+  primary: false
   source: manuell
 parking:
 - name: P kapellet
@@ -60,11 +70,13 @@ access:
     walk_time_min: 60
 elevation:
   launch_masl: 497
-  landing_masl: 4
-  difference_m: 493
-  source: Kartverket/flightlog
+  landing_masl: 8
+  difference_m: 489
+  source: Kartverket
 airspace: []
 hazards:
+- title: Strømledning ved kapellet
+  text: Det går en strømledning i master over landingsjordet ved kapellet. Se over landingen før du flyr.
 - title: Solgangsbris fra nord
   text: Kan gi kraftig turbulens og vindskjær, gjerne sammen med lave tåkeskyer. Lite vind på fjellet kan bety mye vind på landing.
 - title: Mye vind og fallvind
@@ -104,6 +116,6 @@ Startene ligger rundt østtoppen (506 moh). Østsiden er ofte termisk morgen og 
 
 ## Landing
 
-PG lander nede ved kapellet på Elgsnes, der bilen står, eller på stranda ytterst ved Elgsnes.
+Ved start mot sør lander både PG og SPG på jordet under SØ-starten, på sjøsiden av veien vest for det vestligste huset i Aun. Avklar bruk med naboen, og før onna: land i ytterkant. Flaggstanga med vimpel på gården viser vinden, og naboen liker å se folk fly.
 
-SPG lander på jordet under SØ-starten, på sjøsiden av veien vest for det vestligste huset i Aun. Avklar bruk med naboen, og før onna: land i ytterkant. Flaggstanga med vimpel på gården viser vinden, og naboen liker å se folk fly.
+Ved start mot nord lander man som regel på jordet ved kapellet på Elgsnes, der bilen står. Det går en strømledning i master over jordet, så se over landingen før du flyr. Av og til lander man i fjæra ytterst ved Elgsnes.
