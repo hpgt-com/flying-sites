@@ -42,7 +42,7 @@ elevation:
 airspace: []
 hazards:
 - title: Turbulens
-  text: 'Ofte mer alvor i turbulensen enn på Trastad og Borkenes. Over 5 m/s: hold litt ekstra i bremsene.'
+  text: 'Ofte mer alvor i turbulensen enn på Trastad. Over 5 m/s: hold litt ekstra i bremsene.'
 launches:
 - directions:
   - S
