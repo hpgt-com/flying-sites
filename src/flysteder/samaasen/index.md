@@ -7,7 +7,7 @@ external:
   flightlog_id: 755
   pgearth_id: 9691
   yr_id: 1-294001
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
@@ -43,8 +43,8 @@ airspace: []
 hazards:
 - title: Vestlig vind
   text: Kan bli svært turbulent. Lær deg tegnene, og vær forsiktig når vinden er vestlig.
-- title: Start i vindstille
-  text: Starten er bratt, kort og ujevn. Åpner ikke vingen fint, havner du i buskene.
+- title: Krever vind inn
+  text: Starten er bratt, kort og ujevn, og krever vind inn. Brukes bare i hangforhold. Åpner ikke vingen fint, havner du i buskene.
 launches:
 - directions:
   - W
@@ -60,7 +60,7 @@ Selve urstedet i Harstad-regionen, med flyging siden 1976. Et lite hang nord for
 
 ## Start
 
-Start rett ved veien på toppen. Bratt, kort og ikke særlig jevn.
+Start rett ved veien på toppen. Bratt, kort og ikke særlig jevn, så den krever vind inn og brukes bare i hangforhold. Derfor PP3.
 
 ## Landing
 
