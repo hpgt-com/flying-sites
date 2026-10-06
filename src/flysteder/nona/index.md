@@ -80,7 +80,7 @@ Høyeste topp på Grytøya nord for Harstad, med lang tur opp: rundt 1000 høyde
 
 ## Start
 
-Beste start er mot V–SV, men det kan potensielt gå an å starte i flere retninger.
+Beste start er mot V–SV, men det kan potensielt gå an å starte i flere retninger. Høyden gjør at stedet trolig også egner seg for SPG, men det er ikke prøvd ennå.
 
 ## Landing
 
