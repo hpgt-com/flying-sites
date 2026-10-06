@@ -26,10 +26,15 @@ launch:
   lon: 16.46444
   source: flightlog
 landings:
+- name: Landing ved parkeringen
+  lat: 68.71339
+  lon: 16.50262
+  primary: true
+  source: manuell
 - name: Landing Slettlia
   lat: 68.72494
   lon: 16.47306
-  primary: true
+  primary: false
   source: manuell
 parking:
 - name: Parkering
@@ -47,8 +52,8 @@ access:
     walk_time_min: 60
 elevation:
   launch_masl: 475
-  landing_masl: 218
-  difference_m: 257
+  landing_masl: 79
+  difference_m: 396
   source: Kartverket
 airspace:
 - name: Evenes CTR
@@ -81,4 +86,4 @@ Startplassen er perfekt, gressplen overalt.
 
 ## Landing
 
-I Slettlia, men kan gi turbulens i vind. Alternativt på den store myra ved Kilkamhuset, der store kraftlinjer markerer utkanten.
+Hovedlandingen ligger like ved parkeringen. Alternativt i Slettlia, men den kan gi turbulens i vind. Flere myrer har også vært brukt, blant annet den store myra ved Kilkamhuset, der store kraftlinjer markerer utkanten. Se over dem først på grunn av høyspent og kabler i lufta.
