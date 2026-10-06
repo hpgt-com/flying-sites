@@ -138,7 +138,7 @@ scripts:
       <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
       <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
     </div>
-    <div id="home-map" class="map map--home" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" role="region" aria-label="Kart over flysteder. Hver start er en vindrose."></div>
+    <div id="home-map" class="map map--home" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" role="region" aria-label="Kart over flysteder. Hver start er en vindrose."></div>
     {#- Valgt sted: under kartet på mobil, kort oppå kartet nederst til høyre på PC (skjult til noe er valgt). -#}
     <section class="selected" id="selected" aria-live="polite">
       <p class="muted selected__empty">Trykk på et flysted i kartet eller i listen for å se mer.</p>

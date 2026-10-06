@@ -17,8 +17,10 @@ wind_directions:
   - E
   - SE
   - S
-  possible: []
-  source: flightlog
+  possible:
+  - N
+  - NE
+  source: flightlog/lokalkunnskap
 launch:
   lat: 67.92784
   lon: 13.07143
@@ -49,6 +51,8 @@ hazards:
   text: Starten ligger på lyng i bratt terreng med stup nedenfor. Du må ha full kontroll på starten.
 launches:
 - directions:
+  - N
+  - NE
   - E
   - SE
   - S

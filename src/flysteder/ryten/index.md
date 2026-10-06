@@ -16,8 +16,11 @@ wind_directions:
   primary:
   - E
   - SE
-  possible: []
-  source: flightlog
+  possible:
+  - S
+  - SW
+  - W
+  source: flightlog/lokalkunnskap
 launch:
   lat: 68.08705
   lon: 13.09203
@@ -50,6 +53,9 @@ launches:
 - directions:
   - E
   - SE
+  - S
+  - SW
+  - W
   categories:
   - PG
   text: Enkelt å finne startplass på toppen.

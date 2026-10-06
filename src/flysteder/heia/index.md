@@ -18,6 +18,7 @@ wind_directions:
   - NE
   - N
   possible:
+  - NW
   - W
   source: flightlog/lokalkunnskap
 launch:
@@ -61,6 +62,7 @@ launches:
   categories: null
   text: 'Tegn på god termikk: pent vær, NØ 2–5 m/s og trykk rundt 1005 hPa. Hangflyging krever mye vind.'
 - directions:
+  - NW
   - W
   categories: null
   text: Det kan flys hang på baksiden.

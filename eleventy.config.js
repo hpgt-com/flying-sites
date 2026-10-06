@@ -86,6 +86,7 @@ export default function (eleventyConfig) {
       return {
         id: d.id,
         name: d.name,
+        region: d.region ?? null,
         lat: d.launch.lat,
         lon: d.launch.lon,
         primary: d.wind_directions?.primary ?? [],
