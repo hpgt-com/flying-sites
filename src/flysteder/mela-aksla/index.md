@@ -7,7 +7,7 @@ external:
   flightlog_id: 10554
   pgearth_id: null
   yr_id: 1-2691773
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -79,7 +79,7 @@ launches:
   - NW
   categories:
   - PG
-  text: Alternativ start for SV, V og NV, der gangruten ender (756 moh).
+  text: Alternativ start for SV, V og NV, der gangruten ender (756 moh). PP3, siden man ikke ser landingen herfra.
   lat: 68.6381
   lon: 16.12245
   source: manuell
@@ -92,8 +92,8 @@ Kan levere heftig termikk på de rette dagene.
 
 ## Start
 
-Hovedstarten ligger på 540 moh. Gangruten går videre opp til en alternativ start på 756 moh, for SV, V og NV.
+Hovedstarten ligger på 540 moh og er PP2. Gangruten går videre opp til en alternativ start på 756 moh, for SV, V og NV. Den er PP3, siden man ikke ser landingen derfra.
 
 ## Landing
 
-Ved parkeringen ved Melåa. Det går lavspent- og telefonledninger i master flere steder, så se over landingen først. Alternativ landing ligger på myra ca. 900 m sør for parkeringen (se kartet).
+Hovedlandingen er ved parkeringen ved Melåa. Den er litt teknisk, fordi det går lavspent- og telefonledninger i master flere steder, så se over landingen først. Den alternative landingen på myra ca. 900 m sør for parkeringen er veldig fin (se kartet).
