@@ -7,7 +7,7 @@ external:
   flightlog_id: 9995
   pgearth_id: null
   yr_id: 1-293736
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
@@ -21,7 +21,6 @@ wind_directions:
   - NE
   - E
   - SE
-  - S
   source: flightlog/gpx
 launch:
   lat: 68.92073
@@ -48,10 +47,10 @@ access:
     elevation_gain_m: 990
     walk_time_min: 95
 elevation:
-  launch_masl: 1012
-  landing_masl: 27
-  difference_m: 985
-  source: flightlog/gpx
+  launch_masl: 999
+  landing_masl: 6
+  difference_m: 993
+  source: Kartverket
 airspace: []
 hazards: []
 launches:
@@ -64,15 +63,7 @@ launches:
   - SE
   categories:
   - PG
-  text: Fra toppen. Beste start er mot V–SV, men det går an å starte i flere retninger.
-- directions:
-  - S
-  categories:
-  - PG
-  lat: 68.91753
-  lon: 16.4478
-  source: gpx
-  text: Sørover fra ryggen ca. 400 m sør for toppen, på rundt 960 moh.
+  text: Fra toppen. Beste start er mot V–SV, men det kan potensielt gå an å starte i flere retninger.
 links:
 - title: Friflyt
   text: Turbeskrivelse til Nona
@@ -89,7 +80,7 @@ Høyeste topp på Grytøya nord for Harstad, med lang tur opp: rundt 1000 høyde
 
 ## Start
 
-Beste start er mot V–SV fra toppen, men det går an å starte i flere retninger. Det er også startet sørover fra ryggen litt under toppen.
+Beste start er mot V–SV, men det kan potensielt gå an å starte i flere retninger. Høyden gjør at stedet trolig også egner seg for SPG, men det er ikke prøvd ennå.
 
 ## Landing
 

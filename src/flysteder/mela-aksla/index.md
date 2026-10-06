@@ -7,7 +7,7 @@ external:
   flightlog_id: 10554
   pgearth_id: null
   yr_id: 1-2691773
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -27,7 +27,17 @@ launch:
   lat: 68.65397
   lon: 16.11531
   source: flightlog
-landings: []
+landings:
+- name: Landing ved parkeringen
+  lat: 68.664427
+  lon: 16.083105
+  primary: true
+  source: manuell
+- name: Alternativ landing
+  lat: 68.65639
+  lon: 16.08755
+  primary: false
+  source: manuell
 parking:
 - name: Parkering
   lat: 68.664427
@@ -44,12 +54,35 @@ access:
     walk_time_min: 100
 elevation:
   launch_masl: 540
-  landing_masl: 3
-  difference_m: 537
-  source: flightlog
+  landing_masl: 6
+  difference_m: 534
+  source: Kartverket
 airspace: []
-hazards: []
-launches: []
+hazards:
+- title: Ledninger ved landingen
+  text: Det går lavspent- og telefonledninger i master flere steder rundt landingen ved parkeringen. Se over landingen før du flyr.
+launches:
+- directions:
+  - N
+  - NE
+  - E
+  - S
+  - SW
+  - W
+  - NW
+  categories:
+  - PG
+  text: Hovedstarten.
+- directions:
+  - SW
+  - W
+  - NW
+  categories:
+  - PG
+  text: Alternativ start for SV, V og NV, der gangruten ender (756 moh). PP3, siden man ikke ser landingen herfra.
+  lat: 68.6381
+  lon: 16.12245
+  source: manuell
 reviewed:
   by: null
   date: null
@@ -59,8 +92,8 @@ Kan levere heftig termikk på de rette dagene.
 
 ## Start
 
-Beskrivelse av startområdet mangler.
+Hovedstarten ligger på 540 moh og er PP2. Gangruten går videre opp til en alternativ start på 756 moh, for SV, V og NV. Den er PP3, siden man ikke ser landingen derfra.
 
 ## Landing
 
-Landingsbeskrivelse mangler.
+Hovedlandingen er ved parkeringen ved Melåa. Den er litt teknisk, fordi det går lavspent- og telefonledninger i master flere steder, så se over landingen først. Den alternative landingen på myra ca. 900 m sør for parkeringen er veldig fin (se kartet).

@@ -7,7 +7,7 @@ external:
   flightlog_id: 7506
   pgearth_id: null
   yr_id: 1-275166
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -41,10 +41,10 @@ access:
     elevation_gain_m: 500
     walk_time_min: 50
 elevation:
-  launch_masl: 543
+  launch_masl: 510
   landing_masl: 0
-  difference_m: 543
-  source: flightlog
+  difference_m: 510
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Løypestreng ved Innersand
@@ -68,7 +68,7 @@ Ved Kvalvika i Flakstad i Lofoten, med landing på stranda.
 
 ## Start
 
-Enkelt å finne startplass på toppen.
+Enkelt å finne startplass på toppen, med mange muligheter for en fin start. Velger man en stupstart, er det PP3.
 
 ## Landing
 

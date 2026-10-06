@@ -7,7 +7,7 @@ external:
   flightlog_id: 4327
   pgearth_id: null
   yr_id: 1-330261
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -22,18 +22,27 @@ launch:
   lat: 68.67222
   lon: 16.43333
   source: flightlog
-landings: []
-parking: []
+landings:
+- name: Landing
+  lat: 68.65611
+  lon: 16.42806
+  primary: true
+  source: manuell
+parking:
+- name: Parkering
+  lat: 68.65656
+  lon: 16.42087
+  source: manuell
 access:
   parking_text: null
   route_text: null
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 500
-  landing_masl: 140
-  difference_m: 360
-  source: flightlog
+  launch_masl: 502
+  landing_masl: 138
+  difference_m: 364
+  source: Kartverket
 airspace: []
 hazards: []
 launches: []
@@ -50,4 +59,4 @@ Beskrivelse av startområdet mangler.
 
 ## Landing
 
-Samme landing som Storbakkan.
+Samme landing som Storbakkan, ved foten av kollen.

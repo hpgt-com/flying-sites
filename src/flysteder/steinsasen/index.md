@@ -7,7 +7,7 @@ external:
   flightlog_id: 5868
   pgearth_id: null
   yr_id: 1-294131
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
@@ -33,14 +33,14 @@ landings:
 parking: []
 access:
   parking_text: Ved vannhuset ved Steinsåsvannet.
-  route_text: Opp den bratte lia mot toppen, tung tur i ulendt terreng.
+  route_text: Opp den bratte lia mot toppen, tung tur i ulendt terreng. Alternativt trolig stien mot Grønnkollhytta, videre forbi Musvatnet og opp mot Middagsfjellet, frem til Steinsåsen. Den ruten er ikke kontrollert.
   routes: []
   walk_time_min: 45
 elevation:
-  launch_masl: 495
-  landing_masl: 140
-  difference_m: 355
-  source: flightlog
+  launch_masl: 488
+  landing_masl: 131
+  difference_m: 357
+  source: Kartverket
 airspace: []
 hazards:
 - title: Krevende landing i Storvassbotn
@@ -64,7 +64,7 @@ En av de ukjente perlene, med nydelig startplass og en av de beste topplandingsm
 
 ## Start
 
-To sider: vest og sørvest.
+To sider: vest og sørvest. Starten er delvis stup- og fjellstart, derfor PP3.
 
 ## Landing
 

@@ -189,6 +189,8 @@ scripts:
         <h2 id="h-landing">Landing</h2>
         {% set landingText = content | section("Landing") %}
         {% if landingText %}<div class="prose">{{ landingText | safe }}</div>{% else %}<p class="missing">Ingen beskrivelse av landingen ennå.</p>{% endif %}
+        {#- Gjelder alle steder, så det står i malen og ikke i hver stedsfil. -#}
+        <p class="landing-note">Se alltid over landingen før du flyr. Lander du på et jorde, må det være avtalt med bonden, og gresset må ikke være høyt.</p>
       </section>
 
     </div>
@@ -255,6 +257,11 @@ scripts:
               {% else %}
               <span class="muted">Ingen faste luftrom over starten.</span>
               {% endif %}
+              {#- Luftrom i nærheten vises bare når stedsfilen har en merknad om dem, for eksempel at innflygingen
+                  til landingen går inn i Evenes CTR. -#}
+              {% for n in derived.airspace.airspaces %}{% if n.note and not (ceiling and n.name == ceiling.airspace.name) %}
+              <span class="muted airspace__nearby"><strong>{{ n.name }}</strong>{% if not n.overLaunch %} ({{ n.distanceKm | replace(".", ",") }} km unna){% endif %}: {{ n.note }}</span>
+              {% endif %}{% endfor %}
               <span class="airspace__source">Hentet automatisk fra openAIP {{ derived.airspace.fetched | formatDate }}.<br>Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr. <a href="/luftrom/">Telefonnumre til tårnene</a></span>
               {% else %}
               {% set mainAirspace = airspace | rejectattr("nearby") | list %}

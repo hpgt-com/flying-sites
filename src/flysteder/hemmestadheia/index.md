@@ -29,10 +29,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 550
+  launch_masl: 510
   landing_masl: 0
-  difference_m: 550
-  source: flightlog
+  difference_m: 510
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Trakteffekt langs fjorden

@@ -53,10 +53,10 @@ access:
     elevation_gain_m: 330
     walk_time_min: 35
 elevation:
-  launch_masl: 567
-  landing_masl: 243
-  difference_m: 324
-  source: flightlog
+  launch_masl: 563
+  landing_masl: 213
+  difference_m: 350
+  source: Kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA

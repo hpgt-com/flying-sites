@@ -32,6 +32,8 @@ jobs:
       - run: npm ci
 
       - name: Hent luftrom fra openAIP
+        # shell: bash gir pipefail, så en feil i skriptet stopper jobben selv om utskriften går gjennom tee.
+        shell: bash
         run: npm run --silent airspace | tee luftrom.txt
         env:
           OPENAIP_API_KEY: ${{ secrets.OPENAIP_API_KEY }}

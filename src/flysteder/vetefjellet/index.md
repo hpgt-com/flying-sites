@@ -7,7 +7,7 @@ external:
   flightlog_id: 5031
   pgearth_id: null
   yr_id: 1-294030
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -40,10 +40,10 @@ access:
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 520
-  landing_masl: 180
-  difference_m: 340
-  source: flightlog
+  launch_masl: 527
+  landing_masl: 206
+  difference_m: 321
+  source: Kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA

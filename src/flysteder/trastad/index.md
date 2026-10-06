@@ -25,7 +25,17 @@ launch:
   lat: 68.78472
   lon: 16.14444
   source: flightlog
-landings: []
+landings:
+- name: Landing ved rødt naust
+  lat: 68.78234
+  lon: 16.12941
+  primary: true
+  source: manuell
+- name: Landing ved busstoppet (teknisk)
+  lat: 68.78212
+  lon: 16.13527
+  primary: false
+  source: manuell
 parking: []
 access:
   parking_text: Ved en bom ved en liten vei til høyre på toppen.
@@ -34,9 +44,9 @@ access:
   walk_time_min: null
 elevation:
   launch_masl: 155
-  landing_masl: null
-  difference_m: 160
-  source: flightlog
+  landing_masl: 3
+  difference_m: 152
+  source: Kartverket
 airspace: []
 hazards:
 - title: Grunneier
@@ -62,4 +72,4 @@ Starten er lett å komme seg opp til.
 
 ## Landing
 
-Ingen fast landingsplass, man finner seg et jorde. Landingene langs havet ligger ofte i løftsonen, så det er fort gjort å overskyte. Avklar landing med klubben før du flyr.
+Som regel på kanten ved det røde naustet, eller oppe ved veien ved busstoppet, som er mer teknisk. Landingene langs havet ligger ofte i løftsonen, så det er fort gjort å overskyte. Avklar landing med klubben før du flyr.

@@ -7,8 +7,8 @@ external:
   flightlog_id: 370
   pgearth_id: null
   yr_id: 1-330348
-level: null
-training_site: false
+level: PP2
+training_site: true
 categories:
 - PG
 season: Hele året
@@ -33,17 +33,21 @@ landings:
   lon: 16.42806
   primary: true
   source: manuell
-parking: []
+parking:
+- name: Parkering
+  lat: 68.65656
+  lon: 16.42087
+  source: manuell
 access:
   parking_text: null
   route_text: null
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 324
-  landing_masl: 124
-  difference_m: 200
-  source: flightlog
+  launch_masl: 340
+  landing_masl: 138
+  difference_m: 202
+  source: Kartverket
 airspace: []
 hazards:
 - title: Turbulens i mye vind
@@ -73,3 +77,5 @@ Gresskledd kolle ved Storvatnet på Storjorda, mellom Sørvik og Straumen. Start
 ## Landing
 
 Landing ved foten av kollen.
+
+Om vinteren og våren brukes Storbakkan som kursbakke, og da lander man på isen på Storvatnet. Sjekk at isen er trygg.

@@ -23,22 +23,27 @@ launch:
   lon: 16.11583
   source: flightlog
 landings:
-- name: Landing
-  lat: 68.78989
-  lon: 16.11861
+- name: Landing (ca.)
+  lat: 68.79613
+  lon: 16.11071
   primary: true
   source: manuell
-parking: []
+parking:
+- name: Parkering (ca.)
+  lat: 68.79613
+  lon: 16.11071
+  masl: 12
+  source: manuell
 access:
-  parking_text: null
+  parking_text: Ved jordet nedenfor veien, der man går opp til starten. Ikke stå i veien for traktor som skal inn på jordet.
   route_text: null
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: null
-  landing_masl: null
-  difference_m: null
-  source: flightlog
+  launch_masl: 75
+  landing_masl: 12
+  difference_m: 63
+  source: Kartverket
 airspace: []
 hazards:
 - title: Turbulens
@@ -62,4 +67,4 @@ Start på markene over veien. Unngå start her når gresset er høyt om sommeren
 
 ## Landing
 
-Landing ved havet nedenfor starten.
+På jordet nedenfor veien, der man parkerer og går opp til starten.

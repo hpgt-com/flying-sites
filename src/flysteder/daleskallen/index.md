@@ -22,22 +22,26 @@ launch:
   lon: 16.11944
   source: flightlog
 landings:
-- name: Parkering og landing
-  lat: 68.79017
-  lon: 16.107
+- name: Landing (ca.)
+  lat: 68.79613
+  lon: 16.11071
   primary: true
   source: manuell
-parking: []
+parking:
+- name: Parkering (ca.)
+  lat: 68.79613
+  lon: 16.11071
+  source: manuell
 access:
-  parking_text: Skalleneset, ca. 650 m forbi Dale.
+  parking_text: Ved jordet nedenfor veien, der man går opp til starten. Ikke stå i veien for traktor som skal inn på jordet.
   route_text: Gå rett opp gjennom åpent terreng.
   routes: []
   walk_time_min: null
 elevation:
-  launch_masl: 180
-  landing_masl: 5
-  difference_m: 175
-  source: flightlog
+  launch_masl: 176
+  landing_masl: 12
+  difference_m: 164
+  source: Kartverket
 airspace: []
 hazards:
 - title: Mye vind
@@ -60,4 +64,4 @@ To starter: nedre på 96 moh litt til venstre, og øvre på 180 moh over til hø
 
 ## Landing
 
-Parkering og landing på Skalleneset. Landingene langs veien ligger i løftsonen.
+På jordet nedenfor veien, der man parkerer og går opp til starten. Landingene langs veien ligger i løftsonen.

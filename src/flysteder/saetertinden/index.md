@@ -7,10 +7,11 @@ external:
   flightlog_id: 1599
   pgearth_id: null
   yr_id: 1-330621
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
+- SPG
 season: Vår og sommer
 wind_directions:
   primary:
@@ -18,7 +19,8 @@ wind_directions:
   - SW
   - SE
   - E
-  possible: []
+  possible:
+  - NE
   source: flightlog/lokalkunnskap
 launch:
   lat: 68.58694
@@ -54,18 +56,18 @@ access:
     elevation_gain_m: 1100
     walk_time_min: 110
 elevation:
-  launch_masl: 1095
-  landing_masl: null
-  difference_m: null
-  source: flightlog
+  launch_masl: 1089
+  landing_masl: 4
+  difference_m: 1085
+  source: Kartverket
 airspace:
 - name: Evenes CTR
   nearby: true
-  note: Meld fra til tårnet på Evenes før start, tlf. 67 03 41 23.
+  note: Meld fra til tårnet på Evenes før start.
   source: flightlog
 hazards:
 - title: Evenes CTR
-  text: Flyging fra toppen ned til Hårvika er tett inntil Evenes CTR. Meld fra til tårnet på Evenes før start, tlf. 67 03 41 23.
+  text: Flyging fra toppen ned til Hårvika er tett inntil Evenes CTR. Meld fra til tårnet på Evenes før start. Telefonnummeret står under «Telefonnumre til tårnene» i Luftrom.
 - title: Stupstart
   text: Noen retninger er stupstart. Mot sør er det loddrett stup etter en kort startstrekning, så ikke nøl når du først har begynt å løpe.
 launches:
@@ -78,6 +80,13 @@ launches:
   - E
   categories: null
   text: Krever vind for baklengsstart, eller snø tidlig i sesongen. Alternativ start på ca. 850 moh.
+- directions:
+  - NE
+  - E
+  categories:
+  - PG
+  - SPG
+  text: Fine starter om vinteren, som i seg selv er enkle nok for PP2 og SPG2. Om sommeren er det en del stein, og startene er mer tekniske.
 reviewed:
   by: null
   date: null
@@ -87,7 +96,7 @@ Høyt og flott, nesten 1100 moh, med mange fine landinger i Hårvika.
 
 ## Start
 
-Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
+Sætertinden er PP3, fordi det er en høyfjellsstart. Mot NØ og Ø er det fine starter om vinteren, som i seg selv er enkle nok for PP2 og SPG2. Om sommeren er det en del stein der, og startene er mer tekniske. Flere av de andre startene er stupstarter (se Før du starter). Om vinteren er det fint å starte flere steder. Om sommeren er store deler av toppen dekket av stein, så studer kart og meteogram før du går opp.
 
 ## Landing
 

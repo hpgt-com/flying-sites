@@ -7,7 +7,7 @@ external:
   flightlog_id: 9180
   pgearth_id: null
   yr_id: 1-289448
-level: null
+level: PP2
 training_site: false
 categories:
 - PG
@@ -44,14 +44,14 @@ access:
     elevation_gain_m: 480
     walk_time_min: 60
 elevation:
-  launch_masl: 500
+  launch_masl: 485
   landing_masl: 80
-  difference_m: 420
-  source: flightlog
+  difference_m: 405
+  source: Kartverket/flightlog
 airspace: []
 hazards:
 - title: Andøya TMA
-  text: 'Andøya TMA ligger over. Telefonnummer til Andøya tårn: 76 11 62 72.'
+  text: Andøya TMA ligger over. Kontakt Andenes tårn før du flyr. Telefonnummeret står under «Telefonnumre til tårnene» i Luftrom.
 - title: Bratt og steinete mot nord
   text: Brattere nordover og en del stein, så det krever mer erfaring og kjennskap til forholdene.
 launches:
@@ -80,4 +80,4 @@ Stort sett startbar i alle himmelretninger, men brattere nordover og en del stei
 
 ## Landing
 
-Landingsbeskrivelse mangler.
+Det finnes ingen fast landing. Man lander på myrene rundt fjellet, og hvor avhenger av hvilken side man flyr fra. Derfor er ingen landing tegnet i kartet.

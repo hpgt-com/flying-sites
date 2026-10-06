@@ -7,10 +7,11 @@ external:
   flightlog_id: 9348
   pgearth_id: null
   yr_id: 1-290690
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
+- SPG
 season: null
 wind_directions:
   primary:
@@ -18,13 +19,19 @@ wind_directions:
   - NE
   - E
   - NW
-  possible: []
-  source: flightlog
+  possible:
+  - SE
+  source: flightlog/gpx
 launch:
   lat: 68.90856
   lon: 17.34808
   source: gpx
-landings: []
+landings:
+- name: Landing
+  lat: 68.92077
+  lon: 17.3749
+  primary: true
+  source: gpx
 parking:
 - name: Parkering
   lat: 68.92356
@@ -41,9 +48,9 @@ access:
     walk_time_min: 95
 elevation:
   launch_masl: 1179
-  landing_masl: null
-  difference_m: null
-  source: flightlog
+  landing_masl: 9
+  difference_m: 1170
+  source: Kartverket
 airspace: []
 hazards:
 - title: Ledninger
@@ -57,6 +64,14 @@ launches:
   categories:
   - PG
   text: Kan starte i alle retninger fra toppen, men primært mot V, NV, N, NØ og Ø med tanke på landing nær veien.
+- directions:
+  - SE
+  categories:
+  - SPG
+  text: SPG har startet mot SØ like sørvest for toppen. Det er trolig mulig å ta av fra flere sider av fjellet.
+  lat: 68.90843
+  lon: 17.34775
+  source: gpx
 links:
 - title: ut.no
   text: Turbeskrivelse til Årbostadtinden
@@ -70,8 +85,8 @@ Topp på Andørja, med lang tur opp: nesten 1200 høydemeter fra veien.
 
 ## Start
 
-Toppen er stor nok til å starte i de fleste retninger, men primært mot V, NV, N, NØ og Ø, så landingen blir nær veien. Det anbefales å ha litt vind inn på toppen. Ellers må vingen være lett å starte, og du bør kunne kutte liner raskt.
+Høyfjellsstart, derfor PP3. Toppen er stor nok til å starte i de fleste retninger, men primært mot V, NV, N, NØ og Ø, så landingen blir nær veien. Det anbefales å ha litt vind inn på toppen. Ellers må vingen være lett å starte, og du bør kunne kutte liner raskt.
 
 ## Landing
 
-Landing på gress nede ved veien. Avklar med bonden før du lander, og se over landingen på forhånd med tanke på ledninger.
+Landing på gress nede ved veien, nordøst for toppen ved sjøen. Landingen passer for både PG og SPG. Avklar med bonden før du lander, og se over landingen på forhånd med tanke på ledninger.

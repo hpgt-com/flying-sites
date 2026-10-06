@@ -46,12 +46,18 @@ access:
     elevation_gain_m: 430
     walk_time_min: 60
 elevation:
-  launch_masl: 512
-  landing_masl: 92
-  difference_m: 420
-  source: flightlog
-airspace: []
+  launch_masl: 475
+  landing_masl: 218
+  difference_m: 257
+  source: Kartverket
+airspace:
+- name: Evenes CTR
+  nearby: true
+  note: Innflygingen til landingen går inn i CTR. Ring tårnet på Evenes og få klarering før start.
+  source: lokalkunnskap
 hazards:
+- title: Evenes CTR
+  text: Innflygingen til landingen går inn i Evenes CTR, selv om man flyr lavt og i utkanten av den. Ring tårnet på Evenes og få klarering før du flyr. Telefonnummeret står under «Telefonnumre til tårnene» i Luftrom.
 - title: Over 5 m/s
   text: Stedet ligger litt i le for Sørvikfjellet og kan bli turbulent.
 - title: Grunneiere
