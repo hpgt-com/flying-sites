@@ -4,9 +4,9 @@ id: ramnskogheia
 status: utkast
 region: Andøya
 external:
-  flightlog_id: null
+  flightlog_id: 9180
   pgearth_id: null
-  yr_id: null
+  yr_id: 1-289448
 level: null
 training_site: false
 categories:
