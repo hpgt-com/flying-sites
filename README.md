@@ -45,7 +45,8 @@ Andre kommandoer:
 | `npm run build` | Bygger siden til `_site/` |
 | `npm test` | Tester vindvurderingen, valideringen og tegningene |
 | `npm run images` | Sjekker alle bilder (størrelse, GPS-data) og krymper dem ved behov |
-| `npm run images -- <id> <felt> <fil>` | Importerer et nytt bilde til et sted med riktig navn og størrelse |
+| `npm run images -- <filer eller mappe>` | Importerer bilder navngitt etter konvensjonen, f.eks. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (se SPEC), og fører dem inn i stedsfilen |
+| `npm run images -- <id> <felt> <fil>` | Importerer ett bilde til et sted med riktig navn og størrelse |
 | `npm run airspace` | Henter luftrom fra openAIP (krever `OPENAIP_API_KEY`) |
 
 ## Publisering
