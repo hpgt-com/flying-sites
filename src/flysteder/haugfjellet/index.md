@@ -24,7 +24,17 @@ launch:
   lat: 68.562
   lon: 17.50297
   source: gpx
-landings: []
+landings:
+- name: Landing
+  lat: 68.54579
+  lon: 17.50363
+  primary: true
+  source: manuell
+- name: Landing i fjæra i Bjerkvik sentrum
+  lat: 68.55001
+  lon: 17.55163
+  primary: false
+  source: manuell
 parking:
 - name: Parkering
   lat: 68.548157
@@ -41,9 +51,9 @@ access:
     walk_time_min: 50
 elevation:
   launch_masl: 523
-  landing_masl: 10
-  difference_m: 513
-  source: Kartverket/flightlog
+  landing_masl: 77
+  difference_m: 446
+  source: Kartverket
 airspace: []
 hazards: []
 launches:
@@ -68,4 +78,4 @@ Fine startforhold mot Ø.
 
 ## Landing
 
-Landingsbeskrivelse mangler.
+Det finnes flere landinger, blant annet på jordet ca. 300 m sørvest for parkeringen. Alternativt kan man lande nede i fjæra i Bjerkvik sentrum.
