@@ -7,8 +7,8 @@ external:
   flightlog_id: 370
   pgearth_id: null
   yr_id: 1-330348
-level: null
-training_site: false
+level: PP2
+training_site: true
 categories:
 - PG
 season: Hele året
@@ -77,3 +77,5 @@ Gresskledd kolle ved Storvatnet på Storjorda, mellom Sørvik og Straumen. Start
 ## Landing
 
 Landing ved foten av kollen.
+
+Om vinteren og våren brukes Storbakkan som kursbakke, og da lander man på isen på Storvatnet. Sjekk at isen er trygg.
