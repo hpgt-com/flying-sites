@@ -27,6 +27,11 @@ test("stedsnavn uten æ/ø/å og mellomrom finner riktig sted", () => {
   assert.equal(parsePhotoName("MelaAksla_Aerial_1_X.jpg", sites).siteId, "mela-aksla");
   assert.equal(parsePhotoName("Saetertinden_Aerial_1_X.jpg", sites).siteId, "saetertinden");
   assert.equal(parsePhotoName("Setertinden_Aerial_1_X.jpg", sites).siteId, "saetertinden");
+  const more = [...sites, { id: "arbostadtinden", name: "Årbostadtinden" }, { id: "rodmoldheia", name: "Rødmoldheia" }];
+  assert.equal(parsePhotoName("Aarbostadtinden_Takeoff_NW_1_X.jpg", more).siteId, "arbostadtinden");
+  assert.equal(parsePhotoName("Arbostadtinden_Takeoff_NW_1_X.jpg", more).siteId, "arbostadtinden");
+  assert.equal(parsePhotoName("Roedmoldheia_Overview_1_X.jpg", more).siteId, "rodmoldheia");
+  assert.equal(parsePhotoName("Rodmoldheia_Overview_1_X.jpg", more).siteId, "rodmoldheia");
   assert.equal(parsePhotoName("Rodmoldheia_Landing_1_X.jpg", sites).siteId, "rodmoldheia");
 });
 
