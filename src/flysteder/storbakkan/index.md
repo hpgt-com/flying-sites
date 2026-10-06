@@ -1,7 +1,7 @@
 ---
 name: Storbakkan
 id: storbakkan
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 370
@@ -64,8 +64,8 @@ launches:
   categories: null
   text: Mulig, men se Før du starter.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Klassisk sted med lett tilgang og kort tur opp, brukt både til skoleturer og lange distanser. Behandle det med respekt i mye vind.

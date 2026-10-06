@@ -1,7 +1,7 @@
 ---
 name: Samaåsen
 id: samaasen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 755
@@ -64,8 +64,8 @@ launches:
   categories: null
   text: Greit hang, med muligheter for å komme seg høyt.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Selve urstedet i Harstad-regionen, med flyging siden 1976. Et lite hang nord for byen som kan være smooth som fløyel, og turbulent i vestlig vind.

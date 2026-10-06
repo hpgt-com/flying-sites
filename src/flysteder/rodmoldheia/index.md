@@ -1,7 +1,7 @@
 ---
 name: Rødmoldheia
 id: rodmoldheia
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 639
@@ -83,8 +83,8 @@ launches:
   categories: null
   text: Veststarten gir de beste boblene, fra ca. kl. 13 og utover.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Termikksted nummer én i Harstad og Kvæfjord, og førstevalget på sørlig vind. Uproblematisk for piloter på alle nivåer, med stort distansepotensial. Beste sesong er mai til midten av august.

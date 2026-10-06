@@ -1,7 +1,7 @@
 ---
 name: Heia
 id: heia
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 355
@@ -72,8 +72,8 @@ launches:
   categories: null
   text: Det kan flys hang på baksiden.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Suveren vårtermikk og turer i absolutt toppklasse, med bobler til 1700–1900 moh. Flere distanseturer herfra.

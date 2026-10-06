@@ -1,7 +1,7 @@
 ---
 name: Steinsåsen
 id: steinsasen
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 5868
@@ -56,8 +56,8 @@ launches:
   categories: null
   text: Godt skjermet li som kan gi utrolig bra termikk om sommeren.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 En av de ukjente perlene, med nydelig startplass og en av de beste topplandingsmulighetene. Lite vind skal til for å henge på vestavind.

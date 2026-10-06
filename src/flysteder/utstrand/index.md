@@ -1,7 +1,7 @@
 ---
 name: Utstrand
 id: utstrand
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 338
@@ -50,8 +50,8 @@ hazards:
   text: Kan gi hærjing, flaks og kollaps.
 launches: []
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Subheng rett over havet. Start på 20 moh og, på gode dager, opp i 800 moh over fjellene bak.

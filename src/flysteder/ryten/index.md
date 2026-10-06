@@ -1,7 +1,7 @@
 ---
 name: Ryten
 id: ryten
-status: utkast
+status: gjennomgått
 region: Lofoten
 external:
   flightlog_id: 7506
@@ -60,8 +60,8 @@ launches:
   - PG
   text: Enkelt å finne startplass på toppen.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Ved Kvalvika i Flakstad i Lofoten, med landing på stranda.

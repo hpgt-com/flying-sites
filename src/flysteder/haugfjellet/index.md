@@ -1,7 +1,7 @@
 ---
 name: Haugfjellet
 id: haugfjellet
-status: utkast
+status: gjennomgått
 region: Bjerkvik
 external:
   flightlog_id: 1687
@@ -66,8 +66,8 @@ launches:
   - PG
   text: Fine startforhold mot Ø.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Kort tur fra Bjerkvik, med fine startforhold mot øst.

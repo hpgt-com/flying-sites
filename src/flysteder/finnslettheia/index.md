@@ -1,7 +1,7 @@
 ---
 name: Finnslettheia
 id: finnslettheia
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 4327
@@ -47,8 +47,8 @@ airspace: []
 hazards: []
 launches: []
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Fint hang med gode startplasser. Bruker samme landing som Storbakkan.

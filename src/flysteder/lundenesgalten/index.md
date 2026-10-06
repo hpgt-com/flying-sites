@@ -1,7 +1,7 @@
 ---
 name: Lundenesgalten
 id: lundenesgalten
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 7949
@@ -52,8 +52,8 @@ airspace: []
 hazards: []
 launches: []
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Heter Storgalten i Kartverkets kart. Ligger på Grytøya rett nord for Harstad.
