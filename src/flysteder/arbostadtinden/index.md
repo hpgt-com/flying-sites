@@ -48,9 +48,9 @@ access:
     walk_time_min: 95
 elevation:
   launch_masl: 1179
-  landing_masl: null
-  difference_m: null
-  source: flightlog
+  landing_masl: 5
+  difference_m: 1174
+  source: flightlog/gpx
 airspace: []
 hazards:
 - title: Ledninger
