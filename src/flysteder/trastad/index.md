@@ -1,13 +1,13 @@
 ---
 name: Trastad
 id: trastad
-status: utkast
+status: gjennomgått
 region: Harstad og Kvæfjord
 external:
   flightlog_id: 1047
   pgearth_id: null
   yr_id: 1-2692219
-level: null
+level: PP3
 training_site: false
 categories:
 - PG
@@ -53,6 +53,8 @@ hazards:
   text: Jordet rett nedenfor busskuret på Trastad må det ikke landes på. Kontakt noen i klubben om landing før du flyr.
 - title: Rotor fra Kveøya
   text: 'Kveøya ligger på tvers et par km foran, så flygingen foregår i en slags rotor. Over 6 m/s kan det bli farlig turbulens. Mye vindrosser på fjorden: ikke fly.'
+- title: Lavt over skog, hus og ledninger
+  text: Hanget går langt ut over havet, så det kan være teknisk å komme seg ned. Får du ikke løft på hanget, flyr du ganske lavt ned mot jordene ved havet, over skog, hus og ledninger.
 launches:
 - directions:
   - SW
@@ -60,15 +62,15 @@ launches:
   categories: null
   text: Mest hang og termisk hang. Ikke et sted for skliturer.
 reviewed:
-  by: null
-  date: null
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
 ---
 
 Et av de mest brukte stedene i Kvæfjord, hogd ut rett over Trastadsenteret. Spesielt om våren kan det gi heftige turer med termikk til skybase.
 
 ## Start
 
-Starten er lett å komme seg opp til.
+Starten er lett å komme seg opp til. Her flys det bare på hang, og stedet er PP3, fordi det kan være teknisk å komme seg ned til landingen.
 
 ## Landing
 
