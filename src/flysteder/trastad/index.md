@@ -31,7 +31,7 @@ landings:
   lon: 16.12941
   primary: true
   source: manuell
-- name: Landing ved busstoppet (teknisk)
+- name: Landing på veien ved busstoppet (teknisk)
   lat: 68.78212
   lon: 16.13527
   primary: false
@@ -79,4 +79,4 @@ Starten er lett å komme seg opp til. Flys bare på hang.
 
 ## Landing
 
-Som regel på kanten ved det røde naustet, eller oppe ved veien ved busstoppet, som er mer teknisk. Landingene langs havet ligger ofte i løftsonen, så det er fort gjort å overskyte. Avklar landing med klubben før du flyr.
+Som regel på kanten ved det røde naustet, eller på veien ved busstoppet, som er mer teknisk. Lander du på veien, må du ikke være til hinder for trafikken. Jordet nedenfor busskuret skal det ikke landes på. Landingene langs havet ligger ofte i løftsonen, så det er fort gjort å overskyte. Avklar landing med klubben før du flyr.
