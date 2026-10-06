@@ -61,11 +61,11 @@ elevation:
 airspace:
 - name: Evenes CTR
   nearby: true
-  note: Meld fra til tårnet på Evenes før start, tlf. 67 03 41 23.
+  note: Meld fra til tårnet på Evenes før start.
   source: flightlog
 hazards:
 - title: Evenes CTR
-  text: Flyging fra toppen ned til Hårvika er tett inntil Evenes CTR. Meld fra til tårnet på Evenes før start, tlf. 67 03 41 23.
+  text: Flyging fra toppen ned til Hårvika er tett inntil Evenes CTR. Meld fra til tårnet på Evenes før start. Telefonnummeret står under «Telefonnumre til tårnene» i Luftrom.
 - title: Stupstart
   text: Noen retninger er stupstart. Mot sør er det loddrett stup etter en kort startstrekning, så ikke nøl når du først har begynt å løpe.
 launches:
