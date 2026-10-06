@@ -25,14 +25,14 @@ launch:
   lon: 16.19278
   source: flightlog
 landings:
-- name: Landing
-  lat: 68.795526
-  lon: 16.208673
+- name: Landing ved parkeringen
+  lat: 68.78407
+  lon: 16.1989
   primary: true
   source: manuell
-- name: Alt. landing og parkering
-  lat: 68.784364
-  lon: 16.199507
+- name: Landing under starten (PP2)
+  lat: 68.79558
+  lon: 16.20923
   primary: false
   source: manuell
 parking:
@@ -51,9 +51,9 @@ access:
     walk_time_min: 65
 elevation:
   launch_masl: 621
-  landing_masl: 130
-  difference_m: 491
-  source: Kartverket/flightlog
+  landing_masl: 237
+  difference_m: 384
+  source: Kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA
@@ -95,4 +95,4 @@ Stor og litt slak startplass. Topplandingsplassen er som en fotballbane.
 
 ## Landing
 
-Primært på jordet under starten. Alternativt på myra like etter parkeringen.
+Primært på myra like ved parkeringen. PP2 og ferske piloter bruker gjerne landingen under starten.
