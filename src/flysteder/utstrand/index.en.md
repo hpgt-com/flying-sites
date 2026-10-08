@@ -9,7 +9,7 @@ access:
   route_text: The launch is on the field below the road, a short distance from the parking.
 ---
 
-A sub-ridge right above the sea. Launch at 20 m asl and, on good days, climb to 800 m asl over the mountains behind.
+Ridge soaring on a small slope right above the sea. Launch at 20 m asl and, on good days, climb to 800 m asl over the mountains behind.
 
 ## Launch
 

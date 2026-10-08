@@ -13,6 +13,16 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 - Trykk **«Foreslå endring»** nederst på stedssiden. Da åpnes et skjema her på GitHub (krever konto).
 - Eller si fra direkte til noen i klubben.
 
+## Dokumentasjon
+
+| Dokument | Innhold |
+|---|---|
+| [docs/arkitektur.md](docs/arkitektur.md) | Hvordan siden henger sammen, med tegninger: kilder, bygging, nettleser, språk, publisering, hva som er bygget og hva som er planlagt |
+| [docs/stedsfiler.md](docs/stedsfiler.md) | Formatet på stedsfilene: alle feltene, tekst, nivå, bilder, tegning og oversettelse |
+| [docs/drift.md](docs/drift.md) | Oppskrifter: nytt sted, gjennomgang, statussiden, vindvarsel, luftrom, bilder, statistikk, nytt språk, feilsøking |
+| [SPEC.md](SPEC.md) | Spesifikasjonen: hva siden skal vise, og hvordan |
+| [SECURITY.md](SECURITY.md) | Sikkerhet: CSP, kodeskanning og innstillinger i GitHub |
+
 ## Slik er repoet bygget opp
 
 | Hvor | Hva |
@@ -24,7 +34,8 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 | `src/_includes/` | Sidemaler for forsiden og stedssidene |
 | `src/assets/` | CSS, JavaScript og bilder |
 | `lib/`, `scripts/` | Validering, GPX, bilder, luftrom og vedlikeholdsskript |
-| `SPEC.md` | Full spesifikasjon: hva siden skal vise, og hvordan |
+| `src/_i18n/` | Ordbøkene for norsk og engelsk (all fast tekst i maler og skript) |
+| `docs/` | Dokumentasjon, se over |
 
 Siden finnes på norsk og engelsk (`/en/`). Språkene står i `src/_data/languages.js`, og all fast tekst i maler og skript ligger i ordbøkene `src/_i18n/<språk>.json`. Nytt språk: legg det til i `languages.js` og lag en ordbok med samme nøkler som `nb.json`. Tekst som mangler i et språk, vises på norsk.
 
@@ -46,7 +57,7 @@ Andre kommandoer:
 | Kommando | Hva |
 |---|---|
 | `npm run build` | Bygger siden til `_site/` |
-| `npm test` | Tester vindvurderingen, valideringen og tegningene |
+| `npm test` | Tester vindvurderingen, valideringen, tegningene, bildene, statussiden, språkstøtten og eksporten |
 | `npm run images` | Sjekker alle bilder (størrelse, GPS-data) og krymper dem ved behov |
 | `npm run images -- <filer eller mappe>` | Importerer bilder navngitt etter konvensjonen, f.eks. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (se SPEC). Alle bildene importeres, og bygget finner dem ut fra filnavnet |
 | `npm run images -- <id> <felt> <fil>` | Importerer ett bilde til et sted med riktig navn og størrelse |
@@ -64,6 +75,7 @@ Andre kommandoer:
 ## Kilder
 
 - Kart: [Kartverket](https://www.kartverket.no/), [OpenTopoMap](https://opentopomap.org) og satellittbilde fra [Sentinel-2 cloudless](https://s2maps.eu) (EOX, CC BY-NC-SA 4.0)
+- Høyder for start, landing og parkering: Kartverket
 - Høyder til gangruter: Kartverket
 - Vindvarsel: [MET Norge](https://api.met.no/) og [Yr](https://www.yr.no/)
 - Luftrom: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
