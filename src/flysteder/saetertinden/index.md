@@ -3,6 +3,7 @@ name: Sætertinden
 id: saetertinden
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 1599
   pgearth_id: null

@@ -3,6 +3,7 @@ name: Elgen
 id: elgen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 356
   pgearth_id: null

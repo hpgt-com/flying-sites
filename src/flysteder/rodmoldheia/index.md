@@ -3,6 +3,7 @@ name: Rødmoldheia
 id: rodmoldheia
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 639
   pgearth_id: null

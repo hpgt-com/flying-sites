@@ -3,6 +3,7 @@ name: Høgfjellet
 id: hogfjellet
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 8801
   pgearth_id: null

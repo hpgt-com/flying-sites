@@ -3,6 +3,7 @@ name: Sollifjellet
 id: sollifjellet
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 235
   pgearth_id: 9335

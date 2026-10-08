@@ -82,7 +82,7 @@
     "tabWeather": "Vær",
     "tabInfo": "Info",
     "searchLabel": "Søk etter flysted",
-    "searchPlaceholder": "Navn, f.eks. Sollifjellet",
+    "searchPlaceholder": "Navn eller kommune, f.eks. Kvæfjord",
     "windFromForecast": "Vind fra varsel",
     "slots": [
       [

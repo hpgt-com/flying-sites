@@ -25,6 +25,7 @@ aldri som gjettede verdier.
 | `name`, `id` | Navnet som vises, og id (lik mappenavnet). |
 | `status`, `reviewed` | `utkast` eller `gjennomgått`. Gjennomgått krever `reviewed.by` (navn) og `reviewed.date` (`'2026-10-06'`). |
 | `region` | For eksempel «Harstad og Kvæfjord» eller «Lofoten». Forsidekartet åpner over regionen i `src/_data/site.js`. |
+| `municipality` | Kommunen starten ligger i, fra Kartverket (for eksempel «Kvæfjord»). Påkrevd. Søket på forsiden finner stedet på kommunen og regionen. |
 | `external` | `flightlog_id`, `yr_id` (Yr-stedet nærmest starten), `pgearth_id` (bare når stedet finnes på Paraglidingearth). |
 | `level` | `PP2`–`PP5`. Se [Nivå](#nivå). |
 | `training_site` | `true` for kursplass. |

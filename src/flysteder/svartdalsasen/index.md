@@ -3,6 +3,7 @@ name: Svartdalsåsen
 id: svartdalsasen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 1953
   pgearth_id: null

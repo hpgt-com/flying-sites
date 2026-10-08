@@ -3,6 +3,7 @@ name: Dale
 id: dale
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 362
   pgearth_id: null

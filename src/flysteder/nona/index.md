@@ -3,6 +3,7 @@ name: Nona
 id: nona
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 9995
   pgearth_id: null

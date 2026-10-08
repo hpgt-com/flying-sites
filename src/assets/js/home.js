@@ -7,9 +7,11 @@
   var LEVELS = ["PP2", "PP3", "PP4", "PP5"];
   var filter = { direction: "", level: "", category: "", q: "" };
 
-  // --- Søk etter navn ---
+  // --- Søk etter navn og sted ---
   // Små bokstaver, uten aksenter, og æ/ø/å skrevet som ae/o/a, så «saeter», «sæter» og «Sæter» finner
-  // Sætertinden. Mellomrom og bindestrek teller ikke. Treff hvor som helst i navnet («solli» → Sollifjellet).
+  // Sætertinden. Mellomrom og bindestrek teller ikke. Treff hvor som helst i navnet («solli» → Sollifjellet),
+  // eller i kommunen eller regionen («kvæfjord», «lofoten»). Navn og steder sjekkes hver for seg, så et søk
+  // ikke kan treffe over skjøten mellom dem.
   function searchKey(s) {
     return String(s || "").toLowerCase()
       .replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a")
@@ -17,7 +19,7 @@
       .replace(/[\s\-–]+/g, "");
   }
   sites.forEach(function (site) {
-    site.searchKey = searchKey(site.name);
+    site.searchKeys = [site.name].concat(site.places || []).map(searchKey);
     site.all = { primary: site.primary, possible: site.possible };
   });
 
@@ -31,7 +33,10 @@
       site.possible = own ? own.possible : site.all.possible;
     });
   }
-  function nameMatches(site) { return !filter.q || site.searchKey.indexOf(searchKey(filter.q)) !== -1; }
+  function nameMatches(site) {
+    var q = searchKey(filter.q);
+    return !q || site.searchKeys.some(function (key) { return key.indexOf(q) !== -1; });
+  }
   var selectedId = null;
   var markers = {};
 

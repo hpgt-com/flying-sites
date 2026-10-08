@@ -3,6 +3,7 @@ name: Blåhatten
 id: blahatten
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 369
   pgearth_id: null

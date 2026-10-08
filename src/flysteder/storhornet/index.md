@@ -3,6 +3,7 @@ name: Storhornet
 id: storhornet
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 1492
   pgearth_id: 9690

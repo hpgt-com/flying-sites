@@ -3,6 +3,7 @@ name: Nontua
 id: nontua
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 745
   pgearth_id: null

@@ -3,6 +3,7 @@ name: Storlitinden
 id: storlitinden
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 331
   pgearth_id: null

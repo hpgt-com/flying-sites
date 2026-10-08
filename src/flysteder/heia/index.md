@@ -3,6 +3,7 @@ name: Heia
 id: heia
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 355
   pgearth_id: null

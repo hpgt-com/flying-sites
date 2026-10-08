@@ -3,6 +3,7 @@ name: Finnslettheia
 id: finnslettheia
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 4327
   pgearth_id: null
