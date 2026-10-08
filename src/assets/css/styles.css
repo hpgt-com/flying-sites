@@ -1012,6 +1012,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .wind-summary__counts > span { display: inline-flex; align-items: center; }
 .wind-summary__counts .wind-dot { width: 10px; height: 10px; margin-right: 5px; }
 .wind-summary__missing { font-size: 13px; color: var(--muted); }
+.wind-summary__scope { font-size: 13px; color: var(--muted); }
 /* Sektoren vinden kommer fra: løftet ut og fylt med vurderingsfargen (roseSvg i common.js). */
 .rose .sector--wind { stroke: var(--map-ink); stroke-width: 3; stroke-linejoin: round; }
 .rose .sector--wind-ok { fill: var(--wind-ok); }

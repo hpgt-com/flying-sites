@@ -16,7 +16,21 @@
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[\s\-–]+/g, "");
   }
-  sites.forEach(function (site) { site.searchKey = searchKey(site.name); });
+  sites.forEach(function (site) {
+    site.searchKey = searchKey(site.name);
+    site.all = { primary: site.primary, possible: site.possible };
+  });
+
+  // Med en kategori valgt gjelder startene for den kategorien: SPG på Elgen starter bare mot NØ–SV, selv om
+  // PG starter i alle retninger. site.primary/possible byttes, så retningsfilteret, vindrosen og
+  // vindvurderingen bruker samme retninger. Uten kategori, eller uten egne starter for den, gjelder hele stedet.
+  function applyCategory() {
+    sites.forEach(function (site) {
+      var own = filter.category && site.byCategory && site.byCategory[filter.category];
+      site.primary = own ? own.primary : site.all.primary;
+      site.possible = own ? own.possible : site.all.possible;
+    });
+  }
   function nameMatches(site) { return !filter.q || site.searchKey.indexOf(searchKey(filter.q)) !== -1; }
   var selectedId = null;
   var markers = {};
@@ -29,13 +43,13 @@
   // stående. Steder uten varsel (hentingen feilet for stedet) forsvinner ikke, men får "nowind" og vises
   // for seg under «Mangler varsel – ikke vurdert», så det ikke ser ut som de er vurdert.
   var suggest = false;
-  function matches(site, assessment, windAssessed) {
+  function matches(site, assessment, windAssessed, ignoreSuggest) {
     if (!nameMatches(site)) return "no";
-    if (suggest && assessment && (assessment.rating === "no" || assessment.rating === "high")) return "no";
+    if (suggest && !ignoreSuggest && assessment && (assessment.rating === "no" || assessment.rating === "high")) return "no";
     if (filter.direction && site.primary.indexOf(filter.direction) === -1 && site.possible.indexOf(filter.direction) === -1) return "no";
     if (filter.category && site.categories.indexOf(filter.category) === -1) return "no";
     if (filter.level && site.level && LEVELS.indexOf(site.level) > LEVELS.indexOf(filter.level)) return "no";
-    if (suggest && windAssessed && !assessment) return "nowind";
+    if (suggest && !ignoreSuggest && windAssessed && !assessment) return "nowind";
     if (filter.level && !site.level) return "unknown";
     return "match";
   }
@@ -110,8 +124,9 @@
   // Vinden i området (vanligste retning, median middelvind, høyeste kast) og hvor mange steder som får
   // hver vurdering, med den vanligste årsaken. Forklarer hvorfor ingen steder passer en dag med mye vind.
   var summaryEl = document.getElementById("wind-summary");
-  function summarize(assessments) {
-    var list = Object.keys(assessments).map(function (id) { return assessments[id]; });
+  // ids: stedene oppsummeringen gjelder (de som passer filtrene).
+  function summarize(assessments, ids) {
+    var list = ids.filter(function (id) { return assessments[id]; }).map(function (id) { return assessments[id]; });
     if (!list.length) return null;
     var dirs = {}, speeds = [], maxGust = null;
     var counts = { ok: 0, maybe: 0, high: 0, no: 0 }, highByGust = 0, highByLocal = 0, noByRain = 0;
@@ -129,7 +144,7 @@
     });
     speeds.sort(function (x, y) { return x - y; });
     var mainDir = Object.keys(dirs).sort(function (x, y) { return dirs[y] - dirs[x]; })[0];
-    return { counts: counts, total: list.length, missing: sites.length - list.length, highByGust: highByGust, highByLocal: highByLocal, noByRain: noByRain,
+    return { counts: counts, total: list.length, missing: ids.length - list.length, filtered: ids.length < sites.length, highByGust: highByGust, highByLocal: highByLocal, noByRain: noByRain,
       dir: mainDir, speed: speeds[Math.floor(speeds.length / 2)], minSpeed: speeds[0], maxSpeed: speeds[speeds.length - 1], gust: maxGust };
   }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
@@ -153,7 +168,7 @@
       (sum.gust != null ? ", kast opptil " + Math.round(sum.gust) + " m/s" : "") + ".";
     // Som i prototypen: vindlinje, fargelinje med fordelingen og antall per vurdering med fargede prikker.
     // Detaljene (kast, stedets egen grense, mangler varsel) står i merkelappen på linjen.
-    var detail = plural(sum.total, "sted", "steder") + ": " + parts.join(", ") + "." +
+    var detail = plural(sum.total, "sted", "steder") + (sum.filtered ? " som passer filtrene" : "") + ": " + parts.join(", ") + "." +
       (sum.missing ? " " + plural(sum.missing, "sted", "steder") + " mangler varsel og er ikke vurdert." : "");
     // [vurdering, antall, tekst]. «Passer ikke» deles i feil retning og regn, så årsaken synes.
     var order = [["ok", c.ok, "kan passe"], ["maybe", c.maybe, c.maybe === 1 ? "usikkert" : "usikre"], ["high", c.high, "for mye vind"],
@@ -166,6 +181,7 @@
     }).join("");
     summaryEl.innerHTML = '<p class="wind-summary__wind">' + FS.escapeHtml(wind) + "</p>" +
       '<div class="wind-bar" role="img" aria-label="' + FS.escapeHtml(detail) + '" title="' + FS.escapeHtml(detail) + '">' + bar + "</div>" +
+      (sum.filtered ? '<p class="wind-summary__scope">For ' + plural(sum.total + sum.missing, "sted", "steder") + " som passer filtrene:</p>" : "") +
       '<p class="wind-summary__counts">' + chips + "</p>" +
       (sum.missing ? '<p class="wind-summary__missing">' + plural(sum.missing, "sted", "steder") + " mangler varsel</p>" : "") +
       (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">Ingen steder kan passe på dette tidspunktet. ' + FS.escapeHtml(noneReason(sum)) + "</p>" : "");
@@ -369,6 +385,7 @@
   }
 
   function update() {
+    applyCategory();
     var assessments = assessAll();
     var windOn = !!(forecast && !stale && windSlot !== "off");
     var counts = { match: 0, unknown: 0, nowind: 0, no: 0 };
@@ -446,7 +463,11 @@
         : "Viser " + shown + " av " + sites.length + " flysteder";
     }
     noResultsEl.hidden = counts.match + counts.unknown + counts.nowind !== 0;
-    var sum = assessments ? summarize(assessments) : null;
+    // Oppsummeringen følger retning, nivå, kategori og søk, men ikke «Bare steder som kan passe», som ellers
+    // ville skjult det oppsummeringen forklarer.
+    var scope = assessments ? sites.filter(function (s) { return matches(s, assessments[s.id], true, true) !== "no"; })
+      .map(function (s) { return s.id; }) : [];
+    var sum = assessments ? summarize(assessments, scope) : null;
     renderSummary(sum);
     // Tomt resultat med forslag på: si hvorfor, ikke bare at ingen passer.
     noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0

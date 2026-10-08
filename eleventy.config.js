@@ -3,7 +3,7 @@ import * as yaml from "js-yaml";
 import { HtmlBasePlugin } from "@11ty/eleventy";
 import {
   DIRECTIONS, directionLabel, directionWord, directionType, sortDirections, formatNumber, formatDate, feetToMeters,
-  formatLimit, limitMasl,
+  formatLimit, limitMasl, categoryDirections,
 } from "./lib/format.js";
 import { validateSite } from "./lib/validation.js";
 import { statusSummary } from "./lib/status.js";
@@ -92,6 +92,8 @@ export default function (eleventyConfig) {
         primary: d.wind_directions?.primary ?? [],
         possible: d.wind_directions?.possible ?? [],
         categories: d.categories ?? [],
+        // Retningene for hver kategori, fra startene (SPG starter bare mot NØ–SV på Elgen).
+        byCategory: categoryDirections(d),
         level: d.level ?? null,
         elevation: d.elevation?.launch_masl ?? null,
         maxWind: d.wind_limits?.max_wind ?? null,
