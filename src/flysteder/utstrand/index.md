@@ -54,11 +54,11 @@ reviewed:
   date: '2026-10-06'
 ---
 
-Subheng rett over havet. Start på 20 moh og, på gode dager, opp i 800 moh over fjellene bak.
+Subheng rett over havet. Start på 13 moh og, på gode dager, opp i 800 moh over fjellene bak.
 
 ## Start
 
-Kysthang fra et jorde nedenfor veien, på ca. 20 moh.
+Kysthang fra et jorde nedenfor veien, på ca. 13 moh.
 
 ## Landing
 
