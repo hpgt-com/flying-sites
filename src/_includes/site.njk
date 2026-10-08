@@ -73,7 +73,7 @@ scripts:
           {% if hasHazard %}<li><span class="drawing-pin drawing-pin--hazard drawing-pin--legend">!</span>{{ t.site.hazard }}</li>{% endif %}
         </ul>
         <div class="buttons">
-          {% for p in parking %}
+          {% for p in local.parking %}
           <a class="btn btn--primary" href="https://www.google.com/maps/dir/?api=1&destination={{ p.lat }},{{ p.lon }}" target="_blank" rel="noopener">{{ t.site.directionsTo | fmt({ target: t.site.directionsParking if parking.length == 1 else p.name }) }}{{ m.external() }}</a>
           {% endfor %}
           {% for r in routes %}
@@ -384,7 +384,7 @@ scripts:
   launches: local.launches,
   wind_directions: wind_directions,
   landings: local.landings,
-  parking: parking,
+  parking: local.parking,
   routes: derived.routes,
   drawing: derived.drawing
 } | json | safe }}</script>
