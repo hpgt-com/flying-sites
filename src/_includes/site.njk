@@ -111,7 +111,8 @@ scripts:
         <dl class="row-list">
           <div>
             <dt>Parkering</dt>
-            <dd>{{ access.parking_text or "" }}{% if not access.parking_text %}<span class="missing">Ikke registrert ennå</span>{% endif %}</dd>
+            {#- Parkering i kartet uten beskrivelse er ikke «ikke registrert»: da vises den bare i kartet. -#}
+            <dd>{% if access.parking_text %}{{ access.parking_text }}{% elif parking and parking.length %}Merket i kartet. <span class="missing">Beskrivelse mangler.</span>{% else %}<span class="missing">Ikke registrert ennå</span>{% endif %}</dd>
           </div>
           <div>
             <dt>Veien opp</dt>

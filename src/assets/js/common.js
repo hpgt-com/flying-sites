@@ -338,9 +338,36 @@
     groups.forEach(function (g) { map.layersControl.addOverlay(g.layer, g.def.name); });
     var loading = null, attribution = null, active = 0;
 
+    // Status under lagvelgeren mens luftrommene lastes, og ved feil, så et avkrysset lag uten innhold ikke
+    // ser ut som «ingen luftrom her». «Prøv igjen» henter på nytt.
+    var statusEl = null;
+    var Status = L.Control.extend({
+      options: { position: "topright" },
+      onAdd: function () {
+        statusEl = L.DomUtil.create("div", "airspace-status");
+        statusEl.setAttribute("role", "status");
+        statusEl.hidden = true;
+        L.DomEvent.disableClickPropagation(statusEl);
+        statusEl.addEventListener("click", function (ev) { if (ev.target.closest("[data-retry]")) start(); });
+        return statusEl;
+      },
+    });
+    new Status().addTo(map);
+    function setStatus(state) {
+      if (!statusEl) return;
+      statusEl.hidden = !state;
+      statusEl.classList.toggle("airspace-status--error", state === "error");
+      statusEl.innerHTML = state === "loading" ? "Laster luftrom …"
+        : state === "error" ? 'Kunne ikke hente luftrom. Sjekk IPPC. <button type="button" data-retry>Prøv igjen</button>' : "";
+    }
+
     function load() {
       if (loading) return loading;
-      loading = fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+      loading = fetch(url).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (data) {
+        if (!data || !Array.isArray(data.features)) throw new Error("ukjent format");
         attribution = "Luftrom: openAIP (CC BY-NC 4.0), " + (data.fetched || "").split("-").reverse().join(".") +
           ". Ikke for navigasjon, sjekk IPPC";
         data.features.forEach(function (f) {
@@ -360,19 +387,29 @@
       return loading;
     }
 
+    function start() {
+      setStatus("loading");
+      load().then(function () {
+        setStatus(null);
+        if (active && attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
+      }, function () {
+        loading = null; // neste forsøk henter på nytt
+        setStatus(active ? "error" : null);
+      });
+    }
+
     function isAirspace(layer) { return groups.some(function (g) { return g.layer === layer; }); }
 
     // Kreditering vises så lenge minst ett luftromslag er på.
     map.on("overlayadd", function (ev) {
       if (!isAirspace(ev.layer)) return;
       active++;
-      load().then(function () {
-        if (active && attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
-      });
+      start();
     });
     map.on("overlayremove", function (ev) {
       if (!isAirspace(ev.layer)) return;
       active--;
+      if (!active) setStatus(null);
       if (!active && attribution) map.attributionControl.removeAttribution(attribution);
     });
   }

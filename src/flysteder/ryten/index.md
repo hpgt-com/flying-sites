@@ -42,7 +42,7 @@ parking:
   lon: 13.139099
   source: gpx
 access:
-  parking_text: null
+  parking_text: Ved campingplassen (avgift), og følg turstien derfra. Ellers en egnet plass i området.
   route_text: null
   routes:
   - file: ryten-route-1.gpx
