@@ -1,7 +1,7 @@
 ---
 hazards:
   - title: Turbulence in strong wind
-    text: The site has a nasty temper when the wind picks up, especially from E and SE. Max 5 m/s. The landing becomes a witches' cauldron in wind over 5 m/s.
+    text: The site has a nasty temper when the wind picks up, especially from E and SE. Max 5 m/s. The landing becomes very turbulent in wind over 5 m/s.
 launches:
   - text: Best direction, as the wind then blows straight onto the largest slope.
   - text: Possible, but see Before you launch.
