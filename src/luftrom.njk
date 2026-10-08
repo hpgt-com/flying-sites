@@ -1,21 +1,26 @@
 ---
 layout: base.njk
-permalink: /luftrom/
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ language.prefix }}/luftrom/"
 bodyClass: page-towers
-name: Tårn
-description: Telefonnumre til tårnene rundt HPGTs flysteder.
+eleventyComputed:
+  name: "{{ t.towers.title }}"
+  description: "{{ t.towers.description }}"
 ---
 {#- Numrene ligger i src/_data/towers.json. Tårn uten nummer vises ikke. -#}
 {%- import "macros.njk" as m with context -%}
 <div class="towers-page">
   <header class="topbar">
-    <a class="back-link" href="/">{{ m.chevron("left") }}Alle flysteder</a>
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
     {{ m.siteMenu() }}
   </header>
 
   <div class="towers-page__intro">
-    <h1>Tårn</h1>
-    <p class="muted">Ring tårnet når du skal fly i kontrollert luftrom. Sjekk alltid luftrom og NOTAM i <a href="https://ippc.no" target="_blank" rel="noopener">IPPC{{ m.external() }}</a> før du flyr.</p>
+    <h1>{{ t.towers.title }}</h1>
+    <p class="muted">{{ t.towers.intro | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }}</p>
   </div>
 
   <ul class="towers">

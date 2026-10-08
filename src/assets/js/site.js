@@ -22,7 +22,7 @@
 
   (data.routes || []).forEach(function (route) {
     var line = L.polyline(route.line, { color: INK, weight: 4, dashArray: "2 8", lineCap: "round", opacity: 0.9 }).addTo(map);
-    line.bindTooltip("Gangrute" + (route.name ? " " + route.name : ""), { sticky: true });
+    line.bindTooltip(FS.t("site.route") + (route.name ? " " + route.name : ""), { sticky: true });
     routeLines.push(line);
     route.line.forEach(function (p) { bounds.push(p); });
   });
@@ -54,7 +54,7 @@
         if (launchDone) return;
         launchDone = true;
         parts.push('<span class="map-combo__launch">' + (launches > 1 ? launches : "") + "</span>");
-        names.push(launches > 1 ? launches + " starter" : "Start");
+        names.push(launches > 1 ? FS.t("site.launchN", { n: launches }) : FS.t("site.launch"));
         return;
       }
       if (o.kind === "landing") parts.push('<span class="map-symbol map-symbol--landing' + (o.alternative ? " map-symbol--alt" : "") + '"></span>');
@@ -62,7 +62,7 @@
       else parts.push('<span class="drawing-pin' + (o.hazard ? " drawing-pin--hazard" : "") + '">' + o.n + "</span>");
       names.push(o.title);
     });
-    var title = names.join(", ") + ". Trykk for å zoome inn.";
+    var title = FS.t("site.zoomIn", { names: names.join(", ") });
     return L.divIcon({
       className: "map-combo-anchor",
       html: '<span class="map-combo" title="' + FS.escapeHtml(title) + '">' + parts.join("") + "</span>",
@@ -87,7 +87,7 @@
   });
 
   (data.parking || []).forEach(function (p) {
-    var name = p.name || "Parkering";
+    var name = p.name || FS.t("site.parking");
     L.marker([p.lat, p.lon], { icon: squareIcon("map-icon--parking", "P"), title: name, alt: name, kind: "parking" })
       .bindTooltip(name, { direction: "top", offset: [0, -10] })
       .addTo(pointLayer);
@@ -97,7 +97,7 @@
   // Landing som målskive, alternativ landing i grått. Utseendet ligger i styles.css (.map-symbol).
   (data.landings || []).forEach(function (landing) {
     var isAlternative = landing.primary === false;
-    var name = landing.name || (isAlternative ? "Alternativ landing" : "Landing");
+    var name = landing.name || (isAlternative ? FS.t("site.altLanding") : FS.t("site.landing"));
     var icon = L.divIcon({ className: "map-symbol map-symbol--landing" + (isAlternative ? " map-symbol--alt" : ""), iconSize: [26, 26], iconAnchor: [13, 13] });
     L.marker([landing.lat, landing.lon], { icon: icon, title: name, alt: name, kind: "landing", alternative: isAlternative })
       .bindTooltip(name, { direction: "top", offset: [0, -12] })
@@ -218,7 +218,7 @@
   var hint = document.createElement("div");
   hint.className = "map-hint";
   hint.setAttribute("aria-hidden", "true");
-  hint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "Hold ⌘ og rull for å zoome kartet" : "Hold Ctrl og rull for å zoome kartet";
+  hint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? FS.t("site.zoomHintMac") : FS.t("site.zoomHint");
   mapEl.appendChild(hint);
   var hintTimer = null;
   // Fanges før Leaflet ser hendelsen (capture), så Leaflets egen zoom bare får rullingen med Ctrl/Cmd.
@@ -251,7 +251,7 @@
   FS.fitWhenVisible(map, mapEl, fitAll);
 
   // «Vis hele stedet» og fullskjerm under zoomknappene (common.js).
-  FS.addViewControls(map, mapEl, fitAll, "Vis hele stedet");
+  FS.addViewControls(map, mapEl, fitAll, FS.t("site.showWholeSite"));
 
   // --- Høydeprofil ---
   var profileEl = document.getElementById("elevation-profile");
@@ -311,7 +311,7 @@
     });
     s += '<text class="profile__axis" x="' + LEFT + '" y="' + (HEIGHT - 8) + '">0 km</text>';
     s += '<text class="profile__axis" x="' + (width - RIGHT) + '" y="' + (HEIGHT - 8) + '" text-anchor="end">' + FS.formatNumber(total / 1000, 1) + " km</text>";
-    s += '<text class="profile__axis" x="4" y="' + (TOP - 2) + '">moh</text>';
+    s += '<text class="profile__axis" x="4" y="' + (TOP - 2) + '">' + FS.escapeHtml(FS.t("site.masl")) + "</text>";
     s += '<path class="profile__area" d="' + area + '"></path>';
     s += '<path class="profile__line" d="' + line + '"></path>';
     s += '<path class="profile__steep" d="' + steep + '"></path>';
@@ -332,7 +332,7 @@
     cursor.setAttribute("cx", cx); cursor.setAttribute("cy", cy);
     slider.value = String(index);
     readouts.distance.textContent = FS.formatNumber(q[0] / 1000, 2) + " km";
-    readouts.elevation.textContent = Math.round(q[1]) + " moh";
+    readouts.elevation.textContent = Math.round(q[1]) + " " + FS.t("site.masl");
     readouts.grade.textContent = q[4] + " %";
     positionMarker.setLatLng([q[2], q[3]]);
     if (!map.hasLayer(positionMarker)) positionMarker.addTo(map);
@@ -348,14 +348,14 @@
     });
     if (!route.profile) {
       svg.innerHTML = "";
-      summaryEl.textContent = "Mangler høydedata for denne ruten.";
+      summaryEl.textContent = FS.t("site.noProfile");
       return;
     }
     slider.max = String(route.profile.length - 1);
     var steepM = route.steepM >= 50 ? roundTo(route.steepM, 50) : roundTo(route.steepM, 10);
-    var text = FS.formatNumber(route.lengthKm, 1) + " km fra " + Math.round(route.fromMasl) + " til " + Math.round(route.toMasl) + " moh. ";
-    text += steepM > 0 ? "Ca. " + steepM + " m av turen er brattere enn 25 %. " : "Ingen partier er brattere enn 25 %. ";
-    text += route.elevationSource === "Kartverket" ? "Høyder fra Kartverket." : "Høyder fra GPS i gangruten.";
+    var text = FS.t("site.profileSummary", { km: FS.formatNumber(route.lengthKm, 1), from: Math.round(route.fromMasl), to: Math.round(route.toMasl) });
+    text += steepM > 0 ? FS.t("site.steep", { m: steepM }) : FS.t("site.noSteep");
+    text += route.elevationSource === "Kartverket" ? FS.t("site.heightsKartverket") : FS.t("site.heightsGps");
     summaryEl.textContent = text;
     draw();
   }

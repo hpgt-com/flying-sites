@@ -51,3 +51,14 @@ test("retninger per kategori følger startene for kategorien", async () => {
   assert.deepEqual(categoryDirections(solli).SPG, { primary: ["N"], possible: ["S"] });
   assert.deepEqual(categoryDirections({ categories: ["PG"], launches: [] }), {});
 });
+
+test("formatering følger språket", async () => {
+  const { formatNumber, formatDate, directionLabel, formatLimit } = await import("../lib/format.js");
+  assert.equal(formatNumber(3.45, 1), "3,5");
+  assert.equal(formatNumber(3.45, 1, "en"), "3.5");
+  assert.equal(formatDate("2026-10-06"), "06.10.2026");
+  assert.equal(formatDate("2026-10-06", "en"), "6 Oct 2026");
+  assert.equal(directionLabel("NE"), "NØ");
+  assert.equal(directionLabel("NE", "en"), "NE");
+  assert.equal(formatLimit({ ref: "GND", value: 0 }, "en"), "ground");
+});

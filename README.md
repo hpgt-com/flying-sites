@@ -18,12 +18,15 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 | Hvor | Hva |
 |---|---|
 | `src/flysteder/<id>/index.md` | Ett flysted: strukturerte data øverst (front matter), tekst under |
+| `src/flysteder/<id>/index.en.md` | Engelsk tekst for stedet (valgfri, se `lib/translations.js`). Mangler den, vises den norske teksten med en merknad |
 | `src/flysteder/<id>/` | Bilder (`<id>-overview-1.jpg`, `<id>-takeoff-se-1.jpg`, `<id>-landing-1.jpg`, `<id>-landing-spg-1.jpg`), gangruter (`<id>-route.gpx`) og tegning til kartet (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`) |
 | `src/_data/` | Tårn (`towers.json`), felles vindgrenser (`windRules.json`), vindvarsel (`forecast.js`) og mellomlagret luftrom |
 | `src/_includes/` | Sidemaler for forsiden og stedssidene |
 | `src/assets/` | CSS, JavaScript og bilder |
 | `lib/`, `scripts/` | Validering, GPX, bilder, luftrom og vedlikeholdsskript |
 | `SPEC.md` | Full spesifikasjon: hva siden skal vise, og hvordan |
+
+Siden finnes på norsk og engelsk (`/en/`). Språkene står i `src/_data/languages.js`, og all fast tekst i maler og skript ligger i ordbøkene `src/_i18n/<språk>.json`. Nytt språk: legg det til i `languages.js` og lag en ordbok med samme nøkler som `nb.json`. Tekst som mangler i et språk, vises på norsk.
 
 Nøklene i stedsfilene er på engelsk, verdiene og tekstene på norsk. Ukjente nøkler og ugyldige verdier stopper byggingen, så feil ikke kommer ut på siden. [Statussiden](https://flysteder.hpgt.com/status/) viser hva som mangler for hvert sted.
 
