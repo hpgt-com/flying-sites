@@ -1,17 +1,20 @@
 <title>HPGT Flyplattform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: samme uttrykk som flysteder.hpgt.com. Toppmeny med fem faner, innhold i to kolonner på desktop, én på mobil. */
+/* Layout: samme oppbygging som flysteder.hpgt.com i dag. Forsiden: venstrekolonne med faner og kart over resten.
+   Stedssiden: hovedkolonne og hvite kort til høyre. Farger og navn på fargene er hentet fra src/assets/css/styles.css. */
 :root {
   --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --line-soft: #D5DEDD;
-  --fjord: #2E5E6E; --accent: #C24A12; --dir-primary: #3D7A8A; --possible: #8FBCC7;
+  --fjord: #2E5E6E; --dir-primary: #3D7A8A; --possible: #8FBCC7; --rose-none: #FFFFFF; --rose-border: #9FB1B4;
   --card: #FFFFFF; --surface: #E6ECEB; --link: #2E5E6E; --on-color: #FFFFFF;
-  --hazard-bg: #FBE3DA; --hazard-text: #6B1A0B;
-  --ok: #2E8B57; --warn: #D99A1E; --bad: #C62828; --none: #7F9396;
+  --inverse-bg: #1C2B33; --inverse-text: #FFFFFF;
+  --notice-bg: #FFF3D1; --notice-line: #E0A82E; --notice-text: #4A3510; --notice-icon: #B7791F;
+  --wind-ok: #2E8B57; --wind-maybe: #D99A1E; --wind-high: #C62828; --wind-no: #7F9396;
   --s0: #DCE9EC; --s1: #A9CBD4; --s2: #5F9AAA; --s3: #2E5E6E; --s4: #C24A12;
-  --map-bg: #E3ECEC; --map-grid: #CCD9D8; --proto: #FFF4D6; --proto-text: #6A4A00;
+  --map-bg: #E4ECE6; --map-sea: #D3E3E8; --map-grid: #D2DDD8; --new: #2E5E6E;
+  --proto-bg: #1C2B33; --proto-text: #E4ECEA;
   --font-heading: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "Barlow", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --radius: 12px;
@@ -19,212 +22,309 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #11191D; --text: #E4ECEA; --muted: #A4B3B8; --line: #34444B; --line-soft: #2C3A40;
-  --fjord: #3C7486; --accent: #D65A1E; --dir-primary: #5B9BAB; --possible: #3F7482;
+  --fjord: #3C7486; --dir-primary: #5B9BAB; --possible: #3F7482; --rose-none: #26343B; --rose-border: #5C7076;
   --card: #1A242A; --surface: #223038; --link: #8CC3D3; --on-color: #FFFFFF;
-  --hazard-bg: #3A1E16; --hazard-text: #F6C9B8;
-  --ok: #3FA56B; --warn: #E0A93A; --bad: #E05252; --none: #8A9C9F;
+  --inverse-bg: #E4ECEA; --inverse-text: #11191D;
+  --notice-bg: #33290F; --notice-line: #B7891F; --notice-text: #F3E2B3; --notice-icon: #E0A82E;
   --s0: #22343B; --s1: #2F5560; --s2: #4C8696; --s3: #8CC3D3; --s4: #E07A45;
-  --map-bg: #17232A; --map-grid: #26363D; --proto: #3A3115; --proto-text: #F2D48A;
+  --map-bg: #1C282D; --map-sea: #15222A; --map-grid: #26363D; --new: #8CC3D3;
+  --proto-bg: #0B1114; --proto-text: #E4ECEA;
   color-scheme: dark;
 }}
 :root[data-theme="dark"] {
   --bg: #11191D; --text: #E4ECEA; --muted: #A4B3B8; --line: #34444B; --line-soft: #2C3A40;
-  --fjord: #3C7486; --accent: #D65A1E; --dir-primary: #5B9BAB; --possible: #3F7482;
+  --fjord: #3C7486; --dir-primary: #5B9BAB; --possible: #3F7482; --rose-none: #26343B; --rose-border: #5C7076;
   --card: #1A242A; --surface: #223038; --link: #8CC3D3; --on-color: #FFFFFF;
-  --hazard-bg: #3A1E16; --hazard-text: #F6C9B8;
-  --ok: #3FA56B; --warn: #E0A93A; --bad: #E05252; --none: #8A9C9F;
+  --inverse-bg: #E4ECEA; --inverse-text: #11191D;
+  --notice-bg: #33290F; --notice-line: #B7891F; --notice-text: #F3E2B3; --notice-icon: #E0A82E;
   --s0: #22343B; --s1: #2F5560; --s2: #4C8696; --s3: #8CC3D3; --s4: #E07A45;
-  --map-bg: #17232A; --map-grid: #26363D; --proto: #3A3115; --proto-text: #F2D48A;
+  --map-bg: #1C282D; --map-sea: #15222A; --map-grid: #26363D; --new: #8CC3D3;
+  --proto-bg: #0B1114; --proto-text: #E4ECEA;
   color-scheme: dark;
 }
+/* Fargeblindvennlige farger (valg i menyen), som på siden i dag: Okabe–Ito. */
+:root[data-cvd="on"] { --wind-ok: #0072B2; --wind-maybe: #E69F00; --wind-high: #D55E00; }
+
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--font-body); }
-a { color: var(--link); }
-h1, h2, h3 { font-family: var(--font-heading); line-height: 1.15; text-wrap: balance; margin: 0; }
-h1 { font-size: 2.1rem; font-weight: 700; }
-h2 { font-size: 1.45rem; font-weight: 600; }
-h3 { font-size: 1.1rem; font-weight: 600; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.5 var(--font-body); }
+a { color: var(--link); } a:hover { color: var(--text); }
+button { font-family: inherit; }
+h1, h2 { font-family: var(--font-heading); margin: 0; line-height: 1.05; text-wrap: balance; }
+h1 { font-weight: 700; font-size: 44px; letter-spacing: -.5px; }
+h2 { font-weight: 600; font-size: 26px; }
+h3 { margin: 0; font-size: 19px; font-weight: 600; }
 p { margin: 0; }
-.num { font-variant-numeric: tabular-nums; }
-.muted { color: var(--muted); }
-.small { font-size: .875rem; }
+.muted { color: var(--muted); } .small { font-size: 14px; } .num { font-variant-numeric: tabular-nums; }
+a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 
-/* Topp */
-.top { background: var(--fjord); color: #fff; padding-inline: 16px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; }
-.top-in { max-width: 1240px; margin: 0 auto; display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; padding-block: 10px; }
-.brand { font-family: var(--font-heading); font-weight: 700; font-size: 1.3rem; letter-spacing: .01em; white-space: nowrap; }
-.brand span { font-weight: 500; opacity: .75; }
-nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-nav.tabs a { color: #fff; text-decoration: none; font-family: var(--font-heading); font-weight: 600; font-size: 1.05rem; padding: 8px 12px; border-radius: 8px; min-height: 40px; display: inline-flex; align-items: center; }
-nav.tabs a:hover { background: rgba(255,255,255,.12); }
-nav.tabs a[aria-current="page"] { background: #fff; color: #2E5E6E; }
-.proto-bar { background: var(--proto); color: var(--proto-text); font-size: .875rem; padding: 6px 16px; text-align: center; }
+/* Prototype-linjen øverst: bare for å bla mellom skjermene. */
+.proto { background: var(--proto-bg); color: var(--proto-text); padding: 6px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; }
+.proto b { font-family: var(--font-heading); font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--notice-line); }
+.proto nav { display: flex; flex-wrap: wrap; gap: 2px; }
+.proto nav a { color: inherit; text-decoration: none; padding: 4px 9px; border-radius: 6px; min-height: 32px; display: inline-flex; align-items: center; }
+.proto nav a:hover { background: rgba(255,255,255,.1); }
+.proto nav a[aria-current="page"] { background: var(--proto-text); color: var(--proto-bg); font-weight: 600; }
+.proto span.note { opacity: .7; margin-left: auto; }
 
-main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
-.view { display: grid; gap: 24px; }
-.lead { max-width: 68ch; color: var(--muted); font-size: 1.05rem; }
-.head { display: grid; gap: 6px; }
-.eyebrow { font-family: var(--font-heading); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; color: var(--accent); }
-.grid2 { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 900px) { .grid2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } .grid2.even { grid-template-columns: 1fr 1fr; } }
+/* Felles fra siden */
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.logo { font-family: var(--font-heading); font-weight: 700; font-size: 22px; white-space: nowrap; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 500; text-decoration: none; }
+.topbar__end { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 15px; }
+.menu { position: relative; }
+.menu__button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.menu__panel { position: absolute; right: 0; top: 52px; z-index: 40; width: 290px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.18); display: grid; gap: 12px; }
+.menu__label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.theme-toggle { display: flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
+.theme-toggle button { flex: 1; font-size: 15px; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 999px; min-height: 40px; cursor: pointer; }
+.theme-toggle button[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; background: none; border: 0; padding: 4px 0; color: var(--text); text-align: left; cursor: pointer; font-size: 15px; font-weight: 600; }
+.switch small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.switch__track { width: 44px; height: 26px; border-radius: 999px; background: var(--line); position: relative; flex-shrink: 0; transition: background .15s; }
+.switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.switch[aria-checked="true"] .switch__track { background: var(--fjord); }
+.switch[aria-checked="true"] .switch__track::after { transform: translateX(18px); }
+
+.tag { display: inline-flex; align-items: center; min-height: 26px; padding: 0 9px; border-radius: 6px; font-size: 13px; font-weight: 600; background: var(--surface); color: var(--text); white-space: nowrap; }
+.dir { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 24px; padding: 0 5px; border-radius: 5px; font-size: 13px; font-weight: 700; }
+.dir--primary { background: var(--dir-primary); color: #fff; } .dir--possible { background: var(--possible); color: var(--text); }
+.dirs, .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.new { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border: 1.5px solid var(--new); color: var(--new); white-space: nowrap; }
+.btn { min-height: 48px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); text-decoration: none; font-weight: 600; font-size: 16px; cursor: pointer; }
+.btn--primary { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
+.btn--primary:hover { background: var(--fjord); border-color: var(--fjord); color: #fff; }
+.btn--wide { display: flex; width: 100%; }
+.buttons { display: grid; gap: 8px; }
+.segmented { display: flex; border: 1px solid var(--rose-border); border-radius: 10px; overflow: hidden; }
+.segmented button { flex: 1; min-height: 40px; border: 0; background: transparent; color: var(--text); font-size: 15px; font-weight: 500; cursor: pointer; padding: 0 6px; white-space: nowrap; }
+.segmented button + button { border-left: 1px solid var(--rose-border); }
+.segmented button[aria-pressed="true"] { background: var(--fjord); color: #fff; font-weight: 600; }
+.filter { display: grid; gap: 6px; }
+.filter__title { font-size: 14px; font-weight: 600; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.filter__note { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.ext { width: 15px; height: 15px; flex-shrink: 0; }
+.link-list { display: grid; }
+.link-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--text); }
+.link-row:last-child { border-bottom: 1px solid var(--line); }
+.link-row b { display: block; font-weight: 600; } .link-row span span { display: block; font-size: 14px; color: var(--muted); }
 .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; min-width: 0; align-content: start; }
-.card > header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.tag { display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface); color: var(--text); white-space: nowrap; }
-.tag.primary { background: var(--dir-primary); color: #fff; }
-.tag.possible { background: var(--possible); color: var(--text); }
-.tag.ok { background: var(--ok); color: #fff; } .tag.warn { background: var(--warn); color: #1C2B33; } .tag.bad { background: var(--bad); color: #fff; } .tag.none { background: var(--none); color: #fff; }
-.tag.new { background: var(--accent); color: #fff; }
-.tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.btn { font: 600 1rem var(--font-body); border: 0; border-radius: 10px; padding: 10px 16px; min-height: 44px; cursor: pointer; background: var(--accent); color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
-.btn.ghost { background: transparent; color: var(--link); border: 1px solid var(--line); }
-.btn:focus-visible, a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.seg button { font: 600 .9rem var(--font-body); background: var(--card); color: var(--text); border: 0; padding: 6px 12px; min-height: 36px; cursor: pointer; }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--fjord); color: #fff; }
-table { border-collapse: collapse; width: 100%; font-size: .93rem; }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
-th { font-weight: 600; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+.card > header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.wind-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; vertical-align: -1px; }
+.r-ok { --r: var(--wind-ok); } .r-maybe { --r: var(--wind-maybe); } .r-high { --r: var(--wind-high); } .r-no { --r: var(--wind-no); } .r-none { --r: var(--line); }
+.wind-dot { background: var(--r, var(--line)); }
+.site-wind { display: grid; gap: 2px; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--r, var(--line)); border-radius: 10px; text-decoration: none; color: inherit; }
+.site-wind strong { font-size: 16px; }
+.site-wind span { font-size: 14px; line-height: 1.45; color: var(--muted); }
+.site-wind .time { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+a.site-wind:hover { border-color: var(--dir-primary); border-left-color: var(--r); }
+.wind-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--line); }
+.wind-bar span { display: block; background: var(--r); }
+.counts { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 13px; }
+.counts span { display: inline-flex; align-items: center; gap: 5px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
 td.r, th.r { text-align: right; }
 tr.click { cursor: pointer; } tr.click:hover td { background: var(--surface); }
 .scroll { overflow-x: auto; }
-.kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.kpi { background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 2px; }
-.kpi b { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.kpi span { color: var(--muted); font-size: .875rem; }
-.note { background: var(--proto); color: var(--proto-text); border-radius: 10px; padding: 10px 14px; font-size: .9rem; }
-svg text { font-family: var(--font-body); }
-.t-ink { fill: var(--text); } .t-muted { fill: var(--muted); } .t-head { font-family: var(--font-heading); font-weight: 600; }
-.g-line { stroke: var(--line-soft); } .g-axis { stroke: var(--line); }
-
-/* Kart */
-.mapwrap { background: var(--map-bg); border-radius: var(--radius); border: 1px solid var(--line-soft); overflow: hidden; position: relative; }
-.mapwrap svg { display: block; width: 100%; height: auto; max-height: 78vh; }
-.map-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
-.map-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 5px; }
-.site-dot { fill: var(--dir-primary); stroke: var(--card); stroke-width: 2; cursor: pointer; }
-.site-dot.dim { fill: var(--none); }
-.site-lbl { font-size: 11px; fill: var(--muted); pointer-events: none; }
-.st-ring { fill: var(--card); stroke: var(--text); stroke-width: 1.5; cursor: pointer; }
-.st-ring.prop { stroke-dasharray: 3 2; }
-.st-val { font: 700 12px var(--font-body); fill: var(--text); pointer-events: none; }
-.st-arrow { fill: var(--accent); pointer-events: none; }
-.st-name { font: 600 11.5px var(--font-body); fill: var(--text); pointer-events: none; paint-order: stroke; stroke: var(--map-bg); stroke-width: 3px; }
-.st-g:hover .st-ring, .st-g:focus .st-ring { stroke: var(--accent); stroke-width: 2.5; }
-.st-g { outline: none; }
-
-.stlist { display: grid; gap: 8px; }
-.strow { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--card); text-decoration: none; color: inherit; }
-.strow:hover { border-color: var(--dir-primary); }
-.strow .big { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; text-align: right; line-height: 1; font-variant-numeric: tabular-nums; }
-.strow .big small { font-size: .85rem; font-weight: 500; color: var(--muted); }
-
-.now { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
-.now .val { font-family: var(--font-heading); font-size: 3.2rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-.now .val small { font-size: 1.1rem; font-weight: 500; color: var(--muted); }
-.dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: .93rem; }
+.kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+.kpi { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; background: var(--card); }
+.kpi b { font-family: var(--font-heading); font-size: 30px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: 13px; }
+.dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 15px; margin: 0; }
 .dl dt { color: var(--muted); } .dl dd { margin: 0; font-variant-numeric: tabular-nums; }
+.scale { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.scale i { width: 20px; height: 11px; border-radius: 3px; display: inline-block; }
+svg text { font-family: var(--font-body); }
+.t-ink { fill: var(--text); } .t-muted { fill: var(--muted); }
+.g-line { stroke: var(--line-soft); }
 
-.site-assess { display: grid; gap: 10px; }
-.assess-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--surface); }
+/* Vindrosen, samme stier og klasser som common.js */
+.rose .sector { stroke: var(--rose-border); stroke-width: 1; }
+.rose .sector--primary { fill: var(--dir-primary); } .rose .sector--possible { fill: var(--possible); } .rose .sector--none { fill: var(--rose-none); }
+.rose .center { fill: var(--text); }
+.rose text { font-size: 14px; font-weight: 600; fill: var(--text); }
+.rose .sector--wind { fill: var(--r); stroke: var(--text); stroke-width: 3; stroke-linejoin: round; }
 
-/* Heatmap */
-.hm { display: grid; grid-template-columns: 34px repeat(17, minmax(0, 1fr)); gap: 2px; font-size: .72rem; }
-.hm div { aspect-ratio: 1.3; border-radius: 3px; }
-.hm .lab { aspect-ratio: auto; color: var(--muted); display: flex; align-items: center; }
-.hm .hl { aspect-ratio: auto; color: var(--muted); text-align: center; }
-.hm-scale { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
-.hm-scale i { width: 22px; height: 12px; border-radius: 3px; display: inline-block; }
+/* ---------- Forsiden ---------- */
+.home { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "map" "pane"; }
+.home__head { grid-area: head; padding: 16px 16px 0; display: grid; gap: 18px; }
+.home__left { grid-area: pane; padding: 16px; display: grid; gap: 18px; align-content: start; }
+.home__map { grid-area: map; }
+.home__map { position: relative; min-height: 70vh; background: var(--map-bg); overflow: hidden; }
+@media (min-width: 900px) {
+  .home { grid-template-columns: 380px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "head map" "pane map"; height: calc(100vh - 44px); }
+  .home__head { padding: 20px 24px 0; border-right: 1px solid var(--line); }
+  .home__left { overflow-y: auto; padding: 18px 24px 32px; border-right: 1px solid var(--line); }
+  .home__map { min-height: 0; }
+}
+.home h1 { font-size: 34px; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; min-height: 44px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--muted); font-size: 16px; font-weight: 600; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--text); }
+.search { width: 100%; min-height: 44px; border: 1px solid var(--rose-border); border-radius: 999px; padding: 0 16px 0 40px; font: inherit; font-size: 16px; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2345545C' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") no-repeat 14px center; color: var(--text); }
+.results { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.result { display: grid; gap: 4px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); text-align: left; width: 100%; cursor: pointer; color: inherit; font: inherit; }
+.result[aria-pressed="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+.result__head { display: flex; justify-content: space-between; gap: 8px; }
+.result__name { font-weight: 600; } .result__elev { color: var(--muted); font-size: 14px; }
+.result__wind { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.station-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); text-align: left; width: 100%; cursor: pointer; color: inherit; font: inherit; }
+.station-row[aria-pressed="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+.station-row .val { font-family: var(--font-heading); font-weight: 700; font-size: 26px; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; }
+.station-row .val small { display: block; font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--muted); }
+.station-row .meta { font-size: 13px; color: var(--muted); }
 
-/* Logg */
-.drop { border: 2px dashed var(--line); border-radius: var(--radius); padding: 22px; text-align: center; display: grid; gap: 10px; justify-items: center; background: var(--card); }
-.drop.over { border-color: var(--accent); background: var(--surface); }
-.flist { display: grid; gap: 6px; }
-.frow { display: grid; grid-template-columns: 70px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line-soft); background: var(--card); cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
-.frow[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
-.frow .d { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
-.form label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); font-weight: 500; }
-.form input, .form select, .form textarea { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 42px; }
-.form .full { grid-column: 1 / -1; }
+/* Kartet */
+.map-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.land { fill: var(--map-bg); }
+.map-grid { stroke: var(--map-grid); stroke-width: 1; }
+.marker { cursor: pointer; outline: none; }
+.marker__ring { fill: #fff; stroke: #1C2B33; stroke-width: 2; }
+.marker__ring.rated { stroke: var(--r); stroke-width: 3.5; }
+.marker.dim { opacity: .28; }
+.marker.sel .marker__halo { stroke: #1C2B33; stroke-width: 3; fill: none; }
+.marker:focus-visible .marker__halo { stroke: var(--link); stroke-width: 3; fill: none; }
+.marker .rose .sector { stroke: #fff; stroke-width: 4; }
+.marker .rose .sector--primary { fill: #3D7A8A; } .marker .rose .sector--possible { fill: #8FBCC7; } .marker .rose .sector--none { fill: #fff; }
+.marker .rose .center { fill: #1C2B33; }
+.marker .rose .sector--wind { stroke: none; }
+.cluster rect { fill: #fff; stroke: #1C2B33; stroke-width: 2; }
+.cluster text { font: 700 16px var(--font-heading); fill: #1C2B33; }
+.station rect.body { fill: #1C2B33; stroke: #fff; stroke-width: 1.5; }
+.station text { font: 700 13px var(--font-body); fill: #fff; }
+.station .arrow { fill: #1C2B33; stroke: #fff; stroke-width: 1.5; }
+.station.prop rect.body { fill: #45545C; }
+.station.sel rect.halo { fill: none; stroke: var(--link); stroke-width: 3; }
+.map-label { font: 700 13px var(--font-heading); fill: #1C2B33; paint-order: stroke; stroke: #fff; stroke-width: 3px; pointer-events: none; }
+.place-label { font: italic 500 13px var(--font-body); fill: var(--muted); pointer-events: none; }
+.map-ctrl { position: absolute; left: 12px; top: 12px; display: grid; gap: 8px; }
+.map-ctrl span { display: grid; place-items: center; width: 40px; height: 40px; background: #fff; color: #1C2B33; border: 2px solid rgba(0,0,0,.2); border-radius: 6px; font-weight: 700; font-size: 20px; }
+.map-chip { position: absolute; left: 64px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+.map-chip > div { background: #fff; color: #1C2B33; border-radius: 10px; padding: 7px 12px; font-size: 14px; font-weight: 600; box-shadow: 0 1px 5px rgba(0,0,0,.25); pointer-events: auto; }
+.map-legend { position: absolute; left: 12px; bottom: 12px; background: #fff; color: #1C2B33; border-radius: 10px; padding: 7px 12px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 14px; box-shadow: 0 1px 5px rgba(0,0,0,.25); max-width: calc(100% - 24px); }
+.map-legend i { display: inline-block; width: 13px; height: 13px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+.map-note { position: absolute; right: 12px; bottom: 12px; font-size: 11px; color: var(--muted); background: var(--card); padding: 2px 6px; border-radius: 4px; opacity: .9; }
+.map-card { position: absolute; right: 12px; bottom: 44px; width: min(370px, calc(100% - 24px)); max-height: calc(100% - 70px); overflow-y: auto; background: #fff; color: #1C2B33; border-radius: 14px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.25); display: grid; gap: 12px;
+  --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --line-soft: #D5DEDD; --card: #fff; --surface: #E6ECEB; --link: #2E5E6E; --inverse-bg: #1C2B33; --inverse-text: #fff; --dir-primary: #3D7A8A; --possible: #8FBCC7; --rose-none: #fff; --rose-border: #9FB1B4; --new: #2E5E6E; --s0: #DCE9EC; --s1: #A9CBD4; --s2: #5F9AAA; --s3: #2E5E6E; color-scheme: light; }
+.map-card__close { position: absolute; right: 10px; top: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--surface); color: var(--text); cursor: pointer; font-size: 18px; }
+.map-card__head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding-right: 30px; }
+.map-card h2 { font-size: 28px; }
+.map-card .big { font-family: var(--font-heading); font-size: 44px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.map-card .big small { font-size: 17px; font-weight: 500; color: var(--muted); }
 
-/* Klubb */
+/* ---------- Undersider ---------- */
+.page { max-width: 1240px; margin: 0 auto; padding: 8px 16px 64px; display: grid; gap: 22px; }
+.page-head { display: grid; gap: 8px; }
+.page-head .lead { max-width: 64ch; color: var(--muted); }
+.title-elev { font-family: var(--font-body); font-size: 18px; font-weight: 500; color: var(--muted); white-space: nowrap; letter-spacing: 0; }
+.site-grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 960px) { .site-grid { grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; } }
+.col { display: grid; gap: 22px; align-content: start; min-width: 0; }
+.block { display: grid; gap: 12px; min-width: 0; }
+.block > header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.notice { background: var(--notice-bg); border: 1.5px solid var(--notice-line); border-radius: var(--radius); padding: 16px 18px; color: var(--notice-text); display: grid; gap: 10px; }
+.notice h2 { display: flex; align-items: center; gap: 10px; font-size: 24px; }
+.notice h2 i { width: 22px; height: 22px; border-radius: 50%; background: var(--notice-icon); color: #fff; font: 700 15px/22px var(--font-body); text-align: center; font-style: normal; }
+.notice b { display: block; font-size: 15px; } .notice p { font-size: 14px; }
+.ghost-block { border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 8px; color: var(--muted); font-size: 15px; background: repeating-linear-gradient(135deg, transparent 0 10px, var(--surface) 10px 11px); }
+.ghost-block b { color: var(--text); }
+.grid2 { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .grid2 { grid-template-columns: 1fr 1fr; } .grid2.wide-left { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+.hm { display: grid; grid-template-columns: 30px repeat(17, minmax(0, 1fr)); gap: 2px; font-size: 11px; }
+.hm div { aspect-ratio: 1.25; border-radius: 3px; }
+.hm span { color: var(--muted); display: flex; align-items: center; } .hm .hl { justify-content: center; }
 .bars { display: grid; gap: 6px; }
-.bar { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0,1fr) 44px; gap: 10px; align-items: center; font-size: .92rem; }
-.bar .track { height: 14px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+.bar { display: grid; grid-template-columns: minmax(90px, 130px) minmax(0, 1fr) 40px; gap: 10px; align-items: center; font-size: 15px; }
+.bar .track { height: 12px; background: var(--surface); border-radius: 4px; overflow: hidden; }
 .bar .fill { height: 100%; background: var(--dir-primary); border-radius: 4px; }
 .bar b { text-align: right; font-variant-numeric: tabular-nums; }
-.rank { font-family: var(--font-heading); font-weight: 700; color: var(--muted); width: 1.5em; display: inline-block; }
-
-/* Plan */
+.rank { font-family: var(--font-heading); font-weight: 700; color: var(--muted); }
+.flist { display: grid; gap: 6px; }
+.frow { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+.frow[aria-pressed="true"] { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+.frow .d { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.src { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--surface); color: var(--muted); letter-spacing: .03em; }
+.account { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; }
+.account .ok { color: var(--wind-ok); font-weight: 600; font-size: 14px; }
 .matrix td:first-child { font-weight: 600; }
 .verdict { font-weight: 600; }
-.verdict.build { color: var(--ok); } .verdict.integ { color: var(--link); } .verdict.skip { color: var(--muted); }
-.phases { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.verdict.build { color: var(--wind-ok); } .verdict.integ { color: var(--link); } .verdict.skip { color: var(--muted); }
+.phases { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 .phase { border-top: 4px solid var(--dir-primary); }
-.phase:nth-child(2) { border-top-color: var(--possible); } .phase:nth-child(3) { border-top-color: var(--line); }
-.phase ul, .card ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
-.prose { max-width: 70ch; display: grid; gap: 10px; }
-.crumb { font-size: .9rem; } .crumb a { text-decoration: none; }
-@media (prefers-reduced-motion: no-preference) { .view { animation: fade .18s ease-out; } @keyframes fade { from { opacity: .4; } to { opacity: 1; } } }
-@media (max-width: 560px) { h1 { font-size: 1.75rem; } .now .val { font-size: 2.6rem; } .hm { font-size: .6rem; grid-template-columns: 26px repeat(17, minmax(0, 1fr)); } }
+.phase:nth-child(2) { border-top-color: var(--possible); } .phase:nth-child(3) { border-top-color: var(--rose-border); } .phase:nth-child(4) { border-top-color: var(--line); }
+.card ul { margin: 0; padding-left: 1.1em; display: grid; gap: 5px; font-size: 15px; }
+.eyebrow { font-family: var(--font-heading); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 14px; color: var(--muted); }
+code { font-size: .88em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 600px) { h1 { font-size: 34px; } .hm { font-size: 9px; grid-template-columns: 24px repeat(17, minmax(0, 1fr)); } .proto span.note { display: none; } }
+@media (prefers-reduced-motion: no-preference) { .fade { animation: fade .16s ease-out; } @keyframes fade { from { opacity: .5; } to { opacity: 1; } } }
 </style>
 
-<header class="top">
-  <div class="top-in">
-    <div class="brand">HPGT <span>flysteder</span></div>
-    <nav class="tabs" aria-label="Hovedmeny">
-      <a href="#kart">Kart</a>
-      <a href="#sted-sollifjellet">Stedsside</a>
-      <a href="#vaer">Værstasjoner</a>
-      <a href="#logg">Min logg</a>
-      <a href="#klubb">Klubben</a>
-      <a href="#plan">Bygge eller integrere?</a>
-    </nav>
-  </div>
-</header>
-<div class="proto-bar">Prototype. Startene er ekte, men værmålinger, stasjoner og flyturer er eksempeldata med fiktive piloter.</div>
-<main id="app"></main>
+<div class="proto">
+  <b>Prototype</b>
+  <nav aria-label="Skjermer i prototypen">
+    <a href="#forside">Forsiden</a>
+    <a href="#sted-sollifjellet">Stedsside</a>
+    <a href="#stasjon-sollifjellet">Værstasjon</a>
+    <a href="#klubb">Klubben</a>
+    <a href="#meg">Min side</a>
+    <a href="#plan">Plan</a>
+  </nav>
+  <span class="note">Ekte flysteder. Vær, stasjoner og turer er eksempeldata med fiktive piloter.</span>
+</div>
+<div id="app"></div>
 
 <script>
 /* ---------- Data ---------- */
-const SITES = [{"id":"blahatten","name":"Blåhatten","lat":68.73083,"lon":16.46444,"d":["S","SE"],"p":[],"lv":null,"alt":512,"c":["PG"]},{"id":"borkenes","name":"Borkenes","lat":68.78028,"lon":16.1675,"d":["SW","W"],"p":[],"lv":null,"alt":100,"c":["PG"]},{"id":"dale","name":"Dale","lat":68.79472,"lon":16.11583,"d":["S","SW"],"p":[],"lv":null,"alt":null,"c":["PG"]},{"id":"daleskallen","name":"Daleskallen","lat":68.79583,"lon":16.11944,"d":["W"],"p":[],"lv":null,"alt":180,"c":["PG"]},{"id":"elgen","name":"Elgen","lat":68.89083,"lon":16.28194,"d":["N","NE","E","SE","S","SW","W","NW"],"p":[],"lv":"PP3","alt":506,"c":["PG","SPG"]},{"id":"finnslettheia","name":"Finnslettheia","lat":68.67222,"lon":16.43333,"d":["E","SE"],"p":[],"lv":null,"alt":500,"c":["PG"]},{"id":"heia","name":"Heia","lat":68.75889,"lon":16.51028,"d":["E","NE","N"],"p":["W"],"lv":null,"alt":478,"c":["PG"]},{"id":"hemmestadheia","name":"Hemmestadheia","lat":68.72639,"lon":16.0925,"d":["W"],"p":[],"lv":null,"alt":550,"c":["PG"]},{"id":"hinnstein","name":"Hinnstein","lat":68.74722,"lon":16.50278,"d":["E","SE"],"p":[],"lv":null,"alt":565,"c":["PG"]},{"id":"hogfjellet","name":"Høgfjellet","lat":68.82333,"lon":16.30972,"d":["NW","N","NE"],"p":[],"lv":"PP3","alt":615,"c":["PG","SPG"]},{"id":"keipen","name":"Keipen","lat":68.85639,"lon":16.33556,"d":["SW","W"],"p":[],"lv":null,"alt":480,"c":["PG"]},{"id":"kilhusasen","name":"Kilhusåsen","lat":68.80306,"lon":16.45222,"d":["W","NW"],"p":[],"lv":null,"alt":290,"c":["PG"]},{"id":"mela-aksla","name":"Melå aksla","lat":68.65397,"lon":16.11531,"d":["N","NE","E","S","SW","W","NW"],"p":[],"lv":null,"alt":540,"c":["PG"]},{"id":"nontua","name":"Nontua","lat":68.8175,"lon":16.33889,"d":["SE","E","NE","N"],"p":["NW"],"lv":null,"alt":570,"c":["PG","SPG"]},{"id":"nupen","name":"Nupen","lat":68.85889,"lon":16.25333,"d":["NW","N","NE","E","SE"],"p":[],"lv":null,"alt":400,"c":["PG"]},{"id":"reinfjellet","name":"Reinfjellet","lat":68.64833,"lon":16.01167,"d":["S","SE","E","NE"],"p":[],"lv":null,"alt":900,"c":["PG"]},{"id":"rodmoldheia","name":"Rødmoldheia","lat":68.80639,"lon":16.19278,"d":["S","SW"],"p":["SE","W"],"lv":"PP2","alt":630,"c":["PG"]},{"id":"saetertinden","name":"Sætertinden","lat":68.58694,"lon":16.36222,"d":["S","SW","SE","E"],"p":[],"lv":null,"alt":1095,"c":["PG"]},{"id":"samaasen","name":"Samaåsen","lat":68.81028,"lon":16.52639,"d":["W","NW"],"p":[],"lv":null,"alt":174,"c":["PG"]},{"id":"sollifjellet","name":"Sollifjellet","lat":68.80389,"lon":16.36667,"d":["N","NE","E","SE","S","NW"],"p":[],"lv":"PP2","alt":567,"c":["PG","SPG"]},{"id":"steinsasen","name":"Steinsåsen","lat":68.75694,"lon":16.43139,"d":["NW","W","SW"],"p":[],"lv":null,"alt":495,"c":["PG","SPG"]},{"id":"storbakkan","name":"Storbakkan","lat":68.66194,"lon":16.41,"d":["SW","S"],"p":["SE","E"],"lv":null,"alt":324,"c":["PG"]},{"id":"storgalten","name":"Storgalten","lat":68.90343,"lon":16.53276,"d":["E","SE"],"p":[],"lv":null,"alt":782,"c":["PG"]},{"id":"storhornet","name":"Storhornet","lat":68.82722,"lon":16.21611,"d":["W","NW","N","NE","E"],"p":[],"lv":null,"alt":740,"c":["PG","SPG"]},{"id":"storlitinden","name":"Storlitinden","lat":68.79667,"lon":16.30583,"d":["SE","S","SW"],"p":["NW"],"lv":"PP2","alt":600,"c":["PG"]},{"id":"strand","name":"Strand","lat":68.77,"lon":16.20861,"d":["SW"],"p":[],"lv":null,"alt":151,"c":["PG"]},{"id":"svartdalsasen","name":"Svartdalsåsen","lat":68.75556,"lon":16.42361,"d":["W","NW"],"p":[],"lv":null,"alt":360,"c":["PG"]},{"id":"trastad","name":"Trastad","lat":68.78472,"lon":16.14444,"d":["SW","W"],"p":[],"lv":null,"alt":155,"c":["PG"]},{"id":"utstrand","name":"Utstrand","lat":68.81222,"lon":16.09556,"d":["SW","W"],"p":[],"lv":null,"alt":20,"c":["PG"]},{"id":"vetefjellet","name":"Vetefjellet","lat":68.79861,"lon":16.34028,"d":["S","SE"],"p":["E"],"lv":null,"alt":340,"c":["PG"]}];
+const SITES = [{"id":"arbostadtinden","name":"Årbostadtinden","lat":68.90856,"lon":17.34808,"d":["N","NE","E","NW"],"p":["SE"],"lv":"PP3","ts":false,"alt":1179,"c":["PG","SPG"],"fl":9348,"i":"Topp på Andørja, med lang tur opp: nesten 1200 høydemeter fra veien."},{"id":"blahatten","name":"Blåhatten","lat":68.73083,"lon":16.46444,"d":["S","SE"],"p":[],"lv":"PP2","ts":false,"alt":475,"c":["PG"],"fl":369,"i":"Et av de klassiske stedene, med et av de beste hangene på sørlig vind. Toppen er som en gressplen, fin både for start og topplanding."},{"id":"dale","name":"Dale","lat":68.79472,"lon":16.11583,"d":["S","SW"],"p":[],"lv":"PP2","ts":false,"alt":75,"c":["PG"],"fl":362,"i":"Avansert sted som kan være vanskelig å lese. Kan gi enorme høydegevinster i lite vind, men også kraftig turbulens."},{"id":"daleskallen","name":"Daleskallen","lat":68.79583,"lon":16.11944,"d":["W"],"p":[],"lv":"PP2","ts":false,"alt":176,"c":["PG"],"fl":2471,"i":"Knallbra sted på vestlige vinder, og det roligste av de tre stedene ved Dale. Vanlig med flyhøyder over 600 moh."},{"id":"elgen","name":"Elgen","lat":68.89083,"lon":16.28194,"d":["N","NE","E","SE","S","SW","W","NW"],"p":[],"lv":"PP3","ts":false,"alt":497,"c":["PG","SPG"],"fl":356,"i":"Ytterst i havgapet, med utsikt mot Grytøya og midnattsola. Fjellet dekker de fleste vindretninger, med egne starter for PG og SPG. Flott for soaring og kveldsturer."},{"id":"finnslettheia","name":"Finnslettheia","lat":68.67222,"lon":16.43333,"d":["E","SE"],"p":[],"lv":"PP2","ts":false,"alt":502,"c":["PG"],"fl":4327,"i":"Fint hang med gode startplasser. Bruker samme landing som Storbakkan."},{"id":"haugfjellet","name":"Haugfjellet","lat":68.562,"lon":17.50297,"d":["NE","E","SE","S"],"p":[],"lv":"PP2","ts":false,"alt":523,"c":["PG"],"fl":1687,"i":"Kort tur fra Bjerkvik, med fine startforhold mot øst."},{"id":"heia","name":"Heia","lat":68.75889,"lon":16.51028,"d":["E","NE","N"],"p":["NW","W"],"lv":"PP3","ts":false,"alt":475,"c":["PG"],"fl":355,"i":"Suveren vårtermikk og turer i absolutt toppklasse, med bobler til 1700–1900 moh. Flere distanseturer herfra."},{"id":"hinnstein","name":"Hinnstein","lat":68.74722,"lon":16.50278,"d":["E","SE"],"p":[],"lv":"PP3","ts":false,"alt":558,"c":["PG"],"fl":666,"i":"Kanskje klubbens beste hang på sørøstlig vind. Rolig, går høyt, og har suveren utsikt over byen."},{"id":"hogfjellet","name":"Høgfjellet","lat":68.82333,"lon":16.30972,"d":["NW","N","NE"],"p":[],"lv":"PP3","ts":false,"alt":617,"c":["PG","SPG"],"fl":8801,"i":"Nabo til Nontua, med bratt start."},{"id":"keipen","name":"Keipen","lat":68.85639,"lon":16.33556,"d":["S","SW","W"],"p":["SE"],"lv":"PP3","ts":false,"alt":475,"c":["PG"],"fl":889,"i":"Et av de eldste flystedene, der det ble fløyet med standard rogallo. Hard og kraftig termikk, og høydegevinster på over 1000 m på hang."},{"id":"kilhusasen","name":"Kilhusåsen","lat":68.80306,"lon":16.45222,"d":["W","NW"],"p":[],"lv":"PP2","ts":false,"alt":280,"c":["PG"],"fl":354,"i":"Kanskje klubbens aller beste sted målt i flytimer. Lett tilgjengelig for alle."},{"id":"lundenesgalten","name":"Lundenesgalten","lat":68.90343,"lon":16.53276,"d":["E","SE"],"p":[],"lv":"PP2","ts":false,"alt":780,"c":["PG","SPG"],"fl":7949,"i":"Heter Storgalten i Kartverkets kart. Ligger på Grytøya rett nord for Harstad."},{"id":"mela-aksla","name":"Melå aksla","lat":68.65397,"lon":16.11531,"d":["N","NE","E","S","SW","W","NW"],"p":[],"lv":"PP2","ts":false,"alt":540,"c":["PG"],"fl":10554,"i":"Kan levere heftig termikk på de rette dagene."},{"id":"nona","name":"Nona","lat":68.92073,"lon":16.45081,"d":["W","SW"],"p":["NW","NE","E","SE"],"lv":"PP3","ts":false,"alt":999,"c":["PG"],"fl":9995,"i":"Høyeste topp på Grytøya nord for Harstad, med lang tur opp: rundt 1000 høydemeter fra veien."},{"id":"nontua","name":"Nontua","lat":68.8175,"lon":16.33889,"d":["SE","E","NE","N"],"p":["NW"],"lv":"PP2","ts":false,"alt":564,"c":["PG","SPG"],"fl":745,"i":"Et av favorittstedene, med utsikt over Andfjorden og fine skliturer på sommerkvelder. Topplanding overalt."},{"id":"ramnskogheia","name":"Ramnskogheia","lat":68.98521,"lon":15.51386,"d":["N","NE","E","SE","S","SW","W","NW"],"p":[],"lv":"PP2","ts":false,"alt":485,"c":["PG"],"fl":9180,"i":"Mellom Åknes og Risøyhamn på Andøya, startbar i alle retninger."},{"id":"reinebringen","name":"Reinebringen","lat":67.92784,"lon":13.07143,"d":["E","SE","S"],"p":["N","NE"],"lv":"PP3","ts":false,"alt":484,"c":["PG","SPG"],"fl":7476,"i":"Kjent fjell over Reine i Lofoten, med kort og bratt tur opp trappene."},{"id":"reinfjellet","name":"Reinfjellet","lat":68.64833,"lon":16.01167,"d":["S","SE","E","NE"],"p":[],"lv":"PP2","ts":false,"alt":893,"c":["PG"],"fl":3118,"i":"Høyt, luftig og bratt, med en av de mest spektakulære startplassene og super utsikt. Du får full uttelling for høydemeterne."},{"id":"rodmoldheia","name":"Rødmoldheia","lat":68.80639,"lon":16.19278,"d":["S","SW"],"p":["SE","W"],"lv":"PP2","ts":true,"alt":621,"c":["PG"],"fl":639,"i":"Termikksted nummer én i Harstad og Kvæfjord, og førstevalget på sørlig vind. Uproblematisk for piloter på alle nivåer, med stort distansepotensial. Beste sesong er mai til midten av august."},{"id":"ryten","name":"Ryten","lat":68.08705,"lon":13.09203,"d":["E","SE"],"p":["S","SW","W"],"lv":"PP2","ts":false,"alt":510,"c":["PG"],"fl":7506,"i":"Ved Kvalvika i Flakstad i Lofoten, med landing på stranda."},{"id":"saetertinden","name":"Sætertinden","lat":68.58694,"lon":16.36222,"d":["S","SW","SE","E"],"p":["NE"],"lv":"PP3","ts":false,"alt":1089,"c":["PG","SPG"],"fl":1599,"i":"Høyt og flott, nesten 1100 moh, med mange fine landinger i Hårvika."},{"id":"samaasen","name":"Samaåsen","lat":68.81012,"lon":16.5263,"d":["W","NW"],"p":[],"lv":"PP3","ts":false,"alt":171,"c":["PG"],"fl":755,"i":"Selve urstedet i Harstad-regionen, med flyging siden 1976. Et lite hang nord for byen som kan være smooth som fløyel, og turbulent i vestlig vind."},{"id":"sollifjellet","name":"Sollifjellet","lat":68.80389,"lon":16.36667,"d":["N","NE","E","SE","S","NW"],"p":[],"lv":"PP2","ts":true,"alt":563,"c":["PG","SPG"],"fl":235,"i":"Et av klubbens mest brukte steder. Her flys det året rundt, til alt fra korte skliturer til termikk og fine XC-turer."},{"id":"steinsasen","name":"Steinsåsen","lat":68.75694,"lon":16.43139,"d":["NW","W","SW"],"p":[],"lv":"PP3","ts":false,"alt":488,"c":["PG","SPG"],"fl":5868,"i":"En av de ukjente perlene, med nydelig startplass og en av de beste topplandingsmulighetene. Lite vind skal til for å henge på vestavind."},{"id":"storbakkan","name":"Storbakkan","lat":68.66194,"lon":16.41,"d":["SW","S"],"p":["SE","E"],"lv":"PP2","ts":true,"alt":340,"c":["PG"],"fl":370,"i":"Klassisk sted med lett tilgang og kort tur opp, brukt både til skoleturer og lange distanser. Behandle det med respekt i mye vind."},{"id":"storhornet","name":"Storhornet","lat":68.83032,"lon":16.20122,"d":["W","NW","N","NE","E"],"p":[],"lv":"PP2","ts":true,"alt":609,"c":["PG","SPG"],"fl":1492,"i":"Et av klubbens mest brukte og beste steder. Dekker mange vindretninger, har stor utgangshøyde og er et glimrende utgangspunkt for distanseturer."},{"id":"storlitinden","name":"Storlitinden","lat":68.79667,"lon":16.30583,"d":["SE","S","SW"],"p":["NW"],"lv":"PP2","ts":false,"alt":597,"c":["PG"],"fl":331,"i":"Et av klubbens mest brukte steder, med en kort og enkel tur opp fra Kvæfjordeidet. Hang, termikk og skliturer."},{"id":"svartdalsasen","name":"Svartdalsåsen","lat":68.77571,"lon":16.46005,"d":["W","NW"],"p":[],"lv":"PP2","ts":false,"alt":340,"c":["PG"],"fl":1953,"i":"Blant de beste termikkgeneratorene i området, ofte med hang samtidig. Lite brukt, siden Kilhusåsen gir enklere gange på NV. Har du gått opp hit, send gjerne GPX-sporet til klubben."},{"id":"trastad","name":"Trastad","lat":68.78481,"lon":16.14474,"d":["SW","W"],"p":[],"lv":"PP3","ts":false,"alt":158,"c":["PG"],"fl":1047,"i":"Et av de mest brukte stedene i Kvæfjord, hogd ut rett over Trastadsenteret. Spesielt om våren kan det gi heftige turer med termikk til skybase."},{"id":"utstrand","name":"Utstrand","lat":68.81222,"lon":16.09556,"d":["SW","W"],"p":[],"lv":"PP2","ts":false,"alt":13,"c":["PG"],"fl":338,"i":"Subheng rett over havet. Start på 20 moh og, på gode dager, opp i 800 moh over fjellene bak."},{"id":"vetefjellet","name":"Vetefjellet","lat":68.79861,"lon":16.34028,"d":["S","SE"],"p":["E"],"lv":"PP2","ts":false,"alt":527,"c":["PG"],"fl":5031,"i":"På veien opp mot Storlitinden, til høyre for tinden. Et godt alternativ når vinden dreier fra sør mot øst, og med gode muligheter for topplanding."}];
 const SITE = Object.fromEntries(SITES.map(s => [s.id, s]));
+const HAZARDS = { sollifjellet: [
+  ["Trakteffekt over toppen av alpinsenteret", "Ved masta og ved heisen trakter vinden, og den er ofte sterkere der enn ellers på fjellet. Punkt 2 i kartet."],
+  ["Bølgevind", "Stedet er utsatt for bølgevind, særlig med vind fra S–SØ og mye høydevind fra samme retning. Viser Yr mye vind og kraftige kast på Sætertinden, er det et tegn på at bølgevind kan slå ned rundt Sollifjellet."]] };
 
-// Eksempelstasjoner. "forslag" = stasjon klubben kunne satt opp selv.
+// Eksempelstasjoner. kind: "forslag" = stasjon klubben kunne satt opp, ellers en kilde som finnes i dag.
 const STATIONS = [
-  { id: "sollifjellet", name: "Sollifjellet topp", src: "Holfuy", kind: "forslag", lat: 68.8045, lon: 16.3695, alt: 560, fx: 1.35, dOff: 10 },
-  { id: "hogfjellet", name: "Høgfjellet", src: "Ecowitt (klubbens egen)", kind: "forslag", lat: 68.8245, lon: 16.3135, alt: 600, fx: 1.45, dOff: -15 },
-  { id: "elgsnes", name: "Elgsnes", src: "Holfuy", kind: "forslag", lat: 68.8945, lon: 16.2985, alt: 15, fx: 1.0, dOff: 20 },
-  { id: "harstad", name: "Harstad", src: "MET (Frost)", kind: "offentlig", lat: 68.7985, lon: 16.5345, alt: 45, fx: .85, dOff: 0 },
-  { id: "borkenes", name: "Borkenes", src: "MET (Frost)", kind: "offentlig", lat: 68.7755, lon: 16.1795, alt: 20, fx: .9, dOff: -25 },
-  { id: "melaaksla", name: "Melå", src: "Netatmo (delt)", kind: "privat", lat: 68.6545, lon: 16.1305, alt: 60, fx: .8, dOff: 30 },
-  { id: "saetertinden", name: "Sætertinden", src: "Holfuy", kind: "forslag", lat: 68.5905, lon: 16.3575, alt: 1050, fx: 1.6, dOff: 5 },
+  { id: "sollifjellet", name: "Sollifjellet topp", src: "Holfuy", kind: "forslag", lat: 68.8115, lon: 16.3800, alt: 560, fx: 1.0, dOff: 10 },
+  { id: "hogfjellet", name: "Høgfjellet", src: "Holfuy", kind: "forslag", lat: 68.8380, lon: 16.2950, alt: 600, fx: 1.1, dOff: -15 },
+  { id: "elgsnes", name: "Elgsnes", src: "XCC flymet", kind: "eksisterende", lat: 68.8800, lon: 16.2300, alt: 15, fx: .85, dOff: 20 },
+  { id: "harstad", name: "Harstad", src: "MET", kind: "eksisterende", lat: 68.7950, lon: 16.5600, alt: 45, fx: .85, dOff: 0 },
+  { id: "kvaefjord", name: "Borkenes", src: "MET", kind: "eksisterende", lat: 68.7700, lon: 16.2100, alt: 20, fx: .9, dOff: -25 },
+  { id: "mela", name: "Melå", src: "Netatmo (delt)", kind: "eksisterende", lat: 68.6650, lon: 16.1600, alt: 60, fx: .8, dOff: 30 },
+  { id: "saetertinden", name: "Sætertinden", src: "XCC flymet", kind: "eksisterende", lat: 68.5980, lon: 16.3950, alt: 1050, fx: 1.3, dOff: 5 },
 ];
 const ST = Object.fromEntries(STATIONS.map(s => [s.id, s]));
+const PLACES = [["Harstad", 68.799, 16.53], ["Borkenes", 68.775, 16.17], ["Kasfjord", 68.835, 16.40], ["Evenes", 68.57, 16.68], ["Sandsøy", 68.9, 16.12]];
 
 const DIRS = ["N","NE","E","SE","S","SW","W","NW"];
 const DIR_NO = { N:"N", NE:"NØ", E:"Ø", SE:"SØ", S:"S", SW:"SV", W:"V", NW:"NV" };
 const DIR_WORD = { N:"nord", NE:"nordøst", E:"øst", SE:"sørøst", S:"sør", SW:"sørvest", W:"vest", NW:"nordvest" };
 const RULES = { maxWind: 7, maxGust: 10, maxGustSpread: 4, minWind: 2 };
+const RATING = { ok: "Kan passe", maybe: "Usikkert", high: "For mye vind", no: "Passer ikke", none: "Ingen data" };
+const ORDER = { ok: 0, maybe: 1, high: 2, no: 3, none: 4 };
 const MONTHS = ["jan","feb","mar","apr","mai","jun","jul","aug","sep","okt","nov","des"];
-const NOW = new Date(2026, 9, 5, 14, 0); // 5. okt 2026 kl. 14
+const NOW = new Date(2026, 9, 8, 14, 0);
 const HOURS = 24 * 30;
+const ME = "Siri B.";
+const EXT = '<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>';
+const CHEV = '<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const flightlogUrl = s => s.fl ? `https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id=${s.fl}` : "https://flightlog.org/";
 
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const sectorOf = deg => DIRS[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
 const fmt = (n, d = 1) => n.toLocaleString("nb-NO", { minimumFractionDigits: d, maximumFractionDigits: d });
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 function distKm(a, b) { const R = 6371, r = Math.PI / 180; const dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r; const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*r) * Math.cos(b.lat*r) * Math.sin(dLon/2)**2; return 2 * R * Math.asin(Math.sqrt(x)); }
+const fmtDate = d => d.toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
+const fmtDur = m => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, "0")}`;
+const hh = d => String(d.getHours()).padStart(2, "0") + ":00";
 
-/* Felles vindfelt for 30 dager, timeverdier. Hver stasjon får terrengjustering. */
+/* Felles vindfelt for 30 dager (timeverdier), med terrengjustering per stasjon. */
 const REGION = (() => {
   const r = rng(42); let dir = 200, sp = 4; const out = [];
   for (let i = 0; i < HOURS; i++) {
     const t = new Date(NOW.getTime() - (HOURS - 1 - i) * 3600e3);
     dir += (r() - .5) * 28 + (r() < .02 ? (r() - .5) * 160 : 0);
-    sp += (r() - .5) * 1.3 + (4.2 - sp) * .04;
-    sp = Math.max(.3, Math.min(14, sp));
+    sp += (r() - .5) * 1.3 + (4.2 - sp) * .04; sp = Math.max(.3, Math.min(14, sp));
     const diurnal = Math.sin((t.getHours() - 8) / 24 * 2 * Math.PI) * 1.1;
     out.push({ t, dir: (dir % 360 + 360) % 360, sp: Math.max(.2, sp + diurnal), temp: 7 + Math.sin((t.getHours() - 9) / 24 * 2 * Math.PI) * 3 + (r() - .5) * 2 - i / HOURS * 3 });
   }
@@ -232,424 +332,476 @@ const REGION = (() => {
 })();
 const OBS = Object.fromEntries(STATIONS.map((s, k) => {
   const r = rng(100 + k);
-  return [s.id, REGION.map(o => {
-    const sp = Math.max(.1, o.sp * s.fx + (r() - .5) * 1.4);
-    const gust = sp + .8 + r() * (1.5 + sp * .35);
-    return { t: o.t, dir: ((o.dir + s.dOff + (r() - .5) * 30) % 360 + 360) % 360, sp, gust, temp: o.temp - s.alt / 150 };
-  })];
+  return [s.id, REGION.map(o => { const sp = Math.max(.1, o.sp * s.fx + (r() - .5) * 1.4); return { t: o.t, dir: ((o.dir + s.dOff + (r() - .5) * 30) % 360 + 360) % 360, sp, gust: sp + .8 + r() * (1.5 + sp * .35), temp: o.temp - s.alt / 150 }; })];
 }));
 const latest = id => OBS[id][HOURS - 1];
 
 function assess(site, o) {
-  if (!o) return { cls: "none", label: "Ingen data" };
+  if (!o) return { r: "none", why: "" };
   const sec = sectorOf(o.dir);
-  if (o.sp > RULES.maxWind || o.gust > RULES.maxGust) return { cls: "bad", label: "For mye vind", why: o.gust > RULES.maxGust ? `kast ${fmt(o.gust)} m/s` : `middel ${fmt(o.sp)} m/s` };
+  if (o.sp > RULES.maxWind || o.gust > RULES.maxGust) return { r: "high", why: o.gust > RULES.maxGust ? `kast ${fmt(o.gust)} m/s` : `middelvind ${fmt(o.sp)} m/s` };
   const prim = site.d.includes(sec), poss = site.p.includes(sec);
-  if (!prim && !poss) return { cls: "bad", label: "Passer ikke", why: `vind fra ${DIR_WORD[sec]}` };
-  if (!prim || o.sp < RULES.minWind || o.gust - o.sp > RULES.maxGustSpread) return { cls: "warn", label: "Usikkert", why: !prim ? "mulig retning" : o.sp < RULES.minWind ? "svak vind, usikker retning" : "byig" };
-  return { cls: "ok", label: "Kan passe", why: `${DIR_WORD[sec]} ${fmt(o.sp)} m/s` };
+  if (!prim && !poss) return { r: "no", why: `vind fra ${DIR_WORD[sec]}` };
+  if (!prim || o.sp < RULES.minWind || o.gust - o.sp > RULES.maxGustSpread) return { r: "maybe", why: !prim ? "mulig retning" : o.sp < RULES.minWind ? "svak vind, usikker retning" : "byig" };
+  return { r: "ok", why: "innenfor grensene" };
 }
-const nearestStations = (site, n = 3) => STATIONS.map(s => ({ s, km: distKm(site, s) })).sort((a, b) => a.km - b.km).slice(0, n);
+const nearestStations = (p, n = 3) => STATIONS.map(s => ({ s, km: distKm(p, s) })).sort((a, b) => a.km - b.km).slice(0, n);
 const nearestSites = (st, maxKm = 9) => SITES.map(s => ({ s, km: distKm(st, s) })).filter(x => x.km <= maxKm).sort((a, b) => a.km - b.km);
-function flyableHours(site, stId, days = 30) {
-  const arr = OBS[stId].slice(-24 * days); let n = 0;
-  for (const o of arr) { const h = o.t.getHours(); if (h >= 8 && h <= 21 && assess(site, o).cls === "ok") n++; }
-  return n;
+// Målt vind for et sted: nærmeste stasjon innen 12 km. Varsel (eksempel): utledet fra samme felt.
+function windFor(site, mode) {
+  const n = nearestStations(site, 1)[0];
+  if (mode === "maalt") { if (n.km > 12) return null; return { ...latest(n.s.id), station: n.s, km: n.km }; }
+  const off = { "0": 0, "3": 3, "6": 6, tomorrow: 22 }[mode] ?? 0; const r = rng(site.id.length * 31 + off + Math.round(site.lat * 100));
+  const base = latest(n.s.id); const sp = Math.max(.5, base.sp * .8 + off * .12 * (r() - .3));
+  return { dir: (base.dir + off * 9 + (r() - .5) * 20 + 360) % 360, sp, gust: sp + 1.2 + r() * 3, t: new Date(NOW.getTime() + off * 3600e3) };
 }
+function flyableHours(site, stId, days = 30) { let n = 0; for (const o of OBS[stId].slice(-24 * days)) { const h = o.t.getHours(); if (h >= 8 && h <= 21 && assess(site, o).r === "ok") n++; } return n; }
 
-/* Flyturer i klubben (fiktive piloter) */
+/* Flyturer: eksempel på data hentet fra Flightlog og XContest for medlemmer som har koblet til kontoen sin. */
 const PILOTS = ["Ingrid L.","Martin S.","Siri B.","Jonas K.","Eirik H.","Mari T.","Anders V.","Hanne R.","Tor E.","Lene A.","Ola M.","Kristin F.","Petter N.","Ane G."];
-const ME = "Siri B.";
 const FLIGHTS = (() => {
   const r = rng(7), out = [];
-  const pop = { sollifjellet: 9, storlitinden: 6, rodmoldheia: 5, hogfjellet: 5, elgen: 4, nontua: 3, steinsasen: 3, storhornet: 2, vetefjellet: 2, keipen: 2, saetertinden: 1.5, reinfjellet: 1, heia: 1, blahatten: 1, kilhusasen: 1, nupen: 1, trastad: .6, mela_aksla: .5 };
-  const pool = []; for (const [k, w] of Object.entries(pop)) { const id = k.replace("_", "-"); for (let i = 0; i < w * 10; i++) pool.push(id); }
-  for (let i = 0; i < 236; i++) {
+  const pop = { sollifjellet: 9, storlitinden: 6, rodmoldheia: 5, hogfjellet: 5, elgen: 4, nontua: 3, steinsasen: 3, storhornet: 3, vetefjellet: 2, keipen: 2, saetertinden: 1.5, reinfjellet: 1, heia: 1, blahatten: 1.5, kilhusasen: 1, trastad: .8, "mela-aksla": .6, lundenesgalten: .6, utstrand: .5, storbakkan: .8, finnslettheia: .4 };
+  const pool = []; for (const [k, w] of Object.entries(pop)) if (SITE[k]) for (let i = 0; i < w * 10; i++) pool.push(k);
+  for (let i = 0; i < 260; i++) {
     const site = SITE[pool[Math.floor(r() * pool.length)]];
     const pilot = PILOTS[Math.floor(Math.pow(r(), 1.6) * PILOTS.length)];
     const yr = r() < .62 ? 2026 : r() < .6 ? 2025 : 2024;
     const m = Math.min(10, Math.max(2, Math.round(6 + (r() + r() + r() - 1.5) * 4)));
-    if (yr === 2026 && m > 9) continue;
-    const day = 1 + Math.floor(r() * 27), hr = 10 + Math.floor(r() * 9);
+    const date = new Date(yr, m - 1, 1 + Math.floor(r() * 27), 10 + Math.floor(r() * 9), Math.floor(r() * 60));
+    if (date > NOW) continue;
     const xc = r() < .12 && site.alt > 450;
     const km = xc ? 8 + Math.pow(r(), 1.5) * 38 : 1 + r() * (site.alt ? site.alt / 160 : 2);
     const min = xc ? 40 + km * 3.2 + r() * 40 : 5 + r() * 25 + (site.alt ? site.alt / 60 : 0) * r();
-    const date = new Date(yr, m - 1, day, hr, Math.floor(r() * 60));
-    if (date > NOW) continue;
-    out.push({ id: "f" + i, site: site.id, pilot, date, km, min, maxAlt: Math.round((site.alt || 200) + (xc ? 600 + r() * 900 : r() * 250)), wing: r() < .15 && site.c.includes("SPG") ? "SPG" : "PG", xc });
+    out.push({ id: "f" + i, site: site.id, pilot, date, km, min, maxAlt: Math.round((site.alt || 200) + (xc ? 600 + r() * 900 : r() * 250)), wing: r() < .15 && site.c.includes("SPG") ? "SPG" : "PG", xc, src: xc && r() < .7 ? "XContest" : "Flightlog" });
   }
-  // Noen tydelige turer for innlogget pilot
-  out.push({ id: "me1", site: "hogfjellet", pilot: ME, date: new Date(2026, 6, 14, 13, 5), km: 31.4, min: 142, maxAlt: 1720, wing: "PG", xc: true });
-  out.push({ id: "me2", site: "sollifjellet", pilot: ME, date: new Date(2026, 9, 4, 12, 40), km: 3.1, min: 24, maxAlt: 790, wing: "PG", xc: false });
+  out.push({ id: "me1", site: "hogfjellet", pilot: ME, date: new Date(2026, 6, 14, 13, 5), km: 31.4, min: 142, maxAlt: 1720, wing: "PG", xc: true, src: "XContest" });
+  out.push({ id: "me2", site: "sollifjellet", pilot: ME, date: new Date(2026, 9, 7, 12, 40), km: 3.1, min: 24, maxAlt: 790, wing: "PG", xc: false, src: "Flightlog" });
   return out.sort((a, b) => b.date - a.date);
 })();
-const fmtDate = d => d.toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
-const fmtDur = m => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, "0")}`;
 
-/* ---------- Tegnehjelpere ---------- */
-const MAPB = { lat0: 68.565, lat1: 68.925, lon0: 15.97, lon1: 16.6 };
-function proj(lat, lon, W = 600) {
-  const k = Math.cos(68.75 * Math.PI / 180);
-  const wDeg = (MAPB.lon1 - MAPB.lon0) * k, hDeg = MAPB.lat1 - MAPB.lat0, H = W * hDeg / wDeg;
-  return { x: (lon - MAPB.lon0) * k / wDeg * W, y: (MAPB.lat1 - lat) / hDeg * H, H };
+/* ---------- Tegning ---------- */
+const ROSE_PATHS = ["M58.8 21.7 A62 62 0 0 1 101.2 21.7 L85.5 65.0 A16 16 0 0 0 74.5 65.0Z","M106.2 23.8 A62 62 0 0 1 136.2 53.8 L94.5 73.2 A16 16 0 0 0 86.8 65.5Z","M138.3 58.8 A62 62 0 0 1 138.3 101.2 L95.0 85.5 A16 16 0 0 0 95.0 74.5Z","M136.2 106.2 A62 62 0 0 1 106.2 136.2 L86.8 94.5 A16 16 0 0 0 94.5 86.8Z","M101.2 138.3 A62 62 0 0 1 58.8 138.3 L74.5 95.0 A16 16 0 0 0 85.5 95.0Z","M53.8 136.2 A62 62 0 0 1 23.8 106.2 L65.5 86.8 A16 16 0 0 0 73.2 94.5Z","M21.7 101.2 A62 62 0 0 1 21.7 58.8 L65.0 74.5 A16 16 0 0 0 65.0 85.5Z","M23.8 53.8 A62 62 0 0 1 53.8 23.8 L73.2 65.5 A16 16 0 0 0 65.5 73.2Z"];
+const dirType = (s, c) => s.d.includes(c) ? "primary" : s.p.includes(c) ? "possible" : "none";
+// Som roseSvg i common.js: sektoren vinden kommer fra fylles med vurderingsfargen.
+function roseInner(site, wind, edge) {
+  let out = "", lifted = "";
+  DIRS.forEach((code, i) => {
+    if (wind && wind.code === code) {
+      if (edge) { const b0 = (i * 45 - 22.5 - 90) * Math.PI / 180, b1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
+        lifted = `<path class="sector sector--wind r-${wind.r}" d="M80 80 L${(80 + 62 * Math.cos(b0)).toFixed(1)} ${(80 + 62 * Math.sin(b0)).toFixed(1)} A62 62 0 0 1 ${(80 + 62 * Math.cos(b1)).toFixed(1)} ${(80 + 62 * Math.sin(b1)).toFixed(1)}Z"/>`; return; }
+      const a = i * 45 * Math.PI / 180; lifted = `<path class="sector sector--wind r-${wind.r}" d="${ROSE_PATHS[i]}" transform="translate(${(Math.sin(a) * 8).toFixed(1)} ${(-Math.cos(a) * 8).toFixed(1)})"/>`; return;
+    }
+    out += `<path class="sector sector--${dirType(site, code)}" d="${ROSE_PATHS[i]}"/>`;
+  });
+  return out + lifted + `<circle class="center" cx="80" cy="80" r="9"/>`;
 }
-function stationMarker(st, o, opts = {}) {
-  const p = proj(st.lat, st.lon); const r = 15;
-  return `<g class="st-g" tabindex="0" role="link" aria-label="${esc(st.name)}: ${fmt(o.sp)} m/s fra ${DIR_WORD[sectorOf(o.dir)]}" data-go="stasjon-${st.id}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
-    <g transform="rotate(${o.dir.toFixed(0)})"><path class="st-arrow" d="M0,-${r + 2} l-6,-11 l6,3 l6,-3z"/></g>
-    <circle class="st-ring ${st.kind === "forslag" ? "prop" : ""}" r="${r}"/>
-    <text class="st-val" text-anchor="middle" y="4">${Math.round(o.sp)}</text>
-    ${opts.label !== false ? `<text class="st-name" x="${r + 6}" y="4">${esc(st.name)}</text>` : ""}
-  </g>`;
+function roseSvg(site, size, labels, wind) {
+  const vb = labels ? "-12 -12 184 184" : "10 10 140 140";
+  return `<svg class="rose" width="${size}" height="${size}" viewBox="${vb}" aria-hidden="true">${roseInner(site, wind, false)}${labels ? `<text x="80" y="2" text-anchor="middle">N</text><text x="80" y="168" text-anchor="middle">S</text><text x="-4" y="85" text-anchor="middle">V</text><text x="164" y="85" text-anchor="middle">Ø</text>` : ""}</svg>`;
 }
-function mapSVG({ highlightSite = null, focusStation = null, showSites = true, label = true } = {}) {
-  const { H } = proj(MAPB.lat0, MAPB.lon0); let g = "";
-  for (let lat = 68.6; lat < MAPB.lat1; lat += .05) { const y = proj(lat, MAPB.lon0).y; g += `<line class="g-line" x1="0" x2="600" y1="${y}" y2="${y}"/><text class="t-muted" font-size="10" x="4" y="${y - 3}">${lat.toFixed(2)}°N</text>`; }
-  for (let lon = 16.0; lon < MAPB.lon1; lon += .1) { const x = proj(MAPB.lat0, lon).x; g += `<line class="g-line" y1="0" y2="${H}" x1="${x}" x2="${x}"/><text class="t-muted" font-size="10" x="${x + 3}" y="${H - 6}">${lon.toFixed(1)}°Ø</text>`; }
-  let s = "";
-  if (showSites) for (const site of SITES) {
-    const p = proj(site.lat, site.lon); const hi = site.id === highlightSite;
-    const crowded = STATIONS.some(st => { const q = proj(st.lat, st.lon); return Math.abs(q.x - p.x) < 95 && Math.abs(q.y - p.y) < 16; });
-    s += `<g data-go="sted-${site.id}" style="cursor:pointer"><circle class="site-dot" cx="${p.x}" cy="${p.y}" r="${hi ? 7 : 4.5}" ${hi ? 'style="fill:var(--accent)"' : ""}/>${(label && !crowded) || hi ? `<text class="site-lbl" x="${p.x + 7}" y="${p.y - 6}" ${hi ? 'style="font-weight:700;fill:var(--text)"' : ""}>${esc(site.name)}</text>` : ""}</g>`;
+const dirBadges = s => [...s.d.map(c => [c, "primary"]), ...s.p.map(c => [c, "possible"])].sort((a, b) => DIRS.indexOf(a[0]) - DIRS.indexOf(b[0])).map(([c, t]) => `<span class="dir dir--${t}">${DIR_NO[c]}</span>`).join("");
+
+const MAPB = { lat0: 68.555, lat1: 68.975, lon0: 15.88, lon1: 16.98 };
+const MAP_W = 1000, K = Math.cos(68.75 * Math.PI / 180), MAP_H = Math.round(MAP_W * (MAPB.lat1 - MAPB.lat0) / ((MAPB.lon1 - MAPB.lon0) * K));
+const proj = (lat, lon) => ({ x: (lon - MAPB.lon0) / (MAPB.lon1 - MAPB.lon0) * MAP_W, y: (MAPB.lat1 - lat) / (MAPB.lat1 - MAPB.lat0) * MAP_H });
+const inMap = s => s.lat > MAPB.lat0 && s.lat < MAPB.lat1 && s.lon > MAPB.lon0 && s.lon < MAPB.lon1;
+
+function clusterSites(list) {
+  const R = 22, out = [];
+  for (const s of list) { const p = proj(s.lat, s.lon); const c = out.find(c => Math.hypot(c.x - p.x, c.y - p.y) < R); if (c) c.items.push(s); else out.push({ x: p.x, y: p.y, items: [s] }); }
+  return out;
+}
+
+function mapView(st) {
+  const sites = SITES.filter(inMap); const outside = SITES.length - sites.length;
+  let g = `<rect width="${MAP_W}" height="${MAP_H}" class="land"/>`;
+  for (let lat = 68.6; lat < MAPB.lat1; lat += .1) { const y = proj(lat, 0).y; g += `<line class="map-grid" x1="0" x2="${MAP_W}" y1="${y}" y2="${y}"/>`; }
+  for (let lon = 16.0; lon < MAPB.lon1; lon += .2) { const x = proj(0, lon).x; g += `<line class="map-grid" y1="0" y2="${MAP_H}" x1="${x}" x2="${x}"/>`; }
+  g += PLACES.map(([n, la, lo]) => { const p = proj(la, lo); return `<text class="place-label" x="${p.x}" y="${p.y}" text-anchor="middle">${n}</text>`; }).join("");
+  const sel = st.sel;
+  for (const c of clusterSites(sites)) {
+    if (c.items.length > 1) {
+      const isSel = sel === "c:" + c.items.map(s => s.id).join(",") || c.items.some(s => sel === "s:" + s.id);
+      g += `<g class="marker cluster" tabindex="0" role="button" aria-label="${c.items.length} flysteder: ${esc(c.items.map(s => s.name).join(", "))}" data-select="c:${c.items.map(s => s.id).join(",")}" transform="translate(${c.x.toFixed(1)},${c.y.toFixed(1)})">${isSel ? `<rect x="-26" y="-26" width="52" height="52" rx="14" style="fill:none;stroke:#1C2B33;stroke-width:3"/>` : ""}<rect x="-20" y="-20" width="40" height="40" rx="10"/><text text-anchor="middle" y="6">${c.items.length}</text></g>`;
+      continue;
+    }
+    const s = c.items[0]; const w = st.mode !== "av" ? windFor(s, st.mode) : null; const a = w ? assess(s, w) : null;
+    const isSel = sel === "s:" + s.id; const dim = st.suggest && a && (a.r === "high" || a.r === "no");
+    const scale = isSel ? 1.25 : a && (a.r === "high" || a.r === "no") ? .85 : 1;
+    g += `<g class="marker ${isSel ? "sel" : ""} ${dim ? "dim" : ""}" tabindex="0" role="button" aria-label="${esc(s.name)}${a ? ": " + RATING[a.r] : ""}" data-select="s:${s.id}" transform="translate(${c.x.toFixed(1)},${c.y.toFixed(1)}) scale(${scale})">
+      ${isSel ? `<circle class="marker__halo" r="29"/><circle r="26" style="fill:#fff"/>` : `<circle class="marker__halo" r="27" style="stroke:none;fill:none"/>`}
+      <circle class="marker__ring ${a ? "rated r-" + a.r : ""}" r="22"/>
+      <g class="rose" transform="scale(${(18 / 62).toFixed(3)}) translate(-80,-80)">${roseInner(s, w ? { code: sectorOf(w.dir), r: a.r } : null, true)}</g>
+      ${isSel ? `<text class="map-label" y="38" text-anchor="middle">${esc(s.name)}</text>` : ""}
+    </g>`;
   }
-  let m = ""; for (const st of STATIONS) if (!focusStation || st.id === focusStation || true) m += stationMarker(st, latest(st.id), { label: true });
-  return `<svg viewBox="0 0 600 ${H.toFixed(0)}" role="img" aria-label="Skjematisk kart over flysteder og værstasjoner">${g}${s}${m}</svg>`;
+  if (st.stations) for (const s of STATIONS) {
+    const o = latest(s.id); const p = proj(s.lat, s.lon); const isSel = sel === "w:" + s.id;
+    g += `<g class="marker station ${s.kind === "forslag" ? "prop" : ""} ${isSel ? "sel" : ""}" tabindex="0" role="button" aria-label="Værstasjon ${esc(s.name)}: ${fmt(o.sp)} m/s fra ${DIR_WORD[sectorOf(o.dir)]}" data-select="w:${s.id}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
+      <g transform="rotate(${o.dir.toFixed(0)})"><path class="arrow" d="M0,-14 L-7,-27 L0,-23 L7,-27Z"/></g>
+      ${isSel ? `<rect class="halo" x="-24" y="-17" width="48" height="34" rx="10"/>` : ""}
+      <rect class="body" x="-19" y="-12" width="38" height="24" rx="7" ${s.kind === "forslag" ? 'style="stroke:#fff;stroke-width:1.5;stroke-dasharray:3 2"' : ""}/>
+      <text text-anchor="middle" y="4.5">${fmt(o.sp)}</text>
+      ${isSel ? `<text class="map-label" y="32" text-anchor="middle" style="fill:#1C2B33">${esc(s.name)}</text>` : ""}
+    </g>`;
+  }
+  return `<svg class="map-svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Skjematisk kart med flysteder og værstasjoner">${g}</svg>
+    <div class="map-ctrl" aria-hidden="true"><span>+</span><span>−</span></div>
+    <div class="map-chip"><div>Viser ${sites.length} av ${SITES.length} flysteder${outside ? ` · ${outside} utenfor utsnittet` : ""}</div>${st.stations ? `<div>${STATIONS.length} værstasjoner · målt kl. 14:00</div>` : ""}</div>
+    <div class="map-legend"><span><i style="background:#3D7A8A"></i>Hovedretning</span><span><i style="background:#8FBCC7"></i>Mulig</span>${st.stations ? `<span><i style="background:#1C2B33;border-radius:4px;width:20px"></i>Værstasjon, middelvind i m/s. Pilen peker dit vinden blåser</span>` : ""}</div>
+    ${cardFor(st)}`;
 }
 
+function sparkline(stId, hours = 24, w = 320, h = 72) {
+  const d = OBS[stId].slice(-hours); const max = Math.max(10, ...d.map(o => o.gust));
+  const X = i => 4 + i / (d.length - 1) * (w - 8), Y = v => h - 16 - v / max * (h - 22);
+  const band = d.map((o, i) => `${X(i).toFixed(1)},${Y(o.gust).toFixed(1)}`).join(" ") + " " + d.map((o, i) => `${X(i).toFixed(1)},${Y(o.sp).toFixed(1)}`).reverse().join(" ");
+  const line = d.map((o, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(o.sp).toFixed(1)}`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto" role="img" aria-label="Vind siste ${hours} timer"><line x1="4" x2="${w - 4}" y1="${Y(7)}" y2="${Y(7)}" style="stroke:var(--wind-high);stroke-dasharray:3 3;opacity:.6"/><polygon points="${band}" style="fill:var(--possible);opacity:.5"/><path d="${line}" style="fill:none;stroke:var(--dir-primary);stroke-width:2"/><circle cx="${X(d.length - 1)}" cy="${Y(d[d.length - 1].sp)}" r="3.5" style="fill:var(--dir-primary)"/><text class="t-muted" font-size="10" x="4" y="${h - 2}">for 24 t siden</text><text class="t-muted" font-size="10" x="${w - 4}" y="${h - 2}" text-anchor="end">nå</text><text font-size="10" x="${w - 4}" y="${Y(7) - 3}" text-anchor="end" style="fill:var(--wind-high)">7 m/s</text></svg>`;
+}
+
+function cardFor(st) {
+  if (!st.sel) return "";
+  const [kind, id] = st.sel.split(":");
+  if (kind === "c") {
+    const items = id.split(",").map(i => SITE[i]);
+    return `<section class="map-card fade" aria-label="Flysteder her"><button class="map-card__close" data-close aria-label="Lukk">×</button><h2>${items.length} flysteder her</h2><div class="results">${items.map(s => `<button class="result" data-select="s:${s.id}"><span class="result__head"><span class="result__name">${esc(s.name)}</span><span class="result__elev">${s.alt ?? "–"} moh</span></span><span class="dirs">${dirBadges(s)}</span></button>`).join("")}</div><p class="small muted">På siden zoomer kartet inn når du trykker på et tall.</p></section>`;
+  }
+  if (kind === "s") {
+    const s = SITE[id]; const m = windFor(s, "maalt"); const a = m ? assess(s, m) : null;
+    const fmode = st.mode === "maalt" || st.mode === "av" ? "0" : st.mode; const f = windFor(s, fmode); const fa = assess(s, f);
+    const roseWind = st.mode === "maalt" ? (m ? { code: sectorOf(m.dir), r: a.r } : null) : st.mode !== "av" ? { code: sectorOf(f.dir), r: fa.r } : null;
+    return `<section class="map-card fade" aria-label="${esc(s.name)}"><button class="map-card__close" data-close aria-label="Lukk">×</button>
+      <div class="map-card__head">${roseSvg(s, 92, true, roseWind)}<div style="display:grid;gap:6px"><h2>${esc(s.name)}</h2><span class="muted small">Start ${s.alt ?? "–"} moh</span><div class="dirs">${dirBadges(s)}</div><div class="tags">${s.lv ? `<span class="tag">${s.lv}</span>` : ""}${s.ts ? `<span class="tag">Kursplass</span>` : ""}${s.c.map(c => `<span class="tag">${c}</span>`).join("")}</div></div></div>
+      <p style="font-size:15px">${esc(s.i)}</p>
+      ${m ? `<a class="site-wind r-${a.r}" href="#stasjon-${m.station.id}"><span class="time">Målt kl. 14:00 · ${esc(m.station.name)}, ${fmt(m.km)} km</span><strong>${RATING[a.r]} <span class="new" style="margin-left:4px;height:18px;font-size:10px;vertical-align:2px">Ny</span></strong><span>${DIR_WORD[sectorOf(m.dir)]} ${fmt(m.sp)} m/s, kast ${fmt(m.gust)} m/s${a.r === "high" ? "" : " · " + a.why}</span></a>` : `<div class="site-wind r-none"><span class="time">Målt</span><strong>Ingen værstasjon i nærheten</strong></div>`}
+      <div class="site-wind r-${fa.r}"><span class="time">Varsel ${fmode === "tomorrow" ? "i morgen kl. 12" : fmode === "0" ? "nå" : "om " + fmode + " timer"} · MET</span><strong>${RATING[fa.r]}</strong><span>${DIR_WORD[sectorOf(f.dir)]} ${fmt(f.sp)} m/s, kast ${fmt(f.gust)} m/s</span></div>
+      <div class="buttons"><a class="btn btn--primary btn--wide" href="#sted-${s.id}">Se hele stedet</a><a class="btn btn--wide" href="${flightlogUrl(s)}" target="_blank" rel="noopener">Se på Flightlog ${EXT}</a></div></section>`;
+  }
+  const s = ST[id]; const o = latest(s.id); const near = nearestSites(s, 6).slice(0, 4);
+  return `<section class="map-card fade" aria-label="Værstasjon ${esc(s.name)}"><button class="map-card__close" data-close aria-label="Lukk">×</button>
+    <div style="display:grid;gap:4px;padding-right:30px"><span class="eyebrow">Værstasjon · ${esc(s.src)}${s.kind === "forslag" ? " (foreslått)" : ""}</span><h2>${esc(s.name)}</h2><span class="muted small">${s.alt} moh · målt kl. 14:00</span></div>
+    <div style="display:flex;gap:16px;align-items:end"><div class="big">${fmt(o.sp)}<small> m/s</small></div><dl class="dl"><dt>Fra</dt><dd>${DIR_WORD[sectorOf(o.dir)]} (${Math.round(o.dir)}°)</dd><dt>Kast</dt><dd>${fmt(o.gust)} m/s</dd><dt>Temp.</dt><dd>${fmt(o.temp)} °C</dd></dl></div>
+    ${sparkline(s.id)}
+    ${near.length ? `<div style="display:grid;gap:6px"><span class="small muted" style="font-weight:600">Starter i nærheten, vurdert mot målt vind</span>${near.map(({ s: x, km }) => { const a = assess(x, o); return `<button class="result" data-select="s:${x.id}" style="padding:8px 10px"><span class="result__head"><span class="result__name">${esc(x.name)}</span><span class="result__wind r-${a.r}"><span class="wind-dot"></span>${RATING[a.r]}</span></span><span class="small muted">${fmt(km)} km unna${x.alt != null ? ` · start ${x.alt} moh` : ""}</span></button>`; }).join("")}</div>` : ""}
+    <a class="btn btn--primary btn--wide" href="#stasjon-${s.id}">Se historikk</a></section>`;
+}
+
+/* ---------- Diagrammer ---------- */
 function windChart(stId, hours, { w = 680, h = 230 } = {}) {
-  const data = OBS[stId].slice(-hours);
-  const pad = { l: 34, r: 12, t: 34, b: 26 }; const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const data = OBS[stId].slice(-hours); const pad = { l: 34, r: 12, t: 34, b: 26 }; const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
   const ymax = Math.max(12, Math.ceil(Math.max(...data.map(o => o.gust)) / 2) * 2);
   const X = i => pad.l + i / (data.length - 1) * iw, Y = v => pad.t + ih - v / ymax * ih;
   let grid = ""; for (let v = 0; v <= ymax; v += ymax > 16 ? 4 : 2) grid += `<line class="g-line" x1="${pad.l}" x2="${w - pad.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="t-muted" font-size="10" x="${pad.l - 6}" y="${Y(v) + 3}" text-anchor="end">${v}</text>`;
-  const step = hours <= 48 ? 6 : 24; let xl = "";
-  data.forEach((o, i) => { if (o.t.getHours() % step === 0 && (step === 6 || true)) { xl += `<line class="g-line" x1="${X(i)}" x2="${X(i)}" y1="${pad.t}" y2="${pad.t + ih}"/><text class="t-muted" font-size="10" x="${X(i)}" y="${h - 8}" text-anchor="middle">${hours <= 48 ? String(o.t.getHours()).padStart(2, "0") : o.t.getDate() + "."}</text>`; } });
-  const band = data.map((o, i) => `${X(i)},${Y(o.gust)}`).join(" ") + " " + data.map((o, i) => `${X(i)},${Y(o.sp)}`).reverse().join(" ");
+  const dayStep = hours <= 168 ? 1 : 5; let xl = "", dayN = 0;
+  data.forEach((o, i) => {
+    if (hours <= 48 ? o.t.getHours() % 6 === 0 : o.t.getHours() === 0 && dayN++ % dayStep === 0)
+      xl += `<line class="g-line" x1="${X(i)}" x2="${X(i)}" y1="${pad.t}" y2="${pad.t + ih}"/><text class="t-muted" font-size="10" x="${X(i)}" y="${h - 8}" text-anchor="middle">${hours <= 48 ? String(o.t.getHours()).padStart(2, "0") : o.t.getDate() + "." + (o.t.getMonth() + 1)}</text>`;
+  });
+  const band = data.map((o, i) => `${X(i).toFixed(1)},${Y(o.gust).toFixed(1)}`).join(" ") + " " + data.map((o, i) => `${X(i).toFixed(1)},${Y(o.sp).toFixed(1)}`).reverse().join(" ");
   const line = data.map((o, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(o.sp).toFixed(1)}`).join("");
-  const gl = data.map((o, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(o.gust).toFixed(1)}`).join("");
-  const aStep = hours <= 48 ? 3 : hours <= 168 ? 12 : 24; let arrows = "";
-  data.forEach((o, i) => { if (i % aStep === 0) arrows += `<g transform="translate(${X(i)},${pad.t - 16}) rotate(${(o.dir + 180).toFixed(0)})"><path d="M0,-7 L4,5 L0,2 L-4,5Z" style="fill:var(--fjord)"/></g>`; });
-  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Vind siste ${hours} timer" style="width:100%;height:auto">
-    ${grid}${xl}
-    <line x1="${pad.l}" x2="${w - pad.r}" y1="${Y(RULES.maxWind)}" y2="${Y(RULES.maxWind)}" style="stroke:var(--accent);stroke-dasharray:4 3;opacity:.7"/>
-    <text font-size="10" x="${w - pad.r - 2}" y="${Y(RULES.maxWind) - 4}" text-anchor="end" style="fill:var(--accent)">7 m/s</text>
-    <polygon points="${band}" style="fill:var(--possible);opacity:.45"/>
-    <path d="${gl}" style="fill:none;stroke:var(--s2);stroke-width:1"/>
-    <path d="${line}" style="fill:none;stroke:var(--fjord);stroke-width:2.2"/>
-    ${arrows}
-    <text class="t-muted" font-size="10" x="${pad.l}" y="10">Pilene viser hvor vinden blåser</text>
-  </svg>`;
+  const aStep = hours <= 48 ? 3 : hours <= 168 ? 12 : 36; let arrows = "";
+  data.forEach((o, i) => { if (i % aStep === 0) arrows += `<g transform="translate(${X(i).toFixed(1)},${pad.t - 16}) rotate(${(o.dir + 180).toFixed(0)})"><path d="M0,-7 L4,5 L0,2 L-4,5Z" style="fill:var(--fjord)"/></g>`; });
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Vind siste ${hours} timer" style="width:100%;height:auto">${grid}${xl}
+    <line x1="${pad.l}" x2="${w - pad.r}" y1="${Y(RULES.maxWind)}" y2="${Y(RULES.maxWind)}" style="stroke:var(--wind-high);stroke-dasharray:4 3;opacity:.7"/><text font-size="10" x="${w - pad.r - 2}" y="${Y(RULES.maxWind) - 4}" text-anchor="end" style="fill:var(--wind-high)">7 m/s</text>
+    <polygon points="${band}" style="fill:var(--possible);opacity:.45"/><path d="${line}" style="fill:none;stroke:var(--fjord);stroke-width:2.2"/>${arrows}
+    <text class="t-muted" font-size="10" x="${pad.l}" y="10">Pilene peker dit vinden blåser</text></svg>
+    <div class="scale"><i style="background:var(--fjord);height:3px"></i>middelvind <i style="background:var(--possible)"></i>opp til kast <i style="background:var(--wind-high);height:2px"></i>grensen for middelvind</div>`;
 }
-
 function windRose(stId, hours, site = null, size = 260) {
-  const data = OBS[stId].slice(-hours); const bins = [2, 5, 8, 99];
-  const cnt = DIRS.map(() => [0, 0, 0, 0]);
-  for (const o of data) { const k = DIRS.indexOf(sectorOf(o.dir)); cnt[k][bins.findIndex(b => o.sp < b)]++; }
-  const tot = data.length, maxF = Math.max(...cnt.map(c => c.reduce((a, b) => a + b, 0))) / tot;
-  const c = size / 2, R = c - 26; let out = "";
+  const data = OBS[stId].slice(-hours); const bins = [2, 5, 8, 99]; const cnt = DIRS.map(() => [0, 0, 0, 0]);
+  for (const o of data) cnt[DIRS.indexOf(sectorOf(o.dir))][bins.findIndex(b => o.sp < b)]++;
+  const tot = data.length, maxF = Math.max(...cnt.map(c => c.reduce((a, b) => a + b, 0))) / tot; const c = size / 2, R = c - 26; let out = "";
   for (const f of [.25, .5, .75, 1]) out += `<circle cx="${c}" cy="${c}" r="${R * f}" class="g-line" style="fill:none"/>`;
   if (site) DIRS.forEach((d, k) => { const t = site.d.includes(d) ? "var(--dir-primary)" : site.p.includes(d) ? "var(--possible)" : null; if (t) { const a0 = (k * 45 - 22.5 - 90) * Math.PI / 180, a1 = (k * 45 + 22.5 - 90) * Math.PI / 180; out += `<path d="M${c + Math.cos(a0) * (R + 6)},${c + Math.sin(a0) * (R + 6)} A${R + 6},${R + 6} 0 0 1 ${c + Math.cos(a1) * (R + 6)},${c + Math.sin(a1) * (R + 6)}" style="fill:none;stroke:${t};stroke-width:6"/>`; } });
   const cols = ["var(--s0)", "var(--s1)", "var(--s2)", "var(--s4)"];
-  cnt.forEach((cc, k) => { let acc = 0; cc.forEach((v, b) => { const r0 = acc / tot / maxF * R, r1 = (acc + v) / tot / maxF * R; acc += v; if (v === 0) return; const a0 = (k * 45 - 19 - 90) * Math.PI / 180, a1 = (k * 45 + 19 - 90) * Math.PI / 180;
+  cnt.forEach((cc, k) => { let acc = 0; cc.forEach((v, b) => { const r0 = acc / tot / maxF * R, r1 = (acc + v) / tot / maxF * R; acc += v; if (!v) return; const a0 = (k * 45 - 19 - 90) * Math.PI / 180, a1 = (k * 45 + 19 - 90) * Math.PI / 180;
     out += `<path d="M${c + Math.cos(a0) * r0},${c + Math.sin(a0) * r0} L${c + Math.cos(a0) * r1},${c + Math.sin(a0) * r1} A${r1},${r1} 0 0 1 ${c + Math.cos(a1) * r1},${c + Math.sin(a1) * r1} L${c + Math.cos(a1) * r0},${c + Math.sin(a1) * r0} A${r0},${r0} 0 0 0 ${c + Math.cos(a0) * r0},${c + Math.sin(a0) * r0}Z" style="fill:${cols[b]};stroke:var(--card);stroke-width:.8"/>`; }); });
-  DIRS.forEach((d, k) => { const a = (k * 45 - 90) * Math.PI / 180; out += `<text class="t-ink t-head" font-size="12" x="${c + Math.cos(a) * (R + 17)}" y="${c + Math.sin(a) * (R + 17) + 4}" text-anchor="middle">${DIR_NO[d]}</text>`; });
-  const legend = `<div class="hm-scale"><i style="background:var(--s0)"></i>under 2 <i style="background:var(--s1)"></i>2–5 <i style="background:var(--s2)"></i>5–8 <i style="background:var(--s4)"></i>over 8 m/s${site ? ` <span style="margin-left:8px"><i style="background:var(--dir-primary)"></i> startens retninger</span>` : ""}</div>`;
-  return `<div style="display:grid;gap:8px;justify-items:center"><svg viewBox="0 0 ${size} ${size}" style="width:100%;max-width:${size}px;height:auto" role="img" aria-label="Vindrose">${out}</svg>${legend}</div>`;
+  DIRS.forEach((d, k) => { const a = (k * 45 - 90) * Math.PI / 180; out += `<text class="t-ink" font-size="13" font-weight="600" x="${c + Math.cos(a) * (R + 17)}" y="${c + Math.sin(a) * (R + 17) + 4}" text-anchor="middle">${DIR_NO[d]}</text>`; });
+  return `<div style="display:grid;gap:8px;justify-items:center"><svg viewBox="0 0 ${size} ${size}" style="width:100%;max-width:${size}px;height:auto" role="img" aria-label="Vindrose">${out}</svg><div class="scale"><i style="background:var(--s0)"></i>under 2 <i style="background:var(--s1)"></i>2–5 <i style="background:var(--s2)"></i>5–8 <i style="background:var(--s4)"></i>over 8 m/s${site ? ` <span style="margin-left:6px"><i style="background:var(--dir-primary)"></i> startens retninger</span>` : ""}</div></div>`;
 }
-
 function heatmap(site) {
-  // Andel timer (eksempel) der stasjonen ved starten har vist vind som kan passe, per måned og time.
   const r = rng(site.id.length * 97 + site.d.length * 13); const dirF = Math.min(1, (site.d.length + site.p.length * .4) / 5);
-  let html = `<div class="hm" role="table" aria-label="Flybare timer per måned og time"><span class="lab"></span>`;
+  let html = `<div class="hm" role="img" aria-label="Andel flybare timer per måned og klokkeslett"><span></span>`;
   for (let h = 6; h <= 22; h++) html += `<span class="hl">${h % 2 === 0 ? h : ""}</span>`;
   for (let m = 0; m < 12; m++) {
-    html += `<span class="lab">${MONTHS[m]}</span>`;
-    const season = .45 + .5 * Math.cos((m - 6) / 12 * Math.PI * 2);
-    const light = m >= 10 || m <= 1 ? .25 : 1;
-    for (let h = 6; h <= 22; h++) {
-      const dayShape = Math.exp(-Math.pow((h - 14) / 4.2, 2));
-      let v = season * dayShape * dirF * light * (.75 + r() * .5);
-      if ((m === 11 || m === 0) && (h < 10 || h > 14)) v *= .1;
-      const lvl = v < .06 ? 0 : v < .14 ? 1 : v < .24 ? 2 : v < .34 ? 3 : 4;
-      const col = ["var(--surface)", "var(--s0)", "var(--s1)", "var(--s2)", "var(--s3)"][lvl];
-      html += `<div title="${MONTHS[m]} kl. ${h}: ${Math.round(v * 100)} %" style="background:${col}"></div>`;
-    }
+    html += `<span>${MONTHS[m]}</span>`; const season = .45 + .5 * Math.cos((m - 6) / 12 * Math.PI * 2); const light = m >= 10 || m <= 1 ? .3 : 1;
+    for (let h = 6; h <= 22; h++) { let v = season * Math.exp(-Math.pow((h - 14) / 4.2, 2)) * dirF * light * (.75 + r() * .5); if ((m === 11 || m === 0) && (h < 10 || h > 14)) v *= .1;
+      const lvl = v < .06 ? 0 : v < .14 ? 1 : v < .24 ? 2 : v < .34 ? 3 : 4; html += `<div title="${MONTHS[m]} kl. ${h}: ${Math.round(v * 100)} %" style="background:${["var(--surface)", "var(--s0)", "var(--s1)", "var(--s2)", "var(--s3)"][lvl]}"></div>`; }
   }
-  return html + `</div><div class="hm-scale">Andel timer som kunne passet: <i style="background:var(--surface)"></i>under 6 % <i style="background:var(--s0)"></i> <i style="background:var(--s1)"></i> <i style="background:var(--s2)"></i> <i style="background:var(--s3)"></i>over 34 %</div>`;
+  return html + `</div><div class="scale">Andel timer som kunne passet: <i style="background:var(--surface)"></i>under 6 % <i style="background:var(--s0)"></i><i style="background:var(--s1)"></i><i style="background:var(--s2)"></i><i style="background:var(--s3)"></i>over 34 %</div>`;
 }
-
-/* ---------- Visninger ---------- */
-const V = {};
-
-V.kart = () => {
-  const rows = STATIONS.map(st => { const o = latest(st.id); return `<a class="strow" href="#stasjon-${st.id}">
-      <svg viewBox="-22 -22 44 44" width="44" height="44" aria-hidden="true"><g transform="rotate(${o.dir.toFixed(0)})"><path class="st-arrow" d="M0,-12 l-5,-9 l5,2 l5,-2z"/></g><circle class="st-ring ${st.kind === "forslag" ? "prop" : ""}" r="11"/></svg>
-      <div style="min-width:0"><b>${esc(st.name)}</b> <span class="muted small">${st.alt} moh</span><div class="small muted">${esc(st.src)} · ${DIR_WORD[sectorOf(o.dir)]} · ${st.kind === "forslag" ? "foreslått stasjon" : "oppdatert 14:00"}</div></div>
-      <div class="big">${fmt(o.sp)}<br><small>kast ${fmt(o.gust)}</small></div></a>`; }).join("");
-  return `<section class="view">
-    <div class="head"><span class="eyebrow">Forsiden, ny versjon</span><h1>Starter og værstasjoner i samme kart</h1>
-      <p class="lead">Kartet viser startene som i dag, men også målt vind fra stasjonene i området. Trykk på en stasjon for historikk, eller på en start for stedssiden med været som gjelder akkurat der.</p></div>
-    <div class="grid2">
-      <div style="display:grid;gap:10px;min-width:0">
-        <div class="mapwrap">${mapSVG()}</div>
-        <div class="map-legend"><span><i style="background:var(--dir-primary)"></i>Start</span><span><i style="border:1.5px solid var(--text)"></i>Værstasjon, tallet er middelvind i m/s</span><span><i style="border:1.5px dashed var(--text)"></i>Stasjon klubben kunne satt opp</span><span><i style="background:var(--accent);border-radius:2px"></i>Pil: blåser inn fra denne siden</span></div>
-        <p class="small muted">Kartet er skjematisk i prototypen. På den ekte siden ligger det oppå Kartverkets kart, med samme vindroser og filtre som i dag.</p>
-      </div>
-      <div class="card"><header><h2>Målt vind nå</h2><span class="muted small num">søndag 5. okt kl. 14:00</span></header>
-        <div class="stlist">${rows}</div>
-        <p class="note">Målt vind er fasit for hva som skjer akkurat nå. Varselet (som forsiden bruker i dag) sier hva som kommer. Begge trengs.</p>
-      </div>
-    </div>
-  </section>`;
-};
-
-V.vaer = () => V.kart().replace("Forsiden, ny versjon", "Værstasjoner").replace("Starter og værstasjoner i samme kart", "Alle værstasjoner i området");
-
-V.stasjon = (id, state) => {
-  const st = ST[id] || STATIONS[0]; const o = latest(st.id); const span = state.span || 48;
-  const near = nearestSites(st).slice(0, 8);
-  const nearRows = near.map(({ s, km }) => { const a = assess(s, o); const fh = flyableHours(s, st.id);
-    return `<tr class="click" data-go="sted-${s.id}"><td><a href="#sted-${s.id}">${esc(s.name)}</a><div class="tags" style="margin-top:3px">${s.d.map(d => `<span class="tag primary">${DIR_NO[d]}</span>`).join("")}${s.p.map(d => `<span class="tag possible">${DIR_NO[d]}</span>`).join("")}</div></td>
-      <td class="r num">${fmt(km)} km</td><td class="r num">${s.alt != null ? (s.alt - st.alt > 0 ? "+" : "") + (s.alt - st.alt) + " m" : "–"}</td>
-      <td><span class="tag ${a.cls}">${a.label}</span></td><td class="r num"><b>${fh}</b> t</td></tr>`; }).join("");
-  const tbl = OBS[st.id].slice(-12).reverse().map(x => `<tr><td class="num">${String(x.t.getHours()).padStart(2, "0")}:00</td><td>${DIR_NO[sectorOf(x.dir)]} <span class="muted num">${Math.round(x.dir)}°</span></td><td class="r num">${fmt(x.sp)}</td><td class="r num">${fmt(x.gust)}</td><td class="r num">${fmt(x.temp)}°</td></tr>`).join("");
-  return `<section class="view">
-    <div class="crumb"><a href="#vaer">← Alle værstasjoner</a></div>
-    <div class="head"><span class="eyebrow">${esc(st.src)}${st.kind === "forslag" ? " · foreslått" : ""}</span><h1>${esc(st.name)}</h1>
-      <p class="lead">${st.alt} moh. Målinger hvert 10. minutt i ekte drift, her vist som timeverdier. Historikken lagres, så du kan se hvordan det har blåst før du kjører ut.</p></div>
-    <div class="grid2">
-      <div style="display:grid;gap:24px;min-width:0">
-        <div class="card"><header><h2>Vind</h2><div class="seg" role="group" aria-label="Periode">${[[24, "24 t"], [48, "48 t"], [168, "7 d"], [720, "30 d"]].map(([v, l]) => `<button data-span="${v}" aria-pressed="${v === span}">${l}</button>`).join("")}</div></header>
-          ${windChart(st.id, span)}
-          <div class="hm-scale"><i style="background:var(--fjord);height:3px"></i>middelvind <i style="background:var(--possible)"></i>opp til kast</div>
-        </div>
-        <div class="card"><header><h2>Starter i nærheten</h2><span class="muted small">innen 9 km</span></header>
-          <p class="small muted">Vurdering ut fra målt vind nå, med samme regler som forsiden. «Flybare timer» teller timer kl. 08–21 siste 30 dager der målingen passet startens retninger og grenser.</p>
-          <div class="scroll"><table><thead><tr><th>Start</th><th class="r">Avstand</th><th class="r">Høyde</th><th>Nå</th><th class="r">Flybare t</th></tr></thead><tbody>${nearRows || `<tr><td colspan="5">Ingen starter innen 9 km.</td></tr>`}</tbody></table></div>
-        </div>
-      </div>
-      <div style="display:grid;gap:24px;min-width:0;align-content:start">
-        <div class="card"><div class="now"><div class="val">${fmt(o.sp)}<small> m/s</small></div><dl class="dl"><dt>Retning</dt><dd>${DIR_WORD[sectorOf(o.dir)]} (${Math.round(o.dir)}°)</dd><dt>Kast</dt><dd>${fmt(o.gust)} m/s</dd><dt>Temp.</dt><dd>${fmt(o.temp)} °C</dd><dt>Målt</dt><dd>kl. 14:00</dd></dl></div></div>
-        <div class="card"><header><h2>Vindrose</h2><span class="muted small">siste 30 dager</span></header>${windRose(st.id, 720)}</div>
-        <div class="card"><header><h2>Siste timer</h2></header><div class="scroll"><table><thead><tr><th>Kl.</th><th>Fra</th><th class="r">Middel</th><th class="r">Kast</th><th class="r">Temp</th></tr></thead><tbody>${tbl}</tbody></table></div></div>
-      </div>
-    </div>
-  </section>`;
-};
-
-V.sted = (id) => {
-  const site = SITE[id] || SITE.sollifjellet; const ns = nearestStations(site, 3);
-  const fl = FLIGHTS.filter(f => f.site === site.id);
-  const best = [...fl].sort((a, b) => b.km - a.km)[0]; const longest = [...fl].sort((a, b) => b.min - a.min)[0];
-  const pilots = new Set(fl.map(f => f.pilot)).size;
-  const assessRows = ns.map(({ s, km }) => { const o = latest(s.id); const a = assess(site, o);
-    return `<a class="assess-row" href="#stasjon-${s.id}" style="text-decoration:none;color:inherit"><div style="min-width:0"><b>${esc(s.name)}</b> <span class="muted small">${fmt(km)} km unna · ${s.alt} moh${site.alt ? ` (start ${site.alt})` : ""}</span><div class="small num">${DIR_WORD[sectorOf(o.dir)]} ${fmt(o.sp)} m/s, kast ${fmt(o.gust)}</div></div><span class="tag ${a.cls}">${a.label}</span></a>`; }).join("");
-  const main = ns[0].s;
-  const recent = fl.slice(0, 6).map(f => `<tr><td class="num">${fmtDate(f.date)}</td><td>${esc(f.pilot)}</td><td class="r num">${fmt(f.km)} km</td><td class="r num">${fmtDur(f.min)}</td></tr>`).join("");
-  return `<section class="view">
-    <div class="crumb"><a href="#kart">← Kart</a></div>
-    <div class="head"><span class="eyebrow">Stedsside, nye blokker</span><h1>${esc(site.name)}</h1>
-      <div class="tags">${site.lv ? `<span class="tag">${site.lv}</span>` : ""}${site.c.map(c => `<span class="tag">${c}</span>`).join("")}${site.d.map(d => `<span class="tag primary">${DIR_NO[d]}</span>`).join("")}${site.p.map(d => `<span class="tag possible">${DIR_NO[d]}</span>`).join("")}</div>
-      <p class="lead">Dagens stedsside (kart, farer, start, landing, fakta, Yr) beholdes. Under kommer tre nye blokker: målt vind ved starten, når det pleier å passe, og flyturer herfra.</p></div>
-    <div class="grid2">
-      <div style="display:grid;gap:24px;min-width:0">
-        <div class="card"><header><h2>Vind ved starten nå</h2><span class="tag new">Ny</span></header>
-          <p class="small muted">De tre nærmeste stasjonene, vurdert opp mot startens retninger. Stasjonen på toppen veier mest; stasjoner ved sjøen sier mer om landing.</p>
-          <div class="site-assess">${assessRows}</div>
-        </div>
-        <div class="card"><header><h2>Siste 48 timer ved ${esc(main.name)}</h2><a href="#stasjon-${main.id}" class="small">Mer historikk</a></header>${windChart(main.id, 48)}</div>
-        <div class="card"><header><h2>Når pleier det å passe her?</h2><span class="tag new">Ny</span></header>
-          <p class="small muted">Bygget fra stasjonshistorikk over flere år: hvor ofte målt vind har passet startens retninger og grenser, per måned og klokkeslett. Nyttig for tilreisende og for å planlegge turer.</p>
-          ${heatmap(site)}
-        </div>
-      </div>
-      <div style="display:grid;gap:24px;min-width:0;align-content:start">
-        <div class="card"><header><h2>Vinden siste 30 dager</h2></header>${windRose(main.id, 720, site, 240)}
-          <p class="small muted">Buene rundt rosen er startens retninger. Mye farge innenfor buene betyr at vinden ofte har stått riktig.</p></div>
-        <div class="card"><header><h2>Flyturer herfra</h2><span class="tag new">Ny</span></header>
-          <div class="kpis"><div class="kpi"><b>${fl.length}</b><span>turer logget</span></div><div class="kpi"><b>${pilots}</b><span>piloter</span></div></div>
-          ${best ? `<dl class="dl"><dt>Lengst</dt><dd><b>${fmt(best.km)} km</b> · ${esc(best.pilot)} · ${fmtDate(best.date)}</dd><dt>Lengst i lufta</dt><dd><b>${fmtDur(longest.min)}</b> · ${esc(longest.pilot)}</dd></dl>` : "<p>Ingen turer logget herfra ennå.</p>"}
-          ${recent ? `<div class="scroll"><table><thead><tr><th>Dato</th><th>Pilot</th><th class="r">Dist.</th><th class="r">Tid</th></tr></thead><tbody>${recent}</tbody></table></div>` : ""}
-          <a class="btn" href="#logg">Logg en tur herfra</a>
-        </div>
-      </div>
-    </div>
-  </section>`;
-};
-
-/* Logg */
 function trackFor(f) {
   const site = SITE[f.site]; const r = rng(f.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0));
   const pts = []; let lat = site.lat, lon = site.lon; const n = 60; const bearing = (DIRS.indexOf(site.d[0]) * 45 + 180) * Math.PI / 180;
-  for (let i = 0; i < n; i++) { const stepKm = f.km / n * (f.xc ? 1.1 : .6); lat += Math.cos(bearing + (r() - .5) * 1.8) * stepKm / 111; lon += Math.sin(bearing + (r() - .5) * 1.8) * stepKm / (111 * Math.cos(lat * Math.PI / 180)); if (!f.xc && i > n / 2) { lat -= Math.cos(bearing) * stepKm / 111 * .9; } pts.push([lat, lon]); }
+  for (let i = 0; i < n; i++) { const stepKm = f.km / n * (f.xc ? 1.1 : .6); lat += Math.cos(bearing + (r() - .5) * 1.8) * stepKm / 111; lon += Math.sin(bearing + (r() - .5) * 1.8) * stepKm / (111 * Math.cos(lat * Math.PI / 180)); if (!f.xc && i > n / 2) lat -= Math.cos(bearing) * stepKm / 111 * .9; pts.push([lat, lon]); }
   return pts;
 }
 function trackSVG(pts, site) {
   const lats = pts.map(p => p[0]).concat(site.lat), lons = pts.map(p => p[1]).concat(site.lon);
-  const k = Math.cos(68.75 * Math.PI / 180); const minLa = Math.min(...lats), maxLa = Math.max(...lats), minLo = Math.min(...lons), maxLo = Math.max(...lons);
-  const w = 420, h = 260, padd = 24; const sx = (w - 2 * padd) / Math.max(1e-4, (maxLo - minLo) * k), sy = (h - 2 * padd) / Math.max(1e-4, maxLa - minLa); const s = Math.min(sx, sy);
-  const X = lo => padd + (lo - minLo) * k * s + ((w - 2 * padd) - (maxLo - minLo) * k * s) / 2, Y = la => padd + (maxLa - la) * s + ((h - 2 * padd) - (maxLa - minLa) * s) / 2;
-  const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p[1]).toFixed(1)},${Y(p[0]).toFixed(1)}`).join("");
-  const last = pts[pts.length - 1];
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;background:var(--map-bg);border-radius:10px" role="img" aria-label="Flyspor">
-    <path d="${d}" style="fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linejoin:round"/>
-    <circle cx="${X(site.lon)}" cy="${Y(site.lat)}" r="6" style="fill:var(--dir-primary);stroke:var(--card);stroke-width:2"/>
-    <text class="st-name" x="${X(site.lon) + 9}" y="${Y(site.lat) + 4}">${esc(site.name)}</text>
-    <circle cx="${X(last[1])}" cy="${Y(last[0])}" r="5" style="fill:var(--text)"/>
-    <text class="st-name" x="${X(last[1]) + 8}" y="${Y(last[0]) + 4}">Landet</text></svg>`;
+  const minLa = Math.min(...lats), maxLa = Math.max(...lats), minLo = Math.min(...lons), maxLo = Math.max(...lons);
+  const w = 420, h = 240, pd = 26; const s = Math.min((w - 2 * pd) / Math.max(1e-4, (maxLo - minLo) * K), (h - 2 * pd) / Math.max(1e-4, maxLa - minLa));
+  const X = lo => pd + (lo - minLo) * K * s + ((w - 2 * pd) - (maxLo - minLo) * K * s) / 2, Y = la => pd + (maxLa - la) * s + ((h - 2 * pd) - (maxLa - minLa) * s) / 2;
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p[1]).toFixed(1)},${Y(p[0]).toFixed(1)}`).join(""); const last = pts[pts.length - 1];
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;background:var(--map-bg);border-radius:10px" role="img" aria-label="Flyspor"><path d="${d}" style="fill:none;stroke:var(--dir-primary);stroke-width:2.6;stroke-linejoin:round"/><circle cx="${X(site.lon)}" cy="${Y(site.lat)}" r="6" style="fill:var(--dir-primary);stroke:#fff;stroke-width:2"/><text class="map-label" x="${X(site.lon) + 9}" y="${Y(site.lat) + 4}">${esc(site.name)}</text><circle cx="${X(last[1])}" cy="${Y(last[0])}" r="5" style="fill:#1C2B33;stroke:#fff;stroke-width:2"/><text class="map-label" x="${X(last[1]) + 8}" y="${Y(last[0]) + 4}">Landet</text></svg>`;
 }
-let uploaded = null;
-function parseIGC(text) {
-  const fixes = []; let date = null;
-  for (const line of text.split(/\r?\n/)) {
-    const dm = /^HFDTE(?:DATE:)?(\d{2})(\d{2})(\d{2})/.exec(line); if (dm) date = new Date(2000 + +dm[3], +dm[2] - 1, +dm[1]);
-    const b = /^B(\d{2})(\d{2})(\d{2})(\d{2})(\d{5})([NS])(\d{3})(\d{5})([EW])[AV](\d{5}|-\d{4})(\d{5})/.exec(line);
-    if (b) { let lat = +b[4] + +b[5] / 60000, lon = +b[7] + +b[8] / 60000; if (b[6] === "S") lat = -lat; if (b[9] === "W") lon = -lon; fixes.push({ s: +b[1] * 3600 + +b[2] * 60 + +b[3], lat, lon, alt: +b[11] || +b[10] }); }
-  }
-  if (fixes.length < 5) return null;
-  const start = fixes[0]; let far = 0, track = 0;
-  fixes.forEach((f, i) => { far = Math.max(far, distKm(start, f)); if (i) track += distKm(fixes[i - 1], f); });
-  const near = SITES.map(s => ({ s, km: distKm(start, s) })).sort((a, b) => a.km - b.km)[0];
-  return { date, fixes, min: (fixes[fixes.length - 1].s - start.s) / 60, km: far, track, maxAlt: Math.max(...fixes.map(f => f.alt)), site: near.km < 3 ? near.s : null, siteKm: near.km, nearSite: near.s };
+
+/* ---------- Felles biter ---------- */
+const state = { tab: "vaer", mode: "maalt", sel: "w:sollifjellet", stations: true, suggest: false, q: "", span: 48, year: 2026, flight: null, theme: "auto", cvd: false, menu: false, consent1: true, consent2: true };
+function menu() {
+  return `<div class="menu"><button class="menu__button" data-menu aria-expanded="${state.menu}" aria-label="Meny"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  ${state.menu ? `<div class="menu__panel"><span class="menu__label">Fargemodus</span><div class="theme-toggle" role="group" aria-label="Fargemodus">${[["auto", "Auto"], ["light", "Lys"], ["dark", "Mørk"]].map(([v, l]) => `<button data-theme-choice="${v}" aria-pressed="${state.theme === v}">${l}</button>`).join("")}</div>
+  <button class="switch" role="switch" aria-checked="${state.cvd}" data-cvd><span>Fargeblindvennlige farger<small>Blå i stedet for grønn i vindvurderingen</small></span><span class="switch__track" aria-hidden="true"></span></button>
+  <nav class="link-list"><a class="link-row" href="#forside"><b>Alle flysteder</b>${CHEV}</a><a class="link-row" href="#klubb"><b>Klubben</b>${CHEV}</a><a class="link-row" href="#meg"><b>Min side</b>${CHEV}</a></nav></div>` : ""}</div>`;
 }
-V.logg = (_, state) => {
-  const mine = FLIGHTS.filter(f => f.pilot === ME);
-  const sel = mine.find(f => f.id === state.flight) || mine[0];
-  const site = SITE[sel.site]; const st = nearestStations(site, 1)[0].s;
-  const o = OBS[st.id].find(x => Math.abs(x.t - sel.date) < 3600e3) || latest(st.id);
-  const tot = mine.reduce((a, f) => a + f.min, 0);
-  const list = mine.slice(0, 14).map(f => `<button class="frow" data-flight="${f.id}" aria-pressed="${f.id === sel.id}"><span class="d">${fmtDate(f.date)}</span><span style="min-width:0"><b>${esc(SITE[f.site].name)}</b> <span class="muted small">${f.wing}${f.xc ? " · XC" : ""}</span></span><span class="num small">${fmt(f.km)} km · ${fmtDur(f.min)}</span></button>`).join("");
-  const up = uploaded ? (uploaded.error ? `<p class="note">${esc(uploaded.error)}</p>` : `<div class="card" style="background:var(--surface)"><header><h3>Lest fra ${esc(uploaded.name)}</h3><span class="tag ok">Klar til lagring</span></header>
-      <dl class="dl"><dt>Start</dt><dd>${uploaded.site ? esc(uploaded.site.name) : `Ukjent start (nærmest: ${esc(uploaded.nearSite.name)}, ${fmt(uploaded.siteKm)} km)`}</dd><dt>Dato</dt><dd>${uploaded.date ? fmtDate(uploaded.date) : "–"}</dd><dt>Flytid</dt><dd>${fmtDur(uploaded.min)}</dd><dt>Lengst fra start</dt><dd>${fmt(uploaded.km)} km</dd><dt>Sporlengde</dt><dd>${fmt(uploaded.track)} km</dd><dt>Maks høyde</dt><dd>${uploaded.maxAlt} moh</dd><dt>Punkter</dt><dd>${uploaded.fixes.length}</dd></dl>
-      <p class="small muted">Filen ble lest i nettleseren din. Ingenting er lagret eller sendt noe sted.</p></div>`) : "";
-  return `<section class="view">
-    <div class="head"><span class="eyebrow">Min logg · innlogget som ${ME} (fiktiv)</span><h1>Flyturene mine</h1>
-      <p class="lead">Last opp IGC-filen fra variometeret eller telefonen. Siden finner starten, regner ut tur og flytid og henter målt vind ved starten da du gikk i lufta. Så kan turen sendes videre til XContest eller Flightlog.</p></div>
-    <div class="kpis"><div class="kpi"><b>${mine.length}</b><span>turer totalt</span></div><div class="kpi"><b>${fmtDur(tot)}</b><span>timer i lufta</span></div><div class="kpi"><b>${new Set(mine.map(f => f.site)).size}</b><span>ulike starter</span></div><div class="kpi"><b>${fmt(Math.max(...mine.map(f => f.km)))}</b><span>km, lengste tur</span></div></div>
-    <div class="grid2">
-      <div style="display:grid;gap:24px;min-width:0;align-content:start">
-        <div class="card"><header><h2>${esc(site.name)}, ${fmtDate(sel.date)}</h2><span class="muted small num">kl. ${sel.date.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" })}</span></header>
-          ${trackSVG(trackFor(sel), site)}
-          <dl class="dl"><dt>Distanse</dt><dd>${fmt(sel.km)} km${sel.xc ? " (fri distanse)" : ""}</dd><dt>Flytid</dt><dd>${fmtDur(sel.min)}</dd><dt>Maks høyde</dt><dd>${sel.maxAlt} moh</dd><dt>Vinge</dt><dd>${sel.wing}</dd></dl>
-          <div class="assess-row"><div><b>Vind ved ${esc(st.name)} da du startet</b><div class="small num">${DIR_WORD[sectorOf(o.dir)]} ${fmt(o.sp)} m/s, kast ${fmt(o.gust)} m/s · ${fmt(o.temp)} °C</div></div><span class="tag new">Hentet automatisk</span></div>
-          <div class="tags"><button class="btn ghost" type="button">Send til XContest</button><button class="btn ghost" type="button">Send til Flightlog</button><button class="btn ghost" type="button">Del med klubben</button></div>
-        </div>
-        <div class="card"><header><h2>Logg ny tur</h2></header>
-          <label class="drop" id="drop" for="igc"><b>Slipp IGC-fil her</b><span class="small muted">eller trykk for å velge. Prøv gjerne en ekte fil, den leses bare lokalt.</span><input id="igc" type="file" accept=".igc,.IGC" style="position:absolute;opacity:0;width:1px;height:1px"></label>
-          ${up}
-          <details><summary class="small" style="cursor:pointer">Har du ikke IGC-fil? Fyll inn for hånd</summary>
-            <form class="form" id="manual" style="margin-top:12px"><label>Start<select id="m-site">${SITES.map(s => `<option ${s.id === "sollifjellet" ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</select></label><label>Dato<input id="m-date" type="date" value="2026-10-05"></label><label>Flytid (min)<input id="m-min" type="number" value="25"></label><label>Vinge<select id="m-wing"><option>PG</option><option>SPG</option><option>PPG</option></select></label><label class="full">Notat<textarea id="m-note" rows="2">Fin solgangsbris, litt byig på landing.</textarea></label><div class="full"><button class="btn" type="submit">Lagre tur</button> <span id="m-msg" class="small muted"></span></div></form></details>
-        </div>
-      </div>
-      <div class="card"><header><h2>Alle turer</h2><span class="muted small">${mine.length}</span></header><div class="flist">${list}</div></div>
+const topbar = (back = true, region = "") => `<header class="topbar">${back ? `<a class="back-link" href="#forside">‹ Alle flysteder</a>` : `<span class="logo">HPGT flysteder</span>`}<div class="topbar__end">${region ? `<span>${region}</span>` : ""}${menu()}</div></header>`;
+const sw = (key, label, hint) => `<button class="switch" role="switch" aria-checked="${state[key]}" data-switch="${key}"><span>${label}${hint ? `<small>${hint}</small>` : ""}</span><span class="switch__track" aria-hidden="true"></span></button>`;
+
+/* ---------- Visninger ---------- */
+const V = {};
+
+V.forside = () => {
+  const counts = { ok: 0, maybe: 0, high: 0, no: 0, none: 0 };
+  const rows = SITES.filter(s => !state.q || s.name.toLowerCase().includes(state.q.toLowerCase())).map(s => { const w = state.mode !== "av" ? windFor(s, state.mode) : null; const a = w ? assess(s, w) : { r: "none" }; counts[a.r]++; return { s, w, a }; });
+  if (state.mode !== "av") rows.sort((x, y) => ORDER[x.a.r] - ORDER[y.a.r] || x.s.name.localeCompare(y.s.name, "nb"));
+  const tot = rows.length || 1; const winds = rows.filter(x => x.w).map(x => x.w);
+  const common = winds.length ? DIRS.map(d => [d, winds.filter(w => sectorOf(w.dir) === d).length]).sort((a, b) => b[1] - a[1])[0][0] : null;
+  const summary = state.mode === "av" || !winds.length ? "" : `<div style="display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card)">
+      <span class="small"><b>${state.mode === "maalt" ? "Målt kl. 14:00" : "Varsel " + ({ "0": "nå", "3": "om 3 timer", "6": "om 6 timer", tomorrow: "i morgen kl. 12" })[state.mode]}:</b> mest fra ${DIR_WORD[common]}, ${fmt(Math.min(...winds.map(w => w.sp)), 0)}–${fmt(Math.max(...winds.map(w => w.sp)), 0)} m/s, kast opp til ${fmt(Math.max(...winds.map(w => w.gust)), 0)}</span>
+      <div class="wind-bar">${["ok", "maybe", "high", "no", "none"].map(k => counts[k] ? `<span class="r-${k}" style="width:${counts[k] / tot * 100}%"></span>` : "").join("")}</div>
+      <div class="counts">${["ok", "maybe", "high", "no"].map(k => `<span class="r-${k}"><span class="wind-dot"></span>${counts[k]} ${RATING[k].toLowerCase()}</span>`).join("")}${counts.none ? `<span class="r-none"><span class="wind-dot"></span>${counts.none} uten stasjon i nærheten</span>` : ""}</div></div>`;
+  const list = rows.filter(x => !(state.suggest && (x.a.r === "high" || x.a.r === "no"))).map(({ s, w, a }) => `<li><button class="result" data-select="s:${s.id}" aria-pressed="${state.sel === "s:" + s.id}"><span class="result__head"><span class="result__name">${esc(s.name)}</span><span class="result__elev">${s.alt ?? "–"} moh</span></span><span class="dirs">${dirBadges(s)}</span>${state.mode !== "av" ? `<span class="result__wind r-${a.r}"><span class="wind-dot"></span>${w ? `${RATING[a.r]} · ${DIR_NO[sectorOf(w.dir)]} ${fmt(w.sp)} m/s${state.mode === "maalt" ? ` · ${esc(w.station.name)}` : ""}` : "Ingen værstasjon i nærheten"}</span>` : ""}</button></li>`).join("");
+  const stRows = STATIONS.map(s => { const o = latest(s.id); return `<button class="station-row" data-select="w:${s.id}" aria-pressed="${state.sel === "w:" + s.id}">
+      <svg viewBox="-18 -18 36 36" width="36" height="36" aria-hidden="true"><circle r="16" style="fill:var(--surface)"/><g transform="rotate(${(o.dir + 180).toFixed(0)})"><path d="M0,-12 L5,5 L0,2 L-5,5Z" style="fill:var(--text)"/></g></svg>
+      <span style="min-width:0"><b>${esc(s.name)}</b> <span class="muted small">${s.alt} moh</span><span class="meta" style="display:block">${esc(s.src)}${s.kind === "forslag" ? " · foreslått" : ""} · fra ${DIR_WORD[sectorOf(o.dir)]}</span></span>
+      <span class="val">${fmt(o.sp)}<small>kast ${fmt(o.gust)}</small></span></button>`; }).join("");
+  const pane = state.tab === "sites" ? `
+      <input class="search" type="search" id="q" placeholder="Navn, f.eks. Sollifjellet" value="${esc(state.q)}" aria-label="Søk etter flysted" autocomplete="off">
+      <div class="filter"><span class="filter__title" id="f-wind">Vind <span class="new">Ny: målt</span></span>
+        <div class="segmented" role="group" aria-labelledby="f-wind">${[["av", "Av"], ["maalt", "Målt"], ["0", "Nå"], ["3", "+3 t"], ["6", "+6 t"], ["tomorrow", "I morgen"]].map(([v, l]) => `<button data-mode="${v}" aria-pressed="${state.mode === v}">${l}</button>`).join("")}</div>
+        <p class="filter__note">«Målt» bruker nærmeste værstasjon. Nå, +3 t, +6 t og I morgen bruker MET-varselet som i dag. Samme regler for vind i begge.</p>
+        ${state.mode !== "av" ? sw("suggest", "Bare steder som kan passe") : ""}</div>
+      ${summary}
+      <div class="filter"><span class="filter__title">Vindretning, nivå og kategori</span><p class="filter__note">Kompass og filtre som på siden i dag. Ikke med i prototypen.</p></div>
+      <h2>${rows.length} flysteder</h2><ul class="results">${list}</ul>`
+    : state.tab === "vaer" ? `
+      <p>Målt vind fra ${STATIONS.length} stasjoner nær startene. Trykk på en stasjon for vindhistorikk og hvilke starter vinden passer for.</p>
+      ${sw("stations", "Vis stasjonene i kartet")}
+      <div style="display:grid;gap:8px">${stRows}</div>
+      <p class="filter__note">Pilen peker dit vinden blåser. Stiplet kant i kartet betyr en stasjon klubben kunne satt opp selv (Holfuy på en mye brukt topp). De andre finnes allerede.</p>
+      <h3 style="margin-top:6px">Flere værkilder</h3>
+      <nav class="link-list"><a class="link-row" href="https://flybart.net/" target="_blank" rel="noopener"><span><b>Flybart</b><span>Værstasjoner i området samlet på ett sted</span></span>${EXT}</a><a class="link-row" href="http://xcc.no/xccflymet.html" target="_blank" rel="noopener"><span><b>XCC flymet</b><span>Værstasjonene til Egil Fonn</span></span>${EXT}</a><a class="link-row" href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-294009" target="_blank" rel="noopener"><span><b>Yr</b><span>Varsel for Harstad-området</span></span>${EXT}</a><a class="link-row" href="https://www.windy.com/" target="_blank" rel="noopener"><span><b>Windy</b><span>Vind i høyden og flere værmodeller</span></span>${EXT}</a></nav>`
+    : `<p>Info-fanen er som i dag: tårn og luftrom, IPPC, NLFs tommelfingerregel, åpne data og ansvarsfraskrivelse.</p>
+      <nav class="link-list"><a class="link-row" href="#klubb"><span><b>Klubbens turer og rekorder</b><span>Ny: statistikk fra Flightlog og XContest</span></span>${CHEV}</a><a class="link-row" href="#meg"><span><b>Min side</b><span>Ny: koble til Flightlog og XContest</span></span>${CHEV}</a></nav>`;
+  return `<div class="home">
+    <div class="home__head">
+      ${topbar(false)}
+      <h1>Hvor står vinden i dag?</h1>
+      <div class="tabs" role="tablist" aria-label="Innhold">${[["sites", "Flysteder"], ["vaer", "Vær"], ["info", "Info"]].map(([v, l]) => `<button role="tab" data-tab="${v}" aria-selected="${state.tab === v}">${l}</button>`).join("")}</div>
     </div>
-  </section>`;
+    <div class="home__left">${pane}</div>
+    <div class="home__map">${mapView(state)}<span class="map-note">Skjematisk kart i prototypen. På siden: Kartverket.</span></div>
+  </div>`;
 };
 
-V.klubb = (_, state) => {
-  const yr = state.year || 2026; const fl = FLIGHTS.filter(f => yr === "alle" || f.date.getFullYear() === yr);
-  const hours = fl.reduce((a, f) => a + f.min, 0) / 60;
-  const top = [...fl].sort((a, b) => b.km - a.km).slice(0, 8);
-  const bySite = {}; fl.forEach(f => (bySite[f.site] ||= []).push(f));
-  const siteRank = Object.entries(bySite).sort((a, b) => b[1].length - a[1].length);
-  const maxN = siteRank[0]?.[1].length || 1;
-  const byPilot = {}; fl.forEach(f => { const p = byPilot[f.pilot] ||= { n: 0, min: 0, km: 0, sites: new Set() }; p.n++; p.min += f.min; p.km = Math.max(p.km, f.km); p.sites.add(f.site); });
+V.sted = id => {
+  const site = SITE[id] || SITE.sollifjellet; const ns = nearestStations(site, 3);
+  const mountain = ns.find(n => n.s.alt > 300 && n.km < 12) || ns[0]; const span = [48, 168, 720].includes(state.span) ? state.span : 48;
+  const fl = FLIGHTS.filter(f => f.site === site.id);
+  const best = [...fl].sort((a, b) => b.km - a.km)[0]; const longest = [...fl].sort((a, b) => b.min - a.min)[0];
+  const pilots = new Set(fl.map(f => f.pilot)).size; const f0 = windFor(site, "0"); const fa = assess(site, f0);
+  const hz = HAZARDS[site.id];
+  const measured = ns.filter(n => n.km < 12).map(({ s, km }) => { const o = latest(s.id); const a = assess(site, o);
+    return `<a class="site-wind r-${a.r}" href="#stasjon-${s.id}"><span class="time">Målt kl. 14:00 · ${esc(s.name)}</span><strong>${RATING[a.r]}</strong><span>${DIR_WORD[sectorOf(o.dir)]} ${fmt(o.sp)} m/s, kast ${fmt(o.gust)} · ${fmt(km)} km unna, ${s.alt} moh</span></a>`; }).join("");
+  return `<div class="page fade">
+    ${topbar(true, "Harstad og Kvæfjord")}
+    <div class="site-grid">
+      <div class="col">
+        <div class="page-head"><h1>${esc(site.name)} <span class="title-elev">${site.alt ?? "–"} moh</span></h1><p class="lead">${esc(site.i)}</p></div>
+        <div class="ghost-block"><b>Kart, punkter i kartet, adkomst, høydeprofil, start og landing</b><span>Som på stedssiden i dag, uendret. <a href="https://flysteder.hpgt.com/flysteder/${site.id}/" target="_blank" rel="noopener">Se ${esc(site.name)} på flysteder.hpgt.com</a></span></div>
+        <section class="block" id="vind-historikk"><header><h2>Vind ved starten</h2><span class="new">Ny</span></header>
+          <p class="small muted">Målt ved ${esc(mountain.s.name)} (${mountain.s.alt} moh, ${fmt(mountain.km)} km fra starten). Har vinden dreid eller økt de siste timene, ser du det her før du kjører ut.</p>
+          <div class="segmented" style="max-width:280px">${[[48, "48 t"], [168, "7 d"], [720, "30 d"]].map(([v, l]) => `<button data-span="${v}" aria-pressed="${v === span}">${l}</button>`).join("")}</div>
+          <div class="card">${windChart(mountain.s.id, span)}</div>
+          <div class="grid2">
+            <div class="card"><h3>Vinden siste 30 dager</h3>${windRose(mountain.s.id, 720, site, 230)}<p class="small muted">Buene er startens retninger. Mye farge innenfor buene betyr at vinden ofte har stått riktig.</p></div>
+            <div class="card"><h3>Når pleier det å passe her?</h3><p class="small muted">Fra flere års stasjonshistorikk: hvor ofte målt vind har passet startens retninger og grenser, per måned og klokkeslett. Nyttig for tilreisende og når man planlegger turer.</p>${heatmap(site)}</div>
+          </div>
+        </section>
+        <section class="block"><header><h2>Flyturer herfra</h2><span class="new">Ny</span></header>
+          <p class="small muted">Hentet fra Flightlog og XContest for medlemmer som har koblet til kontoen sin. Ingen logger noe her.</p>
+          <div class="kpis"><div class="kpi"><b>${fl.length}</b><span>turer</span></div><div class="kpi"><b>${pilots}</b><span>piloter</span></div><div class="kpi"><b>${best ? fmt(best.km) : "–"}</b><span>km, lengste tur</span></div><div class="kpi"><b>${longest ? fmtDur(longest.min) : "–"}</b><span>lengst i lufta</span></div></div>
+          ${fl.length ? `<div class="card" style="padding:6px 12px"><div class="scroll"><table><thead><tr><th>Dato</th><th>Pilot</th><th class="r">Dist.</th><th class="r">Tid</th><th>Kilde</th></tr></thead><tbody>${fl.slice(0, 6).map(f => `<tr><td class="num">${fmtDate(f.date)}</td><td>${esc(f.pilot)}</td><td class="r num">${fmt(f.km)} km</td><td class="r num">${fmtDur(f.min)}</td><td><span class="src">${f.src}</span></td></tr>`).join("")}</tbody></table></div></div>` : `<p>Ingen turer fra medlemmer herfra ennå.</p>`}
+          <a class="btn" href="#klubb" style="justify-self:start">Rekorder for alle startene</a>
+        </section>
+      </div>
+      <aside class="col">
+        ${hz ? `<section class="notice"><h2><i>!</i>Før du starter</h2>${hz.map(([t, x]) => `<div><b>${esc(t)}</b><p>${esc(x)}</p></div>`).join("")}</section>` : `<div class="ghost-block"><b>Før du starter</b><span>Farene for stedet, som i dag.</span></div>`}
+        <section class="card"><h2>Fakta</h2><div style="display:flex;gap:16px;align-items:center">${roseSvg(site, 96, true)}<div class="dirs">${dirBadges(site)}</div></div><div class="tags">${site.lv ? `<span class="tag">${site.lv}</span>` : ""}${site.ts ? `<span class="tag">Kursplass</span>` : ""}${site.c.map(c => `<span class="tag">${c}</span>`).join("")}</div><p class="small muted">Høyde, luftrom og resten som i dag.</p></section>
+        <section class="card"><h2>Vær</h2>
+          <div style="display:grid;gap:8px"><span class="small" style="font-weight:600;display:flex;gap:8px;align-items:center">Målt nå <span class="new">Ny</span></span>${measured || `<p class="small muted">Ingen værstasjon innen 12 km.</p>`}</div>
+          <div style="display:grid;gap:8px"><span class="small" style="font-weight:600">Varsel nå (som i dag)</span><div class="site-wind r-${fa.r}"><span class="time">MET · kl. 14</span><strong>${RATING[fa.r]}</strong><span>${DIR_WORD[sectorOf(f0.dir)]} ${fmt(f0.sp)} m/s, kast ${fmt(f0.gust)} m/s</span></div></div>
+          <a href="#vind-historikk" class="small" data-jump="vind-historikk">Vindhistorikk ved starten ↓</a>
+          <div class="ghost-block" style="padding:12px"><span>Yr-meteogram og lenker til Windy, Flybart og XCC flymet, som i dag.</span></div>
+        </section>
+        <section class="card"><h2>Logg og mer</h2><div class="buttons"><a class="btn btn--primary btn--wide" style="justify-content:space-between" href="${flightlogUrl(site)}" target="_blank" rel="noopener">${esc(site.name)} på Flightlog ${EXT}</a><a class="btn btn--wide" style="justify-content:space-between" href="#klubb">Klubbens rekorder herfra ${CHEV}</a></div></section>
+      </aside>
+    </div></div>`;
+};
+
+V.stasjon = id => {
+  const st = ST[id] || STATIONS[0]; const o = latest(st.id); const span = [24, 48, 168, 720].includes(state.span) ? state.span : 48;
+  const near = nearestSites(st).slice(0, 8);
+  const nearRows = near.map(({ s, km }) => { const a = assess(s, o); return `<tr class="click" data-go="sted-${s.id}"><td><a href="#sted-${s.id}">${esc(s.name)}</a><div class="dirs" style="margin-top:3px">${dirBadges(s)}</div></td><td class="r num">${fmt(km)} km</td><td class="r num">${s.alt != null ? (s.alt - st.alt > 0 ? "+" : "") + (s.alt - st.alt) + " m" : "–"}</td><td><span class="result__wind r-${a.r}" style="font-size:14px;color:var(--text)"><span class="wind-dot"></span>${RATING[a.r]}</span></td><td class="r num"><b>${flyableHours(s, st.id)}</b> t</td></tr>`; }).join("");
+  const tbl = OBS[st.id].slice(-12).reverse().map(x => `<tr><td class="num">${hh(x.t)}</td><td>${DIR_NO[sectorOf(x.dir)]} <span class="muted num">${Math.round(x.dir)}°</span></td><td class="r num">${fmt(x.sp)}</td><td class="r num">${fmt(x.gust)}</td><td class="r num">${fmt(x.temp)}°</td></tr>`).join("");
+  return `<div class="page fade">
+    ${topbar(true, "Værstasjon")}
+    <div class="page-head"><span class="eyebrow">${esc(st.src)}${st.kind === "forslag" ? " · foreslått stasjon" : ""}</span><h1>${esc(st.name)} <span class="title-elev">${st.alt} moh</span></h1><p class="lead">Målingene lagres hver gang siden bygges. Da ser du hvordan det har blåst de siste timene, dagene og ukene, og hvilke starter vinden har passet for.</p></div>
+    <div class="site-grid">
+      <div class="col">
+        <section class="block"><header><h2>Vind</h2><div class="segmented">${[[24, "24 t"], [48, "48 t"], [168, "7 d"], [720, "30 d"]].map(([v, l]) => `<button data-span="${v}" aria-pressed="${v === span}">${l}</button>`).join("")}</div></header><div class="card">${windChart(st.id, span)}</div></section>
+        <section class="block"><header><h2>Starter i nærheten</h2><span class="muted small">innen 9 km</span></header>
+          <p class="small muted">Vurdert mot målt vind nå, med reglene fra forsiden. «Flybare timer» teller timer kl. 08–21 de siste 30 dagene der målingen passet startens retninger og grenser.</p>
+          <div class="card" style="padding:6px 12px"><div class="scroll"><table><thead><tr><th>Start</th><th class="r">Avstand</th><th class="r">Høyde</th><th>Nå</th><th class="r">Flybare t</th></tr></thead><tbody>${nearRows || `<tr><td colspan="5">Ingen starter innen 9 km.</td></tr>`}</tbody></table></div></div></section>
+      </div>
+      <aside class="col">
+        <section class="card"><div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><div style="font:700 52px/1 var(--font-heading)" class="num">${fmt(o.sp)}<span style="font:500 18px var(--font-body);color:var(--muted)"> m/s</span></div><dl class="dl"><dt>Fra</dt><dd>${DIR_WORD[sectorOf(o.dir)]} (${Math.round(o.dir)}°)</dd><dt>Kast</dt><dd>${fmt(o.gust)} m/s</dd><dt>Temp.</dt><dd>${fmt(o.temp)} °C</dd><dt>Målt</dt><dd>kl. 14:00</dd></dl></div></section>
+        <section class="card"><header><h2>Vindrose</h2><span class="muted small">siste 30 dager</span></header>${windRose(st.id, 720)}</section>
+        <section class="card"><h2>Siste timer</h2><div class="scroll"><table><thead><tr><th>Kl.</th><th>Fra</th><th class="r">Middel</th><th class="r">Kast</th><th class="r">Temp</th></tr></thead><tbody>${tbl}</tbody></table></div></section>
+      </aside>
+    </div></div>`;
+};
+
+V.klubb = () => {
+  const yr = state.year; const fl = FLIGHTS.filter(f => yr === "alle" || f.date.getFullYear() === yr);
+  const hours = fl.reduce((a, f) => a + f.min, 0) / 60; const top = [...fl].sort((a, b) => b.km - a.km).slice(0, 8);
+  const bySite = {}; fl.forEach(f => (bySite[f.site] ||= []).push(f)); const siteRank = Object.entries(bySite).sort((a, b) => b[1].length - a[1].length); const maxN = siteRank[0]?.[1].length || 1;
+  const byPilot = {}; fl.forEach(f => { const p = byPilot[f.pilot] ||= { n: 0, min: 0, sites: new Set() }; p.n++; p.min += f.min; p.sites.add(f.site); });
   const pilotRank = Object.entries(byPilot).sort((a, b) => b[1].min - a[1].min).slice(0, 8);
   const months = Array(12).fill(0); fl.forEach(f => months[f.date.getMonth()]++); const mMax = Math.max(...months, 1);
-  const mChart = `<svg viewBox="0 0 480 170" style="width:100%;height:auto" role="img" aria-label="Turer per måned">${months.map((v, i) => { const h = v / mMax * 120; return `<rect x="${10 + i * 39}" y="${140 - h}" width="28" height="${h}" rx="3" style="fill:var(--dir-primary)"/>${v ? `<text class="t-ink" font-size="11" x="${24 + i * 39}" y="${134 - h}" text-anchor="middle">${v}</text>` : ""}<text class="t-muted" font-size="11" x="${24 + i * 39}" y="160" text-anchor="middle">${MONTHS[i]}</text>`; }).join("")}<line class="g-axis" x1="4" x2="476" y1="140.5" y2="140.5"/></svg>`;
+  const mChart = `<svg viewBox="0 0 480 170" style="width:100%;height:auto" role="img" aria-label="Turer per måned">${months.map((v, i) => { const h = v / mMax * 120; return `<rect x="${10 + i * 39}" y="${140 - h}" width="28" height="${h}" rx="3" style="fill:var(--dir-primary)"/>${v ? `<text class="t-ink" font-size="11" x="${24 + i * 39}" y="${134 - h}" text-anchor="middle">${v}</text>` : ""}<text class="t-muted" font-size="11" x="${24 + i * 39}" y="160" text-anchor="middle">${MONTHS[i]}</text>`; }).join("")}<line x1="4" x2="476" y1="140.5" y2="140.5" style="stroke:var(--line)"/></svg>`;
+  const unused = SITES.filter(s => !bySite[s.id]);
   const rec = siteRank.map(([id, arr]) => { const b = [...arr].sort((a, c) => c.km - a.km)[0], t = [...arr].sort((a, c) => c.min - a.min)[0];
     return `<tr class="click" data-go="sted-${id}"><td><a href="#sted-${id}">${esc(SITE[id].name)}</a></td><td class="r num">${arr.length}</td><td class="r num">${fmt(b.km)} km <span class="muted small">${esc(b.pilot)}</span></td><td class="r num">${fmtDur(t.min)} <span class="muted small">${esc(t.pilot)}</span></td><td class="num small muted">${fmtDate(arr[0].date)}</td></tr>`; }).join("");
-  return `<section class="view">
-    <div class="head"><span class="eyebrow">Klubben · bare for medlemmer</span><h1>Hvem flyr hvor, og hvor langt</h1>
-      <p class="lead">Statistikk fra turene medlemmene logger. Det Flightlog ikke gir i dag: rekorder per start i vårt område, toppliste for klubben, og hvilke starter som faktisk brukes.</p>
-      <div class="seg" role="group" aria-label="År" style="margin-top:6px;justify-self:start">${[2026, 2025, 2024, "alle"].map(y => `<button data-year="${y}" aria-pressed="${y === yr}">${y === "alle" ? "Alle år" : y}</button>`).join("")}</div></div>
-    <div class="kpis"><div class="kpi"><b>${fl.length}</b><span>turer</span></div><div class="kpi"><b>${Math.round(hours)}</b><span>timer i lufta</span></div><div class="kpi"><b>${Object.keys(byPilot).length}</b><span>aktive piloter</span></div><div class="kpi"><b>${Object.keys(bySite).length}</b><span>starter i bruk av ${SITES.length}</span></div></div>
-    <div class="grid2 even">
-      <div class="card"><header><h2>Lengste turer i området</h2><span class="muted small">fri distanse</span></header>
-        <div class="scroll"><table><thead><tr><th></th><th>Pilot</th><th>Start</th><th class="r">Km</th><th class="r">Tid</th></tr></thead><tbody>${top.map((f, i) => `<tr><td><span class="rank">${i + 1}</span></td><td>${esc(f.pilot)}</td><td><a href="#sted-${f.site}">${esc(SITE[f.site].name)}</a><div class="small muted num">${fmtDate(f.date)}</div></td><td class="r num"><b>${fmt(f.km)}</b></td><td class="r num">${fmtDur(f.min)}</td></tr>`).join("")}</tbody></table></div></div>
-      <div class="card"><header><h2>Starter med flest turer</h2></header>
-        <div class="bars">${siteRank.slice(0, 10).map(([id, arr]) => `<div class="bar"><a href="#sted-${id}">${esc(SITE[id].name)}</a><div class="track"><div class="fill" style="width:${arr.length / maxN * 100}%"></div></div><b>${arr.length}</b></div>`).join("")}</div>
-        <p class="small muted">${SITES.length - Object.keys(bySite).length} starter har ingen loggede turer i perioden. Kanskje verdt en klubbtur?</p></div>
-      <div class="card"><header><h2>Mest i lufta</h2></header>
-        <div class="scroll"><table><thead><tr><th></th><th>Pilot</th><th class="r">Turer</th><th class="r">Timer</th><th class="r">Starter</th><th class="r">Lengste</th></tr></thead><tbody>${pilotRank.map(([p, v], i) => `<tr><td><span class="rank">${i + 1}</span></td><td>${esc(p)}</td><td class="r num">${v.n}</td><td class="r num">${fmtDur(v.min)}</td><td class="r num">${v.sites.size}</td><td class="r num">${fmt(v.km)} km</td></tr>`).join("")}</tbody></table></div>
-        <p class="small muted">Piloter velger selv om de vises med navn. Andre telles bare med i totalene.</p></div>
-      <div class="card"><header><h2>Turer per måned</h2></header>${mChart}</div>
+  return `<div class="page fade">
+    ${topbar(true)}
+    <div class="page-head"><span class="eyebrow">Klubben · bare for medlemmer</span><h1>Hvem flyr hvor, og hvor langt</h1>
+      <p class="lead">Laget av turene medlemmene allerede har på Flightlog og XContest. Ingen må logge noe ekstra: kobler du til kontoen din én gang, kommer turene med her. Oppdateres hver natt.</p>
+      <div class="segmented" style="max-width:380px;margin-top:4px">${[2026, 2025, 2024, "alle"].map(y => `<button data-year="${y}" aria-pressed="${y === yr}">${y === "alle" ? "Alle år" : y}</button>`).join("")}</div></div>
+    <div class="kpis"><div class="kpi"><b>${fl.length}</b><span>turer</span></div><div class="kpi"><b>${Math.round(hours)}</b><span>timer i lufta</span></div><div class="kpi"><b>${Object.keys(byPilot).length}</b><span>piloter med turer</span></div><div class="kpi"><b>${Object.keys(bySite).length} av ${SITES.length}</b><span>starter i bruk</span></div></div>
+    <div class="grid2">
+      <section class="card"><header><h2>Lengste turer i området</h2><span class="muted small">fri distanse</span></header><div class="scroll"><table><thead><tr><th></th><th>Pilot</th><th>Start</th><th class="r">Km</th><th>Kilde</th></tr></thead><tbody>${top.map((f, i) => `<tr><td class="rank">${i + 1}</td><td>${esc(f.pilot)}</td><td><a href="#sted-${f.site}">${esc(SITE[f.site].name)}</a><div class="small muted num">${fmtDate(f.date)} · ${fmtDur(f.min)}</div></td><td class="r num"><b>${fmt(f.km)}</b></td><td><span class="src">${f.src}</span></td></tr>`).join("")}</tbody></table></div></section>
+      <section class="card"><header><h2>Starter med flest turer</h2></header><div class="bars">${siteRank.slice(0, 10).map(([id, arr]) => `<div class="bar"><a href="#sted-${id}">${esc(SITE[id].name)}</a><div class="track"><div class="fill" style="width:${arr.length / maxN * 100}%"></div></div><b>${arr.length}</b></div>`).join("")}</div>
+        <p class="small muted">Ingen turer i perioden fra ${unused.length} starter, blant annet ${unused.slice(0, 5).map(s => `<a href="#sted-${s.id}">${esc(s.name)}</a>`).join(", ")}. Kanskje verdt en klubbtur?</p></section>
+      <section class="card"><header><h2>Mest i lufta</h2></header><div class="scroll"><table><thead><tr><th></th><th>Pilot</th><th class="r">Turer</th><th class="r">Timer</th><th class="r">Starter</th></tr></thead><tbody>${pilotRank.map(([p, v], i) => `<tr><td class="rank">${i + 1}</td><td>${esc(p)}</td><td class="r num">${v.n}</td><td class="r num">${fmtDur(v.min)}</td><td class="r num">${v.sites.size}</td></tr>`).join("")}</tbody></table></div><p class="small muted">Bare medlemmer som har sagt ja til å vises med navn. De andre telles bare med i totalene.</p></section>
+      <section class="card"><header><h2>Turer per måned</h2></header>${mChart}</section>
     </div>
-    <div class="card"><header><h2>Rekorder per start</h2><span class="muted small">trykk for stedssiden</span></header>
-      <div class="scroll"><table><thead><tr><th>Start</th><th class="r">Turer</th><th class="r">Lengst</th><th class="r">Lengst i lufta</th><th>Siste</th></tr></thead><tbody>${rec}</tbody></table></div></div>
-  </section>`;
+    <section class="card"><header><h2>Rekorder per start</h2><span class="muted small">trykk for stedssiden</span></header><div class="scroll"><table><thead><tr><th>Start</th><th class="r">Turer</th><th class="r">Lengst</th><th class="r">Lengst i lufta</th><th>Siste</th></tr></thead><tbody>${rec}</tbody></table></div></section>
+  </div>`;
 };
 
-V.plan = () => `<section class="view">
-  <div class="head"><span class="eyebrow">Anbefaling</span><h1>Bygge selv eller integrere?</h1>
-    <p class="lead">Kort svar: bygg det som handler om vårt område (vær ved startene, statistikk per start og klubb). Integrer der andre allerede er best (konkurranse, global logg, varsel). Ikke prøv å erstatte XContest eller Leonardo.</p></div>
-  <div class="card"><header><h2>Del for del</h2></header><div class="scroll"><table class="matrix"><thead><tr><th>Funksjon</th><th>Hvem gjør det i dag</th><th>Forslag</th><th>Hvorfor</th></tr></thead><tbody>
-    <tr><td>Målt vind i kart</td><td>Flybart, Holfuy, Windy</td><td class="verdict build">Bygg, med data fra andre</td><td>Hent fra MET Frost, Holfuy og evt. egne stasjoner. Verdien er koblingen til våre starter, ikke selve målingen.</td></tr>
-    <tr><td>Historikk per stasjon</td><td>Flybart (delvis), Holfuy</td><td class="verdict build">Bygg</td><td>Krever at vi lagrer målinger selv. Kan gjøres billig: en jobb hver time som legger målinger i en fil eller en liten database.</td></tr>
-    <tr><td>«Når pleier det å passe?» per start</td><td>Ingen</td><td class="verdict build">Bygg</td><td>Unikt. Lages av stasjonshistorikk + startens retninger og vindgrensene vi allerede har i <code>windRules.json</code>. Frost har mange års historikk for MET-stasjoner.</td></tr>
-    <tr><td>Egen værstasjon på toppen</td><td>–</td><td class="verdict integ">Kjøp Holfuy</td><td>Holfuy er laget for paragliding, har API og vises også i Flybart og Windy. Mer nytte per krone enn å bygge eget.</td></tr>
-    <tr><td>Logge turer (IGC)</td><td>Flightlog, XContest, Leonardo, PGpilot</td><td class="verdict build">Bygg en enkel versjon</td><td>Bare det som trengs for klubbstatistikk: last opp IGC, finn start, lagre. Knapp for å sende videre til XContest/Flightlog, så ingen må logge to ganger.</td></tr>
-    <tr><td>Konkurranse og poeng (XC)</td><td>XContest, Leonardo</td><td class="verdict skip">Ikke bygg</td><td>Poengregler, juksekontroll og internasjonal rangering er store ting å vedlikeholde. Lenk til pilotens XContest-profil.</td></tr>
-    <tr><td>Klubbstatistikk og rekorder per start</td><td>Ingen (Flightlog bare delvis)</td><td class="verdict build">Bygg</td><td>Hovedgrunnen til loggen. Kan i starten fylles med import av gamle turer fra Flightlog hvis de vil gi oss data.</td></tr>
-    <tr><td>Varsel</td><td>Yr, MET, Windy, XCC flymet</td><td class="verdict integ">Integrer (som i dag)</td><td>Forsiden bruker allerede MET Locationforecast. Fortsett med det.</td></tr>
-  </tbody></table></div></div>
-  <div class="phases">
-    <div class="card phase"><span class="eyebrow">Fase 1 · passer dagens oppsett</span><h3>Målt vind ved startene</h3><ul>
-      <li>Stasjoner i kartet og på stedssiden, med vurdering mot startens retninger.</li>
-      <li>GitHub Actions henter målinger hver time (som varselet i dag) og lagrer dem som JSON.</li>
-      <li>Ingen innlogging, ingen server. Siden kan fortsatt være statisk.</li>
-      <li>Snakk med Flybart: kanskje de vil dele data, eller vi kan lenke til dem per stasjon.</li></ul></div>
-    <div class="card phase"><span class="eyebrow">Fase 2 · trenger en liten backend</span><h3>Historikk og «når pleier det å passe»</h3><ul>
-      <li>Hent flere års historikk fra MET Frost for de offentlige stasjonene.</li>
-      <li>Regn ut flybare timer per start, måned og klokkeslett ved bygging.</li>
-      <li>Vurder én–to Holfuy-stasjoner på mye brukte topper (Sollifjellet, Høgfjellet).</li></ul></div>
-    <div class="card phase"><span class="eyebrow">Fase 3 · bare hvis medlemmene vil</span><h3>Klubblogg</h3><ul>
-      <li>Innlogging for medlemmer (f.eks. Supabase eller Firebase, gratisnivå holder lenge).</li>
-      <li>IGC-opplasting, automatisk start og vind ved start, eksport videre.</li>
-      <li>Personvern: samtykke til visning med navn, mulighet for å slette alt. Flyspor viser hvor folk bor og ferdes.</li>
-      <li>Test med 5–10 aktive piloter én sesong før det åpnes for alle.</li></ul></div>
-  </div>
-  <div class="grid2 even">
-    <div class="card"><h2>Det som taler for å bygge selv</h2><ul>
-      <li>Ingen andre kobler målt vind til våre starter og våre vindregler.</li>
-      <li>Stedsdataene finnes allerede, rene og validerte, i dette repoet.</li>
-      <li>Klubben eier dataene og kan lage statistikk Flightlog ikke har.</li></ul></div>
-    <div class="card"><h2>Det som taler imot</h2><ul>
-      <li>Drift og vedlikehold på dugnad. En logg med innlogging må holdes i gang i mange år.</li>
-      <li>Piloter logger allerede ett sted. En ny logg brukes bare hvis den sparer arbeid, derfor «send videre».</li>
-      <li>Persondata (GDPR) krever en ansvarlig i klubben.</li>
-      <li>Flightlog og XContest har ikke åpne API-er for import i dag. Spør dem før vi bygger.</li></ul></div>
-  </div>
-  <p class="note">Første steg som koster lite: be MET om en Frost-nøkkel, spør Flybart og Flightlog om samarbeid, og finn ut hva en Holfuy-stasjon på Sollifjellet koster med oppsett og grunneiers ja.</p>
-</section>`;
+V.meg = () => {
+  const mine = FLIGHTS.filter(f => f.pilot === ME); const sel = mine.find(f => f.id === state.flight) || mine[0];
+  const site = SITE[sel.site]; const st = nearestStations(site, 1)[0].s;
+  const o = OBS[st.id].find(x => Math.abs(x.t - sel.date) < 3600e3) || latest(st.id);
+  const tot = mine.reduce((a, f) => a + f.min, 0); const visited = new Set(mine.map(f => f.site)); const notYet = SITES.filter(s => !visited.has(s.id) && inMap(s));
+  const bySite = {}; mine.forEach(f => bySite[f.site] = (bySite[f.site] || 0) + 1); const bs = Object.entries(bySite).sort((a, b) => b[1] - a[1]).slice(0, 6); const bmax = bs[0]?.[1] || 1;
+  return `<div class="page fade">
+    ${topbar(true)}
+    <div class="page-head"><span class="eyebrow">Min side · ${ME} (fiktiv pilot)</span><h1>Turene dine, samlet</h1>
+      <p class="lead">Fortsett å logge som før, med PGpilot, varioen eller XCTrack til Flightlog og XContest. Turene dine dukker opp her av seg selv, med målt vind ved starten lagt til.</p></div>
+    <div class="grid2 wide-left">
+      <div class="col">
+        <div class="kpis"><div class="kpi"><b>${mine.length}</b><span>turer</span></div><div class="kpi"><b>${fmtDur(tot)}</b><span>timer i lufta</span></div><div class="kpi"><b>${visited.size}</b><span>starter</span></div><div class="kpi"><b>${fmt(Math.max(...mine.map(f => f.km)))}</b><span>km, lengste tur</span></div></div>
+        <section class="card"><header><h2>${esc(site.name)}, ${fmtDate(sel.date)}</h2><span class="src">${sel.src}</span></header>
+          ${trackSVG(trackFor(sel), site)}
+          <dl class="dl"><dt>Distanse</dt><dd>${fmt(sel.km)} km${sel.xc ? " (fri distanse)" : ""}</dd><dt>Flytid</dt><dd>${fmtDur(sel.min)}</dd><dt>Maks høyde</dt><dd>${sel.maxAlt} moh</dd><dt>Startet</dt><dd>kl. ${sel.date.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" })}</dd></dl>
+          <a class="site-wind r-${assess(site, o).r}" href="#stasjon-${st.id}"><span class="time">Målt ved ${esc(st.name)} da du startet</span><strong>${DIR_WORD[sectorOf(o.dir)]} ${fmt(o.sp)} m/s, kast ${fmt(o.gust)} m/s <span class="new" style="margin-left:4px;height:18px;font-size:10px;vertical-align:2px">Ny</span></strong><span>${fmt(o.temp)} °C. Fint å se igjen neste gang du lurer på om det blir bra.</span></a>
+          <a class="btn" href="${flightlogUrl(site)}" target="_blank" rel="noopener" style="justify-self:start">Se turen på ${sel.src} ${EXT}</a>
+        </section>
+        <section class="card"><header><h2>Starter du ikke har prøvd ennå</h2><span class="muted small">${notYet.length} i Harstad og Kvæfjord</span></header>
+          <div class="tags">${notYet.slice(0, 16).map(s => `<a class="tag" style="text-decoration:none" href="#sted-${s.id}">${esc(s.name)}${s.lv ? ` · ${s.lv}` : ""}</a>`).join("")}</div></section>
+      </div>
+      <div class="col">
+        <section class="card"><h2>Kontoer</h2>
+          <div class="account"><span><b>Flightlog</b><span class="small muted" style="display:block">siri_b</span></span><span class="ok">✓ Koblet til</span></div>
+          <div class="account"><span><b>XContest</b><span class="small muted" style="display:block">siri.b</span></span><span class="ok">✓ Koblet til</span></div>
+          <p class="small muted">Du skriver bare inn brukernavnet ditt. Siden leser turene dine derfra og lagrer ingen flyspor selv.</p>
+          ${sw("consent1", "Vis meg med navn i klubbens lister", "Ellers telles turene bare med i totalene")}
+          ${sw("consent2", "Ta med turene mine i statistikken for startene")}
+          <button class="btn" type="button">Koble fra og slett alt</button></section>
+        <section class="card"><h2>Mest brukte starter</h2><div class="bars">${bs.map(([id, n]) => `<div class="bar"><a href="#sted-${id}">${esc(SITE[id].name)}</a><div class="track"><div class="fill" style="width:${n / bmax * 100}%"></div></div><b>${n}</b></div>`).join("")}</div></section>
+        <section class="card"><header><h2>Alle turer</h2><span class="muted small">${mine.length}</span></header><div class="flist">${mine.slice(0, 12).map(f => `<button class="frow" data-flight="${f.id}" aria-pressed="${f.id === sel.id}"><span class="d">${fmtDate(f.date)}</span><span style="min-width:0"><b>${esc(SITE[f.site].name)}</b> <span class="src">${f.src}</span></span><span class="num small">${fmt(f.km)} km · ${fmtDur(f.min)}</span></button>`).join("")}</div></section>
+      </div>
+    </div></div>`;
+};
 
-/* ---------- Ruting ---------- */
-const state = {};
+V.plan = () => `<div class="page fade">
+  ${topbar(true)}
+  <div class="page-head"><span class="eyebrow">Anbefaling</span><h1>Bygge selv eller integrere?</h1>
+    <p class="lead">Bygg det som handler om våre starter: målt vind ved startene, historikk, og statistikk per start og for klubben. Hent turene fra Flightlog og XContest i stedet for å be folk logge et nytt sted. Lenk videre til det andre allerede gjør best.</p></div>
+  <section class="card"><h2>Del for del</h2><div class="scroll"><table class="matrix"><thead><tr><th>Funksjon</th><th>Hvem gjør det i dag</th><th>Forslag</th><th>Hvorfor</th></tr></thead><tbody>
+    <tr><td>Målt vind i kartet og på stedssiden</td><td>Flybart, XCC flymet, Holfuy</td><td class="verdict build">Bygg, med andres data</td><td>Verdien er koblingen til våre starter og vindregler. Vær-fanen på forsiden har allerede plass til det.</td></tr>
+    <tr><td>Vindhistorikk og «når pleier det å passe»</td><td>Ingen for våre starter</td><td class="verdict build">Bygg</td><td>Unikt. Lages av stasjonshistorikk, startenes retninger og <code>windRules.json</code>. MET Frost har mange års historikk.</td></tr>
+    <tr><td>Egen stasjon på en topp</td><td>–</td><td class="verdict integ">Kjøp Holfuy</td><td>Laget for paragliding, har API og vises også hos Flybart og Windy.</td></tr>
+    <tr><td>Logge turer</td><td>Flightlog, XContest, PGpilot, varioer</td><td class="verdict skip">Ikke bygg</td><td>Folk logger allerede der, ofte automatisk fra appen. Et tredje sted blir ikke brukt.</td></tr>
+    <tr><td>Klubbstatistikk og rekorder per start</td><td>Flightlog bare delvis</td><td class="verdict build">Bygg, med data fra Flightlog og XContest</td><td>Medlemmet kobler til brukernavnet sitt én gang. Turene leses derfra, og statistikken lages her.</td></tr>
+    <tr><td>Konkurranse og poeng</td><td>XContest, Leonardo</td><td class="verdict skip">Ikke bygg</td><td>Lenk til turen eller pilotprofilen der.</td></tr>
+    <tr><td>Varsel</td><td>MET, Yr, Windy</td><td class="verdict integ">Som i dag</td><td>Forsiden bruker MET Locationforecast, stedssiden Yr-meteogram.</td></tr>
+  </tbody></table></div></section>
+  <section class="card"><h2>Slik passer det inn i det som finnes</h2><ul>
+    <li><b>Henting ved bygging, som varselet.</b> En ny <code>src/_data/stations.js</code> etter mønster av <code>forecast.js</code>. Siden bygges allerede to ganger i timen, så målt vind blir høyst 30 minutter gammel. Nettleseren henter ingenting selv, så CSP-en trenger ikke endres og ingen API-nøkler havner på siden.</li>
+    <li><b>Samme vurdering.</b> <code>wind.js</code> og reglene i <code>windRules.json</code> brukes på målt vind også. «Målt» blir et nytt valg ved siden av Nå, +3 t, +6 t og I morgen.</li>
+    <li><b>Historikk.</b> Målingene legges i en egen datagren eller en liten database, ikke i <code>main</code>, så historikken ikke fyller repoet. Diagrammene lages ved bygging.</li>
+    <li><b>Statussiden</b> kan vise hvilke steder som mangler en stasjon i nærheten. Det sier hvor en Holfuy gir mest nytte.</li>
+    <li><b>Turer</b> krever litt mer: en enkel innlogging for medlemmer og en jobb hver natt som leser turene. Det er det eneste som ikke passer i en helt statisk side.</li></ul></section>
+  <div class="phases">
+    <div class="card phase"><span class="eyebrow">Fase 1</span><h3>Målt vind</h3><ul><li>Stasjoner i Vær-fanen og kartet.</li><li>«Målt nå» på stedssiden og i kortet.</li><li>Kilder: MET Frost, og XCC flymet og Flybart hvis de sier ja.</li></ul></div>
+    <div class="card phase"><span class="eyebrow">Fase 2</span><h3>Historikk</h3><ul><li>Lagre målingene og vis 48 t, 7 d og 30 d.</li><li>«Når pleier det å passe» fra Frost-historikk.</li><li>Vurder Holfuy på Sollifjellet og Høgfjellet.</li></ul></div>
+    <div class="card phase"><span class="eyebrow">Fase 3</span><h3>Klubbstatistikk</h3><ul><li>Avtale med Flightlog om å lese turer per start og pilot.</li><li>Medlemmer kobler til brukernavn og samtykker.</li><li>Rekorder per start og toppliste.</li></ul></div>
+    <div class="card phase"><span class="eyebrow">Senere</span><h3>XContest</h3><ul><li>Bare hvis XContest vil gi tilgang.</li><li>Til da: lenke til turen der.</li></ul></div>
+  </div>
+  <section class="card"><h2>Første steg, som koster lite</h2><ul>
+    <li>Be MET om en klient-ID til Frost (gratis).</li>
+    <li>Spør Egil Fonn (XCC flymet) og Flybart om stasjonsdataene kan brukes på siden.</li>
+    <li>Spør Flightlog om de kan dele turer per start og per pilot, og om de heller vil lage klubbstatistikken selv.</li>
+    <li>Finn ut hva en Holfuy på Sollifjellet koster med oppsett, og spør grunneier og alpinsenteret.</li></ul></section>
+</div>`;
+
+/* ---------- Ruting og hendelser ---------- */
+function applyTheme() {
+  const root = document.documentElement;
+  if (state.theme === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", state.theme);
+  if (state.cvd) root.setAttribute("data-cvd", "on"); else root.removeAttribute("data-cvd");
+}
 function render() {
-  const hash = location.hash.slice(1) || "kart";
-  const [view, ...rest] = hash.split("-"); const arg = rest.join("-");
-  const fn = V[view] || V.kart; document.getElementById("app").innerHTML = fn(arg, state);
-  const navKey = view === "stasjon" ? "vaer" : view;
-  document.querySelectorAll("nav.tabs a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href").slice(1).split("-")[0] === navKey ? "page" : "false"));
-  bind();
+  const hash = location.hash.slice(1) || "forside"; const [view, ...rest] = hash.split("-"); const arg = rest.join("-");
+  const app = document.getElementById("app"); const fn = V[view] || V.forside;
+  const focusQ = document.activeElement && document.activeElement.id === "q"; const caret = focusQ ? document.activeElement.selectionStart : 0;
+  app.innerHTML = fn(arg);
+  document.querySelectorAll(".proto nav a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href").slice(1).split("-")[0] === (V[view] ? view : "forside") ? "page" : "false"));
+  if (focusQ) { const q = document.getElementById("q"); if (q) { q.focus(); q.setSelectionRange(caret, caret); } }
+  bind(app);
 }
-function bind() {
-  const app = document.getElementById("app");
-  app.querySelectorAll("[data-go]").forEach(el => { const go = () => { location.hash = el.dataset.go; }; el.addEventListener("click", e => { if (e.target.closest("a")) return; go(); }); el.addEventListener("keydown", e => { if (e.key === "Enter") go(); }); });
-  app.querySelectorAll("[data-span]").forEach(b => b.addEventListener("click", () => { state.span = +b.dataset.span; render(); }));
-  app.querySelectorAll("[data-year]").forEach(b => b.addEventListener("click", () => { state.year = b.dataset.year === "alle" ? "alle" : +b.dataset.year; render(); }));
-  app.querySelectorAll("[data-flight]").forEach(b => b.addEventListener("click", () => { state.flight = b.dataset.flight; render(); }));
-  const drop = document.getElementById("drop"), input = document.getElementById("igc");
-  if (drop) {
-    const read = file => { if (!file) return; const fr = new FileReader(); fr.onload = () => { const r = parseIGC(String(fr.result)); uploaded = r ? { ...r, name: file.name } : { error: "Fant ingen flypunkter i filen. Er det en IGC-fil fra et variometer eller en app?" }; render(); }; fr.readAsText(file); };
-    input.addEventListener("change", () => read(input.files[0]));
-    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
-    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-    drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); read(e.dataTransfer.files[0]); });
-  }
-  const form = document.getElementById("manual");
-  if (form) form.addEventListener("submit", e => { e.preventDefault(); document.getElementById("m-msg").textContent = "Lagret (bare i prototypen, ingenting sendes)."; });
+function bind(app) {
+  app.querySelectorAll("[data-select]").forEach(el => { const go = e => { e.stopPropagation(); state.sel = el.dataset.select; render(); if (window.innerWidth < 900 && !el.closest(".home__map")) document.querySelector(".home__map")?.scrollIntoView({ behavior: "smooth", block: "start" }); }; el.addEventListener("click", go); el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); } }); });
+  app.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", e => { if (!e.target.closest("a")) location.hash = el.dataset.go; }));
+  app.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", () => { state.sel = null; render(); }));
+  app.querySelectorAll("[data-tab]").forEach(el => el.addEventListener("click", () => { state.tab = el.dataset.tab; if (state.tab === "vaer") state.stations = true; render(); }));
+  app.querySelectorAll("[data-mode]").forEach(el => el.addEventListener("click", () => { state.mode = el.dataset.mode; render(); }));
+  app.querySelectorAll("[data-switch]").forEach(el => el.addEventListener("click", () => { state[el.dataset.switch] = !state[el.dataset.switch]; if (!state.stations && state.sel?.startsWith("w:")) state.sel = null; render(); }));
+  app.querySelectorAll("[data-span]").forEach(el => el.addEventListener("click", () => { state.span = +el.dataset.span; render(); }));
+  app.querySelectorAll("[data-year]").forEach(el => el.addEventListener("click", () => { state.year = el.dataset.year === "alle" ? "alle" : +el.dataset.year; render(); }));
+  app.querySelectorAll("[data-flight]").forEach(el => el.addEventListener("click", () => { state.flight = el.dataset.flight; render(); }));
+  app.querySelectorAll("[data-jump]").forEach(el => el.addEventListener("click", e => { e.preventDefault(); document.getElementById(el.dataset.jump)?.scrollIntoView({ behavior: "smooth" }); }));
+  app.querySelectorAll("[data-menu]").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); state.menu = !state.menu; render(); }));
+  app.querySelectorAll("[data-theme-choice]").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); state.theme = el.dataset.themeChoice; applyTheme(); render(); }));
+  app.querySelectorAll("[data-cvd]").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); state.cvd = !state.cvd; applyTheme(); render(); }));
+  const q = document.getElementById("q"); if (q) q.addEventListener("input", () => { state.q = q.value; render(); });
 }
-window.addEventListener("hashchange", () => { if (!location.hash.startsWith("#stasjon")) state.span = 48; render(); window.scrollTo(0, 0); });
+document.addEventListener("click", e => { if (state.menu && !e.target.closest(".menu")) { state.menu = false; render(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && (state.menu || state.sel)) { if (state.menu) state.menu = false; else state.sel = null; render(); } });
+window.addEventListener("hashchange", () => { state.menu = false; state.span = 48; render(); window.scrollTo(0, 0); });
 render();
 </script>
