@@ -6,7 +6,7 @@ pagination:
   data: languages
   size: 1
   alias: language
-permalink: "{{ language.prefix }}/"
+permalink: "{{ '/' | localeUrl(language.code) }}"
 eleventyComputed:
   description: "{{ t.home.description }}"
 scripts:

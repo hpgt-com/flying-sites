@@ -3,7 +3,7 @@ import path from "node:path";
 import { processRoute } from "../../lib/gpx.js";
 import { lastModified } from "../../lib/git.js";
 import { sourceLabel, groupLaunches, formatDate } from "../../lib/format.js";
-import { dict, fmt } from "../../lib/i18n.js";
+import { dict, fmt, localeUrl } from "../../lib/i18n.js";
 import { readTranslations, overlay, introText, TRANSLATABLE } from "../../lib/translations.js";
 import { processImage } from "../../lib/images.js";
 import { listSiteImages, featuredImages, imageCaption, imageAlt } from "../../lib/site-images.js";
@@ -39,7 +39,7 @@ export default {
   layout: "site.njk",
   pagination: { data: "languages", size: 1, alias: "language" },
   eleventyComputed: {
-    permalink: (data) => `${data.language.prefix}/flysteder/${data.id}/`,
+    permalink: (data) => localeUrl(`/flysteder/${data.id}/`, data.language.code),
     // Verdier som regnes ut ved bygging. Skrives aldri tilbake til stedsfilen.
     derived: async (data) => {
       const inputPath = data.page.inputPath;
@@ -54,6 +54,9 @@ export default {
         hazards: overlay(data.hazards, trData.hazards, TRANSLATABLE.hazards),
         launches: overlay(data.launches, trData.launches, TRANSLATABLE.launches),
         landings: overlay(data.landings, trData.landings, TRANSLATABLE.landings),
+        // «Parkering» uten mer er standardnavnet, og står på sidens språk.
+        parking: overlay(data.parking, trData.parking, TRANSLATABLE.parking)
+          .map((p) => (p && p.name === "Parkering" && lang !== "nb" ? { ...p, name: dict(lang).site.parking } : p)),
         links: overlay(data.links, trData.links, TRANSLATABLE.links),
         airspace: overlay(data.airspace, trData.airspace, TRANSLATABLE.airspace),
         access: { ...data.access, ...Object.fromEntries(["parking_text", "route_text"].filter((k) => trData.access?.[k]).map((k) => [k, trData.access[k]])) },

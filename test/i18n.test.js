@@ -51,11 +51,14 @@ test("alle t.-oppslag i malene og FS.t-oppslag i skriptene finnes i nb.json", ()
 });
 
 test("adresser på et annet språk", () => {
-  assert.equal(localeUrl("/flysteder/ryten/", "en"), "/en/flysteder/ryten/");
-  assert.equal(localeUrl("/en/flysteder/ryten/", "nb"), "/flysteder/ryten/");
+  assert.equal(localeUrl("/flysteder/ryten/", "en"), "/en/sites/ryten/");
+  assert.equal(localeUrl("/en/sites/ryten/", "nb"), "/flysteder/ryten/");
   assert.equal(localeUrl("/en/", "nb"), "/");
   assert.equal(localeUrl("/", "en"), "/en/");
-  assert.equal(localeUrl("/en/luftrom/", "en"), "/en/luftrom/");
+  assert.equal(localeUrl("/luftrom/", "en"), "/en/towers/");
+  assert.equal(localeUrl("/en/towers/", "en"), "/en/towers/");
+  assert.equal(localeUrl("/en/towers/", "nb"), "/luftrom/");
+  assert.equal(localeUrl("/status/", "nb"), "/status/");
 });
 
 test("verdier settes inn i teksten", () => {
