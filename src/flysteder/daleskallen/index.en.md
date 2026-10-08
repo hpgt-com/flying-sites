@@ -7,7 +7,7 @@ hazards:
   - title: Strong wind
     text: Over 7 m/s it can get turbulent. Watch out for wind at altitude.
 launches:
-  - text: Excellent ridge lift and thermal ridge lift.
+  - text: Excellent ridge soaring, also mixed with thermals.
 access:
   parking_text: By the field below the road, where you walk up to the launch. Do not block tractors that need to get into the field.
   route_text: Walk straight up through open terrain.

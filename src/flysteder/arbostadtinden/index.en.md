@@ -17,7 +17,7 @@ Summit on Andørja, with a long hike up: almost 1200 metres of ascent from the r
 
 ## Launch
 
-High mountain launch, hence PP3. The top is big enough to launch in most directions, but primarily towards W, NW, N, NE and E, so the landing is near the road. Some wind onto the top is recommended. Otherwise the wing must be easy to launch, and you should be able to clear the lines quickly.
+High mountain launch, hence PP3. The top is big enough to launch in most directions, but primarily towards W, NW, N, NE and E, so the landing is near the road. Some wind onto the top is recommended.
 
 ## Landing
 
