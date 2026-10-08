@@ -27,23 +27,23 @@
   function render() {
     var now = Date.now();
     if (W.isStale(forecast, data.rules, now)) {
-      show("none", [["strong", "Varselet er for gammelt"], ["span", "Vindvurderingen er slått av til siden er oppdatert. Sjekk Yr eller Windy."]]);
+      show("none", [["strong", FS.t("wind.staleSite")], ["span", FS.t("wind.staleSiteText")]]);
       return;
     }
     var index = W.slotIndex(forecast.times, "0", now);
     var wind = W.windAt(forecast, data.site.id, index);
     if (!wind) {
-      show("none", [["strong", "Ingen vindvurdering nå"], ["span", "Varselet dekker ikke timen nå. Sjekk Yr eller Windy."]]);
+      show("none", [["strong", FS.t("wind.noneNow")], ["span", FS.t("wind.noneNowText")]]);
       return;
     }
     var rating = W.rateWind(data.site, wind, data.rules);
     var text = FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
-      (wind.gust != null ? ", kast " + Math.round(wind.gust) : "") +
-      (wind.rain != null && wind.rain >= data.rules.rainMaybe ? ", regn " + W.formatRain(wind.rain) : "");
+      (wind.gust != null ? ", " + FS.t("wind.gust", { g: Math.round(wind.gust) }) : "") +
+      (wind.rain != null && wind.rain >= data.rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "");
     show(rating.rating, [
-      ["span", "Vind nå, kl. " + W.formatClock(Date.parse(forecast.times[index])), "site-wind__time"],
+      ["span", FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }), "site-wind__time"],
       ["strong", W.RATINGS[rating.rating].label + ": " + text],
-      ["span", (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + "Grov vurdering fra MET-varselet, sjekk alltid selv."],
+      ["span", (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + FS.t("wind.roughNote")],
     ]);
   }
 

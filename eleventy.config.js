@@ -8,6 +8,7 @@ import {
 import { validateSite } from "./lib/validation.js";
 import { statusSummary } from "./lib/status.js";
 import { assetUrl } from "./lib/assets.js";
+import { fmt, localeUrl } from "./lib/i18n.js";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPlugin(HtmlBasePlugin);
@@ -29,13 +30,17 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/_data/cache/airspace/region.geojson": "assets/airspace.geojson" });
 
   eleventyConfig.ignores.add("src/_data/cache/**");
+  // Oversatte stedstekster (index.en.md osv.) er ikke egne sider. De leses av lib/translations.js.
+  eleventyConfig.ignores.add("src/flysteder/*/index.*.md");
   eleventyConfig.addWatchTarget("./lib/");
   // På Windows mister filovervåkingen filer som skrives på nytt (sed, git checkout, enkelte editorer).
   // Polling er litt tregere, men fanger alle endringer. Gjelder bare `npm start`.
   eleventyConfig.setChokidarConfig({ usePolling: true, interval: 500 });
 
   eleventyConfig.addCollection("sites", (api) => {
-    const sites = api.getFilteredByGlob("src/flysteder/*/index.md");
+    // Stedssidene finnes på hvert språk (paginering i flysteder.11tydata.js). Samlingen har én side per sted,
+    // den norske. Lenker til andre språk lages med localeUrl.
+    const sites = api.getFilteredByGlob("src/flysteder/*/index.md").filter((s) => (s.data.language?.code ?? "nb") === "nb");
     const errors = sites.flatMap((s) => {
       // Rå front matter, så valideringen ser bare nøklene fra stedsfilen.
       const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(fs.readFileSync(s.inputPath, "utf8"));
@@ -49,28 +54,36 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addGlobalData("DIRECTIONS", DIRECTIONS);
 
-  eleventyConfig.addFilter("directionLabel", directionLabel);
-  eleventyConfig.addFilter("directionLabels", (list) => sortDirections(list).map(directionLabel).join(", "));
-  eleventyConfig.addFilter("directionWord", directionWord);
+  // Filtrene under følger sidens språk (lang), som Nunjucks gir i this.ctx.
+  const langOf = (ctx) => ctx?.lang ?? "nb";
+  eleventyConfig.addFilter("directionLabel", function (code) { return directionLabel(code, langOf(this.ctx)); });
+  eleventyConfig.addFilter("directionLabels", function (list) { return sortDirections(list).map((c) => directionLabel(c, langOf(this.ctx))).join(", "); });
+  eleventyConfig.addFilter("directionWord", function (code) { return directionWord(code, langOf(this.ctx)); });
+  // Tekst fra ordboken med verdier satt inn: {{ t.site.onFlightlog | fmt({ name: name }) }}.
+  eleventyConfig.addFilter("fmt", (text, vars) => fmt(text, vars));
+  // Intern adresse på sidens språk (eller språket som oppgis): {{ "/luftrom/" | localeUrl }}.
+  eleventyConfig.addFilter("localeUrl", function (url, code) { return localeUrl(url, code ?? langOf(this.ctx)); });
   eleventyConfig.addFilter("directionType", (code, windDirections) => directionType(windDirections, code));
   eleventyConfig.addFilter("sortDirections", sortDirections);
   // Versjonsnummer på CSS/JS, så nettlesere henter nye filer etter en endring (lib/assets.js).
   eleventyConfig.addFilter("asset", assetUrl);
-  eleventyConfig.addFilter("formatNumber", formatNumber);
-  eleventyConfig.addFilter("formatDate", formatDate);
+  eleventyConfig.addFilter("formatNumber", function (n, decimals) { return formatNumber(n, decimals, langOf(this.ctx)); });
+  eleventyConfig.addFilter("formatDate", function (iso) { return formatDate(iso, langOf(this.ctx)); });
   eleventyConfig.addFilter("feetToMeters", feetToMeters);
-  eleventyConfig.addFilter("formatLimit", formatLimit);
-  eleventyConfig.addFilter("limitMasl", limitMasl);
+  eleventyConfig.addFilter("formatLimit", function (limit) { return formatLimit(limit, langOf(this.ctx)); });
+  eleventyConfig.addFilter("limitMasl", function (limit) { return limitMasl(limit, langOf(this.ctx)); });
   eleventyConfig.addFilter("capitalizeFirst", (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s));
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v).replace(/</g, "\\u003c"));
 
   // Plukker ut en del av den ferdige Markdown-teksten: "intro" (før første h2) eller en h2-seksjon.
+  // heading kan være en liste, for eksempel ["Launch", "Start"] når teksten kan være oversatt eller norsk.
   eleventyConfig.addFilter("section", (html, heading) => {
     if (!html) return "";
     const parts = String(html).split(/<h2[^>]*>([\s\S]*?)<\/h2>/);
     if (heading === "intro") return parts[0].trim();
+    const wanted = [].concat(heading).map((h) => String(h).toLowerCase());
     for (let i = 1; i < parts.length; i += 2) {
-      if (parts[i].trim().toLowerCase() === heading.toLowerCase()) return (parts[i + 1] ?? "").trim();
+      if (wanted.includes(parts[i].trim().toLowerCase())) return (parts[i + 1] ?? "").trim();
     }
     return "";
   });
@@ -79,10 +92,12 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("statusSummary", statusSummary);
 
   // Det forsidekartet og kortet trenger om hvert sted.
-  eleventyConfig.addFilter("homeData", function (sites) {
+  // lang: forsidens språk. Lenkene går til stedssiden på samme språk, og ingressen er oversatt når den finnes.
+  eleventyConfig.addFilter("homeData", function (sites, lang = "nb") {
     const url = eleventyConfig.getFilter("url");
     return sites.map((s) => {
       const d = s.data;
+      const tr = d.derived?.translations?.[lang];
       return {
         id: d.id,
         name: d.name,
@@ -98,8 +113,8 @@ export default function (eleventyConfig) {
         elevation: d.elevation?.launch_masl ?? null,
         maxWind: d.wind_limits?.max_wind ?? null,
         trainingSite: !!d.training_site,
-        text: d.derived?.intro ?? "",
-        url: url(s.url),
+        text: tr?.intro || d.derived?.intro || "",
+        url: url(localeUrl(s.url, lang)),
         flightlogId: d.external?.flightlog_id ?? null,
         reviewed: !!(d.reviewed?.by && d.reviewed?.date),
       };

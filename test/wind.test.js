@@ -3,8 +3,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
+import { t } from "../lib/i18n.js";
+
 await import("../src/assets/js/wind.js");
 const W = globalThis.FlyingSitesWind;
+// Norske tekster fra ordboken (src/_i18n/nb.json), som på siden.
+W.useText((key, vars) => t(`js.${key}`, "nb", vars ?? {}));
 const rules = JSON.parse(fs.readFileSync(new URL("../src/_data/windRules.json", import.meta.url), "utf8"));
 
 const site = { primary: ["SW", "W"], possible: ["S"], maxWind: null };
@@ -17,7 +21,7 @@ function hourly(start, hours) {
 }
 
 test("hovedretning, passe vind og små kast gir «Kan passe»", () => {
-  assert.deepEqual(rate({ dir: 247, speed: 4, gust: 6 }), { rating: "ok", reasons: [] });
+  assert.deepEqual(rate({ dir: 247, speed: 4, gust: 6 }), { rating: "ok", reasons: [], codes: [] });
 });
 
 test("manglende kast gjør aldri vurderingen bedre", () => {

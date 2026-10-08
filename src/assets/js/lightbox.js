@@ -4,6 +4,8 @@
 (function () {
   "use strict";
 
+  var FS = window.FlyingSites;
+
   // Rekkefølgen i bildevisningen (data-lightbox-index): alle oversiktsbilder, så start, så landing. Bildene som
   // ikke vises på siden, er skjulte lenker etter rutenettet.
   var links = Array.prototype.slice.call(document.querySelectorAll("a[data-lightbox]"));
@@ -20,9 +22,9 @@
     '<picture><source type="image/webp" sizes="100vw"><img class="lightbox__image" sizes="100vw" alt=""></picture>' +
     '<figcaption class="lightbox__caption"><span class="lightbox__text"></span> <span class="lightbox__counter"></span><span class="lightbox__credit"></span></figcaption>' +
     "</figure>" +
-    '<button type="button" class="lightbox__button lightbox__close" aria-label="Lukk bildevisningen">×</button>' +
-    '<button type="button" class="lightbox__button lightbox__prev" aria-label="Forrige bilde">‹</button>' +
-    '<button type="button" class="lightbox__button lightbox__next" aria-label="Neste bilde">›</button>';
+    '<button type="button" class="lightbox__button lightbox__close" aria-label="' + FS.escapeHtml(FS.t("lightbox.close")) + '">×</button>' +
+    '<button type="button" class="lightbox__button lightbox__prev" aria-label="' + FS.escapeHtml(FS.t("lightbox.prev")) + '">‹</button>' +
+    '<button type="button" class="lightbox__button lightbox__next" aria-label="' + FS.escapeHtml(FS.t("lightbox.next")) + '">›</button>';
   document.body.appendChild(dialog);
 
   var source = dialog.querySelector("source");
@@ -41,7 +43,7 @@
   function showCredit(l) {
     var name = l.getAttribute("data-credit");
     if (!name) { credit.replaceChildren(); return; }
-    credit.replaceChildren(document.createTextNode("Foto: "), creditLink(name, l.getAttribute("data-credit-url")),
+    credit.replaceChildren(document.createTextNode(FS.t("lightbox.photo") + ": "), creditLink(name, l.getAttribute("data-credit-url")),
       document.createTextNode(" · "), creditLink(l.getAttribute("data-license") || "", l.getAttribute("data-license-url")));
   }
   var current = 0;
@@ -92,7 +94,7 @@
     image.src = link.getAttribute("href");
     image.alt = thumb ? thumb.alt : link.getAttribute("data-alt") || "";
     text.textContent = link.getAttribute("data-caption") || "";
-    counter.textContent = links.length > 1 ? "(" + (current + 1) + " av " + links.length + ")" : "";
+    counter.textContent = links.length > 1 ? FS.t("lightbox.of", { i: current + 1, n: links.length }) : "";
     showCredit(link);
     resetZoom();
     if (!dialog.open) {
@@ -133,7 +135,7 @@
       if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return; // la «åpne i ny fane» virke som vanlig
       ev.preventDefault();
       opener = link;
-      window.FlyingSites.track("bilder" + location.pathname);
+      FS.track("bilder" + location.pathname);
       show(index);
     });
   });
@@ -143,7 +145,7 @@
     button.hidden = false;
     button.addEventListener("click", function () {
       opener = button;
-      window.FlyingSites.track("bilder" + location.pathname);
+      FS.track("bilder" + location.pathname);
       show(0);
     });
   });

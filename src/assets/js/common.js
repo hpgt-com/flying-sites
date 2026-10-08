@@ -1,9 +1,30 @@
-// Felles for forsiden og stedssidene: kartlag og vindrose.
+// Felles for forsiden og stedssidene: tekster, kartlag og vindrose.
 (function () {
   "use strict";
 
+  // --- Tekster ---
+  // Ordboken for sidens språk ligger i #i18n-data (base.njk, fra src/_i18n/<språk>.json): t("home.seeSite"),
+  // t("home.closeCard", { name: "Elgen" }). tn() velger entall eller flertall: tn("summary.places", 3).
+  var I18N = readJson("i18n-data") || { meta: { decimal: ",", clockSep: "." }, directions: { labels: {} }, js: {} };
+  function fill(text, vars) {
+    return String(text == null ? "" : text).replace(/\{(\w+)\}/g, function (m, k) { return vars && vars[k] != null ? vars[k] : m; });
+  }
+  function lookup(path) {
+    return path.split(".").reduce(function (o, k) { return o == null ? o : o[k]; }, I18N.js);
+  }
+  function t(path, vars) {
+    var value = lookup(path);
+    return value == null ? path : fill(value, vars);
+  }
+  function tn(path, n, vars) {
+    var forms = lookup(path) || {};
+    var v = vars || {};
+    v.n = n;
+    return fill(n === 1 ? forms.one : forms.other, v);
+  }
+
   var DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-  var DIRECTION_LABELS = { N: "N", NE: "NØ", E: "Ø", SE: "SØ", S: "S", SW: "SV", W: "V", NW: "NV" };
+  var DIRECTION_LABELS = I18N.directions.labels;
 
   // Samme stier som rose-makroen i src/_includes/macros.njk.
   var ROSE_PATHS = [
@@ -53,8 +74,8 @@
     svg += lifted;
     svg += '<circle cx="80" cy="80" r="9" class="rose__center"></circle>';
     if (labels) {
-      svg += '<text x="80" y="2" text-anchor="middle">N</text><text x="80" y="168" text-anchor="middle">S</text>' +
-        '<text x="-4" y="85" text-anchor="middle">V</text><text x="164" y="85" text-anchor="middle">Ø</text>';
+      svg += '<text x="80" y="2" text-anchor="middle">' + DIRECTION_LABELS.N + '</text><text x="80" y="168" text-anchor="middle">' + DIRECTION_LABELS.S + "</text>" +
+        '<text x="-4" y="85" text-anchor="middle">' + DIRECTION_LABELS.W + '</text><text x="164" y="85" text-anchor="middle">' + DIRECTION_LABELS.E + "</text>";
     }
     return svg + "</svg>";
   }
@@ -93,7 +114,7 @@
         maxZoom: 18,
         subdomains: "abc",
         className: "base-tiles",
-        attribution: 'Kartdata: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+        attribution: t("map.openTopoAttribution"),
       });
     }
     var openTopo = openTopoLayer();
@@ -107,10 +128,14 @@
       maxNativeZoom: 14,
       maxZoom: 18,
       className: "photo-tiles",
-      attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless</a> av <a href="https://eox.at">EOX IT Services GmbH</a> (inneholder modifiserte Copernicus Sentinel-data 2024, <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>)',
+      attribution: t("map.satelliteAttribution"),
     });
     topo.addTo(map);
-    map.layersControl = L.control.layers({ "Topografisk (Kartverket)": topo, "OpenTopoMap": openTopo, "Satellitt (Sentinel-2)": satellite }, null, { position: "topright" }).addTo(map);
+    var baseLayers = {};
+    baseLayers[t("map.layerTopo")] = topo;
+    baseLayers[t("map.layerOpenTopo")] = openTopo;
+    baseLayers[t("map.layerSatellite")] = satellite;
+    map.layersControl = L.control.layers(baseLayers, null, { position: "topright" }).addTo(map);
     // Bare når noen velger et lag selv. Leaflet sender også baselayerchange når kartet lastes.
     map.layersControl.getContainer().addEventListener("change", function (ev) {
       if (!ev.target.checked) return;
@@ -122,9 +147,9 @@
     ["skyways_all_all", "thermals_all_all"].forEach(function (name, i) {
       var layer = L.tileLayer("https://thermal.kk7.ch/tiles/" + name + "/{z}/{x}/{y}.png?src=" + encodeURIComponent(location.hostname), {
         tms: true, maxNativeZoom: 13, maxZoom: 18, opacity: 0.7,
-        attribution: 'Termikk: <a href="https://thermal.kk7.ch">thermal.kk7.ch</a> (<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>)',
+        attribution: t("map.thermalAttribution"),
       });
-      map.layersControl.addOverlay(layer, i ? "Termikk: hotspots" : "Termikk: skyways");
+      map.layersControl.addOverlay(layer, i ? t("map.layerThermals") : t("map.layerSkyways"));
     });
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
@@ -167,7 +192,7 @@
       mapEl.classList.toggle("map--fullscreen", on);
       document.body.classList.toggle("has-fullscreen-map", on);
       fullscreenButton.innerHTML = on ? ICON_SHRINK : ICON_EXPAND;
-      var label = on ? "Lukk fullskjerm" : "Vis kartet i fullskjerm";
+      var label = on ? t("map.fullscreenClose") : t("map.fullscreenOpen");
       fullscreenButton.title = label;
       fullscreenButton.setAttribute("aria-label", label);
       fullscreenButton.setAttribute("aria-pressed", String(on));
@@ -218,12 +243,12 @@
     var wind = data.wind_directions || {};
     var all = (wind.primary || []).concat(wind.possible || []);
     var usable = function (list) { return DIRECTIONS.filter(function (d) { return all.indexOf(d) !== -1 && (list || []).indexOf(d) !== -1; }); };
-    var label = function (dirs) { return "Start " + dirs.map(function (d) { return DIRECTION_LABELS[d]; }).join(", "); };
+    var label = function (dirs) { return t("site.launchDirs", { dirs: dirs.map(function (d) { return DIRECTION_LABELS[d]; }).join(", ") }); };
     var launches = data.launches || [];
     var placed = launches.filter(function (l) { return l.lat != null && l.lon != null; });
     var points = [];
     if (!placed.length) {
-      points.push({ lat: data.launch.lat, lon: data.launch.lon, directions: usable(all), label: "Start",
+      points.push({ lat: data.launch.lat, lon: data.launch.lon, directions: usable(all), label: t("site.launch"),
         texts: launches.map(function (l) { return l.text; }).filter(Boolean) });
     } else {
       var rest = launches.filter(function (l) { return l.lat == null; });
@@ -308,28 +333,28 @@
   // Fire grupper med av/på i kartets lagvelger, som i IPPC. Alle er av til å begynne med, og
   // luftrommene (fra openAIP, se scripts/update-airspace.mjs) lastes først når en gruppe slås på.
   var AIRSPACE_GROUPS = [
-    { name: "Luftrom: TMA", types: ["TMA", "CTA"], color: "#2F6FB5", dash: null },
-    { name: "Luftrom: CTR", types: ["CTR", "MCTR", "ATZ", "TIZ"], color: "#C0392B", dash: null },
-    { name: "Luftrom: militære områder", types: ["MTA", "TRA", "TSA"], color: "#7B3FA0", dash: "6 4" },
-    { name: "Luftrom: fare og restriksjon", types: ["D", "R", "P"], color: "#C24A12", dash: "6 4" },
+    { name: t("map.airspaceTma"), types: ["TMA", "CTA"], color: "#2F6FB5", dash: null },
+    { name: t("map.airspaceCtr"), types: ["CTR", "MCTR", "ATZ", "TIZ"], color: "#C0392B", dash: null },
+    { name: t("map.airspaceMilitary"), types: ["MTA", "TRA", "TSA"], color: "#7B3FA0", dash: "6 4" },
+    { name: t("map.airspaceDanger"), types: ["D", "R", "P"], color: "#C24A12", dash: "6 4" },
   ];
 
   function formatLimit(l) {
     if (!l) return "";
-    if (l.ref === "GND" && !l.value) return "bakken";
+    if (l.ref === "GND" && !l.value) return t("map.ground");
     if (l.unit === "FL") return "FL" + l.value;
     var text = l.value + (l.unit === "M" ? " m" : " ft");
-    if (l.ref === "GND") return text + " over bakken";
-    return l.ref === "MSL" && l.unit === "FT" ? text + " (ca. " + Math.round(l.value * 0.3048) + " moh)" : text;
+    if (l.ref === "GND") return t("map.aboveGround", { text: text });
+    return l.ref === "MSL" && l.unit === "FT" ? t("map.aboutMasl", { text: text, m: Math.round(l.value * 0.3048) }) : text;
   }
 
   function airspacePopup(p) {
     var e = escapeHtml;
-    var rows = [["Klasse", p.class], ["Nedre", formatLimit(p.lower)], ["Øvre", formatLimit(p.upper)]]
+    var rows = [[t("map.class"), p.class], [t("map.lower"), formatLimit(p.lower)], [t("map.upper"), formatLimit(p.upper)]]
       .filter(function (row) { return row[1]; })
       .map(function (row) { return "<tr><th>" + row[0] + "</th><td>" + e(row[1]) + "</td></tr>"; }).join("");
     return '<div class="airspace-popup"><strong>' + e(p.name) + "</strong><table>" + rows + "</table>" +
-      (p.byNotam ? '<p class="airspace-popup__notam">Aktiveres ved NOTAM. Sjekk IPPC.</p>' : "") + "</div>";
+      (p.byNotam ? '<p class="airspace-popup__notam">' + e(t("map.byNotam")) + "</p>" : "") + "</div>";
   }
 
   function addAirspaceLayers(map, url) {
@@ -357,8 +382,8 @@
       if (!statusEl) return;
       statusEl.hidden = !state;
       statusEl.classList.toggle("airspace-status--error", state === "error");
-      statusEl.innerHTML = state === "loading" ? "Laster luftrom …"
-        : state === "error" ? 'Kunne ikke hente luftrom. Sjekk IPPC. <button type="button" data-retry>Prøv igjen</button>' : "";
+      statusEl.innerHTML = state === "loading" ? escapeHtml(t("map.airspaceLoading"))
+        : state === "error" ? escapeHtml(t("map.airspaceError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>" : "";
     }
 
     function load() {
@@ -368,8 +393,7 @@
         return r.json();
       }).then(function (data) {
         if (!data || !Array.isArray(data.features)) throw new Error("ukjent format");
-        attribution = "Luftrom: openAIP (CC BY-NC 4.0), " + (data.fetched || "").split("-").reverse().join(".") +
-          ". Ikke for navigasjon, sjekk IPPC";
+        attribution = t("map.airspaceAttribution", { date: (data.fetched || "").split("-").reverse().join(".") });
         data.features.forEach(function (f) {
           var g = groups.find(function (x) { return x.def.types.indexOf(f.properties.type) !== -1; });
           if (!g) return;
@@ -420,9 +444,9 @@
     });
   }
 
-  // Tall med norsk desimalkomma.
+  // Tall med språkets desimaltegn (komma på norsk).
   function formatNumber(n, decimals) {
-    return Number(n).toFixed(decimals || 0).replace(".", ",");
+    return Number(n).toFixed(decimals || 0).replace(".", I18N.meta.decimal);
   }
 
   function readJson(id) {
@@ -431,7 +455,7 @@
   }
 
   // Samme merking som external()-makroen i macros.njk.
-  var EXTERNAL_MARK = '<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> (åpnes i ny fane)</span>';
+  var EXTERNAL_MARK = '<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> ' + escapeHtml(I18N.opensNewTab || "") + "</span>";
 
   // --- Fargemodus ---
   // Skriptet i <head> (base.njk) setter data-theme før siden tegnes. Her kobles knappene til, og
@@ -544,6 +568,10 @@
   document.addEventListener("auxclick", trackLink);
 
   window.FlyingSites = {
+    t: t,
+    tn: tn,
+    lang: I18N.lang || "nb",
+    meta: I18N.meta,
     track: track,
     isDark: isDark,
     EXTERNAL_MARK: EXTERNAL_MARK,

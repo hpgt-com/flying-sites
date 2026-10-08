@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="nb">
+<html lang="{{ t.meta.htmlLang }}">
 <head>
 <meta charset="utf-8">
 {#- Sikkerhet. GitHub Pages lar oss ikke sette HTTP-headere, så policyen står som meta-tag (da virker ikke
@@ -12,7 +12,7 @@
 {#- Stedssidene: mobilnettlesere gjør ellers «Sollifjellet 567 moh» om til en kartlenke (tror det er en adresse).
     Siden har egen knapp for veibeskrivelse, så adressegjenkjenning slås av der. Resten av siden er som før. -#}
 {% if noAddressDetection %}<meta name="format-detection" content="address=no">{% endif %}
-{%- set pageTitle = (name + " – " if name else "") + site.title -%}
+{%- set pageTitle = (name + " – " if name else "") + t.common.siteTitle -%}
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
 {#- Første bilde i rekkefølgen: oversiktsbilde nr 1, ellers start eller landing. -#}
 {%- set ownImage = derived.images[0] if (derived and derived.images and derived.images.length) else null -%}
@@ -21,14 +21,20 @@
 {% if pageDescription %}<meta name="description" content="{{ pageDescription }}">{% endif %}
 {#- Forhåndsvisning når lenken deles på Facebook, Messenger osv. Adressene må være absolutte. -#}
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="{{ site.title }}">
-<meta property="og:locale" content="nb_NO">
+<meta property="og:site_name" content="{{ t.common.siteTitle }}">
+{%- set ogLocale = "nb_NO" -%}{%- for l in languages %}{% if l.code == lang %}{% set ogLocale = l.locale %}{% endif %}{% endfor -%}
+<meta property="og:locale" content="{{ ogLocale }}">
 <meta property="og:title" content="{{ pageTitle }}">
 {% if pageDescription %}<meta property="og:description" content="{{ pageDescription }}">{% endif %}
 <meta property="og:url" content="{{ page.url | htmlBaseUrl(site.url) }}">
 <meta property="og:image" content="{{ shareImage | htmlBaseUrl(site.url) }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4">
+{#- Sider som finnes på flere språk (paginert over languages, se src/_data/languages.js) lenker til hverandre,
+    så søkemotorer viser riktig språk. Norsk er standard (x-default). -#}
+{% if language %}{% for l in languages %}<link rel="alternate" hreflang="{{ l.code }}" href="{{ page.url | localeUrl(l.code) | htmlBaseUrl(site.url) }}">
+{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ page.url | localeUrl('nb') | htmlBaseUrl(site.url) }}">
+{% endif %}
 {#- Fargemodus settes før siden tegnes, så den ikke blinker lys først. Valget (auto, light, dark) lagres
     i nettleseren av menyen (common.js). Auto følger innstillingen på enheten. Det samme gjelder
     fargeblindvennlige farger (data-cvd). -#}
@@ -47,6 +53,8 @@
 </head>
 <body class="{{ bodyClass }}">
 {{ content | safe }}
+{#- Tekstene skriptene trenger, på sidens språk (common.js leser dem). -#}
+<script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
 <script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>
 <script src="{{ "/assets/js/common.js" | asset }}"></script>
 {% for script in scripts %}<script src="{{ script | asset }}"></script>

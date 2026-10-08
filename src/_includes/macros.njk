@@ -13,16 +13,16 @@
 {%- set primary = windDirections.primary or [] -%}
 {%- set possible = windDirections.possible or [] -%}
 <svg class="rose" width="{{ size }}" height="{{ size }}" viewBox="{{ '-12 -12 184 184' if labels else '18 18 124 124' }}" role="img"
-  aria-label="Vindrose. Hovedretning: {{ primary | directionLabels or 'ingen' }}.{% if possible.length %} Mulig: {{ possible | directionLabels }}.{% endif %}">
+  aria-label="{{ t.common.roseLabel | fmt({ primary: (primary | directionLabels) or t.common.noneLabel }) }}{% if possible.length %}{{ t.common.rosePossible | fmt({ possible: possible | directionLabels }) }}{% endif %}">
   {%- for code in DIRECTIONS %}
   <path d="{{ ROSE_PATHS[loop.index0] }}" class="sector sector--{{ code | directionType(windDirections) }}"></path>
   {%- endfor %}
   <circle cx="80" cy="80" r="9" class="rose__center"></circle>
   {%- if labels %}
-  <text x="80" y="2" text-anchor="middle">N</text>
-  <text x="80" y="168" text-anchor="middle">S</text>
-  <text x="-4" y="85" text-anchor="middle">V</text>
-  <text x="164" y="85" text-anchor="middle">Ø</text>
+  <text x="80" y="2" text-anchor="middle">{{ "N" | directionLabel }}</text>
+  <text x="80" y="168" text-anchor="middle">{{ "S" | directionLabel }}</text>
+  <text x="-4" y="85" text-anchor="middle">{{ "W" | directionLabel }}</text>
+  <text x="164" y="85" text-anchor="middle">{{ "E" | directionLabel }}</text>
   {%- endif %}
 </svg>
 {%- endmacro %}
@@ -36,10 +36,10 @@
 {%- endmacro %}
 
 {% macro legend(windDirections=null) -%}
-<ul class="legend" aria-label="Forklaring til vindrosen">
-  <li><span class="swatch swatch--primary"></span>Hovedretning{% if windDirections and windDirections.primary.length %} {{ windDirections.primary | directionLabels }}{% endif %}</li>
-  <li><span class="swatch swatch--possible"></span>Mulig{% if windDirections and windDirections.possible.length %} {{ windDirections.possible | directionLabels }}{% endif %}</li>
-  <li><span class="swatch swatch--none"></span>Ikke egnet</li>
+<ul class="legend" aria-label="{{ t.common.legendLabel }}">
+  <li><span class="swatch swatch--primary"></span>{{ t.common.legendPrimary }}{% if windDirections and windDirections.primary.length %} {{ windDirections.primary | directionLabels }}{% endif %}</li>
+  <li><span class="swatch swatch--possible"></span>{{ t.common.legendPossible }}{% if windDirections and windDirections.possible.length %} {{ windDirections.possible | directionLabels }}{% endif %}</li>
+  <li><span class="swatch swatch--none"></span>{{ t.common.legendNone }}</li>
 </ul>
 {%- endmacro %}
 
@@ -49,28 +49,35 @@
 </svg>
 {%- endmacro %}
 
-{#- Meny oppe til høyre: fargemodus, fargeblindvennlige farger og lenker. common.js lagrer valgene og
-    oppdaterer siden. Knappen er skjult uten JavaScript. -#}
+{#- Meny oppe til høyre: språk, fargemodus, fargeblindvennlige farger og lenker. common.js lagrer valgene og
+    oppdaterer siden. Knappen er skjult uten JavaScript. Språkvalget lenker til samme side på det andre
+    språket når siden finnes på flere språk (language er satt), ellers til forsiden på det språket. -#}
 {% macro siteMenu() -%}
 <div class="site-menu">
   <button type="button" class="site-menu__button" aria-expanded="false" aria-controls="site-menu-panel" hidden>
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
-    <span class="visually-hidden">Meny</span>
+    <span class="visually-hidden">{{ t.common.menu }}</span>
   </button>
   <div class="site-menu__panel" id="site-menu-panel" hidden>
-    <p class="site-menu__label" id="theme-label">Fargemodus</p>
+    <p class="site-menu__label" id="language-label">{{ t.common.language }}</p>
+    <div class="theme-toggle language-toggle" role="group" aria-labelledby="language-label">
+      {%- for l in languages %}
+      <a href="{{ (page.url | localeUrl(l.code)) if language else (l.prefix ~ '/') }}" hreflang="{{ l.code }}" lang="{{ l.code }}" data-language="{{ l.code }}"{% if l.code == lang %} aria-current="true"{% endif %}>{{ l.name }}</a>
+      {%- endfor %}
+    </div>
+    <p class="site-menu__label" id="theme-label">{{ t.common.theme }}</p>
     <div class="theme-toggle" role="group" aria-labelledby="theme-label">
-      <button type="button" data-theme-choice="auto" aria-pressed="false" title="Følger innstillingen på enheten">Auto</button>
-      <button type="button" data-theme-choice="light" aria-pressed="false">Lys</button>
-      <button type="button" data-theme-choice="dark" aria-pressed="false">Mørk</button>
+      <button type="button" data-theme-choice="auto" aria-pressed="false" title="{{ t.common.themeAutoTitle }}">{{ t.common.themeAuto }}</button>
+      <button type="button" data-theme-choice="light" aria-pressed="false">{{ t.common.themeLight }}</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false">{{ t.common.themeDark }}</button>
     </div>
     <button type="button" class="switch" role="switch" aria-checked="false" data-cvd-toggle>
-      <span class="switch__text">Fargeblindvennlige farger<span class="switch__hint">Blå i stedet for grønn i vindvurderingen</span></span>
+      <span class="switch__text">{{ t.common.cvd }}<span class="switch__hint">{{ t.common.cvdHint }}</span></span>
       <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
     </button>
-    <nav class="site-menu__links" aria-label="Lenker">
-      <a href="/">Alle flysteder</a>
-      <a href="{{ site.hpgtUrl }}">Til hpgt.com</a>
+    <nav class="site-menu__links" aria-label="{{ t.common.links }}">
+      <a href="{{ '/' | localeUrl }}">{{ t.common.allSites }}</a>
+      <a href="{{ site.hpgtUrl }}">{{ t.common.toHpgt }}</a>
     </nav>
   </div>
 </div>
@@ -79,12 +86,12 @@
 {#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet.
     Med thumb=false lages en skjult lenke uten bilde, som bare finnes i bildevisningen («Se alle N bilder»). -#}
 {% macro lightboxLink(image, caption, thumb=true) -%}
-<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-lightbox-index="{{ image.index }}" data-alt="{{ image.alt }}"{% if not thumb %} hidden tabindex="-1"{% endif %} data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}"{% if image.credit %} data-credit="{{ image.credit.creator }}" data-credit-url="{{ image.credit.url or '' }}" data-license="{{ image.credit.license }}" data-license-url="{{ image.credit.licenseUrl }}"{% endif %}>{% if thumb %}{{ image.html | safe }}<span class="visually-hidden"> (vis større)</span>{% endif %}</a>
+<a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-lightbox-index="{{ image.index }}" data-alt="{{ image.alt }}"{% if not thumb %} hidden tabindex="-1"{% endif %} data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}"{% if image.credit %} data-credit="{{ image.credit.creator }}" data-credit-url="{{ image.credit.url or '' }}" data-license="{{ image.credit.license }}" data-license-url="{{ image.credit.licenseUrl }}"{% endif %}>{% if thumb %}{{ image.html | safe }}<span class="visually-hidden"> {{ t.common.showLarger }}</span>{% endif %}</a>
 {%- endmacro %}
 
 {#- Merking av lenker som åpnes i ny fane: ↗-symbol, og tekst som bare skjermlesere leser opp. -#}
 {% macro external() -%}
-<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> (åpnes i ny fane)</span>
+<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> {{ t.common.opensNewTab }}</span>
 {%- endmacro %}
 
 {#- Eksterne oppslag (vær, luftrom osv.) åpnes i ny fane, så stedssiden blir stående. Interne lenker (external=false) gjør ikke det. -#}

@@ -2,14 +2,22 @@
 permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
+{#- Sider som finnes på flere språk (paginert over languages) står med én adresse per språk og lenker til
+    hverandre (hreflang). Samlingene har bare den norske, så de andre lages med localeUrl. -#}
 <?xml version="1.0" encoding="utf-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {%- for p in collections.all %}{% if not p.data.noindex and p.url and p.url.endsWith("/") %}
+{%- set codes = languages if p.data.language else [languages[0]] %}
+{%- for l in codes %}
   <url>
-    <loc>{{ p.url | htmlBaseUrl(site.url) }}</loc>
+    <loc>{{ p.url | localeUrl(l.code) | htmlBaseUrl(site.url) }}</loc>
     {%- if p.data.derived and p.data.derived.lastModified %}
     <lastmod>{{ p.data.derived.lastModified.date }}</lastmod>
     {%- endif %}
+    {%- if p.data.language %}{% for alt in languages %}
+    <xhtml:link rel="alternate" hreflang="{{ alt.code }}" href="{{ p.url | localeUrl(alt.code) | htmlBaseUrl(site.url) }}"/>
+    {%- endfor %}{% endif %}
   </url>
+{%- endfor %}
 {%- endif %}{% endfor %}
 </urlset>
