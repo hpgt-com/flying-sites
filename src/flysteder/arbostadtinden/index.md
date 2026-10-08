@@ -38,7 +38,7 @@ parking:
   lon: 17.320554
   source: gpx
 access:
-  parking_text: null
+  parking_text: I lomma på andre siden av veien, der turstien begynner.
   route_text: Følg turløypa til toppen, se ut.no.
   routes:
   - file: arbostadtinden-route.gpx

@@ -34,7 +34,7 @@ parking:
   lon: 16.42087
   source: manuell
 access:
-  parking_text: null
+  parking_text: I lomma ved siden av veien. Parker så du ikke er til hinder for trafikken.
   route_text: null
   routes: []
   walk_time_min: null

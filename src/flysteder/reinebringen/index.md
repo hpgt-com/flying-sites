@@ -43,7 +43,7 @@ parking:
   lon: 13.078698
   source: gpx
 access:
-  parking_text: null
+  parking_text: Finn en egnet plass i Reine, for eksempel ved landingen, og gå derfra.
   route_text: Trappene fra Reine opp mot toppen.
   routes:
   - file: reinebringen-route.gpx
