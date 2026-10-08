@@ -975,6 +975,9 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .airspace-popup td { padding: 1px 0; }
 .airspace-popup__notam { margin: 6px 0 0; color: var(--hazard-text); font-weight: 600; }
 .leaflet-control-layers-overlays label { min-height: 32px; display: flex; align-items: center; }
+.airspace-status { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; max-width: 220px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); }
+.airspace-status--error { background: var(--hazard-bg); color: var(--hazard-text); border-color: var(--hazard-text); }
+.airspace-status button { display: block; margin-top: 6px; min-height: 32px; padding: 4px 10px; border: 1px solid currentColor; border-radius: 6px; background: var(--card); color: var(--text); font: inherit; cursor: pointer; }
 
 /* ---------- Vindvurdering fra varselet (forsiden) ---------- */
 

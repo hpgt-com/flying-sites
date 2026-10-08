@@ -24,3 +24,14 @@ test("sted uten fast landing mangler verken landing eller landingsbilde", () => 
   assert.ok(!missing.includes("landingsbilde"));
   assert.ok(siteStatus({ ...s, data: { ...s.data, no_fixed_landing: undefined } }).missing.includes("landing"));
 });
+
+test("parkering i kartet uten beskrivelse mangler parkeringstekst, ikke parkering", () => {
+  const s = (data) => siteStatus({ url: "/x/", rawInput: "", data: { id: "x", name: "X", ...data } }).missing;
+  const withPoint = s({ parking: [{ lat: 68.8, lon: 16.4 }] });
+  assert.ok(!withPoint.includes("parkering"));
+  assert.ok(withPoint.includes("parkeringstekst"));
+  const none = s({});
+  assert.ok(none.includes("parkering"));
+  assert.ok(!none.includes("parkeringstekst"));
+  assert.ok(!s({ parking: [{ lat: 68.8, lon: 16.4 }], access: { parking_text: "Ved kirka." } }).includes("parkeringstekst"));
+});
