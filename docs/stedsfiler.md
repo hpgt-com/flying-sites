@@ -150,6 +150,5 @@ Ingress.
 - Ukjente nøkler stopper bygget, så skrivefeil ikke stille gjør teksten norsk.
 - Statussiden viser «engelsk tekst utdatert» når `index.md` er endret i Git etter `index.en.md`. Les da gjennom
   den engelske teksten og oppdater den.
-- Stedsnavn står som på norsk. Ordbruk: launch, cliff launch, top landing, soaring/ridge soaring (hang),
-  ridge soaring on a small slope (subhang), thermals, aerial cable (løypestreng), high-voltage power line
-  (høyspent), landowner, m asl.
+- Stedsnavn står som på norsk. Ordbruk: launch, cliff launch, top landing, ridge soaring (hang og subhang),
+  thermals, aerial cable (løypestreng), high-voltage power line (høyspent), landowner, m asl.

@@ -7,7 +7,7 @@ hazards:
   - title: Landowners
     text: Be careful about driving up the road to Slettlia.
 launches:
-  - text: Ridge soaring on a small slope in the right conditions. You can soar in very light wind, preferably S–SE.
+  - text: Ridge soaring in the right conditions. You can soar in very light wind, preferably S–SE.
 landings:
   - name: Landing at the parking
   - name: Slettlia landing
