@@ -3,6 +3,7 @@ name: Reinebringen
 id: reinebringen
 status: gjennomgått
 region: Lofoten
+municipality: Moskenes
 external:
   flightlog_id: 7476
   pgearth_id: null

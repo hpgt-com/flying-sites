@@ -3,6 +3,7 @@ name: Hinnstein
 id: hinnstein
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 666
   pgearth_id: null

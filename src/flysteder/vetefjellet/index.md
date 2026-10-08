@@ -3,6 +3,7 @@ name: Vetefjellet
 id: vetefjellet
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 5031
   pgearth_id: null

@@ -3,6 +3,7 @@ name: Ramnskogheia
 id: ramnskogheia
 status: gjennomgått
 region: Andøya
+municipality: Andøy
 external:
   flightlog_id: 9180
   pgearth_id: null

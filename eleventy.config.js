@@ -3,7 +3,7 @@ import * as yaml from "js-yaml";
 import { HtmlBasePlugin } from "@11ty/eleventy";
 import {
   DIRECTIONS, directionLabel, directionWord, directionType, sortDirections, formatNumber, formatDate, feetToMeters,
-  formatLimit, limitMasl, categoryDirections,
+  formatLimit, limitMasl, categoryDirections, searchPlaces,
 } from "./lib/format.js";
 import { validateSite } from "./lib/validation.js";
 import { statusSummary } from "./lib/status.js";
@@ -95,6 +95,7 @@ export default function (eleventyConfig) {
   // lang: forsidens språk. Lenkene går til stedssiden på samme språk, og ingressen er oversatt når den finnes.
   eleventyConfig.addFilter("homeData", function (sites, lang = "nb") {
     const url = eleventyConfig.getFilter("url");
+    const municipalities = new Set(sites.map((s) => s.data.municipality).filter(Boolean));
     return sites.map((s) => {
       const d = s.data;
       const tr = d.derived?.translations?.[lang];
@@ -102,6 +103,7 @@ export default function (eleventyConfig) {
         id: d.id,
         name: d.name,
         region: d.region ?? null,
+        places: searchPlaces(d, municipalities),
         lat: d.launch.lat,
         lon: d.launch.lon,
         primary: d.wind_directions?.primary ?? [],

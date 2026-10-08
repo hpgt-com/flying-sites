@@ -3,6 +3,7 @@ name: Reinfjellet
 id: reinfjellet
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 3118
   pgearth_id: null

@@ -3,6 +3,7 @@ name: Steinsåsen
 id: steinsasen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 5868
   pgearth_id: null

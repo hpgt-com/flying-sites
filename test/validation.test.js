@@ -11,7 +11,7 @@ const inputPath = path.join(dir, "teststed", "index.md");
 fs.mkdirSync(path.dirname(inputPath));
 
 function errorsFor(launches) {
-  const data = { name: "Teststed", id: "teststed", status: "utkast", launch: { lat: 68.85, lon: 16.25 }, launches };
+  const data = { name: "Teststed", id: "teststed", status: "utkast", municipality: "Harstad", launch: { lat: 68.85, lon: 16.25 }, launches };
   return validateSite(data, inputPath, { name: "Teststed", launches }).map((e) => e.slice(inputPath.length + 2));
 }
 
@@ -32,7 +32,7 @@ test("posisjon langt fra hovedstarten stopper bygget (byttet lat/lon)", () => {
 });
 
 test("no_fixed_landing sammen med landinger stopper bygget", () => {
-  const data = { name: "Teststed", id: "teststed", status: "utkast", launch: { lat: 68.85, lon: 16.25 },
+  const data = { name: "Teststed", id: "teststed", status: "utkast", municipality: "Harstad", launch: { lat: 68.85, lon: 16.25 },
     no_fixed_landing: true, landings: [{ name: "Jordet", lat: 68.84, lon: 16.25 }] };
   const errors = validateSite(data, inputPath, { name: "Teststed" });
   assert.ok(errors.some((e) => /no_fixed_landing/.test(e)));

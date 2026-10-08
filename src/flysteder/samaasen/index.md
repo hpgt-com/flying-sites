@@ -3,6 +3,7 @@ name: Samaåsen
 id: samaasen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 755
   pgearth_id: 9691

@@ -3,6 +3,7 @@ name: Årbostadtinden
 id: arbostadtinden
 status: gjennomgått
 region: Andørja
+municipality: Ibestad
 external:
   flightlog_id: 9348
   pgearth_id: null

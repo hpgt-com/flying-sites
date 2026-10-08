@@ -3,6 +3,7 @@ name: Melå aksla
 id: mela-aksla
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 10554
   pgearth_id: null

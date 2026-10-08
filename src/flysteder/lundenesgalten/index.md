@@ -3,6 +3,7 @@ name: Lundenesgalten
 id: lundenesgalten
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 7949
   pgearth_id: null

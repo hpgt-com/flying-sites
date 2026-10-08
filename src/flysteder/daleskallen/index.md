@@ -3,6 +3,7 @@ name: Daleskallen
 id: daleskallen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 2471
   pgearth_id: null

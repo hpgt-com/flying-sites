@@ -3,6 +3,7 @@ name: Kilhusåsen
 id: kilhusasen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 354
   pgearth_id: 9336

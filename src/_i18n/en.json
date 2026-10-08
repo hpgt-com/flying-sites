@@ -82,7 +82,7 @@
     "tabWeather": "Weather",
     "tabInfo": "Info",
     "searchLabel": "Search for a site",
-    "searchPlaceholder": "Name, e.g. Sollifjellet",
+    "searchPlaceholder": "Name or area, e.g. Kvæfjord",
     "windFromForecast": "Wind from forecast",
     "slots": [
       [

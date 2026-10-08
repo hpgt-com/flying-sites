@@ -7,17 +7,22 @@
   var LEVELS = ["PP2", "PP3", "PP4", "PP5"];
   var filter = { direction: "", level: "", category: "", q: "" };
 
-  // --- Søk etter navn ---
-  // Små bokstaver, uten aksenter, og æ/ø/å skrevet som ae/o/a, så «saeter», «sæter» og «Sæter» finner
-  // Sætertinden. Mellomrom og bindestrek teller ikke. Treff hvor som helst i navnet («solli» → Sollifjellet).
+  // --- Søk etter navn og sted ---
+  // Små bokstaver og uten aksenter. Æ, ø og å kan skrives på alle vanlige måter uten norsk tastatur:
+  // «kvaefjord» og «kvafjord» finner Kvæfjord, «hoegfjellet» og «hogfjellet» Høgfjellet, «blaahatten» og
+  // «blahatten» Blåhatten. Navnet og søket gjøres om på samme måte (æ, ae → a; ø, oe → o; å, aa → a),
+  // så det kan gi et ekstra treff, men aldri miste et. Mellomrom og bindestrek teller ikke. Treff hvor som
+  // helst i navnet («solli» → Sollifjellet), eller i kommunen eller regionen («kvæfjord», «lofoten»). Navn
+  // og steder sjekkes hver for seg, så et søk ikke kan treffe over skjøten mellom dem.
   function searchKey(s) {
     return String(s || "").toLowerCase()
-      .replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a")
+      .replace(/æ/g, "a").replace(/ø/g, "o").replace(/å/g, "a")
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[\s\-–]+/g, "");
+      .replace(/[\s\-–]+/g, "")
+      .replace(/ae/g, "a").replace(/oe/g, "o").replace(/aa/g, "a");
   }
   sites.forEach(function (site) {
-    site.searchKey = searchKey(site.name);
+    site.searchKeys = [site.name].concat(site.places || []).map(searchKey);
     site.all = { primary: site.primary, possible: site.possible };
   });
 
@@ -31,7 +36,10 @@
       site.possible = own ? own.possible : site.all.possible;
     });
   }
-  function nameMatches(site) { return !filter.q || site.searchKey.indexOf(searchKey(filter.q)) !== -1; }
+  function nameMatches(site) {
+    var q = searchKey(filter.q);
+    return !q || site.searchKeys.some(function (key) { return key.indexOf(q) !== -1; });
+  }
   var selectedId = null;
   var markers = {};
 

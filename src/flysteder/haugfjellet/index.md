@@ -3,6 +3,7 @@ name: Haugfjellet
 id: haugfjellet
 status: gjennomgått
 region: Bjerkvik
+municipality: Narvik
 external:
   flightlog_id: 1687
   pgearth_id: null

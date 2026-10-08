@@ -3,6 +3,7 @@ name: Keipen
 id: keipen
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 889
   pgearth_id: 9712

@@ -3,6 +3,7 @@ name: Ryten
 id: ryten
 status: gjennomgått
 region: Lofoten
+municipality: Flakstad
 external:
   flightlog_id: 7506
   pgearth_id: null

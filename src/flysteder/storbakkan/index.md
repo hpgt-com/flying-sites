@@ -3,6 +3,7 @@ name: Storbakkan
 id: storbakkan
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Harstad
 external:
   flightlog_id: 370
   pgearth_id: null

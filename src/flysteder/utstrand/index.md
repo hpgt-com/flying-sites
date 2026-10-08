@@ -3,6 +3,7 @@ name: Utstrand
 id: utstrand
 status: gjennomgått
 region: Harstad og Kvæfjord
+municipality: Kvæfjord
 external:
   flightlog_id: 338
   pgearth_id: null

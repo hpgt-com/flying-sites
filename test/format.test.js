@@ -1,7 +1,7 @@
 // Tester for grupperingen av starter under «Start» på stedssiden (lib/format.js). Kjøres med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { groupLaunches } from "../lib/format.js";
+import { groupLaunches, searchPlaces } from "../lib/format.js";
 
 test("starter med samme retninger blir én linje med tekstene i rekkefølge", () => {
   const groups = groupLaunches([
@@ -61,4 +61,13 @@ test("formatering følger språket", async () => {
   assert.equal(directionLabel("NE"), "NØ");
   assert.equal(directionLabel("NE", "en"), "NE");
   assert.equal(formatLimit({ ref: "GND", value: 0 }, "en"), "ground");
+});
+
+test("søket finner en start på kommunen og regioner som ikke er kommunenavn", () => {
+  const municipalities = new Set(["Harstad", "Kvæfjord", "Flakstad"]);
+  // «Kvæfjord» i regionen «Harstad og Kvæfjord» skal ikke gi treff på en start i Harstad.
+  assert.deepEqual(searchPlaces({ municipality: "Harstad", region: "Harstad og Kvæfjord" }, municipalities), ["Harstad"]);
+  assert.deepEqual(searchPlaces({ municipality: "Kvæfjord", region: "Harstad og Kvæfjord" }, municipalities), ["Kvæfjord"]);
+  assert.deepEqual(searchPlaces({ municipality: "Flakstad", region: "Lofoten" }, municipalities), ["Flakstad", "Lofoten"]);
+  assert.deepEqual(searchPlaces({ municipality: "Flakstad" }, municipalities), ["Flakstad"]);
 });
