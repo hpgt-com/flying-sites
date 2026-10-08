@@ -28,3 +28,26 @@ test("ingen starter gir tom liste", () => {
   assert.deepEqual(groupLaunches(undefined), []);
   assert.deepEqual(groupLaunches(null), []);
 });
+
+test("retninger per kategori følger startene for kategorien", async () => {
+  const { categoryDirections } = await import("../lib/format.js");
+  const elgen = {
+    categories: ["PG", "SPG"],
+    wind_directions: { primary: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"], possible: [] },
+    launches: [
+      { directions: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"], categories: ["PG"] },
+      { directions: ["NE", "E", "SE", "S", "SW"], categories: ["SPG"] },
+    ],
+  };
+  const r = categoryDirections(elgen);
+  assert.deepEqual(r.SPG, { primary: ["NE", "E", "SE", "S", "SW"], possible: [] });
+  assert.equal(r.PG.primary.length, 8);
+  // Start uten egne kategorier gjelder alle stedets kategorier, og retninger utenfor wind_directions tas ikke med.
+  const solli = {
+    categories: ["PG", "SPG"],
+    wind_directions: { primary: ["N", "E"], possible: ["S"] },
+    launches: [{ directions: ["N", "S"] }, { directions: ["W"], categories: ["SPG"] }],
+  };
+  assert.deepEqual(categoryDirections(solli).SPG, { primary: ["N"], possible: ["S"] });
+  assert.deepEqual(categoryDirections({ categories: ["PG"], launches: [] }), {});
+});
