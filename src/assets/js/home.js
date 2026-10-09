@@ -607,8 +607,12 @@
   function hourLabel(ms) { var h = W.osloParts(ms).hour; return (h < 10 ? "0" : "") + h; }
   function windowChip(w) {
     var end = W.osloParts(w.end).hour === 0 ? "24" : hourLabel(w.end);
-    var chip = domEl("span", "day-plan__time day-plan__time--" + w.rating, hourLabel(w.start) + "–" + end);
-    chip.title = RATINGS[w.rating].label;
+    // «10–18 SV 3–5 (7)»: tidsrommet, vanligste retning, middelvind fra–til og høyeste kast.
+    var chip = domEl("span", "day-plan__time day-plan__time--" + w.rating);
+    chip.appendChild(domEl("strong", "", hourLabel(w.start) + "–" + end));
+    var speed = w.min === w.max ? String(w.min) : w.min + "–" + w.max;
+    chip.appendChild(domEl("span", "day-plan__wind", FS.DIRECTION_LABELS[w.dir] + " " + speed + (w.gust != null ? " (" + w.gust + ")" : "")));
+    chip.title = RATINGS[w.rating].label + ": " + FS.t("dayPlan.windTitle", { dir: FS.DIRECTION_LABELS[w.dir], speed: speed, gust: w.gust != null ? w.gust : "?" });
     return chip;
   }
   function siteRow(entry) {

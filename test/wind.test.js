@@ -196,4 +196,7 @@ test("dagsoversikten slår sammen timer med samme vurdering og hopper over mørk
   assert.deepEqual(days["2026-10-09"].map((w) => [W.formatClock(w.start), W.formatClock(w.end), w.rating]), [
     ["10.00", "13.00", "ok"], ["13.00", "14.00", "maybe"], ["14.00", "16.00", "ok"],
   ]);
+  const first = days["2026-10-09"][0];
+  assert.deepEqual([first.dir, first.min, first.max, first.gust], ["SW", 4, 4, 6]);
+  assert.equal(days["2026-10-09"][1].gust, null); // kast mangler i varselet
 });

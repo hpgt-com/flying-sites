@@ -1195,7 +1195,8 @@ body.has-fullscreen-map { overflow: hidden; }
 .day-plan__name { padding: 6px 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
 .day-plan__name:hover { text-decoration: underline; }
 .day-plan__times { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
-.day-plan__time { padding: 2px 6px; border-radius: 6px; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.day-plan__time { display: inline-flex; gap: 5px; padding: 2px 6px; border-radius: 6px; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.day-plan__wind { color: var(--muted); }
 .day-plan__time--ok { background: color-mix(in srgb, var(--wind-ok) 25%, transparent); border: 1px solid var(--wind-ok); }
 .day-plan__time--maybe { background: color-mix(in srgb, var(--wind-maybe) 25%, transparent); border: 1px solid var(--wind-maybe); }
 .day-plan__more summary { cursor: pointer; font-size: 14px; color: var(--muted); padding: 4px 0; }

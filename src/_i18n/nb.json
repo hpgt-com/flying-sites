@@ -148,7 +148,7 @@
     "ratingNo": "Passer ikke",
     "windLegendArrow": "Den løftede sektoren viser hvor vinden kommer fra",
     "dayPlanTitle": "Når kan det passe?",
-    "dayPlanNote": "Tidsrom i dagslys der vindvarselet fra MET kan passe (grønt) eller er usikkert (gult), for stedene som passer filtrene. Grov vurdering, sjekk alltid selv."
+    "dayPlanNote": "Tidsrom i dagslys der vindvarselet fra MET kan passe (grønt) eller er usikkert (gult), for stedene som passer filtrene. Bak tidsrommet står vanligste retning, middelvind og høyeste kast i parentes (m/s). Grov vurdering, sjekk alltid selv."
   },
   "site": {
     "hazardsTitle": "Før du starter",
@@ -254,8 +254,8 @@
     "footerDisclaimer": "Opplysningene er veiledende, og hver pilot vurderer selv om stedet og forholdene er OK.",
     "notTranslated": "",
     "meteogramBase": "https://www.yr.no/nb/innhold/",
-    "windgramTitle": "Høydevind og termikk (utkast)",
-    "windgramIntro": "Vinden i høydene over starten time for time. Fargene viser vindstyrken (m/s), ikke termikken: grønt passe, gult nær grensen, rødt for mye. Pilen viser hvor vinden blåser. «Termikk til» er omtrent hvor høyt termikken går, og rutene over er tonet ned. Den stiplede streken med sky er anslått skybase. Grå kolonner er mørkt.",
+    "windgramTitle": "Høydevind og skybase (utkast)",
+    "windgramIntro": "Vinden i høydene over starten time for time. Fargene viser vindstyrken (m/s): grønt passe, gult nær grensen, rødt for mye. Pilen viser hvor vinden blåser. «Grenselag» er omtrent hvor høyt termikken kan gå, og rutene over er tonet ned. Den stiplede streken med sky er anslått skybase. Grå kolonner er mørkt.",
     "windgramSource": "Modelldata fra <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Grovt: modellen ser ikke det lokale terrenget, og skybasen er anslått fra temperatur og duggpunkt ved bakken."
   },
   "sources": {
@@ -476,7 +476,7 @@
       "today": "I dag",
       "masl": "moh",
       "cloudBase": "Skybase",
-      "blh": "Termikk til",
+      "blh": "Grenselag",
       "launch": "Start {h}"
     },
     "dayPlan": {
@@ -485,7 +485,8 @@
       "none": "Ingen steder ser ut til å passe.",
       "more": "Vis {n} til",
       "maybeOnly": "Bare usikre tidsrom ({n})",
-      "partial": "Varselet går bare til kl. {time} denne dagen."
+      "partial": "Varselet går bare til kl. {time} denne dagen.",
+      "windTitle": "{dir} {speed} m/s, kast opptil {gust}"
     }
   }
 }

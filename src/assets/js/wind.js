@@ -179,7 +179,8 @@
 
   // Dagsoversikt for et sted: for hver dag i varselet, tidsrommene i dagslys der vurderingen er «Kan passe»
   // eller «Usikkert», som [{ start, end, rating }] (millisekunder, end er slutten av siste time). Timer i mørket
-  // tas ikke med. Ved midnattssol gjelder hele døgnet, i mørketida kl. 10–14, når det er lysest.
+  // tas ikke med. Ved midnattssol gjelder hele døgnet, i mørketida kl. 10–14, når det er lysest. Hvert tidsrom har
+  // også vinden: dir (vanligste retning), min og max (middelvind, m/s) og gust (høyeste kast).
   // { "2026-10-09": [...] }, bare dager med minst ett tidsrom.
   function dayWindows(forecast, site, rules, lat, lon) {
     var series = forecast && forecast.sites && forecast.sites[site.id];
@@ -197,8 +198,23 @@
       if (rating !== "ok" && rating !== "maybe") return;
       var list = days[p.date] || (days[p.date] = []);
       var last = list[list.length - 1];
-      if (last && last.rating === rating && last.end === ms) last.end = ms + HOUR;
-      else list.push({ start: ms, end: ms + HOUR, rating: rating });
+      if (!(last && last.rating === rating && last.end === ms)) list.push(last = { start: ms, rating: rating, winds: [] });
+      last.end = ms + HOUR;
+      last.winds.push(wind);
+    });
+    // Vinden i hvert tidsrom: vanligste retning, laveste og høyeste middelvind og høyeste kast (null når ukjent).
+    Object.keys(days).forEach(function (date) {
+      days[date].forEach(function (w) {
+        var count = {};
+        w.winds.forEach(function (x) { var c = directionCode(x.dir); count[c] = (count[c] || 0) + 1; });
+        w.dir = Object.keys(count).sort(function (a, b) { return count[b] - count[a]; })[0];
+        var speeds = w.winds.map(function (x) { return Math.round(x.speed); });
+        w.min = Math.min.apply(null, speeds);
+        w.max = Math.max.apply(null, speeds);
+        var gusts = w.winds.map(function (x) { return x.gust; }).filter(function (g) { return g != null; });
+        w.gust = gusts.length ? Math.round(Math.max.apply(null, gusts)) : null;
+        delete w.winds;
+      });
     });
     return days;
   }
