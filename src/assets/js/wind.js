@@ -177,6 +177,32 @@
     return text("wind.sun", { rise: formatClock(sun.rise), set: formatClock(sun.set) });
   }
 
+  // Dagsoversikt for et sted: for hver dag i varselet, tidsrommene i dagslys der vurderingen er «Kan passe»
+  // eller «Usikkert», som [{ start, end, rating }] (millisekunder, end er slutten av siste time). Timer i mørket
+  // tas ikke med. Ved midnattssol gjelder hele døgnet, i mørketida kl. 10–14, når det er lysest.
+  // { "2026-10-09": [...] }, bare dager med minst ett tidsrom.
+  function dayWindows(forecast, site, rules, lat, lon) {
+    var series = forecast && forecast.sites && forecast.sites[site.id];
+    if (!series) return {};
+    var days = {};
+    var suns = {};
+    forecast.times.forEach(function (time, i) {
+      var ms = Date.parse(time);
+      var p = osloParts(ms);
+      var sun = suns[p.date] || (suns[p.date] = sunTimes(p.date, lat, lon));
+      var light = sun.polar === "day" ? true : sun.polar === "night" ? p.hour >= 10 && p.hour < 14 : ms + HOUR > sun.rise && ms < sun.set;
+      var wind = windAt(forecast, site.id, i);
+      if (!light || !wind) return;
+      var rating = rateWind(site, wind, rules).rating;
+      if (rating !== "ok" && rating !== "maybe") return;
+      var list = days[p.date] || (days[p.date] = []);
+      var last = list[list.length - 1];
+      if (last && last.rating === rating && last.end === ms) last.end = ms + HOUR;
+      else list.push({ start: ms, end: ms + HOUR, rating: rating });
+    });
+    return days;
+  }
+
   globalThis.FlyingSitesWind = {
     RATINGS: RATINGS,
     osloParts: osloParts,
@@ -189,6 +215,7 @@
     formatRain: formatRain,
     sunTimes: sunTimes,
     sunText: sunText,
+    dayWindows: dayWindows,
     useText: useText,
   };
 })();

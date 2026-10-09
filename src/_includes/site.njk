@@ -294,15 +294,6 @@ scripts:
         <h2 id="h-weather">{{ t.site.weather }}</h2>
         {#- Vinden nå for starten, fra MET-varselet som forsiden bruker (site-wind.js). Skjult uten varsel. -#}
         <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
-        {#- Høydevind fra Open-Meteo (windgram.js), utkast for noen få starter (src/_data/windgram.js). -#}
-        {% if windgram and windgram.sites and windgram.sites[id] %}
-        <div class="windgram">
-          <h3>{{ t.site.windgramTitle }}</h3>
-          <p class="muted">{{ t.site.windgramIntro }}</p>
-          <div class="windgram__scroll" id="windgram-grid" tabindex="0" role="region" aria-label="{{ t.site.windgramTitle }}" hidden></div>
-          <p class="windgram__source">{{ t.site.windgramSource | safe }}</p>
-        </div>
-        {% endif %}
         {% if external.yr_id %}
         <figure class="meteogram">
           {#- Yr har meteogrammet på samme språk som siden (nb/en i adressen). -#}
@@ -311,6 +302,15 @@ scripts:
         </figure>
         {% else %}
         <div class="placeholder placeholder--short">{{ t.site.noYr | fmt({ name: name }) }}</div>
+        {% endif %}
+        {#- Høydevind fra Open-Meteo (windgram.js), utkast for noen få starter (src/_data/windgram.js). -#}
+        {% if windgram and windgram.sites and windgram.sites[id] %}
+        <div class="windgram">
+          <h3>{{ t.site.windgramTitle }}</h3>
+          <p class="muted">{{ t.site.windgramIntro }}</p>
+          <div class="windgram__scroll" id="windgram-grid" tabindex="0" role="region" aria-label="{{ t.site.windgramTitle }}" hidden></div>
+          <p class="windgram__source">{{ t.site.windgramSource | safe }}</p>
+        </div>
         {% endif %}
         <nav class="link-list" aria-label="{{ t.site.weatherServices }}">
           {{ m.linkRow("https://www.windy.com/" ~ launch.lat ~ "/" ~ launch.lon ~ "?" ~ launch.lat ~ "," ~ launch.lon ~ ",12", "Windy", t.site.windySite) }}

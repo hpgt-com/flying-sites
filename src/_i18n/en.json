@@ -146,7 +146,9 @@
     "ratingMaybe": "Uncertain",
     "ratingHigh": "Too much wind",
     "ratingNo": "Not suitable",
-    "windLegendArrow": "The raised sector shows where the wind comes from"
+    "windLegendArrow": "The raised sector shows where the wind comes from",
+    "dayPlanTitle": "When might it work?",
+    "dayPlanNote": "Daylight periods where the MET wind forecast might work (green) or is uncertain (yellow), for the sites matching the filters. Rough assessment, always check for yourself."
   },
   "site": {
     "hazardsTitle": "Before you launch",
@@ -252,8 +254,8 @@
     "footerDisclaimer": "The information is a guide only, and every pilot decides for themselves whether the site and conditions are OK.",
     "notTranslated": "The description of this site has not been translated yet and is shown in Norwegian.",
     "meteogramBase": "https://www.yr.no/en/content/",
-    "windgramTitle": "Winds aloft (draft)",
-    "windgramIntro": "Wind at heights above the launch, hour by hour, in m/s. The arrow shows where the wind blows. Cells above the boundary layer (roughly where thermals end) are faded. The dashed line with a cloud is the estimated cloud base, and the cells above it are in cloud. Grey columns are dark.",
+    "windgramTitle": "Winds aloft and thermals (draft)",
+    "windgramIntro": "Wind at heights above the launch, hour by hour. The colours show wind strength (m/s), not thermals: green suitable, yellow near the limit, red too much. The arrow shows where the wind blows. “Thermals to” is roughly how high thermals go, and the cells above are faded. The dashed line with a cloud is the estimated cloud base. Grey columns are dark.",
     "windgramSource": "Model data from <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Rough: the model does not see the local terrain, and the cloud base is estimated from temperature and dew point at ground level."
   },
   "sources": {
@@ -476,6 +478,14 @@
       "cloudBase": "Cloud base",
       "blh": "Thermals to",
       "launch": "Launch {h}"
+    },
+    "dayPlan": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "none": "No sites look like they will work.",
+      "more": "Show {n} more",
+      "maybeOnly": "Only uncertain periods ({n})",
+      "partial": "The forecast only runs until {time}:00 this day."
     }
   }
 }
