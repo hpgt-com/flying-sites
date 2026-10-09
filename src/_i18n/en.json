@@ -339,7 +339,11 @@
       "noneNow": "No wind assessment now",
       "noneNowText": "The forecast does not cover the current hour. Check Yr or Windy.",
       "windNow": "Wind now, at {time}",
-      "roughNote": "Rough assessment from the MET forecast, always check for yourself."
+      "roughNote": "Rough assessment from the MET forecast, always check for yourself.",
+      "sun": "Sunrise {rise}, sunset {set}.",
+      "sunPolarDay": "Midnight sun, the sun does not set.",
+      "sunPolarNight": "Polar night, the sun does not rise above the horizon.",
+      "mapWind": "{speed} ({gust}) m/s"
     },
     "summary": {
       "places": {
@@ -411,6 +415,9 @@
       "fullscreenClose": "Close full screen",
       "layerTopo": "Topographic (Kartverket)",
       "layerOpenTopo": "OpenTopoMap",
+      "layerGray": "Greyscale (Kartverket)",
+      "layerHillshade": "Hillshade",
+      "hillshadeAttribution": "Hillshade: <a href=\"https://hoydedata.no\">Kartverket, hoydedata.no</a>",
       "layerSatellite": "Satellite (Sentinel-2)",
       "layerSkyways": "Thermals: skyways",
       "layerThermals": "Thermals: hotspots",

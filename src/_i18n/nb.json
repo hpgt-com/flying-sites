@@ -339,7 +339,11 @@
       "noneNow": "Ingen vindvurdering nå",
       "noneNowText": "Varselet dekker ikke timen nå. Sjekk Yr eller Windy.",
       "windNow": "Vind nå, kl. {time}",
-      "roughNote": "Grov vurdering fra MET-varselet, sjekk alltid selv."
+      "roughNote": "Grov vurdering fra MET-varselet, sjekk alltid selv.",
+      "sun": "Sola opp {rise}, ned {set}.",
+      "sunPolarDay": "Midnattssol, sola går ikke ned.",
+      "sunPolarNight": "Mørketid, sola kommer ikke over horisonten.",
+      "mapWind": "{speed} ({gust}) m/s"
     },
     "summary": {
       "places": {
@@ -411,6 +415,9 @@
       "fullscreenClose": "Lukk fullskjerm",
       "layerTopo": "Topografisk (Kartverket)",
       "layerOpenTopo": "OpenTopoMap",
+      "layerGray": "Gråtone (Kartverket)",
+      "layerHillshade": "Terrengskygge",
+      "hillshadeAttribution": "Terrengskygge: <a href=\"https://hoydedata.no\">Kartverket, høydedata.no</a>",
       "layerSatellite": "Satellitt (Sentinel-2)",
       "layerSkyways": "Termikk: skyways",
       "layerThermals": "Termikk: hotspots",

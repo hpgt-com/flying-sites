@@ -39,7 +39,7 @@ flowchart LR
   end
 
   subgraph runtime["Hentes av nettleseren"]
-    tiles["Kartfliser<br/>Kartverket, OpenTopoMap,<br/>EOX Sentinel-2, kk7 termikk"]
+    tiles["Kartfliser<br/>Kartverket, høydedata.no, OpenTopoMap,<br/>EOX Sentinel-2, kk7 termikk"]
     yr["Yr meteogram"]
     gc["GoatCounter<br/>(anonym statistikk)"]
   end

@@ -79,6 +79,9 @@
    Bare bakgrunnskartet, ikke luftrom, termikk eller symbolene. */
 [data-theme="dark"] .base-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.7); }
 [data-theme="dark"] .photo-tiles { filter: brightness(0.85); }
+/* Terrengskygge oppå bakgrunnskartet: mørkner skyggesidene uten å bleke kartet. Invertert i mørkt tema, som kartet. */
+.hillshade-tiles { mix-blend-mode: multiply; }
+[data-theme="dark"] .hillshade-tiles { filter: invert(1); mix-blend-mode: screen; }
 [data-theme="dark"] .leaflet-container { background: #1E2A30; }
 [data-theme="dark"] .meteogram img { background: #020A14; }
 
@@ -349,6 +352,7 @@ p { margin: 0; }
 .rose-marker__name { display: none; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; white-space: nowrap; pointer-events: none;
   font: 700 14px/1 var(--font-heading); color: #1C2B33; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .map--names .rose-marker__name { display: block; }
+.rose-marker__wind { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; text-align: center; }
 [data-theme="dark"] .rose-marker__name { color: #F3F5F4; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
 /* Nedtoning på innholdet, ikke på selve markøren: Leaflet setter opacity: 1 direkte på markøren. */
 .rose-marker--dimmed > * { opacity: 0.25; }

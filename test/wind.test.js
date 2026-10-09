@@ -171,3 +171,15 @@ test("steder uten varsel eller med hull i varselet gir ingen vind", () => {
   assert.equal(W.windAt(forecast, "b", 0), null);
   assert.equal(W.windAt(forecast, "a", -1), null);
 });
+
+test("soloppgang og solnedgang i Harstad, med midnattssol og mørketid", () => {
+  const clock = (ms) => W.formatClock(ms);
+  const oct = W.sunTimes("2026-10-09", 68.8, 16.3);
+  // Rundt 07.37 og 17.45 denne dagen. Formelen er nøyaktig til et par minutter, så testen tillater 4.
+  assert.ok(Math.abs(oct.rise - Date.parse("2026-10-09T05:37:00Z")) < 4 * 60000, clock(oct.rise));
+  assert.ok(Math.abs(oct.set - Date.parse("2026-10-09T15:45:00Z")) < 4 * 60000, clock(oct.set));
+  assert.deepEqual(W.sunTimes("2026-06-21", 68.8, 16.3), { polar: "day" });
+  assert.deepEqual(W.sunTimes("2026-12-15", 68.8, 16.3), { polar: "night" });
+  assert.equal(W.sunText("2026-12-15", 68.8, 16.3), "Mørketid, sola kommer ikke over horisonten.");
+  assert.match(W.sunText("2026-10-09", 68.8, 16.3), /^Sola opp 07\.3\d, ned 17\.4\d\.$/);
+});

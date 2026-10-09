@@ -101,6 +101,25 @@
     });
   }
 
+  // Terrengskygge fra Kartverkets nasjonale høydemodell (hoydedata.no, åpne data), oppå bakgrunnskartet. Viser
+  // fjellsidene og hvilken vei de vender. Tjenesten lager bilder for et utsnitt, ikke ferdige fliser, så hver
+  // flis bes om med sitt eget utsnitt i Web Mercator. Bare Norge, gjennomsiktig ellers. Av som standard.
+  var HILLSHADE_URL = "https://hoydedata.no/arcgis/rest/services/NHM_DTM_25833/ImageServer/exportImage";
+  function hillshadeLayer() {
+    var Layer = L.TileLayer.extend({
+      getTileUrl: function (coords) {
+        var size = this.getTileSize();
+        var nw = this._map.unproject(coords.scaleBy(size), coords.z);
+        var se = this._map.unproject(coords.scaleBy(size).add(size), coords.z);
+        var a = L.CRS.EPSG3857.project(nw), b = L.CRS.EPSG3857.project(se);
+        return HILLSHADE_URL + "?bbox=" + [a.x, b.y, b.x, a.y].map(Math.round).join(",") +
+          "&bboxSR=3857&imageSR=3857&size=" + size.x + "," + size.y + "&format=png&transparent=true" +
+          "&renderingRule=" + encodeURIComponent('{"rasterFunction":"skyggerelieff"}') + "&f=image";
+      },
+    });
+    return new Layer("", { minZoom: 8, maxZoom: 18, opacity: 0.4, className: "hillshade-tiles", attribution: t("map.hillshadeAttribution") });
+  }
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
     var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
@@ -130,9 +149,19 @@
       className: "photo-tiles",
       attribution: t("map.satelliteAttribution"),
     });
+    // Kartverkets gråtonekart: roser, luftrom og vurderingsfarger synes bedre på grått. OpenTopoMap under, som for topo.
+    var grayTiles = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png", {
+      maxZoom: 18,
+      className: "base-tiles",
+      attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
+    });
+    var grayUnderlay = openTopoLayer();
+    showUnderlayAfter(grayTiles, grayUnderlay);
+    var gray = L.layerGroup([grayUnderlay, grayTiles]);
     topo.addTo(map);
     var baseLayers = {};
     baseLayers[t("map.layerTopo")] = topo;
+    baseLayers[t("map.layerGray")] = gray;
     baseLayers[t("map.layerOpenTopo")] = openTopo;
     baseLayers[t("map.layerSatellite")] = satellite;
     map.layersControl = L.control.layers(baseLayers, null, { position: "topright" }).addTo(map);
@@ -151,6 +180,7 @@
       });
       map.layersControl.addOverlay(layer, i ? t("map.layerThermals") : t("map.layerSkyways"));
     });
+    map.layersControl.addOverlay(hillshadeLayer(), t("map.layerHillshade"));
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     return map;
