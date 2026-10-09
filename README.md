@@ -78,6 +78,7 @@ Andre kommandoer:
 - Høyder for start, landing og parkering: Kartverket
 - Høyder til gangruter: Kartverket
 - Vindvarsel: [MET Norge](https://api.met.no/) og [Yr](https://www.yr.no/)
+- Høydevind (utkast, Sollifjellet): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
 - Luftrom: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
 - Termikk: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)
 - Stedsbeskrivelser: den gamle flystedsoversikten til Lars Sletten, Flightlog og lokalkunnskap i klubben

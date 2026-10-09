@@ -7,6 +7,7 @@ scripts:
   - /assets/js/wind.js
   - /assets/js/site.js
   - /assets/js/site-wind.js
+  - /assets/js/windgram.js
   - /assets/js/lightbox.js
 ---
 {%- import "macros.njk" as m with context -%}
@@ -293,6 +294,15 @@ scripts:
         <h2 id="h-weather">{{ t.site.weather }}</h2>
         {#- Vinden nå for starten, fra MET-varselet som forsiden bruker (site-wind.js). Skjult uten varsel. -#}
         <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
+        {#- Høydevind fra Open-Meteo (windgram.js), utkast for noen få starter (src/_data/windgram.js). -#}
+        {% if windgram and windgram.sites and windgram.sites[id] %}
+        <div class="windgram">
+          <h3>{{ t.site.windgramTitle }}</h3>
+          <p class="muted">{{ t.site.windgramIntro }}</p>
+          <div class="windgram__scroll" id="windgram-grid" tabindex="0" role="region" aria-label="{{ t.site.windgramTitle }}" hidden></div>
+          <p class="windgram__source">{{ t.site.windgramSource | safe }}</p>
+        </div>
+        {% endif %}
         {% if external.yr_id %}
         <figure class="meteogram">
           {#- Yr har meteogrammet på samme språk som siden (nb/en i adressen). -#}
@@ -388,6 +398,14 @@ scripts:
   routes: derived.routes,
   drawing: derived.drawing
 } | json | safe }}</script>
+{% if windgram and windgram.sites and windgram.sites[id] %}
+{%- set wg = windgram.sites[id] -%}
+<script type="application/json" id="windgram-data">{{ {
+  fetched: windgram.fetched, lat: launch.lat, lon: launch.lon,
+  times: wg.times, heights: wg.heights, launch: wg.launch, cells: wg.cells, blh: wg.blh, cloudBase: wg.cloudBase,
+  rules: { minWind: windRules.minWind, maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else windRules.maxWind), maxGust: windRules.maxGust }
+} | json | safe }}</script>
+{% endif %}
 {#- Varselet for denne starten, til «vind nå» i Vær (site-wind.js). Bare dette stedet, så siden holder seg liten. -#}
 {% if forecast and forecast.sites and forecast.sites[id] %}
 <script type="application/json" id="site-wind-data">{{ {

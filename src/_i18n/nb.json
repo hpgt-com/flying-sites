@@ -251,7 +251,10 @@
     "sources": "Kilder",
     "footerDisclaimer": "Opplysningene er veiledende, og hver pilot vurderer selv om stedet og forholdene er OK.",
     "notTranslated": "",
-    "meteogramBase": "https://www.yr.no/nb/innhold/"
+    "meteogramBase": "https://www.yr.no/nb/innhold/",
+    "windgramTitle": "Høydevind (utkast)",
+    "windgramIntro": "Vinden i høydene over starten time for time, i m/s. Pilen viser hvor vinden blåser. Ruter over grenselaget (omtrent der termikken slutter) er tonet ned. Den stiplede streken med sky er anslått skybase, og rutene over er i skyen. Grå kolonner er mørkt.",
+    "windgramSource": "Modelldata fra <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Grovt: modellen ser ikke det lokale terrenget, og skybasen er anslått fra temperatur og duggpunkt ved bakken."
   },
   "sources": {
     "launch": "Startkoordinat",
@@ -466,6 +469,13 @@
       "next": "Neste bilde",
       "of": "({i} av {n})",
       "photo": "Foto"
+    },
+    "windgram": {
+      "today": "I dag",
+      "masl": "moh",
+      "cloudBase": "Skybase",
+      "blh": "Termikk til",
+      "launch": "Start {h}"
     }
   }
 }
