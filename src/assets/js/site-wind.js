@@ -24,16 +24,21 @@
     el.hidden = false;
   }
 
+  // Soloppgang og solnedgang i dag ved starten, nederst i boksen.
+  function sun(now) {
+    return ["span", W.sunText(W.osloParts(now).date, data.site.lat, data.site.lon), "site-wind__sun"];
+  }
+
   function render() {
     var now = Date.now();
     if (W.isStale(forecast, data.rules, now)) {
-      show("none", [["strong", FS.t("wind.staleSite")], ["span", FS.t("wind.staleSiteText")]]);
+      show("none", [["strong", FS.t("wind.staleSite")], ["span", FS.t("wind.staleSiteText")], sun(now)]);
       return;
     }
     var index = W.slotIndex(forecast.times, "0", now);
     var wind = W.windAt(forecast, data.site.id, index);
     if (!wind) {
-      show("none", [["strong", FS.t("wind.noneNow")], ["span", FS.t("wind.noneNowText")]]);
+      show("none", [["strong", FS.t("wind.noneNow")], ["span", FS.t("wind.noneNowText")], sun(now)]);
       return;
     }
     var rating = W.rateWind(data.site, wind, data.rules);
@@ -44,6 +49,7 @@
       ["span", FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }), "site-wind__time"],
       ["strong", W.RATINGS[rating.rating].label + ": " + text],
       ["span", (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + FS.t("wind.roughNote")],
+      sun(now),
     ]);
   }
 

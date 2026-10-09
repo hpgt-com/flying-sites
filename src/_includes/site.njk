@@ -395,6 +395,6 @@ scripts:
   times: forecast.times,
   series: forecast.sites[id],
   rules: windRules,
-  site: { id: id, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null) }
+  site: { id: id, lat: launch.lat, lon: launch.lon, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null) }
 } | json | safe }}</script>
 {% endif %}

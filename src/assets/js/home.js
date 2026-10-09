@@ -125,7 +125,16 @@
         ? "<strong>" + FS.escapeHtml(FS.t("wind.notCovered")) + "</strong> " + text
         : FS.escapeHtml(FS.t("wind.showing", { time: W.formatClock(Date.parse(forecast.times[index])), tomorrow: windSlot === "tomorrow" ? FS.t("wind.tomorrowSuffix") : "" })) + " " + text;
     }
-    forecastStatusEl.innerHTML = text;
+    forecastStatusEl.innerHTML = text + sunLine(index);
+  }
+  // Soloppgang og solnedgang midt i hjemregionen, for dagen som vises (i dag når vinden er av). Forskjellen
+  // mellom startene i regionen er noen få minutter.
+  function sunLine(index) {
+    if (!bounds.length) return "";
+    var lat = 0, lon = 0;
+    bounds.forEach(function (b) { lat += b[0] / bounds.length; lon += b[1] / bounds.length; });
+    var date = W.osloParts(index >= 0 ? Date.parse(forecast.times[index]) : Date.now()).date;
+    return " " + FS.escapeHtml(W.sunText(date, lat, lon));
   }
 
   // --- Oppsummering ---
@@ -253,13 +262,19 @@
   function markerRose(site, assessment) {
     return FS.roseSvg(site, 40, false, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating, edge: true } : null);
   }
+  // Middelvind og kast under navnet, «5 (8) m/s», når man har zoomet inn så navnene vises. Retningen står i rosen.
+  function markerWind(assessment) {
+    if (!assessment) return "";
+    var w = assessment.wind;
+    return '<span class="rose-marker__wind">' + FS.escapeHtml(FS.t("wind.mapWind", { speed: Math.round(w.speed), gust: w.gust != null ? Math.round(w.gust) : "?" })) + "</span>";
+  }
   function markerIcon(site, assessment, match, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
     return L.divIcon({
       className: "rose-marker" + (match === "no" ? " rose-marker--dimmed" : WEAK[match] ? " rose-marker--unknown" : "") +
         (selected ? " rose-marker--selected" : ""),
       html: '<span class="rose-marker__ring' + ring + '">' + markerRose(site, assessment) + "</span>" +
-        '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + "</span>",
+        '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + markerWind(assessment) + "</span>",
       iconSize: [46, 46],
       iconAnchor: [23, 23],
     });

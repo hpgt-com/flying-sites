@@ -7,6 +7,7 @@
 
   var DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   var HOUR = 3600000;
+  var DAY = 24 * HOUR;
   var TIME_ZONE = "Europe/Oslo";
 
   // Tekstene kommer fra ordboken for sidens språk (FlyingSites.t i common.js, fra src/_i18n/<språk>.json).
@@ -146,6 +147,36 @@
     return row ? { dir: row[0], speed: row[1], gust: row[2], rain: row[3] != null ? row[3] : null } : null;
   }
 
+  // Soloppgang og solnedgang for en kalenderdag ("2026-10-09") på et sted, etter den vanlige soloppgangsformelen
+  // (sola 0,833° under horisonten, med lysbrytning og solskiven). Nøyaktig til et par minutter, nok til å vise
+  // klokkeslettet. { rise, set } i millisekunder, eller { polar: "day" } med midnattssol og { polar: "night" }
+  // i mørketida, når sola ikke går ned eller ikke kommer opp den dagen.
+  function sunTimes(date, lat, lon) {
+    var rad = Math.PI / 180;
+    var noon = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)), 12);
+    var n = Math.round(noon / DAY + 2440587.5 - 2451545 + 0.0008); // dager siden 1. januar 2000
+    var jStar = n - lon / 360;
+    var m = (357.5291 + 0.98560028 * jStar) % 360;
+    var c = 1.9148 * Math.sin(m * rad) + 0.02 * Math.sin(2 * m * rad) + 0.0003 * Math.sin(3 * m * rad);
+    var lambda = (m + c + 180 + 102.9372) % 360;
+    var transit = 2451545 + jStar + 0.0053 * Math.sin(m * rad) - 0.0069 * Math.sin(2 * lambda * rad);
+    var sinDec = Math.sin(lambda * rad) * Math.sin(23.4397 * rad);
+    var cosDec = Math.cos(Math.asin(sinDec));
+    var cosH = (Math.sin(-0.833 * rad) - Math.sin(lat * rad) * sinDec) / (Math.cos(lat * rad) * cosDec);
+    if (cosH < -1) return { polar: "day" };
+    if (cosH > 1) return { polar: "night" };
+    var h = Math.acos(cosH) / rad / 360;
+    var toMs = function (jd) { return Math.round((jd - 2440587.5) * DAY); };
+    return { rise: toMs(transit - h), set: toMs(transit + h) };
+  }
+
+  // «Sola opp 07.37, ned 17.46.» for dagen, eller midnattssol / mørketid.
+  function sunText(date, lat, lon) {
+    var sun = sunTimes(date, lat, lon);
+    if (sun.polar) return text("wind.sunPolar" + (sun.polar === "day" ? "Day" : "Night"));
+    return text("wind.sun", { rise: formatClock(sun.rise), set: formatClock(sun.set) });
+  }
+
   globalThis.FlyingSitesWind = {
     RATINGS: RATINGS,
     osloParts: osloParts,
@@ -156,6 +187,8 @@
     rateWind: rateWind,
     windAt: windAt,
     formatRain: formatRain,
+    sunTimes: sunTimes,
+    sunText: sunText,
     useText: useText,
   };
 })();
