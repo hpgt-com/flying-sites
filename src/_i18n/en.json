@@ -254,7 +254,7 @@
     "footerDisclaimer": "The information is a guide only, and every pilot decides for themselves whether the site and conditions are OK.",
     "notTranslated": "The description of this site has not been translated yet and is shown in Norwegian.",
     "meteogramBase": "https://www.yr.no/en/content/",
-    "windgramTitle": "Winds aloft and cloud base (draft)",
+    "windgramTitle": "Wind above the launch (draft)",
     "windgramIntro": "Wind at heights above the launch, hour by hour. The colours show wind strength (m/s): green suitable, yellow near the limit, red too much. The arrow shows where the wind blows. “Boundary layer” is roughly how high thermals can go, and the cells above are faded. The dashed line with a cloud is the estimated cloud base. Grey columns are dark.",
     "windgramSource": "Model data from <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Rough: the model does not see the local terrain, and the cloud base is estimated from temperature and dew point at ground level."
   },

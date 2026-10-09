@@ -254,7 +254,7 @@
     "footerDisclaimer": "Opplysningene er veiledende, og hver pilot vurderer selv om stedet og forholdene er OK.",
     "notTranslated": "",
     "meteogramBase": "https://www.yr.no/nb/innhold/",
-    "windgramTitle": "Høydevind og skybase (utkast)",
+    "windgramTitle": "Vind over starten (utkast)",
     "windgramIntro": "Vinden i høydene over starten time for time. Fargene viser vindstyrken (m/s): grønt passe, gult nær grensen, rødt for mye. Pilen viser hvor vinden blåser. «Grenselag» er omtrent hvor høyt termikken kan gå, og rutene over er tonet ned. Den stiplede streken med sky er anslått skybase. Grå kolonner er mørkt.",
     "windgramSource": "Modelldata fra <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Grovt: modellen ser ikke det lokale terrenget, og skybasen er anslått fra temperatur og duggpunkt ved bakken."
   },
