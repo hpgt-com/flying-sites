@@ -1,7 +1,7 @@
 // Høydevind (windgram) på stedssiden: vinden i høydene over starten time for time, fra Open-Meteo.
 // Rutenettet er regnet ut i byggingen (lib/windgram.js) og ligger i #windgram-data. Høyest oppe, timene bortover.
 // Fargene følger vindreglene på forsiden: under minste vind blekt, passe grønt, nær grensen gult, over rødt.
-// Ruter over grenselaget (omtrent der termikken slutter) er tonet ned, og ruter over skybasen er skravert.
+// Ruter over grenselaget (omtrent der termikken slutter) er tonet ned. Skybasen er en stiplet strek med sky.
 (function () {
   "use strict";
 
@@ -73,10 +73,14 @@
       if (!cell) { html += '<td class="windgram__none"></td>'; return; }
       var cls = "windgram__cell windgram--" + speedClass(cell[1]);
       if (data.blh[i] != null && height > data.blh[i]) cls += " windgram--above";
-      if (data.cloudBase[i] != null && height >= data.cloudBase[i]) cls += " windgram--cloud";
+      // Skybasen: stiplet strek og sky i den laveste ruten i skyen, svak grå tone over.
+      var cb = data.cloudBase[i];
+      var cloudBaseRow = cb != null && height >= cb && !(r > 0 && data.heights[r - 1] >= cb && data.cells[i][r - 1]);
+      if (cb != null && height >= cb) cls += cloudBaseRow ? " windgram--cloud windgram--cloudbase" : " windgram--cloud";
       if (isNight(data.times[i])) cls += " windgram--night";
       var title = FS.DIRECTION_LABELS[W.directionCode(cell[0])] + " " + Math.round(cell[1]) + " m/s";
       html += '<td class="' + cls + '" title="' + FS.escapeHtml(title) + '">' +
+        (cloudBaseRow ? '<span class="windgram__cloud" aria-hidden="true">☁</span>' : "") +
         '<span class="windgram__arrow" style="transform: rotate(' + cell[0] + 'deg)" aria-hidden="true">↓</span>' +
         Math.round(cell[1]) + "</td>";
     });

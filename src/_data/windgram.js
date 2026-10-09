@@ -14,6 +14,21 @@ const CACHE_FILE = path.resolve(".cache/windgram.json");
 const CACHE_MINUTES = 30;
 const HOURS = 48;
 
+// Open-Meteo svarer av og til 429 (for mange forespørsler fra samme adresse) eller bryter forbindelsen.
+// Da prøves det én gang til etter fem sekunder.
+async function fetchJson(url) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+      if (!response.ok) throw new Error(`Open-Meteo svarte ${response.status}`);
+      return await response.json();
+    } catch (err) {
+      if (attempt >= 2) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+}
+
 async function fetchSite(launch, launchMasl) {
   const url = new URL("https://api.open-meteo.com/v1/forecast");
   url.searchParams.set("latitude", launch.lat.toFixed(4));
@@ -22,9 +37,7 @@ async function fetchSite(launch, launchMasl) {
   url.searchParams.set("wind_speed_unit", "ms");
   url.searchParams.set("timeformat", "unixtime");
   url.searchParams.set("forecast_days", "3");
-  const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
-  if (!response.ok) throw new Error(`Open-Meteo svarte ${response.status}`);
-  const grid = buildWindgram(await response.json(), launchMasl);
+  const grid = buildWindgram(await fetchJson(url), launchMasl);
   if (!grid) throw new Error("tomt svar");
   // Fra timen nå og HOURS timer fram.
   const start = grid.times.findIndex((t) => t > Date.now() - 3600000);

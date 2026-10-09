@@ -253,7 +253,7 @@
     "notTranslated": "The description of this site has not been translated yet and is shown in Norwegian.",
     "meteogramBase": "https://www.yr.no/en/content/",
     "windgramTitle": "Winds aloft (draft)",
-    "windgramIntro": "Wind at heights above the launch, hour by hour, in m/s. The arrow shows where the wind blows. Cells above the boundary layer (roughly where thermals end) are faded, and cells above the cloud base are hatched. Grey columns are dark.",
+    "windgramIntro": "Wind at heights above the launch, hour by hour, in m/s. The arrow shows where the wind blows. Cells above the boundary layer (roughly where thermals end) are faded. The dashed line with a cloud is the estimated cloud base, and the cells above it are in cloud. Grey columns are dark.",
     "windgramSource": "Model data from <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Rough: the model does not see the local terrain, and the cloud base is estimated from temperature and dew point at ground level."
   },
   "sources": {

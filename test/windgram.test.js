@@ -48,3 +48,17 @@ test("alle variablene som hentes, finnes for hver trykkflate", () => {
   for (const p of LEVELS) assert.ok(vars.includes(`geopotential_height_${p}hPa`));
   assert.ok(vars.includes("boundary_layer_height"));
 });
+
+test("startraden har vind også når terrenget i punktet ligger litt over starten", () => {
+  const hourly = { time: [1760000000], wind_speed_10m: [3], wind_direction_10m: [90] };
+  for (const p of LEVELS) {
+    hourly[`geopotential_height_${p}hPa`] = [{ 1000: 50, 975: 260, 950: 480, 925: 700, 900: 930, 850: 1400, 800: 1900, 700: 2950 }[p]];
+    hourly[`wind_speed_${p}hPa`] = [6];
+    hourly[`wind_direction_${p}hPa`] = [270];
+  }
+  const g = buildWindgram({ elevation: 561, hourly }, 563);
+  // 2 m over terrenget: nesten bare bakkevinden (Ø 3 m/s), litt dratt mot vinden lenger opp.
+  const [dir, speed] = g.cells[0][g.heights.indexOf(563)];
+  assert.ok(Math.abs(dir - 90) < 5 && Math.abs(speed - 3) < 0.3, `${dir}/${speed}`);
+  assert.equal(g.cells[0][g.heights.indexOf(500)], null);
+});
