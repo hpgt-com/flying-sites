@@ -249,6 +249,7 @@
   var mapEl = document.getElementById("home-map");
   var map = FS.createMap(mapEl);
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
+  FS.addRadarLayer(map);
   // Kartet åpner over startene i hjemregionen (site.homeRegion), ikke over alle stedene, så et sted langt
   // unna ikke zoomer kartet ut. Stedene utenfor finnes i listen og søket.
   var homeRegion = mapEl.getAttribute("data-home-region");

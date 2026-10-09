@@ -443,7 +443,12 @@
       "airspaceError": "Could not load airspace. Check IPPC.",
       "retry": "Try again",
       "airspaceAttribution": "Airspace: openAIP (CC BY-NC 4.0), {date}. Not for navigation, check IPPC",
-      "openTopoAttribution": "Map data: &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href=\"https://opentopomap.org\">OpenTopoMap</a> (CC-BY-SA)"
+      "openTopoAttribution": "Map data: &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href=\"https://opentopomap.org\">OpenTopoMap</a> (CC-BY-SA)",
+      "layerRadar": "Precipitation radar",
+      "radarLoading": "Loading radar …",
+      "radarError": "Could not load radar.",
+      "radarTime": "Radar at {time}",
+      "radarAttribution": "Radar: weather data by <a href=\"https://www.rainviewer.com/\">Rain Viewer</a>"
     },
     "site": {
       "route": "Walking route",

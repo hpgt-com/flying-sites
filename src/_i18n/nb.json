@@ -443,7 +443,12 @@
       "airspaceError": "Kunne ikke hente luftrom. Sjekk IPPC.",
       "retry": "Prøv igjen",
       "airspaceAttribution": "Luftrom: openAIP (CC BY-NC 4.0), {date}. Ikke for navigasjon, sjekk IPPC",
-      "openTopoAttribution": "Kartdata: &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href=\"https://opentopomap.org\">OpenTopoMap</a> (CC-BY-SA)"
+      "openTopoAttribution": "Kartdata: &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>-bidragsytere, SRTM | Kartstil: &copy; <a href=\"https://opentopomap.org\">OpenTopoMap</a> (CC-BY-SA)",
+      "layerRadar": "Nedbørsradar",
+      "radarLoading": "Laster radar …",
+      "radarError": "Kunne ikke hente radar.",
+      "radarTime": "Radar kl. {time}",
+      "radarAttribution": "Radar: data fra <a href=\"https://www.rainviewer.com/\">Rain Viewer</a>"
     },
     "site": {
       "route": "Gangrute",
