@@ -35,7 +35,17 @@
     return ms < s.rise || ms > s.set;
   }
 
-  var html = '<table class="windgram__table"><thead>';
+  // Bygges med DOM-metoder, ikke innerHTML, så ingenting fra dataene tolkes som HTML.
+  function node(tag, className, text) {
+    var n = document.createElement(tag);
+    if (className) n.className = className;
+    if (text != null) n.textContent = String(text);
+    return n;
+  }
+  var table = node("table", "windgram__table");
+  var thead = table.appendChild(document.createElement("thead"));
+  var tbody = table.appendChild(document.createElement("tbody"));
+
   // Dag over timene, så det er lett å se hvor i dag slutter.
   var days = [];
   cols.forEach(function (i) {
@@ -43,34 +53,41 @@
     if (!days.length || days[days.length - 1].date !== date) days.push({ date: date, n: 0 });
     days[days.length - 1].n++;
   });
-  html += '<tr><th class="windgram__corner"></th>' + days.map(function (d) {
+  var dayRow = thead.appendChild(document.createElement("tr"));
+  dayRow.appendChild(node("th", "windgram__corner"));
+  days.forEach(function (d) {
     var label = d.date === W.osloParts(now).date ? FS.t("windgram.today") : d.date.slice(8, 10) + "." + d.date.slice(5, 7);
-    return '<th class="windgram__day" colspan="' + d.n + '">' + FS.escapeHtml(label) + "</th>";
-  }).join("") + "</tr>";
-  html += '<tr><th class="windgram__corner">' + FS.escapeHtml(FS.t("windgram.masl")) + "</th>" + cols.map(function (i) {
-    return '<th class="windgram__hour' + (isNight(data.times[i]) ? " windgram--night" : "") + '">' + W.osloParts(data.times[i]).hour + "</th>";
-  }).join("") + "</tr></thead><tbody>";
+    dayRow.appendChild(node("th", "windgram__day", label)).colSpan = d.n;
+  });
+  var hourRow = thead.appendChild(document.createElement("tr"));
+  hourRow.appendChild(node("th", "windgram__corner", FS.t("windgram.masl")));
+  cols.forEach(function (i) {
+    hourRow.appendChild(node("th", "windgram__hour" + (isNight(data.times[i]) ? " windgram--night" : ""), W.osloParts(data.times[i]).hour));
+  });
 
   function infoRow(label, values, warn) {
-    return '<tr class="windgram__info"><th>' + FS.escapeHtml(label) + "</th>" + cols.map(function (i) {
+    var tr = tbody.appendChild(node("tr", "windgram__info"));
+    tr.appendChild(node("th", "", label));
+    cols.forEach(function (i) {
       var v = values[i];
-      return "<td" + (warn && v != null && warn(v) ? ' class="windgram__warn"' : "") + ">" + (v == null ? "–" : v) + "</td>";
-    }).join("") + "</tr>";
+      tr.appendChild(node("td", warn && v != null && warn(v) ? "windgram__warn" : "", v == null ? "–" : Math.round(v)));
+    });
   }
   // Skybase under starten betyr at starten kan ligge i skyen.
-  html += infoRow(FS.t("windgram.cloudBase"), data.cloudBase, function (v) { return data.launch != null && v <= data.launch; });
-  html += infoRow(FS.t("windgram.blh"), data.blh);
+  infoRow(FS.t("windgram.cloudBase"), data.cloudBase, function (v) { return data.launch != null && v <= data.launch; });
+  infoRow(FS.t("windgram.blh"), data.blh);
 
   for (var r = data.heights.length - 1; r >= 0; r--) {
     var height = data.heights[r];
     // Høyder uten data i noen av timene (over øverste trykkflate eller under terrenget) vises ikke.
     if (!cols.some(function (i) { return data.cells[i][r]; })) continue;
     var isLaunch = height === data.launch;
-    html += "<tr" + (isLaunch ? ' class="windgram__launch"' : "") + "><th>" +
-      (isLaunch ? FS.escapeHtml(FS.t("windgram.launch", { h: height })) : height) + "</th>";
+    var tr = tbody.appendChild(node("tr", isLaunch ? "windgram__launch" : ""));
+    tr.appendChild(node("th", "", isLaunch ? FS.t("windgram.launch", { h: height }) : Math.round(height)));
     cols.forEach(function (i) {
       var cell = data.cells[i][r];
-      if (!cell) { html += '<td class="windgram__none"></td>'; return; }
+      if (!cell) { tr.appendChild(node("td", "windgram__none")); return; }
+      var dir = Number(cell[0]), speed = Math.round(cell[1]);
       var cls = "windgram__cell windgram--" + speedClass(cell[1]);
       if (data.blh[i] != null && height > data.blh[i]) cls += " windgram--above";
       // Skybasen: stiplet strek og sky i den laveste ruten i skyen, svak grå tone over.
@@ -78,15 +95,15 @@
       var cloudBaseRow = cb != null && height >= cb && !(r > 0 && data.heights[r - 1] >= cb && data.cells[i][r - 1]);
       if (cb != null && height >= cb) cls += cloudBaseRow ? " windgram--cloud windgram--cloudbase" : " windgram--cloud";
       if (isNight(data.times[i])) cls += " windgram--night";
-      var title = FS.DIRECTION_LABELS[W.directionCode(cell[0])] + " " + Math.round(cell[1]) + " m/s";
-      html += '<td class="' + cls + '" title="' + FS.escapeHtml(title) + '">' +
-        (cloudBaseRow ? '<span class="windgram__cloud" aria-hidden="true">☁</span>' : "") +
-        '<span class="windgram__arrow" style="transform: rotate(' + cell[0] + 'deg)" aria-hidden="true">↓</span>' +
-        Math.round(cell[1]) + "</td>";
+      var td = tr.appendChild(node("td", cls));
+      td.title = FS.DIRECTION_LABELS[W.directionCode(dir)] + " " + speed + " m/s";
+      if (cloudBaseRow) td.appendChild(node("span", "windgram__cloud", "☁")).setAttribute("aria-hidden", "true");
+      var arrow = td.appendChild(node("span", "windgram__arrow", "↓"));
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.style.transform = "rotate(" + dir + "deg)";
+      td.appendChild(document.createTextNode(String(speed)));
     });
-    html += "</tr>";
   }
-  html += "</tbody></table>";
-  el.innerHTML = html;
+  el.replaceChildren(table);
   el.hidden = false;
 })();
