@@ -503,6 +503,7 @@
         ? FS.t("home.noName", { q: filter.q.trim() })
         : FS.t("home.noResults");
     renderSearchHits();
+    renderDayPlan();
     updateFiltersToggle();
   }
 
@@ -586,6 +587,92 @@
     searchHitsEl.addEventListener("click", function (ev) {
       var button = ev.target.closest("button[data-select]");
       if (button) { clearTimeout(searchTimer); select(button.getAttribute("data-select"), "list"); }
+    });
+  }
+
+  // --- Når kan det passe? ---
+  // For i dag og de neste dagene i varselet: stedene som passer filtrene (retning, nivå, kategori, søk), med
+  // tidsrommene i dagslys der vurderingen er «Kan passe» eller «Usikkert» (dayWindows i wind.js). Stedene med
+  // flest timer som kan passe står først. Bygges med DOM-metoder, så ingenting fra dataene tolkes som HTML.
+  var dayPlanEl = document.getElementById("day-plan");
+  var dayPlanDaysEl = document.getElementById("day-plan-days");
+  var DAY_PLAN_DAYS = 3, DAY_PLAN_SHOWN = 6;
+  var dayFormat = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Oslo" });
+  function domEl(tag, className, text) {
+    var n = document.createElement(tag);
+    if (className) n.className = className;
+    if (text != null) n.textContent = String(text);
+    return n;
+  }
+  function hourLabel(ms) { var h = W.osloParts(ms).hour; return (h < 10 ? "0" : "") + h; }
+  function windowChip(w) {
+    var end = W.osloParts(w.end).hour === 0 ? "24" : hourLabel(w.end);
+    var chip = domEl("span", "day-plan__time day-plan__time--" + w.rating, hourLabel(w.start) + "–" + end);
+    chip.title = RATINGS[w.rating].label;
+    return chip;
+  }
+  function siteRow(entry) {
+    var li = domEl("li", "day-plan__site");
+    var button = li.appendChild(domEl("button", "day-plan__name", entry.site.name));
+    button.type = "button";
+    button.setAttribute("data-select", entry.site.id);
+    var times = li.appendChild(domEl("span", "day-plan__times"));
+    entry.windows.forEach(function (w) { times.appendChild(windowChip(w)); });
+    return li;
+  }
+  function renderDayPlan() {
+    if (!dayPlanEl) return;
+    if (!forecast || stale) { dayPlanEl.hidden = true; return; }
+    var now = Date.now();
+    var today = W.osloParts(now).date;
+    var tomorrow = W.osloParts(now + 86400000).date;
+    var perSite = sites.filter(function (s) { return matches(s, null, false, true) !== "no"; }).map(function (s) {
+      return { site: s, days: W.dayWindows(forecast, s, rules, s.lat, s.lon) };
+    });
+    var dates = [];
+    forecast.times.forEach(function (t) { var d = W.osloParts(Date.parse(t)).date; if (d >= today && dates.indexOf(d) === -1) dates.push(d); });
+    dayPlanDaysEl.replaceChildren();
+    dates.slice(0, DAY_PLAN_DAYS).forEach(function (date) {
+      var entries = perSite.map(function (e) {
+        var windows = (e.days[date] || []).filter(function (w) { return w.end > now; });
+        var hours = function (rating) { return windows.reduce(function (n, w) { return n + (w.rating === rating ? (w.end - w.start) / 3600000 : 0); }, 0); };
+        return { site: e.site, windows: windows, ok: hours("ok"), maybe: hours("maybe") };
+      }).filter(function (e) { return e.windows.length; });
+      entries.sort(function (a, b) { return b.ok - a.ok || b.maybe - a.maybe || a.site.name.localeCompare(b.site.name); });
+      var good = entries.filter(function (e) { return e.ok; });
+      var unsure = entries.filter(function (e) { return !e.ok; });
+      var day = dayPlanDaysEl.appendChild(domEl("div", "day-plan__day"));
+      var label = date === today ? FS.t("dayPlan.today") : date === tomorrow ? FS.t("dayPlan.tomorrow") : dayFormat.format(Date.parse(date + "T12:00:00Z"));
+      day.appendChild(domEl("h3", "day-plan__date", label.charAt(0).toUpperCase() + label.slice(1)));
+      // Varselet slutter midt på dagen (48 timer fram): si det, så «07–10» ikke ser ut som at det bare passer til 10.
+      var lastTime = Date.parse(forecast.times[forecast.times.length - 1]) + 3600000;
+      if (W.osloParts(lastTime - 1).date === date && W.osloParts(lastTime).hour < 20) {
+        day.appendChild(domEl("p", "muted day-plan__partial", FS.t("dayPlan.partial", { time: hourLabel(lastTime) })));
+      }
+      if (!good.length) day.appendChild(domEl("p", "muted", FS.t("dayPlan.none")));
+      var list = day.appendChild(domEl("ul", "day-plan__list"));
+      good.slice(0, DAY_PLAN_SHOWN).forEach(function (e) { list.appendChild(siteRow(e)); });
+      if (good.length > DAY_PLAN_SHOWN) {
+        var more = day.appendChild(domEl("details", "day-plan__more"));
+        more.appendChild(domEl("summary", "", FS.t("dayPlan.more", { n: good.length - DAY_PLAN_SHOWN })));
+        var rest = more.appendChild(domEl("ul", "day-plan__list"));
+        good.slice(DAY_PLAN_SHOWN).forEach(function (e) { rest.appendChild(siteRow(e)); });
+      }
+      if (unsure.length) {
+        var maybe = day.appendChild(domEl("details", "day-plan__more"));
+        maybe.appendChild(domEl("summary", "", FS.t("dayPlan.maybeOnly", { n: unsure.length })));
+        var mlist = maybe.appendChild(domEl("ul", "day-plan__list"));
+        unsure.forEach(function (e) { mlist.appendChild(siteRow(e)); });
+      }
+    });
+    dayPlanEl.hidden = !dates.length;
+  }
+  if (dayPlanDaysEl) {
+    dayPlanDaysEl.addEventListener("click", function (ev) {
+      var button = ev.target.closest("button[data-select]");
+      if (!button) return;
+      FS.track("dagsoversikt/valgt/" + button.getAttribute("data-select"));
+      select(button.getAttribute("data-select"), "list");
     });
   }
 

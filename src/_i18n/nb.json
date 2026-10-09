@@ -146,7 +146,9 @@
     "ratingMaybe": "Usikkert",
     "ratingHigh": "For mye vind",
     "ratingNo": "Passer ikke",
-    "windLegendArrow": "Den løftede sektoren viser hvor vinden kommer fra"
+    "windLegendArrow": "Den løftede sektoren viser hvor vinden kommer fra",
+    "dayPlanTitle": "Når kan det passe?",
+    "dayPlanNote": "Tidsrom i dagslys der vindvarselet fra MET kan passe (grønt) eller er usikkert (gult), for stedene som passer filtrene. Grov vurdering, sjekk alltid selv."
   },
   "site": {
     "hazardsTitle": "Før du starter",
@@ -252,8 +254,8 @@
     "footerDisclaimer": "Opplysningene er veiledende, og hver pilot vurderer selv om stedet og forholdene er OK.",
     "notTranslated": "",
     "meteogramBase": "https://www.yr.no/nb/innhold/",
-    "windgramTitle": "Høydevind (utkast)",
-    "windgramIntro": "Vinden i høydene over starten time for time, i m/s. Pilen viser hvor vinden blåser. Ruter over grenselaget (omtrent der termikken slutter) er tonet ned. Den stiplede streken med sky er anslått skybase, og rutene over er i skyen. Grå kolonner er mørkt.",
+    "windgramTitle": "Høydevind og termikk (utkast)",
+    "windgramIntro": "Vinden i høydene over starten time for time. Fargene viser vindstyrken (m/s), ikke termikken: grønt passe, gult nær grensen, rødt for mye. Pilen viser hvor vinden blåser. «Termikk til» er omtrent hvor høyt termikken går, og rutene over er tonet ned. Den stiplede streken med sky er anslått skybase. Grå kolonner er mørkt.",
     "windgramSource": "Modelldata fra <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Grovt: modellen ser ikke det lokale terrenget, og skybasen er anslått fra temperatur og duggpunkt ved bakken."
   },
   "sources": {
@@ -476,6 +478,14 @@
       "cloudBase": "Skybase",
       "blh": "Termikk til",
       "launch": "Start {h}"
+    },
+    "dayPlan": {
+      "today": "I dag",
+      "tomorrow": "I morgen",
+      "none": "Ingen steder ser ut til å passe.",
+      "more": "Vis {n} til",
+      "maybeOnly": "Bare usikre tidsrom ({n})",
+      "partial": "Varselet går bare til kl. {time} denne dagen."
     }
   }
 }

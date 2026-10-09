@@ -1181,3 +1181,21 @@ body.has-fullscreen-map { overflow: hidden; }
 .windgram--night { filter: grayscale(0.6) brightness(0.9); }
 .windgram__hour.windgram--night { color: var(--line); }
 .windgram__source { font-size: 12px !important; color: var(--muted); }
+
+/* Når kan det passe? (home.js): dagene under hverandre, tidsrom som små merker i vurderingsfargene. */
+.day-plan { display: grid; gap: 10px; margin: 0 0 16px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.day-plan h2 { margin: 0; font-size: 18px; }
+.day-plan__note { margin: 0; font-size: 13px; }
+#day-plan-days { display: grid; gap: 12px; }
+.day-plan__date { margin: 0 0 4px; font-size: 15px; }
+.day-plan__day p { margin: 0; font-size: 14px; }
+.day-plan__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.day-plan__site { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; border-bottom: 1px solid var(--line); }
+.day-plan__site:last-child { border-bottom: 0; }
+.day-plan__name { padding: 6px 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.day-plan__name:hover { text-decoration: underline; }
+.day-plan__times { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.day-plan__time { padding: 2px 6px; border-radius: 6px; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.day-plan__time--ok { background: color-mix(in srgb, var(--wind-ok) 25%, transparent); border: 1px solid var(--wind-ok); }
+.day-plan__time--maybe { background: color-mix(in srgb, var(--wind-maybe) 25%, transparent); border: 1px solid var(--wind-maybe); }
+.day-plan__more summary { cursor: pointer; font-size: 14px; color: var(--muted); padding: 4px 0; }

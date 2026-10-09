@@ -183,3 +183,17 @@ test("soloppgang og solnedgang i Harstad, med midnattssol og mørketid", () => {
   assert.equal(W.sunText("2026-12-15", 68.8, 16.3), "Mørketid, sola kommer ikke over horisonten.");
   assert.match(W.sunText("2026-10-09", 68.8, 16.3), /^Sola opp 07\.3\d, ned 17\.4\d\.$/);
 });
+
+test("dagsoversikten slår sammen timer med samme vurdering og hopper over mørke timer", () => {
+  const times = hourly("2026-10-09T00:00:00Z", 24);
+  const good = [247, 4, 6, 0], unsure = [247, 6, null, 0], wrong = [90, 4, 6, 0];
+  // Norsk tid er UTC+2 i oktober. Sola er oppe omtrent 07.37–17.46 i Harstad.
+  const rows = times.map((t, i) => (i >= 8 && i < 11 ? good : i === 11 ? unsure : i >= 12 && i < 14 ? good : wrong));
+  rows[2] = good; // kl. 04 norsk tid, mørkt
+  const forecast = { times, sites: { x: rows } };
+  const days = W.dayWindows(forecast, { id: "x", ...site }, rules, 68.8, 16.3);
+  assert.deepEqual(Object.keys(days), ["2026-10-09"]);
+  assert.deepEqual(days["2026-10-09"].map((w) => [W.formatClock(w.start), W.formatClock(w.end), w.rating]), [
+    ["10.00", "13.00", "ok"], ["13.00", "14.00", "maybe"], ["14.00", "16.00", "ok"],
+  ]);
+});
