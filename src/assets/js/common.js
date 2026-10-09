@@ -387,6 +387,103 @@
       (p.byNotam ? '<p class="airspace-popup__notam">' + e(t("map.byNotam")) + "</p>" : "") + "</div>";
   }
 
+  // Nedbørsradar fra RainViewer (gratis for ikke-kommersiell bruk, med kreditering). Lastes først når laget slås
+  // på, og listen over bilder hentes på nytt hvert tiende minutt så lenge laget er på. Gratisversjonen har fliser
+  // bare til zoom 7, så de forstørres når man zoomer inn: grovt, men nok til å se byger som kommer. De siste
+  // bildene (10 minutter mellom hvert) vises som en kort animasjon som blir stående litt på det siste, med
+  // klokkeslettet i en liten boks under lagvelgeren. MET sitt radarkart er forbeholdt Yr, så det kan vi ikke bruke.
+  var RADAR_INDEX = "https://api.rainviewer.com/public/weather-maps.json";
+  var RADAR_FRAMES = 6, RADAR_STEP_MS = 700, RADAR_HOLD_STEPS = 4;
+  var osloClock = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Oslo" });
+  function addRadarLayer(map) {
+    if (!map.layersControl) return;
+    var group = L.layerGroup();
+    map.layersControl.addOverlay(group, t("map.layerRadar"));
+    var layers = [], times = [], timer = null, refresh = null, on = false, step = 0;
+
+    var statusEl = null;
+    var Status = L.Control.extend({
+      options: { position: "topright" },
+      onAdd: function () {
+        statusEl = L.DomUtil.create("div", "airspace-status radar-status");
+        statusEl.setAttribute("role", "status");
+        statusEl.hidden = true;
+        L.DomEvent.disableClickPropagation(statusEl);
+        statusEl.addEventListener("click", function (ev) { if (ev.target.closest("[data-retry]")) load(); });
+        return statusEl;
+      },
+    });
+    new Status().addTo(map);
+    function setStatus(state, text) {
+      if (!statusEl) return;
+      statusEl.hidden = !state;
+      statusEl.classList.toggle("airspace-status--error", state === "error");
+      statusEl.innerHTML = state === "error"
+        ? escapeHtml(t("map.radarError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>"
+        : escapeHtml(text || "");
+    }
+
+    function show(i) {
+      layers.forEach(function (layer, j) { layer.setOpacity(j === i ? 0.7 : 0); });
+      var clock = osloClock.format(new Date(times[i] * 1000)).replace(":", (I18N.meta && I18N.meta.clockSep) || ".");
+      setStatus("frame", t("map.radarTime", { time: clock }));
+    }
+    function play() {
+      clearInterval(timer);
+      step = 0;
+      show(0);
+      // Går gjennom bildene og blir stående på det siste i noen steg før den starter på nytt.
+      timer = setInterval(function () {
+        step = (step + 1) % (layers.length + RADAR_HOLD_STEPS);
+        show(Math.min(step, layers.length - 1));
+      }, RADAR_STEP_MS);
+    }
+    function stop() {
+      clearInterval(timer);
+      clearInterval(refresh);
+      timer = refresh = null;
+      group.clearLayers();
+      layers = [];
+      setStatus(null);
+    }
+    function load() {
+      if (!layers.length) setStatus("loading", t("map.radarLoading"));
+      // Tidsgrense, så laget ikke blir stående på «Laster radar …» hvis RainViewer ikke svarer.
+      var ctrl = typeof AbortController === "function" ? new AbortController() : null;
+      var timeout = ctrl ? setTimeout(function () { ctrl.abort(); }, 15000) : null;
+      fetch(RADAR_INDEX, ctrl ? { signal: ctrl.signal } : {}).then(function (r) {
+        clearTimeout(timeout);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (data) {
+        var past = data && data.radar && Array.isArray(data.radar.past) ? data.radar.past.slice(-RADAR_FRAMES) : [];
+        if (!on) return;
+        if (!past.length || typeof data.host !== "string" || data.host.indexOf("https://") !== 0) throw new Error("ukjent format");
+        group.clearLayers();
+        times = past.map(function (f) { return f.time; });
+        layers = past.map(function (f) {
+          return L.tileLayer(data.host + f.path + "/256/{z}/{x}/{y}/2/1_1.png", {
+            maxNativeZoom: 7, maxZoom: 18, opacity: 0, className: "radar-tiles", attribution: t("map.radarAttribution"),
+          }).addTo(group);
+        });
+        play();
+      }).catch(function () {
+        if (on && !layers.length) setStatus("error");
+      });
+    }
+    map.on("overlayadd", function (ev) {
+      if (ev.layer !== group) return;
+      on = true;
+      load();
+      refresh = setInterval(load, 10 * 60000);
+    });
+    map.on("overlayremove", function (ev) {
+      if (ev.layer !== group) return;
+      on = false;
+      stop();
+    });
+  }
+
   function addAirspaceLayers(map, url) {
     if (!url || !map.layersControl) return;
     var groups = AIRSPACE_GROUPS.map(function (g) { return { def: g, layer: L.layerGroup() }; });
@@ -615,6 +712,7 @@
     offset: offset,
     createMap: createMap,
     addAirspaceLayers: addAirspaceLayers,
+    addRadarLayer: addRadarLayer,
     fitWhenVisible: fitWhenVisible,
     addViewControls: addViewControls,
     escapeHtml: escapeHtml,

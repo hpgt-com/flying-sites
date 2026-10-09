@@ -6,7 +6,7 @@
     frame-ancestors). Skript bare fra siden selv. Bilder fra kartflisene (Kartverket, OpenTopoMap, EOX,
     thermal.kk7.ch) og Yr-meteogrammet. Stiler tillater inline, fordi Leaflet og kartmarkørene setter
     style på elementene. Ny ekstern kilde (kartlag, bilde, skript) må legges til her, ellers blokkeres den. -#}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {#- Stedssidene: mobilnettlesere gjør ellers «Sollifjellet 567 moh» om til en kartlenke (tror det er en adresse).

@@ -91,14 +91,6 @@ scripts:
       </div>
     </div>
 
-    {#- Når kan det passe? Tidsrom per sted for de neste dagene, fra varselet (home.js, dayWindows i wind.js). -#}
-    {% if forecast %}
-    <section class="day-plan" id="day-plan" aria-labelledby="day-plan-title" hidden>
-      <h2 id="day-plan-title">{{ t.home.dayPlanTitle }}</h2>
-      <p class="muted day-plan__note">{{ t.home.dayPlanNote }}</p>
-      <div id="day-plan-days"></div>
-    </section>
-    {% endif %}
 
     <section class="results" aria-labelledby="results-title">
       <h2 id="results-title">{{ t.home.sitesCount | fmt({ n: collections.sites.length }) }}</h2>
@@ -119,6 +111,14 @@ scripts:
     </div>
 
     <div class="home-pane" id="pane-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
+      {#- Når kan det passe? Tidsrom per sted for de neste dagene, fra varselet (home.js, dayWindows i wind.js). -#}
+      {% if forecast %}
+      <section class="day-plan" id="day-plan" aria-labelledby="day-plan-title" hidden>
+        <h2 id="day-plan-title">{{ t.home.dayPlanTitle }}</h2>
+        <p class="muted day-plan__note">{{ t.home.dayPlanNote }}</p>
+        <div id="day-plan-days"></div>
+      </section>
+      {% endif %}
       <p class="muted">{{ t.home.weatherIntro }}</p>
       <nav class="link-list" aria-label="{{ t.home.weatherLabel }}">
         {{ m.linkRow("https://flybart.net/", "Flybart", t.home.flybart) }}
