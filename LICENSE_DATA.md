@@ -8,4 +8,6 @@ Du kan bruke, dele og bearbeide dataene, også kommersielt, så lenge du kredite
 
 Filene inneholder bare strukturerte data: posisjoner for starter, landinger og parkering, vindretninger, nivå, kategorier, høyder, gangruter og klubbens egne punkter i kartet. Stedstekstene, farene (også fare-punkter, -linjer og -områder i kartet) og grunneierforhold er ikke med. De finnes på stedssidene og omfattes ikke av denne lisensen (se README).
 
+Oppsettet og feltene er beskrevet i [docs/open-data.md](docs/open-data.md) (engelsk).
+
 Dataene er veiledende og ikke for navigasjon. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold. Sjekk alltid stedssiden, IPPC og forholdene selv.

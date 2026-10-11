@@ -135,7 +135,7 @@
     "towersSubtitle": "Phone numbers for the control towers",
     "disclaimer": "This overview is a rough guide to flying sites in the HPGT area. The club takes no responsibility for information about safety, airspace or landowner agreements. Every pilot and student decides for themselves whether the site and conditions are OK.",
     "credit": "The site builds on the old site guide by Lars Sletten, which he has given to the club.",
-    "openData": "Open data: {geojson} and {kml} (Google Earth, norgeskart.no). Free to use with attribution, {license}.",
+    "openData": "Open data: {geojson} and {kml} (Google Earth, norgeskart.no). Free to use with attribution, {license}. {docs}.",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
     "analytics": "Visits are counted anonymously with {goatcounter}, without cookies.",
     "showingAll": "Showing all {n} sites",
@@ -148,7 +148,8 @@
     "ratingNo": "Not suitable",
     "windLegendArrow": "The raised sector shows where the wind comes from",
     "dayPlanTitle": "When might it work?",
-    "dayPlanNote": "Daylight periods where the MET wind forecast might work (green) or is uncertain (yellow), for the sites matching the filters. After each period: most common direction, mean wind and highest gust in brackets (m/s). Rough assessment, always check for yourself."
+    "dayPlanNote": "Daylight periods where the MET wind forecast might work (green) or is uncertain (yellow), for the sites matching the filters. After each period: most common direction, mean wind and highest gust in brackets (m/s). Rough assessment, always check for yourself.",
+    "openDataDocs": "About the data format"
   },
   "site": {
     "hazardsTitle": "Before you launch",

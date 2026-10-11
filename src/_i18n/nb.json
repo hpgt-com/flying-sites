@@ -135,7 +135,7 @@
     "towersSubtitle": "Telefonnumre til tårnene",
     "disclaimer": "Oversikten er en grov guide til flysteder i HPGTs område. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold. Hver pilot og elev vurderer selv om stedet og forholdene er OK.",
     "credit": "Siden bygger videre på den gamle flystedsoversikten til Lars Sletten, som han har gitt til klubben.",
-    "openData": "Åpne data: {geojson} og {kml} (Google Earth, norgeskart.no). Fritt til bruk med kreditering, {license}.",
+    "openData": "Åpne data: {geojson} og {kml} (Google Earth, norgeskart.no). Fritt til bruk med kreditering, {license}. {docs}.",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/deed.no",
     "analytics": "Siden teller besøk anonymt med {goatcounter}, uten informasjonskapsler.",
     "showingAll": "Viser alle {n} flysteder",
@@ -148,7 +148,8 @@
     "ratingNo": "Passer ikke",
     "windLegendArrow": "Den løftede sektoren viser hvor vinden kommer fra",
     "dayPlanTitle": "Når kan det passe?",
-    "dayPlanNote": "Tidsrom i dagslys der vindvarselet fra MET kan passe (grønt) eller er usikkert (gult), for stedene som passer filtrene. Bak tidsrommet står vanligste retning, middelvind og høyeste kast i parentes (m/s). Grov vurdering, sjekk alltid selv."
+    "dayPlanNote": "Tidsrom i dagslys der vindvarselet fra MET kan passe (grønt) eller er usikkert (gult), for stedene som passer filtrene. Bak tidsrommet står vanligste retning, middelvind og høyeste kast i parentes (m/s). Grov vurdering, sjekk alltid selv.",
+    "openDataDocs": "Om dataformatet"
   },
   "site": {
     "hazardsTitle": "Før du starter",
