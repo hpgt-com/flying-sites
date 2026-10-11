@@ -1,7 +1,7 @@
-# Dependabot lager PR-er når det kommer nye versjoner av GitHub Actions og npm-pakkene.
-# Én samlet PR per økosystem i måneden. PR-sjekken bygger siden, så det er trygt å merge når den er grønn.
-# cooldown: nye versjoner foreslås først når de har vært ute i 7 dager, så en kompromittert utgivelse
-# rekker å bli oppdaget og trukket før den kommer hit.
+# Dependabot opens PRs when new versions of GitHub Actions and the npm packages are released.
+# One grouped PR per ecosystem per month. The PR check builds the site, so it is safe to merge when green.
+# cooldown: new versions are only proposed after 7 days, so a compromised release
+# has time to be discovered and pulled before it gets here.
 version: 2
 updates:
   - package-ecosystem: github-actions

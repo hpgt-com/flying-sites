@@ -1,7 +1,7 @@
 ---
 layout: base.njk
 bodyClass: page-home
-# Én forside per språk: / og /en/ (src/_data/languages.js).
+# One home page per language: / and /en/ (src/_data/languages.js).
 pagination:
   data: languages
   size: 1
@@ -26,7 +26,7 @@ scripts:
       <h1>{{ t.home.title }}</h1>
     </div>
 
-    {#- Faner i venstrekolonnen (home.js): Flysteder (søk, filtre, liste), Vær og Info. Kartet står alltid. -#}
+    {#- Tabs in the left column (home.js): Flysteder (search, filters, list), Vær and Info. The map is always shown. -#}
     <div class="home-tabs" role="tablist" aria-label="{{ t.home.tabsLabel }}">
       <button type="button" role="tab" id="tab-sites" aria-controls="pane-sites" aria-selected="true">{{ t.home.tabSites }}</button>
       <button type="button" role="tab" id="tab-weather" aria-controls="pane-weather" aria-selected="false" tabindex="-1">{{ t.home.tabWeather }}</button>
@@ -36,23 +36,23 @@ scripts:
     <div class="home-pane home-pane--sites" id="pane-sites" role="tabpanel" aria-labelledby="tab-sites">
 
     <div class="filters" id="filters">
-      {#- Søk etter navn. Filtrerer listen og kartet mens man skriver (home.js). -#}
+      {#- Search by name. Filters the list and the map while typing (home.js). -#}
       <div class="filter filter--search" role="search">
         <label class="filter__title" for="site-search">{{ t.home.searchLabel }}</label>
         <input type="search" id="site-search" class="search-input" placeholder="{{ t.home.searchPlaceholder }}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-describedby="search-hits">
-        {#- Treffene rett under feltet, så de synes mens man skriver, også på mobil der listen ligger langt nede. -#}
+        {#- Matches right below the field, so they are visible while typing, also on mobile where the list is far down. -#}
         <div class="search-hits" id="search-hits" aria-live="polite" hidden></div>
       </div>
       {% if forecast %}
       <div class="filter">
         <span class="filter__title" id="f-wind">{{ t.home.windFromForecast }}</span>
-        {#- Segmentert linje, så alle tidspunktene står på én rad. -#}
+        {#- Segmented control, so all the times fit on one row. -#}
         <div class="segmented" role="group" aria-labelledby="f-wind">
           {% for value, label, full in t.home.slots %}
           <button type="button" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}"{% if full != label %} aria-label="{{ full }}" title="{{ full }}"{% endif %}>{{ label }}</button>
           {% endfor %}
         </div>
-        {#- Forslag som bryter: tone ned steder der varselet sier «Passer ikke» eller «For mye vind» (home.js). -#}
+        {#- Toggle: dim sites where the forecast says «Passer ikke» or «For mye vind» (home.js). -#}
         <button type="button" class="suggest-switch" data-suggest aria-pressed="false">{{ t.home.suggest }}</button>
         <details class="wind-rules">
           <summary>{{ t.home.rulesSummary }}</summary>
@@ -60,7 +60,7 @@ scripts:
         </details>
       </div>
       {% endif %}
-      {#- Kompasset står alltid synlig, også på mobil: store knapper, og det er filteret man bytter oftest. -#}
+      {#- The compass is always visible, also on mobile: big buttons, and it is the filter changed most often. -#}
       <div class="filter">
         <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
         <div class="compass" role="group" aria-labelledby="f-direction">
@@ -69,7 +69,7 @@ scripts:
           {% endfor %}
         </div>
       </div>
-      {#- Mobil: nivå og kategori bak en knapp med antall valgte (home.js). På PC vises alt, og knappen er skjult. -#}
+      {#- Mobile: level and category behind a button showing the number selected (home.js). On desktop everything is shown and the button is hidden. -#}
       <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">{{ t.home.levelAndCategory }}</button>
       <div class="filters-more" id="filters-more">
       <div class="filter">
@@ -99,7 +99,7 @@ scripts:
         {% for s in collections.sites %}
         <li data-id="{{ s.data.id }}">
           <button type="button" class="results__item" data-select="{{ s.data.id }}">
-            {#- Starthøyden til høyre for navnet, når den er registrert. -#}
+            {#- Launch altitude to the right of the name, when recorded. -#}
             <span class="results__head"><span class="results__name">{{ s.data.name }}</span>{% if s.data.elevation and s.data.elevation.launch_masl %}<span class="results__elev">{{ s.data.elevation.launch_masl }} {{ t.units.masl }}</span>{% endif %}</span>
             <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
           </button>
@@ -111,7 +111,7 @@ scripts:
     </div>
 
     <div class="home-pane" id="pane-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
-      {#- Når kan det passe? Tidsrom per sted for de neste dagene, fra varselet (home.js, dayWindows i wind.js). -#}
+      {#- Day plan («Når kan det passe?»): time windows per site for the next few days, from the forecast (home.js, dayWindows in wind.js). -#}
       {% if forecast %}
       <section class="day-plan" id="day-plan" aria-labelledby="day-plan-title" hidden>
         <h2 id="day-plan-title">{{ t.home.dayPlanTitle }}</h2>
@@ -146,19 +146,19 @@ scripts:
   </div>
 
   <main class="home__map">
-    {#- Status for kartet (home.js): hvor mange flysteder som vises, oppsummering av vinden for valgt
-        tidspunkt og når varselet ble hentet. Over kartet på mobil, halvgjennomsiktig kort oppå kartet på PC. -#}
+    {#- Map status (home.js): how many sites are shown, a wind summary for the selected time and when
+        the forecast was fetched. Above the map on mobile, a semi-transparent card on top of the map on desktop. -#}
     <div class="map-info" id="map-info">
       <p class="map-info__count" id="map-count" aria-live="polite">{{ t.home.showingAll | fmt({ n: collections.sites.length }) }}</p>
       <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
       <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
     </div>
     <div id="home-map" class="map map--home" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" role="region" aria-label="{{ t.home.mapLabel }}"></div>
-    {#- Valgt sted: under kartet på mobil, kort oppå kartet nederst til høyre på PC (skjult til noe er valgt). -#}
+    {#- Selected site: below the map on mobile, a card on top of the map at the bottom right on desktop (hidden until something is selected). -#}
     <section class="selected" id="selected" aria-live="polite">
       <p class="muted selected__empty">{{ t.home.selectHint }}</p>
     </section>
-    {#- Tegnforklaring: under kartet på mobil, liten linje nederst til venstre i kartet på PC. -#}
+    {#- Legend: below the map on mobile, a small line at the bottom left of the map on desktop. -#}
     <div class="home__legend">
       {{ m.legend() }}
       {% if forecast %}

@@ -9,12 +9,12 @@ const sites = [
   { id: "rodmoldheia", name: "Rødmoldheia" },
 ];
 
-test("startbilde med retning", () => {
+test("launch image with direction", () => {
   assert.deepEqual(parsePhotoName("Storlitinden_Takeoff_SE_1_DSC04968.jpg", sites),
     { siteId: "storlitinden", siteName: "Storlitinden", field: "takeoff", type: "Takeoff", direction: "SE", category: null, nr: 1, original: "DSC04968" });
 });
 
-test("landing og luftbilde uten retning, og originalnavn med understrek", () => {
+test("landing and aerial image without direction, and original name with underscore", () => {
   assert.equal(parsePhotoName("Storlitinden_Landing_1_DSC05012.jpg", sites).field, "landing");
   const air = parsePhotoName("Storlitinden_Aerial_2_DJI_0042.JPG", sites);
   assert.equal(air.field, "overview");
@@ -23,7 +23,7 @@ test("landing og luftbilde uten retning, og originalnavn med understrek", () => 
   assert.equal(air.original, "DJI_0042");
 });
 
-test("stedsnavn uten æ/ø/å og mellomrom finner riktig sted", () => {
+test("site name without æ/ø/å and spaces finds the right site", () => {
   assert.equal(parsePhotoName("MelaAksla_Aerial_1_X.jpg", sites).siteId, "mela-aksla");
   assert.equal(parsePhotoName("Saetertinden_Aerial_1_X.jpg", sites).siteId, "saetertinden");
   assert.equal(parsePhotoName("Setertinden_Aerial_1_X.jpg", sites).siteId, "saetertinden");
@@ -35,7 +35,7 @@ test("stedsnavn uten æ/ø/å og mellomrom finner riktig sted", () => {
   assert.equal(parsePhotoName("Rodmoldheia_Landing_1_X.jpg", sites).siteId, "rodmoldheia");
 });
 
-test("feil gir en tydelig melding", () => {
+test("errors give a clear message", () => {
   assert.throws(() => parsePhotoName("Storlitinden_Takeoff_1_DSC1.jpg", sites), /Takeoff trenger én retning/);
   assert.throws(() => parsePhotoName("Storlitinden_Takeoff_SØ_1_DSC1.jpg", sites), /SE i stedet for SØ/);
   assert.throws(() => parsePhotoName("Storlitinden_Landing_SE_1_DSC1.jpg", sites), /bare på Takeoff/);
@@ -45,13 +45,13 @@ test("feil gir en tydelig melding", () => {
   assert.throws(() => parsePhotoName("Storlitinden_Launch_1_DSC1.jpg", sites), /skal hete|ukjent type/);
 });
 
-test("kjenner igjen navn etter konvensjonen, men ikke vanlige kamerafiler eller sidens egne filer", () => {
+test("recognises names following the convention, but not ordinary camera files or the site's own files", () => {
   assert.equal(looksLikePhotoName("Storlitinden_Takeoff_SE_1_DSC04968.jpg"), true);
   assert.equal(looksLikePhotoName("DSC04968.jpg"), false);
   assert.equal(looksLikePhotoName("sollifjellet-takeoff.jpg"), false);
 });
 
-test("valgfritt SPG-merke på landing, ikke på andre typer, og PG skrives ikke", () => {
+test("optional SPG tag on landing, not on other types, and PG is not written", () => {
   const spg = parsePhotoName("Saetertinden_Landing_SPG_1_DSC00978.jpg", sites);
   assert.equal(spg.category, "SPG");
   assert.equal(spg.nr, 1);

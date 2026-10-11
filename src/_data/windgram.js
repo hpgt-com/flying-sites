@@ -1,6 +1,6 @@
-// Høydevind (windgram) fra Open-Meteo (CC BY 4.0, gratis for ikke-kommersiell bruk) for startene i SITES.
-// Utkast: bare Sollifjellet foreløpig. Hentes ved hver bygging, som vindvarselet fra MET (forecast.js), og
-// mellomlagres lokalt i .cache/ i 30 minutter. Feiler hentingen, mangler bare høydevinden på stedssiden.
+// Winds aloft (windgram) from Open-Meteo (CC BY 4.0, free for non-commercial use) for the launches in SITES.
+// Draft: only Sollifjellet for now. Fetched on every build, like the MET wind forecast (forecast.js), and
+// cached locally in .cache/ for 30 minutes. If fetching fails, only the winds aloft are missing on the site page.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -14,8 +14,8 @@ const CACHE_FILE = path.resolve(".cache/windgram.json");
 const CACHE_MINUTES = 30;
 const HOURS = 48;
 
-// Open-Meteo svarer av og til 429 (for mange forespørsler fra samme adresse) eller bryter forbindelsen.
-// Da prøves det én gang til etter fem sekunder.
+// Open-Meteo sometimes answers 429 (too many requests from the same address) or drops the connection.
+// Then it retries once after five seconds.
 async function fetchJson(url) {
   for (let attempt = 1; ; attempt++) {
     try {
@@ -39,7 +39,7 @@ async function fetchSite(launch, launchMasl) {
   url.searchParams.set("forecast_days", "3");
   const grid = buildWindgram(await fetchJson(url), launchMasl);
   if (!grid) throw new Error("tomt svar");
-  // Fra timen nå og HOURS timer fram.
+  // From the current hour and HOURS hours ahead.
   const start = grid.times.findIndex((t) => t > Date.now() - 3600000);
   const keep = (list) => list.slice(Math.max(0, start), Math.max(0, start) + HOURS);
   return { ...grid, times: keep(grid.times), cells: keep(grid.cells), blh: keep(grid.blh), cloudBase: keep(grid.cloudBase), cape: keep(grid.cape) };
@@ -51,7 +51,7 @@ export default async function () {
     const cached = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
     if (Date.now() - Date.parse(cached.fetched) < CACHE_MINUTES * 60000) return cached;
   } catch {
-    // ingen gyldig mellomlagring
+    // no valid cache
   }
   const sites = {};
   const failed = [];

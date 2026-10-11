@@ -4,16 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Bygg to ganger i timen, så vindvurderingen på forsiden har ferskt varsel fra MET.
-  # GitHub garanterer ikke planlagte kjøringer: de kan bli forsinket i timevis eller hoppet over når det er
-  # mye last, særlig rundt hel time. Derfor skjeve minutter, og varselet godtas til det er 6 timer gammelt
-  # (maxForecastAgeHours i src/_data/windRules.json).
-  # GitHub slår av planlagte kjøringer etter 60 dager uten aktivitet i repoet.
+  # Build twice an hour, so the front-page wind assessment has a fresh MET forecast.
+  # GitHub does not guarantee scheduled runs: they can be delayed for hours or skipped under heavy load,
+  # especially around the top of the hour. Hence the odd minutes, and the forecast is accepted until it is 6 hours old
+  # (maxForecastAgeHours in src/_data/windRules.json).
+  # GitHub disables scheduled runs after 60 days without repository activity.
   schedule:
     - cron: "17,47 * * * *"
 
-# Byggejobben (build) får bare lese. Rettighetene til å publisere (pages, id-token) har bare deploy-jobben,
-# som ikke kjører kode fra repoet. Actions er låst til commit-SHA (Dependabot oppdaterer dem).
+# The build job is read-only. Only the deploy job has publishing permissions (pages, id-token),
+# and it runs no code from the repo. Actions are pinned to commit SHAs (Dependabot updates them).
 permissions:
   contents: read
 
@@ -21,21 +21,21 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
-# i stedet for å blokkere i opptil 6 timer.
+# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
+# instead of blocking for up to 6 hours.
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
-      pages: read # configure-pages leser innstillingene for Pages
+      pages: read # configure-pages reads the Pages settings
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Full historikk, så «Sist endret» per sted kan hentes fra Git.
+          # Full history, so «Sist endret» per site can be read from Git.
           fetch-depth: 0
-          # Tokenet trengs ikke etter checkout, og skal ikke ligge i .git når siden bygges og lastes opp.
+          # The token is not needed after checkout and must not stay in .git while the site is built and uploaded.
           persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -45,11 +45,11 @@ jobs:
 
       - run: npm ci
 
-      # Gir stien siden publiseres under: "/flying-sites" på hpgt-com.github.io, tom med eget domene.
+      # Provides the path the site is published under: "/flying-sites" on hpgt-com.github.io, empty with a custom domain.
       - id: pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-      # Feiler hvis en stedsfil er ugyldig.
+      # Fails if a site file is invalid.
       - run: npm run build
         env:
           PATH_PREFIX: ${{ steps.pages.outputs.base_path }}/

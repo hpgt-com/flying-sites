@@ -1,4 +1,4 @@
-/* HPGT flysteder. Mobil først. */
+/* HPGT flying sites. Mobile first. */
 
 :root {
   --bg: #F3F5F4;
@@ -36,8 +36,8 @@
   --font-body: "Barlow", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-/* Mørk modus. data-theme settes av skriptet i <head> (base.njk): valget i fargeknappen, eller
-   innstillingen på enheten når valget er «Auto». Bakgrunnskartet gjøres mørkt med et filter. */
+/* Dark mode. data-theme is set by the script in <head> (base.njk): the choice in the colour button, or
+   the device setting when the choice is «Auto». The base map is darkened with a filter. */
 :root[data-theme="dark"] {
   --bg: #11191D;
   --text: #E4ECEA;
@@ -68,18 +68,18 @@
   --map-ink: #F3F5F4;
   color-scheme: dark;
 }
-/* Popuper, lagvelger og vindrosene i kartet er hvite, så de bruker de lyse fargene. */
+/* Popups, layer control and the wind roses on the map are white, so they use the light colours. */
 [data-theme="dark"] .leaflet-popup, [data-theme="dark"] .leaflet-tooltip, [data-theme="dark"] .leaflet-control, [data-theme="dark"] .rose-marker {
   --bg: #F3F5F4; --text: #1C2B33; --muted: #45545C; --line: #C3D0CF; --fjord: #2E5E6E; --accent: #C24A12;
   --dir-primary: #3D7A8A; --dir-primary-text: #FFFFFF; --possible: #8FBCC7; --parking: #2F6FB5; --rose-border: #9FB1B4; --card: #FFFFFF; --link: #2E5E6E; --rose-none: #FFFFFF;
   color: var(--text);
 }
 [data-theme="dark"] .map { background: #26343B; }
-/* Mørkt kart: kartflisene inverteres og fargetonen snus tilbake, så vann blir mørkt og skog forblir grønn.
-   Bare bakgrunnskartet, ikke luftrom, termikk eller symbolene. */
+/* Dark map: tiles are inverted and the hue rotated back, so water turns dark and forest stays green.
+   Only the base map, not airspace, thermals or symbols. */
 [data-theme="dark"] .base-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.7); }
 [data-theme="dark"] .photo-tiles { filter: brightness(0.85); }
-/* Terrengskygge oppå bakgrunnskartet: mørkner skyggesidene uten å bleke kartet. Invertert i mørkt tema, som kartet. */
+/* Hillshade on top of the base map: darkens shaded slopes without bleaching the map. Inverted in the dark theme, like the map. */
 .hillshade-tiles { mix-blend-mode: multiply; }
 [data-theme="dark"] .hillshade-tiles { filter: invert(1); mix-blend-mode: screen; }
 [data-theme="dark"] .leaflet-container { background: #1E2A30; }
@@ -118,7 +118,7 @@ p { margin: 0; }
 .landing-note { margin-top: 10px; font-size: 14px; color: var(--muted); }
 .danger { color: var(--hazard-text); }
 
-/* ---------- Felles komponenter ---------- */
+/* ---------- Shared components ---------- */
 
 .topbar {
   display: flex;
@@ -137,7 +137,7 @@ p { margin: 0; }
   border-radius: 999px; padding: 0 12px; min-height: 40px; cursor: pointer;
 }
 .theme-toggle button[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
-/* Språkvalget i menyen ser ut som fargemodus-valget, men er lenker til samme side på det andre språket. */
+/* The language choice in the menu looks like the colour mode choice, but is links to the same page in the other language. */
 .language-toggle { margin-bottom: 4px; }
 .language-toggle a {
   flex: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: var(--muted);
@@ -145,7 +145,7 @@ p { margin: 0; }
 }
 .language-toggle a[aria-current="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
 
-/* Meny oppe til høyre */
+/* Menu at top right */
 .site-menu { position: relative; }
 .site-menu__button {
   display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
@@ -290,7 +290,7 @@ p { margin: 0; }
 .external-icon { flex-shrink: 0; vertical-align: -2px; margin-left: 4px; }
 .link-row .external-icon, .big-btn .external-icon { margin-left: 0; }
 
-/* Leses opp av skjermlesere, men vises ikke. */
+/* Read by screen readers, but not shown. */
 .visually-hidden {
   position: absolute !important;
   width: 1px;
@@ -331,7 +331,7 @@ p { margin: 0; }
 .leaflet-control-layers-toggle { width: 44px !important; height: 44px !important; }
 .leaflet-touch .leaflet-bar a { width: 40px; height: 40px; line-height: 40px; }
 
-/* Vindroser i kartet */
+/* Wind roses on the map */
 .rose-marker { background: none; border: none; }
 .rose-marker__ring {
   width: 46px;
@@ -346,30 +346,30 @@ p { margin: 0; }
   cursor: pointer;
   transition: opacity 0.15s, transform 0.15s;
 }
-/* I kartet skilles sektorene med hvitt i stedet for grått, så fargene blir tydelige i liten størrelse. */
+/* On the map, sectors are separated by white instead of grey, so colours stay clear at small size. */
 .rose-marker .rose .sector { stroke: var(--white); stroke-width: 4; }
-/* Navn under rosen når man har zoomet nært inn (klassen settes av home.js). */
+/* Name below the rose when zoomed in close (class set by home.js). */
 .rose-marker__name { display: none; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; white-space: nowrap; pointer-events: none;
   font: 700 14px/1 var(--font-heading); color: #1C2B33; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .map--names .rose-marker__name { display: block; }
 .rose-marker__wind { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; text-align: center; }
 [data-theme="dark"] .rose-marker__name { color: #F3F5F4; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
-/* Nedtoning på innholdet, ikke på selve markøren: Leaflet setter opacity: 1 direkte på markøren. */
+/* Dimming on the content, not the marker itself: Leaflet sets opacity: 1 directly on the marker. */
 .rose-marker--dimmed > * { opacity: 0.25; }
-/* Nivå ikke satt mens nivåfilteret er på: kan passe, så bare litt nedtonet. */
+/* Level not set while the level filter is on: may suit, so only slightly dimmed. */
 .rose-marker--unknown > * { opacity: 0.6; }
-/* Klynge av starter når man zoomer ut: hvit sirkel med antall. */
+/* Cluster of launches when zoomed out: white circle with a count. */
 .site-cluster__ring { border-radius: 10px !important; width: 40px; height: 40px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
 .leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
 .leaflet-cluster-spider-leg { transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in; }
-/* Valgt sted: større, og en mørk ring utenpå (hvit luft mellom), så vurderingsfargen på ringen beholdes.
-   Ikke oransje/rød, som er forbeholdt fare og vind. */
+/* Selected site: larger, with a dark outer ring (white gap between), so the rating colour on the ring is kept.
+   Not orange/red, which are reserved for hazard and wind. */
 .rose-marker--selected .rose-marker__ring {
   transform: scale(1.25);
   box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--text), 0 1px 6px rgba(28, 43, 51, 0.45);
 }
 
-/* Kartikoner på stedssiden */
+/* Map icons on the site page */
 .map-icon {
   display: flex !important;
   align-items: center;
@@ -384,20 +384,20 @@ p { margin: 0; }
 }
 .map-icon--parking { background: var(--parking); }
 
-/* Start og landing, både i kartet og i tegnforklaringen. Faste farger, så de synes på det inverterte
-   kartet i mørk modus. Start: vindrose med oransje ring, som på forsiden. Landing: målskive, grå når
-   den er alternativ. Formene skiller seg, så ingenting er bare farge. */
+/* Launch and landing, both on the map and in the legend. Fixed colours, so they show on the inverted
+   map in dark mode. Launch: wind rose with orange ring, as on the home page. Landing: target, grey when
+   alternative. The shapes differ, so nothing relies on colour alone. */
 .map-symbol { display: inline-flex !important; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; box-sizing: border-box; }
-/* Start: prikk i samme petrolblå som hovedretningen i vindrosen, med hvit kant. Rund, så den skiller
-   seg fra parkering (blå firkant med P). */
-/* Ikke position her: Leaflet plasserer markøren med position: absolute, og relative flyttet prikkene
-   (de ble stablet etter hverandre). Antallet plasseres i forhold til markøren. */
+/* Launch: dot in the same petrol blue as the primary direction in the wind rose, with a white border. Round, so it
+   differs from parking (blue square with P). */
+/* No position here: Leaflet places the marker with position: absolute, and relative moved the dots
+   (they stacked one after another). The count is positioned relative to the marker. */
 .map-symbol--launch-dot { background: var(--dir-primary); border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px #1C2B33, 0 1px 4px rgba(28, 43, 51, 0.5); }
-/* Antall starter når flere ligger så tett at de er slått sammen til én rose. */
+/* Launch count when several are so close they are merged into one rose. */
 .map-symbol__count {
   position: absolute; top: -8px; right: -10px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center; border-radius: 999px;
-  /* Hvit med blå kant som startene, så den ikke forveksles med de mørke nummerpunktene fra tegningen. */
+  /* White with a blue border like the launches, so it is not confused with the dark numbered points from the drawing. */
   background: #FFFFFF; color: #1C2B33; border: 2px solid var(--dir-primary); font: 700 12px/1 var(--font-body);
 }
 .map-symbol--landing {
@@ -407,8 +407,8 @@ p { margin: 0; }
   box-shadow: 0 1px 3px rgba(28, 43, 51, 0.45);
 }
 .map-symbol--alt { --target: #7F9396; }
-/* Punkter som ligger oppå hverandre (start, landing, parkering, nummer), slått sammen til én boks med
-   symbolene i liten størrelse. Midtstilt på punktet. Trykk zoomer inn til de skilles (site.js). */
+/* Overlapping points (launch, landing, parking, number) merged into one box with the
+   symbols at small size. Centred on the point. Tapping zooms in until they separate (site.js). */
 .map-combo-anchor { background: none; border: 0; }
 .map-combo {
   position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px; padding: 3px 5px;
@@ -444,7 +444,7 @@ p { margin: 0; }
 .symbol--parking { border-radius: 3px; background: var(--parking); color: var(--on-color); font-size: 11px; font-weight: 700; }
 .symbol--route { width: 22px; height: 0; border-top: 3px dotted var(--text); }
 
-/* ---------- Forsiden ---------- */
+/* ---------- Home page ---------- */
 
 .home {
   display: flex;
@@ -458,8 +458,8 @@ p { margin: 0; }
 .home .topbar { order: 1; }
 .home__intro { order: 2; display: flex; flex-direction: column; gap: 6px; }
 .home__intro h1 { font-size: 32px; }
-/* Mobil: faner, så innholdet i valgt fane, så kartet (med valgt sted og tegnforklaring under), så listen.
-   Flysteder-fanen er display: contents, så filtrene kommer før kartet og listen etter. */
+/* Mobile: tabs, then the selected tab's content, then the map (with selected site and legend below), then the list.
+   The Flysteder tab is display: contents, so the filters come before the map and the list after. */
 .home-tabs { order: 3; }
 .home-pane { order: 4; display: flex; flex-direction: column; gap: 16px; }
 .home-pane--sites { display: contents; }
@@ -469,7 +469,7 @@ p { margin: 0; }
 .home__legend .legend { flex-direction: row; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; }
 .results { order: 6; }
 .results__note { margin: 4px 0 0; font-size: 13px; }
-/* Faner: Flysteder, Vær, Info. */
+/* Tabs: Flysteder, Vær, Info. */
 .home-tabs { display: flex; border-bottom: 1px solid var(--line); }
 .home-tabs button {
   flex: 1; min-height: 44px; padding: 0 8px; font: 600 15px var(--font-body); color: var(--muted); cursor: pointer;
@@ -481,7 +481,7 @@ p { margin: 0; }
 .map--home { height: min(70vh, 560px); }
 
 .filters { display: flex; flex-direction: column; gap: 16px; }
-/* Søkefeltet øverst i filtrene. 16px skrift, så iPhone ikke zoomer inn når feltet får fokus. */
+/* Search field at the top of the filters. 16px font, so iPhone does not zoom in when the field gets focus. */
 .search-input {
   width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 14px 0 40px;
   font: inherit; font-size: 16px; color: var(--text); background: var(--card);
@@ -569,7 +569,7 @@ p { margin: 0; }
 .disclaimer { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
 @media (min-width: 1100px) {
-  /* PC: venstrekolonne og kart. Ingen høyrekolonne: valgt sted, status og tegnforklaring ligger oppå kartet. */
+  /* Desktop: left column and map. No right column: selected site, status and legend sit on top of the map. */
   body.page-home { height: 100vh; overflow: hidden; }
   .home {
     display: grid;
@@ -593,10 +593,10 @@ p { margin: 0; }
   .home__map { height: 100vh; order: 0; position: relative; display: block; }
   .map--home { height: 100%; border: none; border-radius: 0; }
   .home__intro h1 { font-size: 42px; }
-  /* Valgt sted: kort nederst til høyre, skjult til noe er valgt. */
+  /* Selected site: card at bottom right, hidden until something is selected. */
   .home__map .selected { position: absolute; right: 14px; bottom: 14px; z-index: 1000; width: 360px; max-height: calc(100% - 200px); overflow-y: auto; box-shadow: 0 4px 22px rgba(28, 43, 51, 0.3); }
   .home__map .selected:not(.selected--active) { display: none; }
-  /* Tegnforklaring: liten linje nederst til venstre, halvgjennomsiktig. */
+  /* Legend: small line at bottom left, semi-transparent. */
   .home__map .home__legend {
     position: absolute; left: 12px; bottom: 26px; z-index: 1000; max-width: calc(100% - 410px);
     display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line);
@@ -607,7 +607,7 @@ p { margin: 0; }
   .home__map .wind-legend__arrow { flex-basis: auto; }
 }
 
-/* ---------- Stedssiden ---------- */
+/* ---------- Site page ---------- */
 
 .site-page {
   display: flex;
@@ -621,13 +621,13 @@ p { margin: 0; }
 .site-page__main, .site-page__aside { display: flex; flex-direction: column; gap: 32px; }
 
 .block { display: flex; flex-direction: column; gap: 12px; margin: 0; }
-/* Rekkefølgen i HTML er rekkefølgen på mobil (tittel, Før du starter, innhold, høyre kolonne), så skjermlesere
-   og tastatur følger det man ser. Ingen `order` her. */
+/* HTML order is the mobile order (title, Før du starter, content, right column), so screen readers
+   and keyboard follow what is seen. No `order` here. */
 .block--title { gap: 10px; }
 
 .block--title h1 { font-size: 50px; line-height: 0.95; }
 .title-elev { font-family: var(--font-body); font-size: 18px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-/* Adkomst som tall øverst i Adkomst (site.njk). */
+/* Access as numbers at the top of Adkomst (site.njk). */
 .access-stats { display: flex; flex-wrap: wrap; gap: 8px; }
 .access-stats > div { flex: 1 1 90px; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
 .access-stats strong { font: 700 28px/1 var(--font-heading); }
@@ -636,10 +636,10 @@ p { margin: 0; }
 .lead { font-size: 18px; line-height: 1.45; color: var(--muted); }
 .lead p + p { margin-top: 8px; }
 
-/* Oversiktstegningene er små, så de vises i egen størrelse og strekkes ikke. */
+/* The overview drawings are small, so they are shown at their own size and not stretched. */
 .meteogram figcaption { font-size: 14px; line-height: 1.4; color: var(--muted); }
 
-/* Før du starter: viktig informasjon til piloten, i rolig ravfarge og ikke rødt (rødt er for «for mye vind»). */
+/* Før du starter: important information for the pilot, in calm amber rather than red (red is for «for mye vind»). */
 .block--notice {
   background: var(--notice-bg);
   color: var(--notice-text);
@@ -667,7 +667,7 @@ p { margin: 0; }
 .facts > div:last-child { border-bottom: 1px solid var(--line); }
 .facts dt { font-size: 14px; color: var(--muted); }
 .facts dd { margin: 0; }
-/* Nivå, kategori og sesong hver for seg, på én linje. */
+/* Level, category and season separately, on one line. */
 .facts > .facts__trio { flex-direction: row; flex-wrap: wrap; gap: 10px 24px; }
 .facts__trio > div { display: flex; flex-direction: column; gap: 4px; }
 .elevations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -698,8 +698,8 @@ p { margin: 0; }
 }
 .launch-list li:last-child { border-bottom: 1px solid var(--line); }
 .launch-list__badges { display: flex; flex-wrap: wrap; gap: 4px; }
-/* Med kategori: på mobil står PG/SPG under retningene, så teksten får plass. Fra 640 px står retninger,
-   kategori og tekst i hver sin kolonne. */
+/* With category: on mobile PG/SPG sits below the directions, so the text fits. From 640 px directions,
+   category and text each get their own column. */
 .launch-list--categories li { grid-template-areas: "dir text" "cat text"; grid-template-rows: auto 1fr; row-gap: 6px; align-items: start; }
 .launch-list--categories .launch-list__badges { grid-area: dir; }
 .launch-list--categories .launch-list__categories { grid-area: cat; }
@@ -743,7 +743,7 @@ p { margin: 0; }
 .profile__summary { font-size: 14px; line-height: 1.45; color: var(--muted); }
 
 
-/* Oversiktsbildet stort øverst, start og landing under. */
+/* Overview image large at the top, launch and landing below. */
 .image-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .image-grid figure { margin: 0; position: relative; }
 .image-grid figure:first-child, .image-grid figure:last-child:nth-child(2) { grid-column: 1 / -1; }
@@ -759,7 +759,7 @@ p { margin: 0; }
 .images-missing { font-size: 14px; color: var(--muted); }
 .images-credit { font-size: 13px; color: var(--muted); }
 
-/* Høyre kolonne: hver del i et hvitt kort (Fakta, Vær, Bilder, Logg og mer), som i prototypen. */
+/* Right column: each part in a white card (Fakta, Vær, Bilder, Logg og mer), as in the prototype. */
 .site-page__aside > .block {
   background: var(--card);
   border: 1px solid var(--line);
@@ -769,7 +769,7 @@ p { margin: 0; }
 }
 .site-page__aside > .block > h2 { font-size: 24px; }
 .site-page__aside .facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
-/* Vær: meteogrammet i egen ramme og lenkene kompakt på én linje, med beskrivelsen til høyre. */
+/* Vær: the meteogram in its own frame and the links compact on one line, with the description to the right. */
 .block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
 .block--weather .meteogram img { border: 0; border-radius: 6px; }
 .block--weather .link-list { gap: 6px; }
@@ -779,7 +779,7 @@ p { margin: 0; }
 .block--weather .link-row > span { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 10px; flex: 1; min-width: 0; }
 .block--weather .link-row__subtitle { font-size: 13px; text-align: right; }
 
-/* Vind nå (site-wind.js), med samme farger som vurderingen på forsiden. */
+/* Vind nå (site-wind.js), with the same colours as the assessment on the home page. */
 .site-wind {
   display: flex; flex-direction: column; gap: 3px; padding: 10px 14px;
   background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--wind-no); border-radius: 10px;
@@ -830,8 +830,8 @@ p { margin: 0; }
 
 @media (min-width: 1024px) {
   .site-page { max-width: 1200px; padding: 16px 40px 64px; gap: 28px; }
-  /* To kolonner. Før du starter står øverst til høyre ved siden av tittelen, og innholdet til venstre
-     starter rett under tittelen selv om boksen er høyere (den spenner over to rader). */
+  /* Two columns. Før du starter sits at top right beside the title, and the content on the left
+     starts right below the title even if the box is taller (it spans two rows). */
   .site-page__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 400px;
@@ -849,7 +849,7 @@ p { margin: 0; }
   .map--site { height: 440px; }
 }
 
-/* ---------- Statussiden (/status/) ---------- */
+/* ---------- Status page (/status/) ---------- */
 
 .status-page {
   display: flex;
@@ -882,7 +882,7 @@ p { margin: 0; }
 .status-table td:nth-child(2), .status-table td:nth-child(3) { white-space: nowrap; }
 .status-table .tag { font-size: 12px; padding: 1px 6px; }
 
-/* Mobil: hver rad blir et kort, så kolonnen «Mangler» får hele bredden. */
+/* Mobile: each row becomes a card, so the «Mangler» column gets the full width. */
 @media (max-width: 639px) {
   .status-table-wrap { overflow: visible; border: none; background: none; }
   .status-table thead { display: none; }
@@ -894,7 +894,7 @@ p { margin: 0; }
   .status-table td[data-label="Mangler"]::before { display: block; margin-top: 4px; }
 }
 
-/* ---------- Bildevisning (lightbox.js) ---------- */
+/* ---------- Image viewer (lightbox.js) ---------- */
 
 .lightbox-link { display: block; cursor: zoom-in; }
 .lightbox {
@@ -919,10 +919,10 @@ body:has(.lightbox[open]) { overflow: hidden; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* Bildet fyller hele skjermen (også mobil på tvers og nettbrett). Knapper og bildetekst ligger oppå. */
+  /* The image fills the whole screen (also mobile in landscape and tablets). Buttons and caption sit on top. */
   padding: 0;
   box-sizing: border-box;
-  /* Knip, flytting og sveip håndteres i lightbox.js. */
+  /* Pinch, pan and swipe are handled in lightbox.js. */
   touch-action: none;
   overflow: hidden;
 }
@@ -935,7 +935,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
   max-width: calc(100% - 24px); padding: 5px 14px; border-radius: 12px; box-sizing: border-box;
   background: rgba(10, 16, 20, 0.72); font-size: 15px; text-align: center; pointer-events: none;
 }
-/* Fotograf og lisens under bildeteksten. Lenkene skal kunne trykkes, resten av teksten slipper trykk gjennom. */
+/* Photographer and licence below the caption. Links must be tappable; the rest of the text lets taps through. */
 .lightbox__credit { display: block; font-size: 12.5px; color: #C9D4D7; }
 .lightbox__credit:empty { display: none; }
 .lightbox__credit a { color: #FFFFFF; pointer-events: auto; }
@@ -946,7 +946,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
   height: 48px;
   border: none;
   border-radius: 50%;
-  /* Mørk og halvgjennomsiktig, så knappen synes også oppå lyse bilder (snø, himmel). */
+  /* Dark and semi-transparent, so the button shows on light images too (snow, sky). */
   background: rgba(10, 16, 20, 0.6);
   color: var(--on-color);
   font-size: 30px;
@@ -962,10 +962,10 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox__next { right: 8px; }
 .lightbox__button[hidden] { display: none; }
 
-/* Luftrom fra openAIP */
+/* Airspace from openAIP */
 .airspace__source { font-size: 13px; color: var(--muted); }
 
-/* ---------- Tårn (/tarn/) ---------- */
+/* ---------- Towers (/tarn/) ---------- */
 
 .towers-page, .simple-page { display: flex; flex-direction: column; gap: 24px; padding: 8px 16px 48px; max-width: 640px; margin: 0 auto; }
 .towers-page__intro, .simple-page__intro { display: flex; flex-direction: column; gap: 6px; }
@@ -978,7 +978,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .towers__name { font-size: 17px; }
 .towers__phone { font-size: 15px; font-weight: 500; color: var(--muted); }
 
-/* Luftromslag på kartet */
+/* Airspace layers on the map */
 .airspace-popup { font-family: var(--font-body); font-size: 14px; }
 .airspace-popup strong { display: block; margin-bottom: 4px; font-size: 15px; }
 .airspace-popup table { border-collapse: collapse; }
@@ -986,13 +986,13 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .airspace-popup td { padding: 1px 0; }
 .airspace-popup__notam { margin: 6px 0 0; color: var(--hazard-text); font-weight: 600; }
 .leaflet-control-layers-overlays label { min-height: 32px; display: flex; align-items: center; }
-/* Stedstekst som ikke er oversatt ennå (vises på norsk på en side på et annet språk). */
+/* Site text not yet translated (shown in Norwegian on a page in another language). */
 .translation-note { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--notice-bg); color: var(--notice-text); font-size: 14px; }
 .airspace-status { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; max-width: 220px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); }
 .airspace-status--error { background: var(--hazard-bg); color: var(--hazard-text); border-color: var(--hazard-text); }
 .airspace-status button { display: block; margin-top: 6px; min-height: 32px; padding: 4px 10px; border: 1px solid currentColor; border-radius: 6px; background: var(--card); color: var(--text); font: inherit; cursor: pointer; }
 
-/* ---------- Vindvurdering fra varselet (forsiden) ---------- */
+/* ---------- Wind assessment from the forecast (home page) ---------- */
 
 :root {
   --wind-ok: #2E8B57;
@@ -1000,7 +1000,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
   --wind-high: #C62828;
   --wind-no: #7F9396;
 }
-/* Fargeblindvennlige farger (valg i menyen): Okabe–Ito, blå i stedet for grønn. */
+/* Colour-blind-friendly colours (menu option): Okabe–Ito, blue instead of green. */
 :root[data-cvd="on"] {
   --wind-ok: #0072B2;
   --wind-maybe: #E69F00;
@@ -1012,15 +1012,15 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .rose-marker__ring--maybe { border: 3.5px solid var(--wind-maybe); }
 .rose-marker__ring--high { border: 3.5px solid var(--wind-high); }
 .rose-marker__ring--no { border: 3.5px solid var(--wind-no); }
-/* Tynn mørk kant utenpå vindringen, så også gul og grå skiller seg fra kartet (minst 3:1). */
+/* Thin dark border outside the wind ring, so yellow and grey also stand out from the map (at least 3:1). */
 .rose-marker__ring--ok, .rose-marker__ring--maybe, .rose-marker__ring--high, .rose-marker__ring--no {
   box-shadow: 0 0 0 1px rgba(28, 43, 51, 0.85), 0 1px 4px rgba(28, 43, 51, 0.45);
 }
-/* Ikke bare farge: steder som ikke passer eller har for mye vind, vises litt mindre. */
+/* Not colour alone: sites that do not suit or have too much wind are shown slightly smaller. */
 .rose-marker__ring--high, .rose-marker__ring--no { transform: scale(0.85); }
-/* Sektoren vinden kommer fra i markørene: fra midten helt ut til ringen, uten hvit kant (roseSvg, edge). */
+/* The sector the wind comes from in the markers: from the centre out to the ring, without a white border (roseSvg, edge). */
 .rose-marker .rose .sector--wind-edge { stroke: none; }
-/* Fargelinjen i statuskortet: fordelingen av vurderingene. */
+/* Colour bar in the status card: the distribution of ratings. */
 .wind-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 2px 0; background: var(--line); }
 .wind-bar__part { display: block; }
 .wind-summary__wind { font-weight: 600; }
@@ -1029,7 +1029,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .wind-summary__counts .wind-dot { width: 10px; height: 10px; margin-right: 5px; }
 .wind-summary__missing { font-size: 13px; color: var(--muted); }
 .wind-summary__scope { font-size: 13px; color: var(--muted); }
-/* Sektoren vinden kommer fra: løftet ut og fylt med vurderingsfargen (roseSvg i common.js). */
+/* The sector the wind comes from: lifted out and filled with the rating colour (roseSvg in common.js). */
 .rose .sector--wind { stroke: var(--map-ink); stroke-width: 3; stroke-linejoin: round; }
 .rose .sector--wind-ok { fill: var(--wind-ok); }
 .rose .sector--wind-maybe { fill: var(--wind-maybe); }
@@ -1047,19 +1047,19 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .selected__reasons { margin: -4px 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
 .selected__wind { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; font-size: 15px; }
 
-/* ---------- Retningsbuer og punkter i kartet på stedssiden (site.js) ---------- */
+/* ---------- Direction arcs and points on the site page map (site.js) ---------- */
 
 .drawing-swatch { width: 22px; height: 0; border-top: 4px solid; }
 .drawing-swatch--arrow { border-top: 5px solid #F2B705; box-shadow: 0 0 0 1.5px #1C2B33; }
 .drawing-swatch--possible { border-top: 5px solid #F8DC7A; box-shadow: 0 0 0 1.5px #1C2B33; }
-/* Retningsmerket ved buen: midtstilt på punktet (Leaflet plasserer øvre venstre hjørne). */
+/* Direction label at the arc: centred on the point (Leaflet places the top left corner). */
 .arc-label { font: 700 14px/1 var(--font-heading); color: #1C2B33; background: #F2B705; border: 1.5px solid #1C2B33; border-radius: 4px; padding: 2px 5px; pointer-events: none; }
 .arc-label-anchor { background: none; border: 0; }
 .arc-label-anchor .arc-label { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; }
-/* Nummererte punkter i kartet og i listen under. */
+/* Numbered points on the map and in the list below. */
 .drawing-pin { width: 26px; height: 26px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   background: #1C2B33; color: #FFFFFF; border: 2px solid #FFFFFF; font: 700 14px/1 var(--font-body); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5); cursor: pointer; }
-/* Fare: lys firkant med rød kant, som «Før du starter»-boksen, så den ikke forveksles med de oransje startene. */
+/* Hazard: light square with red border, like the «Før du starter» box, so it is not confused with the orange launches. */
 .drawing-pin--hazard { background: #FFF3D1; color: #4A3510; border: 2.5px solid #B7791F; border-radius: 5px; }
 .drawing-pin--legend { width: 20px; height: 20px; font-size: 12px; cursor: default; }
 .drawing-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -1068,17 +1068,17 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .drawing-list button { background: none; border: 0; padding: 0; min-width: 44px; min-height: 30px; display: flex; justify-content: center; cursor: pointer; }
 .drawing-list div { display: flex; flex-direction: column; gap: 2px; line-height: 1.45; }
 .points h3 { margin-top: 4px; }
-/* Hint når man ruller over kartet uten Ctrl (site.js). */
+/* Hint when scrolling over the map without Ctrl (site.js). */
 .map-hint { position: absolute; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center;
   background: rgba(28, 43, 51, 0.55); color: #FFFFFF; font-weight: 600; font-size: 17px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
 .map-hint.is-visible { opacity: 1; }
-/* «Vis hele stedet»/«Vis alle flysteder» og fullskjerm under zoomknappene (addViewControls i common.js). */
+/* «Vis hele stedet»/«Vis alle flysteder» and full screen below the zoom buttons (addViewControls in common.js). */
 .map-reset a { display: flex !important; align-items: center; justify-content: center; color: var(--text); }
-/* Fullskjerm: kartet legges over hele siden (common.js). Ikke nettleserens fullskjerm, så det også virker på iPhone. */
+/* Full screen: the map is laid over the whole page (common.js). Not the browser's full screen, so it also works on iPhone. */
 .map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
 body.has-fullscreen-map { overflow: hidden; }
-/* «Vis bare steder som kan passe» under vindtidspunktet (home.js). Egen linje, så den ikke blandes med tidspunktene. */
-/* Segmentert linje (vindtidspunkt, nivå, kategori): alle valgene på én rad med felles ramme. */
+/* «Vis bare steder som kan passe» below the wind time (home.js). Its own line, so it does not mix with the times. */
+/* Segmented row (wind time, level, category): all options in one row with a shared border. */
 .segmented { display: flex; border: 1px solid var(--rose-border); border-radius: 10px; overflow: hidden; background: var(--card); }
 .segmented button {
   flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 4px; font: 500 15px/1.1 var(--font-body); color: var(--text);
@@ -1086,8 +1086,8 @@ body.has-fullscreen-map { overflow: hidden; }
 }
 .segmented button:first-child { border-left: 0; }
 .segmented button[aria-pressed="true"] { background: var(--fjord); color: var(--on-color); font-weight: 600; }
-/* «Bare steder som kan passe» som bryter (av/på), ikke en stor knapp. aria-pressed styres av home.js.
-   Eget klassenavn: .switch er bryteren i menyen (macros.njk). */
+/* «Bare steder som kan passe» as a switch (on/off), not a large button. aria-pressed is set by home.js.
+   Own class name: .switch is the switch in the menu (macros.njk). */
 .suggest-switch {
   position: relative; display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; min-height: 44px; padding: 0 0 0 48px;
   font: 500 15px/1.3 var(--font-body); color: var(--text); background: none; border: 0; cursor: pointer; text-align: left;
@@ -1098,9 +1098,9 @@ body.has-fullscreen-map { overflow: hidden; }
 .suggest-switch[aria-pressed="true"]::after { transform: translateX(16px); }
 .suggest-switch:disabled { opacity: 0.45; cursor: not-allowed; }
 .suggest-switch:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; border-radius: 4px; }
-/* Oppsummering av vinden og vurderingene under vindvalget (home.js). */
-/* Statuskortet for kartet på forsiden: antall som vises, vindoppsummering og varseltidspunkt (home.js).
-   Over kartet på mobil, halvgjennomsiktig oppå kartet på PC. */
+/* Summary of the wind and ratings below the wind selector (home.js). */
+/* Status card for the home page map: count shown, wind summary and forecast time (home.js).
+   Above the map on mobile, semi-transparent on top of the map on desktop. */
 .map-info {
   display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
   background: var(--card); background: color-mix(in srgb, var(--card) 86%, transparent);
@@ -1114,9 +1114,9 @@ body.has-fullscreen-map { overflow: hidden; }
 .wind-summary p + p { margin-top: 4px; }
 .wind-summary__none { color: var(--hazard-text); font-weight: 600; }
 .wind-summary[hidden] { display: none; }
-/* Regelteksten for vindvurderingen bak «Hvordan vurderes vinden?». */
+/* Rule text for the wind assessment behind «Hvordan vurderes vinden?». */
 .wind-rules summary { font-size: 14px; color: var(--link); cursor: pointer; min-height: 32px; display: flex; align-items: center; }
-/* Nivå og kategori: på mobil bak en knapp med antall valgte (home.js), på PC alltid synlige. Kompasset står alltid synlig. */
+/* Level and category: on mobile behind a button with the selected count (home.js), always visible on desktop. The compass is always visible. */
 .filters-more { display: none; flex-direction: column; gap: 16px; }
 .filters-more.is-open { display: flex; }
 .filters-toggle {
@@ -1127,8 +1127,8 @@ body.has-fullscreen-map { overflow: hidden; }
 .filters-toggle[aria-expanded="true"]::after { content: "▴"; }
 .filters-toggle__count { font-size: 13px; font-weight: 600; color: var(--on-color); background: var(--fjord); border-radius: 999px; padding: 2px 8px; }
 @media (min-width: 1100px) {
-  /* PC brukes med mus: mindre kontroller og tettere avstand, så listen kommer høyere opp. Mobil
-     beholder trykkflater på 44 px. */
+  /* Desktop is used with a mouse: smaller controls and tighter spacing, so the list comes higher up. Mobile
+     keeps 44 px touch targets. */
   .home__left { gap: 16px; }
   .home__intro h1 { font-size: 30px; }
   .filters { gap: 12px; }
@@ -1147,12 +1147,12 @@ body.has-fullscreen-map { overflow: hidden; }
   .results h2 { font-size: 20px; }
   .filters-toggle { display: none; }
   .filters-more { display: flex; }
-  /* Statuskortet oppå kartet, til høyre for zoomknappene. */
+  /* Status card on top of the map, to the right of the zoom buttons. */
   .home__map { position: relative; }
   .home__map .map-info { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
 }
 
-/* Høydevind (windgram.js): timene bortover, høydene oppover. Rullbar sideveis på mobil. */
+/* Wind above the launch (windgram.js): hours across, heights upward. Scrolls sideways on mobile. */
 .windgram { display: grid; gap: 8px; margin-top: 4px; }
 .windgram h3 { margin: 0; font-size: 18px; }
 .windgram p { margin: 0; font-size: 14px; }
@@ -1182,7 +1182,7 @@ body.has-fullscreen-map { overflow: hidden; }
 .windgram__hour.windgram--night { color: var(--line); }
 .windgram__source { font-size: 12px !important; color: var(--muted); }
 
-/* Når kan det passe? (home.js): dagene under hverandre, tidsrom som små merker i vurderingsfargene. */
+/* Day plan («Når kan det passe?», home.js): days stacked, periods as small badges in the rating colours. */
 .day-plan { display: grid; gap: 10px; margin: 0 0 16px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .day-plan h2 { margin: 0; font-size: 18px; }
 .day-plan__note { margin: 0; font-size: 13px; }
@@ -1201,7 +1201,7 @@ body.has-fullscreen-map { overflow: hidden; }
 .day-plan__time--maybe { background: color-mix(in srgb, var(--wind-maybe) 25%, transparent); border: 1px solid var(--wind-maybe); }
 .day-plan__more summary { cursor: pointer; font-size: 14px; color: var(--muted); padding: 4px 0; }
 
-/* «Bruk to fingre for å flytte kartet» på berøringsskjerm (useTwoFingers i common.js). Over kartet, men ikke klikkbar. */
+/* «Bruk to fingre for å flytte kartet» on touch screens (useTwoFingers in common.js). Above the map, but not clickable. */
 .map-touch-hint { position: absolute; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;
   background: rgba(28, 43, 51, 0.55); color: #fff; font-size: 17px; font-weight: 600; text-align: center;
   opacity: 0; pointer-events: none; transition: opacity 0.2s; }

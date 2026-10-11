@@ -1,7 +1,7 @@
-// Høydevind (windgram) på stedssiden: vinden i høydene over starten time for time, fra Open-Meteo.
-// Rutenettet er regnet ut i byggingen (lib/windgram.js) og ligger i #windgram-data. Høyest oppe, timene bortover.
-// Fargene følger vindreglene på forsiden: under minste vind blekt, passe grønt, nær grensen gult, over rødt.
-// Ruter over grenselaget (omtrent der termikken slutter) er tonet ned. Skybasen er en stiplet strek med sky.
+// Wind above the launch (windgram) on the site page: wind at heights above the launch, hour by hour, from Open-Meteo.
+// The grid is computed at build time (lib/windgram.js) and stored in #windgram-data. Highest at the top, hours across.
+// Colours follow the home page wind rules: below minimum wind pale, suitable green, near the limit yellow, above red.
+// Cells above the boundary layer (roughly where thermals end) are dimmed. Cloud base is a dashed line with a cloud.
 (function () {
   "use strict";
 
@@ -20,7 +20,7 @@
     return "storm";
   }
 
-  // Bare timer fra nå og framover (byggingen kan være opptil en halvtime gammel).
+  // Only hours from now on (the build can be up to half an hour old).
   var now = Date.now();
   var first = 0;
   while (first < data.times.length - 1 && data.times[first + 1] <= now) first++;
@@ -35,7 +35,7 @@
     return ms < s.rise || ms > s.set;
   }
 
-  // Bygges med DOM-metoder, ikke innerHTML, så ingenting fra dataene tolkes som HTML.
+  // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML.
   function node(tag, className, text) {
     var n = document.createElement(tag);
     if (className) n.className = className;
@@ -46,7 +46,7 @@
   var thead = table.appendChild(document.createElement("thead"));
   var tbody = table.appendChild(document.createElement("tbody"));
 
-  // Dag over timene, så det er lett å se hvor i dag slutter.
+  // Day above the hours, so it is easy to see where today ends.
   var days = [];
   cols.forEach(function (i) {
     var date = W.osloParts(data.times[i]).date;
@@ -73,13 +73,13 @@
       tr.appendChild(node("td", warn && v != null && warn(v) ? "windgram__warn" : "", v == null ? "–" : Math.round(v)));
     });
   }
-  // Skybase under starten betyr at starten kan ligge i skyen.
+  // Cloud base below the launch means the launch may be in cloud.
   infoRow(FS.t("windgram.cloudBase"), data.cloudBase, function (v) { return data.launch != null && v <= data.launch; });
   infoRow(FS.t("windgram.blh"), data.blh);
 
   for (var r = data.heights.length - 1; r >= 0; r--) {
     var height = data.heights[r];
-    // Høyder uten data i noen av timene (over øverste trykkflate eller under terrenget) vises ikke.
+    // Heights without data in any hour (above the top pressure level or below the terrain) are not shown.
     if (!cols.some(function (i) { return data.cells[i][r]; })) continue;
     var isLaunch = height === data.launch;
     var tr = tbody.appendChild(node("tr", isLaunch ? "windgram__launch" : ""));
@@ -90,7 +90,7 @@
       var dir = Number(cell[0]), speed = Math.round(cell[1]);
       var cls = "windgram__cell windgram--" + speedClass(cell[1]);
       if (data.blh[i] != null && height > data.blh[i]) cls += " windgram--above";
-      // Skybasen: stiplet strek og sky i den laveste ruten i skyen, svak grå tone over.
+      // Cloud base: dashed line and cloud in the lowest cell in cloud, faint grey tint above.
       var cb = data.cloudBase[i];
       var cloudBaseRow = cb != null && height >= cb && !(r > 0 && data.heights[r - 1] >= cb && data.cells[i][r - 1]);
       if (cb != null && height >= cb) cls += cloudBaseRow ? " windgram--cloud windgram--cloudbase" : " windgram--cloud";

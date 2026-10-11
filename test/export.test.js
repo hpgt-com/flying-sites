@@ -1,4 +1,4 @@
-// Tester for de åpne datafilene (lib/export.js). Kjøres med `npm test`.
+// Tests for the open data files (lib/export.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { sitesToGeoJSON, geoJSONToKML } from "../lib/export.js";
@@ -27,9 +27,9 @@ const site = {
 const geo = sitesToGeoJSON([site], "https://flysteder.hpgt.com", new Date("2026-10-05T08:00:00Z"));
 const kinds = (k) => geo.features.filter((f) => f.properties.kind === k);
 
-test("GeoJSON har lisens og alle typer, med [lon, lat]", () => {
+test("GeoJSON has a licence and all types, with [lon, lat]", () => {
   assert.equal(geo.license.name, "CC BY 4.0");
-  assert.equal(kinds("launch").length, 2); // hovedstart + start med egen posisjon, ikke den uten posisjon
+  assert.equal(kinds("launch").length, 2); // main launch + launch with its own position, not the one without a position
   assert.deepEqual(kinds("launch")[0].geometry.coordinates, [16.4, 68.8]);
   assert.deepEqual(kinds("launch")[0].properties.directions_primary, ["S", "SW"]);
   assert.equal(kinds("landing").length, 1);
@@ -41,12 +41,12 @@ test("GeoJSON har lisens og alle typer, med [lon, lat]", () => {
   assert.equal(geo.features[0].properties.site_url, "https://flysteder.hpgt.com/flysteder/testfjell/");
 });
 
-test("stedstekster og farer er ikke med", () => {
+test("site texts and hazards are not included", () => {
   const json = JSON.stringify(geo);
   assert.doesNotMatch(json, /Tekst som ikke skal med|Uten posisjon|Skal ikke med|Rotor|Trakteffekt|Farlig|hazard/);
 });
 
-test("KML er gyldig og har én mappe per sted, med tegn escapet", () => {
+test("KML is valid and has one folder per site, with characters escaped", () => {
   const kml = geoJSONToKML(geo);
   assert.match(kml, /^<\?xml/);
   assert.equal((kml.match(/<Folder>/g) || []).length, 1);
@@ -56,7 +56,7 @@ test("KML er gyldig og har én mappe per sted, med tegn escapet", () => {
   assert.match(kml, /CC BY 4.0/);
 });
 
-test("KML-navnene sier sted og type, og like startgrupper står én gang", () => {
+test("KML names give site and type, and identical launch groups appear once", () => {
   const twice = { ...site, data: { ...site.data, launches: [
     { directions: ["E", "S"], categories: ["PG", "SPG"] }, { directions: ["S", "E"], categories: ["PG", "SPG"] }, { directions: ["N"], lat: 68.801, lon: 16.401 },
   ], landings: [{ name: "Myra", lat: 68.79, lon: 16.42, primary: true }, { name: "Jordet", lat: 68.78, lon: 16.43, primary: false }] } };

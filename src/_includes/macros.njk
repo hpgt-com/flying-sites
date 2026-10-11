@@ -1,4 +1,4 @@
-{#- Vindrose med åtte sektorer. Rekkefølge: N, NE, E, SE, S, SW, W, NW. Samme stier i assets/js/common.js. -#}
+{#- Wind rose with eight sectors. Order: N, NE, E, SE, S, SW, W, NW. Same paths in assets/js/common.js. -#}
 {% macro rose(windDirections, size=120, labels=true) -%}
 {%- set ROSE_PATHS = [
   "M58.8 21.7 A62 62 0 0 1 101.2 21.7 L85.5 65.0 A16 16 0 0 0 74.5 65.0Z",
@@ -49,9 +49,9 @@
 </svg>
 {%- endmacro %}
 
-{#- Meny oppe til høyre: språk, fargemodus, fargeblindvennlige farger og lenker. common.js lagrer valgene og
-    oppdaterer siden. Knappen er skjult uten JavaScript. Språkvalget lenker til samme side på det andre
-    språket når siden finnes på flere språk (language er satt), ellers til forsiden på det språket. -#}
+{#- Menu at the top right: language, colour mode, colour-blind-friendly colours and links. common.js stores the choices
+    and updates the page. The button is hidden without JavaScript. The language switch links to the same page in the
+    other language when the page exists in several languages (language is set), otherwise to that language's home page. -#}
 {% macro siteMenu() -%}
 <div class="site-menu">
   <button type="button" class="site-menu__button" aria-expanded="false" aria-controls="site-menu-panel" hidden>
@@ -83,18 +83,18 @@
 </div>
 {%- endmacro %}
 
-{#- Bilde som åpnes i bildevisningen (lightbox.js). Uten JavaScript åpner lenken det store bildet.
-    Med thumb=false lages en skjult lenke uten bilde, som bare finnes i bildevisningen («Se alle N bilder»). -#}
+{#- Image that opens in the lightbox (lightbox.js). Without JavaScript the link opens the large image.
+    With thumb=false a hidden link without an image is made, which only exists in the lightbox («Se alle N bilder»). -#}
 {% macro lightboxLink(image, caption, thumb=true) -%}
 <a href="{{ image.fullUrl }}" class="lightbox-link" data-lightbox data-lightbox-index="{{ image.index }}" data-alt="{{ image.alt }}"{% if not thumb %} hidden tabindex="-1"{% endif %} data-caption="{{ caption }}" data-srcset-webp="{{ image.srcsetWebp }}" data-srcset-jpeg="{{ image.srcsetJpeg }}" data-width="{{ image.width }}" data-height="{{ image.height }}"{% if image.credit %} data-credit="{{ image.credit.creator }}" data-credit-url="{{ image.credit.url or '' }}" data-license="{{ image.credit.license }}" data-license-url="{{ image.credit.licenseUrl }}"{% endif %}>{% if thumb %}{{ image.html | safe }}<span class="visually-hidden"> {{ t.common.showLarger }}</span>{% endif %}</a>
 {%- endmacro %}
 
-{#- Merking av lenker som åpnes i ny fane: ↗-symbol, og tekst som bare skjermlesere leser opp. -#}
+{#- Marker for links that open in a new tab: a ↗ symbol, and text read only by screen readers. -#}
 {% macro external() -%}
 <svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> {{ t.common.opensNewTab }}</span>
 {%- endmacro %}
 
-{#- Eksterne oppslag (vær, luftrom osv.) åpnes i ny fane, så stedssiden blir stående. Interne lenker (external=false) gjør ikke det. -#}
+{#- External lookups (weather, airspace etc.) open in a new tab, so the site page stays open. Internal links (external=false) do not. -#}
 {% macro linkRow(href, title, subtitle, isExternal=true) -%}
 <a class="link-row" href="{{ href }}"{% if isExternal %} target="_blank" rel="noopener"{% endif %}><span><span class="link-row__title">{{ title }}</span><span class="link-row__subtitle">{{ subtitle }}</span></span>{% if isExternal %}{{ external() }}{% else %}{{ chevron() }}{% endif %}</a>
 {%- endmacro %}

@@ -1,27 +1,27 @@
 name: Update airspace
 
-# Henter luftrom fra openAIP for alle flystedene én gang i måneden (AIRAC-syklusen er 28 dager).
-# Endringer kommer som en PR, så noen ser over diffen før det publiseres. Uten endringer skjer ingenting.
-# Krever repository secret OPENAIP_API_KEY, og at «Allow GitHub Actions to create and approve pull
-# requests» er slått på under Settings → Actions → General.
+# Fetches airspace from openAIP for all sites once a month (the AIRAC cycle is 28 days).
+# Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing happens.
+# Requires the repository secret OPENAIP_API_KEY, and «Allow GitHub Actions to create and approve pull
+# requests» enabled under Settings → Actions → General.
 
 on:
   schedule:
-    - cron: "0 6 1 * *" # den 1. hver måned kl. 06:00 UTC
+    - cron: "0 6 1 * *" # the 1st of every month at 06:00 UTC
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
-# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
-# i stedet for å blokkere i opptil 6 timer.
+# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
+# instead of blocking for up to 6 hours.
 jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # Tokenet beholdes, fordi jobben pusher en gren for PR-en. Den laster ikke opp artefakter.
+      # The token is kept because the job pushes a branch for the PR. It uploads no artifacts.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -32,7 +32,7 @@ jobs:
       - run: npm ci
 
       - name: Hent luftrom fra openAIP
-        # shell: bash gir pipefail, så en feil i skriptet stopper jobben selv om utskriften går gjennom tee.
+        # shell: bash enables pipefail, so a script error stops the job even though output goes through tee.
         shell: bash
         run: npm run --silent airspace | tee luftrom.txt
         env:

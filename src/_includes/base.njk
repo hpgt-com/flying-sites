@@ -2,24 +2,24 @@
 <html lang="{{ t.meta.htmlLang }}">
 <head>
 <meta charset="utf-8">
-{#- Sikkerhet. GitHub Pages lar oss ikke sette HTTP-headere, så policyen står som meta-tag (da virker ikke
-    frame-ancestors). Skript bare fra siden selv. Bilder fra kartflisene (Kartverket, OpenTopoMap, EOX,
-    thermal.kk7.ch) og Yr-meteogrammet. Stiler tillater inline, fordi Leaflet og kartmarkørene setter
-    style på elementene. Ny ekstern kilde (kartlag, bilde, skript) må legges til her, ellers blokkeres den. -#}
+{#- Security. GitHub Pages does not let us set HTTP headers, so the policy is a meta tag (frame-ancestors
+    does not work then). Scripts only from the site itself. Images from the map tiles (Kartverket, OpenTopoMap,
+    EOX, thermal.kk7.ch) and the Yr meteogram. Styles allow inline, because Leaflet and the map markers set
+    style on elements. A new external source (map layer, image, script) must be added here, or it is blocked. -#}
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{#- Stedssidene: mobilnettlesere gjør ellers «Sollifjellet 567 moh» om til en kartlenke (tror det er en adresse).
-    Siden har egen knapp for veibeskrivelse, så adressegjenkjenning slås av der. Resten av siden er som før. -#}
+{#- Site pages: mobile browsers otherwise turn «Sollifjellet 567 moh» into a map link (taking it for an address).
+    The page has its own directions button, so address detection is turned off there. The rest of the page is unchanged. -#}
 {% if noAddressDetection %}<meta name="format-detection" content="address=no">{% endif %}
 {%- set pageTitle = (name + " – " if name else "") + t.common.siteTitle -%}
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
-{#- Første bilde i rekkefølgen: oversiktsbilde nr 1, ellers start eller landing. -#}
+{#- First image in the order: overview image no. 1, otherwise launch or landing. -#}
 {%- set ownImage = derived.images[0] if (derived and derived.images and derived.images.length) else null -%}
 {%- set shareImage = ownImage.shareUrl if ownImage else ("/assets/img/share.jpg" | asset) -%}
 <title>{{ pageTitle }}</title>
 {% if pageDescription %}<meta name="description" content="{{ pageDescription }}">{% endif %}
-{#- Forhåndsvisning når lenken deles på Facebook, Messenger osv. Adressene må være absolutte. -#}
+{#- Preview when the link is shared on Facebook, Messenger etc. The URLs must be absolute. -#}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{{ t.common.siteTitle }}">
 {%- set ogLocale = "nb_NO" -%}{%- for l in languages %}{% if l.code == lang %}{% set ogLocale = l.locale %}{% endif %}{% endfor -%}
@@ -30,19 +30,19 @@
 <meta property="og:image" content="{{ shareImage | htmlBaseUrl(site.url) }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4">
-{#- Sider som finnes på flere språk (paginert over languages, se src/_data/languages.js) lenker til hverandre,
-    så søkemotorer viser riktig språk. Norsk er standard (x-default). -#}
+{#- Pages in several languages (paginated over languages, see src/_data/languages.js) link to each other,
+    so search engines show the right language. Norwegian is the default (x-default). -#}
 {% if language %}{% for l in languages %}<link rel="alternate" hreflang="{{ l.code }}" href="{{ page.url | localeUrl(l.code) | htmlBaseUrl(site.url) }}">
 {% endfor %}<link rel="alternate" hreflang="x-default" href="{{ page.url | localeUrl('nb') | htmlBaseUrl(site.url) }}">
 {% endif %}
-{#- Fargemodus settes før siden tegnes, så den ikke blinker lys først. Valget (auto, light, dark) lagres
-    i nettleseren av menyen (common.js). Auto følger innstillingen på enheten. Det samme gjelder
-    fargeblindvennlige farger (data-cvd). -#}
+{#- The colour mode is set before the page renders, so it does not flash light first. The choice (auto, light, dark)
+    is stored in the browser by the menu (common.js). Auto follows the device setting. The same applies to
+    colour-blind-friendly colours (data-cvd). -#}
 <script src="{{ "/assets/js/theme-init.js" | asset }}"></script>
-{#- Besøksstatistikk (GoatCounter), uten informasjonskapsler. Adressen må også stå i connect-src og img-src over. -#}
+{#- Visitor statistics (GoatCounter), without cookies. The address must also be in connect-src and img-src above. -#}
 <script data-goatcounter="{{ site.goatcounter }}" async src="{{ "/assets/js/goatcounter.js" | asset }}"></script>
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}
-{#- Fontene ligger på siden selv (Fontsource, se eleventy.config.js), så besøkende ikke sender IP-adressen til Google. -#}
+{#- The fonts are self-hosted (Fontsource, see eleventy.config.js), so visitors do not send their IP address to Google. -#}
 <link rel="preload" href="/assets/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ "/assets/css/fonts.css" | asset }}">
@@ -53,7 +53,7 @@
 </head>
 <body class="{{ bodyClass }}">
 {{ content | safe }}
-{#- Tekstene skriptene trenger, på sidens språk (common.js leser dem). -#}
+{#- The strings the scripts need, in the page's language (read by common.js). -#}
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
 <script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>
 <script src="{{ "/assets/js/common.js" | asset }}"></script>

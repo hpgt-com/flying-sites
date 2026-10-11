@@ -10,7 +10,7 @@ eleventyComputed:
   name: "{{ t.towers.title }}"
   description: "{{ t.towers.description }}"
 ---
-{#- Numrene ligger i src/_data/towers.json, med navn på andre språk i names. Tårn uten nummer vises ikke. -#}
+{#- The numbers are in src/_data/towers.json, with names in other languages in names. Towers without a number are not shown. -#}
 {%- import "macros.njk" as m with context -%}
 <div class="towers-page">
   <header class="topbar">

@@ -1,11 +1,11 @@
-// Henter luftrom fra openAIP for hele regionen og lagrer:
-//   src/_data/cache/airspace/<id>.json   luftrom over og nær hver start (brukes på stedssiden)
-//   src/_data/cache/airspace/region.geojson   alle luftrommene som polygoner (brukes av kartlaget)
+// Fetches airspace from openAIP for the whole region and saves:
+//   src/_data/cache/airspace/<id>.json   airspace over and near each launch (used on the site page)
+//   src/_data/cache/airspace/region.geojson   all airspace as polygons (used by the map layer)
 //
 //   OPENAIP_API_KEY=... npm run airspace
 //
-// Nøkkelen lages på openaip.net og skal aldri inn i repoet. I GitHub ligger den som repository secret.
-// Skriptet skriver aldri i stedsfilene. Endringer vises i Git-diffen og gjennomgås før de publiseres.
+// The key is created on openaip.net and must never be committed. On GitHub it is a repository secret.
+// The script never writes to the site files. Changes show up in the Git diff and are reviewed before publishing.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -14,7 +14,7 @@ import { fetchRegion, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM } f
 
 const yaml = createRequire(import.meta.url)("js-yaml");
 const SITES_DIR = "src/sites";
-// Margin rundt stedene, så kartet også viser luftrom et stykke utenfor (Lofoten, Bardufoss osv.).
+// Margin around the sites, so the map also shows airspace some way beyond them (Lofoten, Bardufoss etc.).
 const MARGIN_KM = 60;
 
 const apiKey = process.env.OPENAIP_API_KEY;
@@ -30,10 +30,10 @@ const sites = fs.readdirSync(SITES_DIR)
     return { id, data: yaml.load(/^---\r?\n([\s\S]*?)\r?\n---/.exec(text)[1]) };
   });
 
-// Luftrommene hentes i én eller flere sirkler som til sammen dekker alle startene, pluss margin. openAIP
-// avviser for stor radius (216 km ga 400), så stedene i Lofoten, på Andøya og i Bjerkvik kan ikke dekkes av
-// én sirkel rundt midten av regionen. Hver sirkel har senter i en start og dekker startene innen
-// MAX_RADIUS_KM - MARGIN_KM. Som regel blir det 2–3 kall.
+// Airspace is fetched in one or more circles that together cover all launches, plus margin. openAIP
+// rejects too large a radius (216 km gave 400), so the sites in Lofoten, on Andøya and in Bjerkvik cannot be
+// covered by one circle around the middle of the region. Each circle is centred on a launch and covers the
+// launches within MAX_RADIUS_KM - MARGIN_KM. Usually this means 2–3 requests.
 const MAX_RADIUS_KM = 150;
 const km = (a, b) => {
   const r = Math.PI / 180;
@@ -44,7 +44,7 @@ const launches = sites.map((s) => s.data.launch);
 const circles = [];
 let left = [...launches];
 while (left.length) {
-  // Senter i starten som dekker flest av de gjenværende.
+  // Centre on the launch that covers most of the remaining ones.
   const reach = MAX_RADIUS_KM - MARGIN_KM;
   const center = left.reduce((best, l) => {
     const n = left.filter((o) => km(l, o) <= reach).length;
@@ -86,7 +86,7 @@ for (const { id, data } of sites) {
   for (const a of airspaces) console.log(`  ${describe(a)}`);
 }
 
-// Steder som er fjernet eller har fått ny id, skal ikke ha cache-filer liggende igjen.
+// Sites that were removed or got a new id must not leave cache files behind.
 for (const file of fs.readdirSync(CACHE_DIR)) {
   if (file.endsWith(".json") && !sites.some((s) => `${s.id}.json` === file)) {
     fs.unlinkSync(path.join(CACHE_DIR, file));
@@ -94,7 +94,7 @@ for (const file of fs.readdirSync(CACHE_DIR)) {
   }
 }
 
-// Kartlaget. Skrives bare når innholdet er endret, så datoen i cache-filene ikke gir støy i diffen.
+// The map layer. Only written when the content changed, so the date in the cache files does not add diff noise.
 const geoFile = path.join(CACHE_DIR, "region.geojson");
 const geo = regionGeoJSON(items);
 const oldGeo = fs.existsSync(geoFile) ? JSON.parse(fs.readFileSync(geoFile, "utf8")) : null;

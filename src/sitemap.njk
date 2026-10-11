@@ -2,8 +2,8 @@
 permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
-{#- Sider som finnes på flere språk (paginert over languages) står med én adresse per språk og lenker til
-    hverandre (hreflang). Samlingene har bare den norske, så de andre lages med localeUrl. -#}
+{#- Pages in several languages (paginated over languages) are listed with one address per language, linking to
+    each other (hreflang). The collections only hold the Norwegian one, so the others are made with localeUrl. -#}
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {%- for p in collections.all %}{% if not p.data.noindex and p.url and p.url.endsWith("/") %}
