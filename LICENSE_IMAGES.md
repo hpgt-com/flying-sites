@@ -1,15 +1,15 @@
-# Lisens for bildene
+# Licence for the images
 
-Bildene av flystedene (start, landing og oversikt) i `src/sites/` og på https://flysteder.hpgt.com er
-lisensiert under **Creative Commons Navngivelse-IkkeKommersiell 4.0 Internasjonal (CC BY-NC 4.0)**:
+The photos of the sites (launch, landing and overview) in `src/sites/` and on https://flysteder.hpgt.com are
+licensed under **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**:
 https://creativecommons.org/licenses/by-nc/4.0/
 
-Du kan dele og bearbeide bildene til ikke-kommersielle formål, så lenge du oppgir fotografen og lisensen,
-for eksempel «Foto: Kristoffer D. Hofstad (https://hofstad.net), CC BY-NC 4.0».
+You may share and adapt the images for non-commercial purposes, as long as you credit the photographer and the
+licence, for example «Foto: Kristoffer D. Hofstad (https://hofstad.net), CC BY-NC 4.0».
 
-Fotograf, copyright og lisens står i hvert bilde (EXIF og XMP) og i bildevisningen på siden. Der det ikke står
-noe annet, er fotografen Kristoffer D. Hofstad (Hofstad.NET, @krishofs).
+Photographer, copyright and licence are embedded in each image (EXIF and XMP) and shown in the image viewer on the
+site. Unless stated otherwise, the photographer is Kristoffer D. Hofstad (Hofstad.NET, @krishofs).
 
-Bilder kan vise personer. Ta kontakt med HPGT eller fotografen før du bruker bilder av personer i andre sammenhenger.
+Images may show people. Contact HPGT or the photographer before using images of people in other contexts.
 
-Bilder fra andre fotografer legges bare inn når fotografen har godtatt denne lisensen.
+Images from other photographers are only added when the photographer has accepted this licence.

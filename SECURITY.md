@@ -1,62 +1,63 @@
-# Sikkerhet
+# Security
 
-## Melde fra om et sikkerhetsproblem
+## Reporting a security issue
 
-Har du funnet en sårbarhet i siden eller i repoet, ikke opprett en offentlig issue. Bruk
-**[Report a vulnerability](https://github.com/hpgt-com/flying-sites/security/advisories/new)** under
-fanen Security, så ser bare vedlikeholderne meldingen. Skriv hva du fant, hvordan det kan gjenskapes og
-hvilken side det gjelder. Vi svarer så fort vi kan, men dette er et frivillig klubbprosjekt.
+If you have found a vulnerability in the site or the repository, do not open a public issue. Use
+**[Report a vulnerability](https://github.com/hpgt-com/flying-sites/security/advisories/new)** under the Security
+tab, so only the maintainers see the report. Describe what you found, how to reproduce it and which page it affects.
+We reply as soon as we can, but this is a volunteer club project.
 
-Feil i stedsinformasjonen (farer, retninger, luftrom) er ikke sikkerhetsproblemer i denne forstand.
-Meld dem med «Foreslå endring» på stedssiden.
+Errors in site information (hazards, directions, airspace) are not security issues in this sense. Report them with
+«Foreslå endring» ("Suggest a change") on the site page.
 
-## Hva som er gjort
+## What is in place
 
-Siden er statisk (Eleventy på GitHub Pages), uten innlogging, skjema eller database.
+The site is static (Eleventy on GitHub Pages), with no login, forms or database.
 
-**Siden**
-- Content-Security-Policy som meta-tag i `src/_includes/base.njk`: skript bare fra siden selv (ingen
-  inline-skript), bilder bare fra kartflisene (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) og Yr.
-  GitHub Pages kan ikke sette egne HTTP-headere, så `frame-ancestors` og andre header-only-regler er ikke med.
+**The site**
+- Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
+  scripts), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
+  GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
 - `Referrer-Policy: strict-origin-when-cross-origin`.
-- Leaflet, markercluster og fontene ligger på siden selv. Ingen skript eller fonter fra CDN.
-- Bilder publiseres uten EXIF-metadata (`lib/images.js`).
+- Leaflet, markercluster and the fonts are served from the site itself. No scripts or fonts from a CDN.
+- Images are published without EXIF metadata (`lib/images.js`).
 
-**Repoet og publiseringen**
-- Alle endringer går via PR. «PR check» kjører tester og bygging (`build`), dependency review (`dependency-review`,
-  stopper pakker med kjente sårbarheter) og zizmor (`workflow-security`, sikkerhetsfeil i workflowene).
-- CodeQL analyserer JavaScript og workflowene på PR-er, main og hver uke.
-- Actions er låst til commit-SHA og oppdateres av Dependabot. Workflowene har bare lesetilgang som
-  standard. Publiseringsrettighetene (`pages`, `id-token`) har bare publiseringsjobben.
-- Hemmeligheter (`OPENAIP_API_KEY`) ligger som repository secret, aldri i koden. `.gitignore` stopper
-  `.env` og nøkkelfiler.
+**The repository and publishing**
+- All changes go through a PR. «PR check» runs tests and the build (`build`), dependency review
+  (`dependency-review`, stops packages with known vulnerabilities) and zizmor (`workflow-security`, security issues
+  in the workflows).
+- CodeQL analyses the JavaScript and the workflows on PRs, on `main` and weekly.
+- Actions are pinned to commit SHAs and updated by Dependabot. Workflows have read-only access by default. Only the
+  deploy job has the publishing permissions (`pages`, `id-token`).
+- Secrets (`OPENAIP_API_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
+  key files.
 
-## Innstillinger i GitHub (gjøres av en med admin-tilgang)
+## GitHub settings (done by someone with admin access)
 
-Disse kan ikke ligge i repoet. Gå gjennom dem når noen får eller mister tilgang. Menynavnene er fra
-GitHub høsten 2026.
+These cannot live in the repository. Go through them whenever someone gains or loses access. Menu names are as in
+GitHub in autumn 2026.
 
-**Organisasjonen** (hpgt-com → Settings)
+**The organisation** (hpgt-com → Settings)
 - [ ] **Authentication security**: «Require two-factor authentication for everyone in the organization».
 - [ ] **Member privileges**: Base permissions = Read.
-- [ ] Minst to eiere, eller en felles e-post styret har tilgang til, så klubben ikke står uten admin.
+- [ ] At least two owners, or a shared email the board has access to, so the club is never left without an admin.
 
-**Repoet** (flying-sites → Settings)
-- [ ] **Rulesets → New branch ruleset**, navn «main protection», Enforcement status = Active,
+**The repository** (flying-sites → Settings)
+- [ ] **Rulesets → New branch ruleset**, name «main protection», Enforcement status = Active,
   Target = Include default branch:
-  - Restrict deletions og Block force pushes.
-  - Require a pull request before merging, Required approvals = 0 så lenge én person merger alene.
-  - Require status checks to pass: `build`, `dependency-review` og `workflow-security`, med kilde GitHub Actions.
-    «Require branches to be up to date» av. En sjekk kan bare velges når den har kjørt nylig.
+  - Restrict deletions and Block force pushes.
+  - Require a pull request before merging, Required approvals = 0 as long as one person merges alone.
+  - Require status checks to pass: `build`, `dependency-review` and `workflow-security`, with source GitHub Actions.
+    «Require branches to be up to date» off. A check can only be selected once it has run recently.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
-    (når CodeQL har kjørt på main).
-  - Bypass list: Repository admin, «For pull requests only». PR-er fra luftrom-workflowen lages med
-    GitHub-tokenet og starter ikke PR-sjekken, så de må merges med «Bypass rules». Direkte push til
-    main er fortsatt sperret.
+    (once CodeQL has run on `main`).
+  - Bypass list: Repository admin, «For pull requests only». PRs from the airspace workflow are created with the
+    GitHub token and do not trigger the PR check, so they must be merged with «Bypass rules». Direct pushes to
+    `main` are still blocked.
 - [ ] **Advanced Security**: Private vulnerability reporting, Dependency graph, Dependabot alerts,
-  Dependabot security updates, Secret scanning og Push protection på. Code scanning skal stå på
-  Advanced (vår `code-scanning.yml`), ikke Default setup.
+  Dependabot security updates, Secret scanning and Push protection on. Code scanning must be set to
+  Advanced (our `code-scanning.yml`), not Default setup.
 - [ ] **Actions → General**, Workflow permissions: «Read repository contents and packages permissions»,
-  og «Allow GitHub Actions to create and approve pull requests» på (trengs av luftrom-workflowen).
-- [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» på.
-- [ ] **Collaborators and teams** og **GitHub Apps**: færrest mulig med skrive- og admin-tilgang.
+  and «Allow GitHub Actions to create and approve pull requests» on (needed by the airspace workflow).
+- [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» on.
+- [ ] **Collaborators and teams** and **GitHub Apps**: as few people as possible with write and admin access.
