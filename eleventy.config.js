@@ -16,7 +16,7 @@ export default function (eleventyConfig) {
   // GPX kopieres med samme sti. Bildene kopieres ikke: lib/images.js lager visningsstørrelser
   // uten metadata i _site/img/, så originalene (med EXIF) aldri publiseres.
   // Gangrutene ligger ved siden av stedssidene: src/sites/<id>/*.gpx blir /flysteder/<id>/*.gpx.
-  eleventyConfig.addPassthroughCopy({ "src/sites/**/*.gpx": "flysteder" });
+  eleventyConfig.addPassthroughCopy({ "src/sites": "flysteder" }, { filter: ["**/*.gpx"] });
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
