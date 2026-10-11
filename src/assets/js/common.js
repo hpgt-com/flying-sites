@@ -1,10 +1,10 @@
-// Felles for forsiden og stedssidene: tekster, kartlag og vindrose.
+// Shared by the home page and site pages: texts, map layers and wind rose.
 (function () {
   "use strict";
 
-  // --- Tekster ---
-  // Ordboken for sidens språk ligger i #i18n-data (base.njk, fra src/_i18n/<språk>.json): t("home.seeSite"),
-  // t("home.closeCard", { name: "Elgen" }). tn() velger entall eller flertall: tn("summary.places", 3).
+  // --- Texts ---
+  // The dictionary for the page language is in #i18n-data (base.njk, from src/_i18n/<lang>.json): t("home.seeSite"),
+  // t("home.closeCard", { name: "Elgen" }). tn() picks singular or plural: tn("summary.places", 3).
   var I18N = readJson("i18n-data") || { meta: { decimal: ",", clockSep: "." }, directions: { labels: {} }, js: {} };
   function fill(text, vars) {
     return String(text == null ? "" : text).replace(/\{(\w+)\}/g, function (m, k) { return vars && vars[k] != null ? vars[k] : m; });
@@ -26,7 +26,7 @@
   var DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   var DIRECTION_LABELS = I18N.directions.labels;
 
-  // Samme stier som rose-makroen i src/_includes/macros.njk.
+  // Same paths as the rose macro in src/_includes/macros.njk.
   var ROSE_PATHS = [
     "M58.8 21.7 A62 62 0 0 1 101.2 21.7 L85.5 65.0 A16 16 0 0 0 74.5 65.0Z",
     "M106.2 23.8 A62 62 0 0 1 136.2 53.8 L94.5 73.2 A16 16 0 0 0 86.8 65.5Z",
@@ -38,16 +38,16 @@
     "M23.8 53.8 A62 62 0 0 1 53.8 23.8 L73.2 65.5 A16 16 0 0 0 65.5 73.2Z",
   ];
 
-  // "primary" | "possible" | "none", som directionType i lib/format.js.
+  // "primary" | "possible" | "none", like directionType in lib/format.js.
   function directionType(site, code) {
     if (site.primary.indexOf(code) !== -1) return "primary";
     if (site.possible.indexOf(code) !== -1) return "possible";
     return "none";
   }
 
-  // wind (valgfri): { code, rating, edge } fra vindvurderingen. Sektoren vinden kommer fra fylles med
-  // vurderingsfargen, så man ser om vinden treffer en startretning uten en egen pil. Med edge (markørene
-  // på forsiden) går den fra midten helt ut til ringen rundt rosen; ellers (kortet) «løftes» den litt ut.
+  // wind (optional): { code, rating, edge } from the wind assessment. The sector the wind comes from is filled with
+  // the rating colour, so you can see whether the wind hits a launch direction without a separate arrow. With edge (the
+  // home page markers) it runs from the centre out to the ring around the rose; otherwise (the card) it is «lifted» out slightly.
   var LIFT = 8;
   function roseSvg(site, size, labels, wind) {
     var lift = wind && !wind.edge;
@@ -57,7 +57,7 @@
     DIRECTIONS.forEach(function (code, i) {
       if (wind && wind.code === code) {
         if (wind.edge) {
-          // Fra midten og helt ut til kanten (r = 62, der ringen rundt markøren ligger).
+          // From the centre out to the edge (r = 62, where the ring around the marker is).
           var b0 = (i * 45 - 22.5 - 90) * Math.PI / 180, b1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
           lifted = '<path d="M80 80 L' + (80 + 62 * Math.cos(b0)).toFixed(1) + " " + (80 + 62 * Math.sin(b0)).toFixed(1) +
             " A62 62 0 0 1 " + (80 + 62 * Math.cos(b1)).toFixed(1) + " " + (80 + 62 * Math.sin(b1)).toFixed(1) +
@@ -80,9 +80,9 @@
     return svg + "</svg>";
   }
 
-  // En flis i laget under vises først når flisen over på samme sted er lastet. OpenTopoMap laster ofte raskere
-  // enn Kartverket, så uten dette blinker OpenTopoMap fram før Kartverket legger seg over. Laget under har
-  // maxNativeZoom 17, så på zoom 18 dekker én flis under fire fliser over.
+  // A tile in the lower layer is shown only once the tile above at the same spot has loaded. OpenTopoMap often loads faster
+  // than Kartverket, so without this OpenTopoMap flashes up before Kartverket covers it. The lower layer has
+  // maxNativeZoom 17, so at zoom 18 one lower tile covers four upper tiles.
   function showUnderlayAfter(top, under) {
     var native = under.options.maxNativeZoom;
     var ready = {};
@@ -101,9 +101,9 @@
     });
   }
 
-  // Terrengskygge fra Kartverkets nasjonale høydemodell (hoydedata.no, åpne data), oppå bakgrunnskartet. Viser
-  // fjellsidene og hvilken vei de vender. Tjenesten lager bilder for et utsnitt, ikke ferdige fliser, så hver
-  // flis bes om med sitt eget utsnitt i Web Mercator. Bare Norge, gjennomsiktig ellers. Av som standard.
+  // Hillshade from Kartverket's national elevation model (hoydedata.no, open data), on top of the base map. Shows
+  // the mountainsides and which way they face. The service renders images for an extent, not ready-made tiles, so each
+  // tile is requested with its own extent in Web Mercator. Norway only, transparent elsewhere. Off by default.
   var HILLSHADE_URL = "https://hoydedata.no/arcgis/rest/services/NHM_DTM_25833/ImageServer/exportImage";
   function hillshadeLayer() {
     var Layer = L.TileLayer.extend({
@@ -120,16 +120,16 @@
     return new Layer("", { minZoom: 8, maxZoom: 18, opacity: 0.4, className: "hillshade-tiles", attribution: t("map.hillshadeAttribution") });
   }
 
-  // Fast engelsk nøkkel for hvert kartlag, så statistikken (map-layer/<nøkkel>) er lik på alle språk.
+  // Fixed English key for each map layer, so the statistics (map-layer/<key>) are the same in all languages.
   function layerLabel(map, key, label) {
     (map.layerKeys || (map.layerKeys = {}))[label] = key;
     return label;
   }
 
-  // Berøringsskjerm: én finger ruller siden, to fingre flytter og zoomer kartet, så man ikke blir fanget i kartet
-  // når man ruller nedover siden. Uten Leaflets dra-funksjon gir leaflet.css kartet touch-action: pan-x pan-y, så
-  // nettleseren ruller siden, mens Leaflet tar knipet (som også flytter kartet). Drar man med én finger, vises
-  // «Bruk to fingre for å flytte kartet» et øyeblikk. I fullskjerm finnes ingen side å rulle, og én finger flytter kartet.
+  // Touch screens: one finger scrolls the page, two fingers pan and zoom the map, so you do not get trapped in the map
+  // when scrolling down the page. Without Leaflet's dragging, leaflet.css gives the map touch-action: pan-x pan-y, so
+  // the browser scrolls the page while Leaflet takes the pinch (which also pans the map). Dragging with one finger briefly
+  // shows «Bruk to fingre for å flytte kartet». In full screen there is no page to scroll, and one finger pans the map.
   var COARSE = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
   function useTwoFingers(map) {
     if (!COARSE) return;
@@ -173,19 +173,19 @@
       });
     }
     var openTopo = openTopoLayer();
-    // Kartverkets fliser er gjennomsiktige utenfor Norge, så OpenTopoMap under fyller ut resten av verden.
+    // Kartverket's tiles are transparent outside Norway, so OpenTopoMap below fills in the rest of the world.
     var underlay = openTopoLayer();
     showUnderlayAfter(kartverket, underlay);
     var topo = L.layerGroup([underlay, kartverket]);
-    // Satellittbilde fra Sentinel-2 cloudless (EOX), fritt for ikke-kommersiell bruk (CC BY-NC-SA 4.0) uten nøkkel.
-    // 10 m oppløsning, så flisene finnes bare til zoom 14 og forstørres over det. Ikke invertert i mørkt tema.
+    // Satellite imagery from Sentinel-2 cloudless (EOX), free for non-commercial use (CC BY-NC-SA 4.0) without a key.
+    // 10 m resolution, so tiles exist only up to zoom 14 and are enlarged beyond that. Not inverted in the dark theme.
     var satellite = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {
       maxNativeZoom: 14,
       maxZoom: 18,
       className: "photo-tiles",
       attribution: t("map.satelliteAttribution"),
     });
-    // Kartverkets gråtonekart: roser, luftrom og vurderingsfarger synes bedre på grått. OpenTopoMap under, som for topo.
+    // Kartverket's greyscale map: roses, airspace and rating colours show better on grey. OpenTopoMap below, as for topo.
     var grayTiles = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
       className: "base-tiles",
@@ -201,14 +201,14 @@
     baseLayers[layerLabel(map, "opentopomap", t("map.layerOpenTopo"))] = openTopo;
     baseLayers[layerLabel(map, "satellite", t("map.layerSatellite"))] = satellite;
     map.layersControl = L.control.layers(baseLayers, null, { position: "topright" }).addTo(map);
-    // Bare når noen velger et lag selv. Leaflet sender også baselayerchange når kartet lastes.
+    // Only when someone picks a layer themselves. Leaflet also fires baselayerchange when the map loads.
     map.layersControl.getContainer().addEventListener("change", function (ev) {
       if (!ev.target.checked) return;
       var label = ev.target.closest("label");
       track("map-layer/" + ((label && map.layerKeys[label.textContent.trim()]) || "unknown"));
     });
-    // Termikk fra thermal.kk7.ch: statistikk fra loggede flyturer, ikke et varsel. Av som standard.
-    // Flisene er i TMS-rekkefølge, og src skal oppgi domenet vårt (vilkår på thermal.kk7.ch).
+    // Thermals from thermal.kk7.ch: statistics from logged flights, not a forecast. Off by default.
+    // Tiles are in TMS order, and src must give our domain (terms of thermal.kk7.ch).
     ["skyways_all_all", "thermals_all_all"].forEach(function (name, i) {
       var layer = L.tileLayer("https://thermal.kk7.ch/tiles/" + name + "/{z}/{x}/{y}.png?src=" + encodeURIComponent(location.hostname), {
         tms: true, maxNativeZoom: 13, maxZoom: 18, opacity: 0.7,
@@ -222,12 +222,12 @@
     return map;
   }
 
-  // Leaflet må vite kartets størrelse før det zoomer til innholdet. Elementet kan ha null
-  // størrelse når skriptet kjører (skjult fane, layout ikke ferdig), så vi venter på første
-  // reelle størrelse og holder kartet oppdatert når den endres.
-  // Knapper under zoomknappene: «Vis hele …» (hus) går tilbake til utsnittet fit() gir, og fullskjerm
-  // legger kartet over hele siden. Ikke nettleserens fullskjerm, så det også virker på iPhone. Esc eller
-  // knappen igjen lukker. Utsnittet tilpasses når kartet bytter størrelse. Brukes på forsiden og stedssiden.
+  // Leaflet must know the map size before it zooms to the content. The element can have zero
+  // size when the script runs (hidden tab, layout not finished), so we wait for the first
+  // real size and keep the map updated when it changes.
+  // Buttons below the zoom buttons: «Vis hele …» (house) returns to the view fit() gives, and full screen
+  // lays the map over the whole page. Not the browser's full screen, so it also works on iPhone. Esc or
+  // the button again closes it. The view is refitted when the map changes size. Used on the home page and site page.
   var ICON_HOME = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>';
   var ICON_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>';
   var ICON_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"></path></svg>';
@@ -300,12 +300,12 @@
     check();
   }
 
-  // --- Starter på stedssiden og i 3D-visningen ---
-  // Starter med egen posisjon (launches[].lat/lon) får hver sin rose med sine retninger. Hovedstarten
-  // (launch) viser retningene til startene uten egen posisjon, eller alle retningene når ingen har det.
-  // Bare retninger stedet passer for (hovedretning eller mulig) tas med, så linjer som «ikke egnet,
-  // men mulig i svak vind» ikke gir farge. En start uten slike retninger tegnes ikke.
-  // data: { launch, launches, wind_directions }. Gir [{ lat, lon, directions, label, texts }].
+  // --- Launches on the site page and in the 3D view ---
+  // Launches with their own position (launches[].lat/lon) each get a rose with their directions. The main launch
+  // (launch) shows the directions of launches without their own position, or all directions when none has one.
+  // Only directions the site suits (primary or possible) are included, so lines like «ikke egnet,
+  // men mulig i svak vind» get no colour. A launch without such directions is not drawn.
+  // data: { launch, launches, wind_directions }. Returns [{ lat, lon, directions, label, texts }].
   function launchPoints(data) {
     var wind = data.wind_directions || {};
     var all = (wind.primary || []).concat(wind.possible || []);
@@ -332,19 +332,19 @@
     return points;
   }
 
-  // --- Retningsbuer ---
-  // Hvilke sider av fjellet stedet passer for: én gul bue per retning i wind_directions, med en pil ut.
-  // Mørk gul er hovedretning, lys gul mulig. Brukes i kartet på stedssiden (ovenfra) og i 3D-visningen.
-  // Har startene egne posisjoner (launches[].lat/lon), får hver retningsgruppe (starter med samme
-  // retninger) sin egen bue der startene ligger: midt mellom dem, med radius til lengste start +
-  // ARC_RADIUS_PLACED_M, så buen strekker seg langs siden mellom dem. Uten egne posisjoner er det én bue
-  // rundt hovedstarten, eller rundt direction_arc i tegningen (<id>-drawing.geojson).
-  // data: { launch, launches, wind_directions, drawing }. Koordinatene er [lon, lat].
+  // --- Direction arcs ---
+  // Which sides of the mountain the site suits: one yellow arc per direction in wind_directions, with an arrow out.
+  // Dark yellow is primary, light yellow possible. Used in the site page map (from above) and in the 3D view.
+  // If launches have their own positions (launches[].lat/lon), each direction group (launches with the same
+  // directions) gets its own arc where the launches are: midway between them, with radius to the farthest launch +
+  // ARC_RADIUS_PLACED_M, so the arc stretches along the slope between them. Without own positions there is one arc
+  // around the main launch, or around direction_arc in the drawing (<id>-drawing.geojson).
+  // data: { launch, launches, wind_directions, drawing }. Coordinates are [lon, lat].
   var ARC_COLORS = { primary: "#F2B705", possible: "#F8DC7A" };
   var ARC_RADIUS_M = 250, ARC_RADIUS_PLACED_M = 110, ARC_ARROW_M = 70;
   var BEARINGS = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
 
-  // Punkt `meters` fra [lon, lat] i retning `bearing` (grader, 0 er nord). Godt nok på korte avstander.
+  // Point `meters` from [lon, lat] in direction `bearing` (degrees, 0 is north). Good enough for short distances.
   function offset(from, bearing, meters) {
     var b = bearing * Math.PI / 180;
     return [from[0] + Math.sin(b) * meters / (111320 * Math.cos(from[1] * Math.PI / 180)), from[1] + Math.cos(b) * meters / 110540];
@@ -372,8 +372,8 @@
     });
   }
 
-  // [{ direction, label, color, pts, bearing, center, radius, mid, tip }], én per retning og gruppe.
-  // options.minRadius og options.arrow (meter) lar kartet holde buen synlig når man zoomer ut.
+  // [{ direction, label, color, pts, bearing, center, radius, mid, tip }], one per direction and group.
+  // options.minRadius and options.arrow (metres) let the map keep the arc visible when zoomed out.
   function directionArcs(data, options) {
     var wind = data.wind_directions || {}, arcs = [], o = options || {};
     var arrow = o.arrow || ARC_ARROW_M;
@@ -390,15 +390,15 @@
     return arcs;
   }
 
-  // Pilspiss ved `tip` i retning `bearing`, som trekant i meter: [[lon, lat], ...].
+  // Arrowhead at `tip` in direction `bearing`, as a triangle in metres: [[lon, lat], ...].
   function arrowHead(tip, bearing, size) {
     var base = offset(tip, bearing + 180, size);
     return [tip, offset(base, bearing + 90, size * 0.6), offset(base, bearing - 90, size * 0.6), tip];
   }
 
-  // --- Luftromslag ---
-  // Fire grupper med av/på i kartets lagvelger, som i IPPC. Alle er av til å begynne med, og
-  // luftrommene (fra openAIP, se scripts/update-airspace.mjs) lastes først når en gruppe slås på.
+  // --- Airspace layers ---
+  // Four groups with on/off in the map's layer control, as in IPPC. All are off initially, and the
+  // airspace (from openAIP, see scripts/update-airspace.mjs) is loaded only when a group is switched on.
   var AIRSPACE_GROUPS = [
     { key: "airspace-tma", name: t("map.airspaceTma"), types: ["TMA", "CTA"], color: "#2F6FB5", dash: null },
     { key: "airspace-ctr", name: t("map.airspaceCtr"), types: ["CTR", "MCTR", "ATZ", "TIZ"], color: "#C0392B", dash: null },
@@ -424,11 +424,11 @@
       (p.byNotam ? '<p class="airspace-popup__notam">' + e(t("map.byNotam")) + "</p>" : "") + "</div>";
   }
 
-  // Nedbørsradar fra RainViewer (gratis for ikke-kommersiell bruk, med kreditering). Lastes først når laget slås
-  // på, og listen over bilder hentes på nytt hvert tiende minutt så lenge laget er på. Gratisversjonen har fliser
-  // bare til zoom 7, så de forstørres når man zoomer inn: grovt, men nok til å se byger som kommer. De siste
-  // bildene (10 minutter mellom hvert) vises som en kort animasjon som blir stående litt på det siste, med
-  // klokkeslettet i en liten boks under lagvelgeren. MET sitt radarkart er forbeholdt Yr, så det kan vi ikke bruke.
+  // Precipitation radar from RainViewer (free for non-commercial use, with attribution). Loaded only when the layer
+  // is switched on, and the image list is refetched every ten minutes while the layer is on. The free tier has tiles
+  // only up to zoom 7, so they are enlarged when zooming in: coarse, but enough to see approaching showers. The latest
+  // images (10 minutes apart) play as a short animation that pauses briefly on the last one, with
+  // the time in a small box below the layer control. MET's radar map is reserved for Yr, so we cannot use it.
   var RADAR_INDEX = "https://api.rainviewer.com/public/weather-maps.json";
   var RADAR_FRAMES = 6, RADAR_STEP_MS = 700, RADAR_HOLD_STEPS = 4;
   var osloClock = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Oslo" });
@@ -469,7 +469,7 @@
       clearInterval(timer);
       step = 0;
       show(0);
-      // Går gjennom bildene og blir stående på det siste i noen steg før den starter på nytt.
+      // Steps through the images and stays on the last one for a few steps before starting over.
       timer = setInterval(function () {
         step = (step + 1) % (layers.length + RADAR_HOLD_STEPS);
         show(Math.min(step, layers.length - 1));
@@ -485,7 +485,7 @@
     }
     function load() {
       if (!layers.length) setStatus("loading", t("map.radarLoading"));
-      // Tidsgrense, så laget ikke blir stående på «Laster radar …» hvis RainViewer ikke svarer.
+      // Timeout, so the layer does not stay on «Laster radar …» if RainViewer does not respond.
       var ctrl = typeof AbortController === "function" ? new AbortController() : null;
       var timeout = ctrl ? setTimeout(function () { ctrl.abort(); }, 15000) : null;
       fetch(RADAR_INDEX, ctrl ? { signal: ctrl.signal } : {}).then(function (r) {
@@ -527,8 +527,8 @@
     groups.forEach(function (g) { map.layersControl.addOverlay(g.layer, layerLabel(map, g.def.key, g.def.name)); });
     var loading = null, attribution = null, active = 0;
 
-    // Status under lagvelgeren mens luftrommene lastes, og ved feil, så et avkrysset lag uten innhold ikke
-    // ser ut som «ingen luftrom her». «Prøv igjen» henter på nytt.
+    // Status below the layer control while airspace loads, and on error, so a checked layer without content does not
+    // look like «ingen luftrom her». «Prøv igjen» fetches again.
     var statusEl = null;
     var Status = L.Control.extend({
       options: { position: "topright" },
@@ -561,8 +561,8 @@
         data.features.forEach(function (f) {
           var g = groups.find(function (x) { return x.def.types.indexOf(f.properties.type) !== -1; });
           if (!g) return;
-          // Gjennomsiktig fyll, så kartet synes også der flere luftrom overlapper. Fyllet er likevel
-          // klikkbart, og området lyser svakt opp når musen er over det.
+          // Transparent fill, so the map shows through where airspaces overlap. The fill is still
+          // clickable, and the area lights up faintly on hover.
           L.geoJSON(f, {
             style: { color: g.def.color, weight: 2, opacity: 0.9, fillColor: g.def.color, fillOpacity: 0, dashArray: g.def.dash },
             onEachFeature: function (feature, layer) {
@@ -581,14 +581,14 @@
         setStatus(null);
         if (active && attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
       }, function () {
-        loading = null; // neste forsøk henter på nytt
+        loading = null; // next attempt fetches again
         setStatus(active ? "error" : null);
       });
     }
 
     function isAirspace(layer) { return groups.some(function (g) { return g.layer === layer; }); }
 
-    // Kreditering vises så lenge minst ett luftromslag er på.
+    // Attribution is shown while at least one airspace layer is on.
     map.on("overlayadd", function (ev) {
       if (!isAirspace(ev.layer)) return;
       active++;
@@ -608,7 +608,7 @@
     });
   }
 
-  // Tall med språkets desimaltegn (komma på norsk).
+  // Number with the language's decimal separator (comma in Norwegian).
   function formatNumber(n, decimals) {
     return Number(n).toFixed(decimals || 0).replace(".", I18N.meta.decimal);
   }
@@ -618,12 +618,12 @@
     return el ? JSON.parse(el.textContent) : null;
   }
 
-  // Samme merking som external()-makroen i macros.njk.
+  // Same marking as the external() macro in macros.njk.
   var EXTERNAL_MARK = '<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> ' + escapeHtml(I18N.opensNewTab || "") + "</span>";
 
-  // --- Fargemodus ---
-  // Skriptet i <head> (base.njk) setter data-theme før siden tegnes. Her kobles knappene til, og
-  // siden følger med når enheten bytter mellom lys og mørk mens valget er «Auto».
+  // --- Colour mode ---
+  // The script in <head> (base.njk) sets data-theme before the page is drawn. Here the buttons are wired up, and
+  // the page follows when the device switches between light and dark while the choice is «Auto».
   var THEME_COLORS = { light: "#F3F5F4", dark: "#11191D" };
   var darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
@@ -637,7 +637,7 @@
     root.setAttribute("data-theme-choice", choice);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", THEME_COLORS[theme]);
-    // Bilder med egen mørk variant, som Yr-meteogrammet. Den lyse adressen huskes i data-src-light.
+    // Images with their own dark variant, such as the Yr meteogram. The light URL is kept in data-src-light.
     document.querySelectorAll("img[data-src-dark]").forEach(function (img) {
       if (!img.hasAttribute("data-src-light")) img.setAttribute("data-src-light", img.getAttribute("src"));
       var src = img.getAttribute(theme === "dark" ? "data-src-dark" : "data-src-light");
@@ -659,7 +659,7 @@
         if (choice === "auto") localStorage.removeItem("theme");
         else localStorage.setItem("theme", choice);
       } catch (e) {
-        // privat modus eller blokkert lagring: valget gjelder bare denne siden
+        // private mode or blocked storage: the choice applies to this page only
       }
       applyTheme(choice);
     });
@@ -671,8 +671,8 @@
   }
   applyTheme(document.documentElement.getAttribute("data-theme-choice") || "auto");
 
-  // --- Fargeblindvennlige farger ---
-  // Bytter vindvurderingen til blå / gul / oransjerød / grå (Okabe–Ito). Lagres som «cvd» i nettleseren.
+  // --- Colour-blind-friendly colours ---
+  // Switches the wind assessment to blue / yellow / reddish orange / grey (Okabe–Ito). Stored as «cvd» in the browser.
   function applyCvd(on) {
     var root = document.documentElement;
     if (on) root.setAttribute("data-cvd", "on");
@@ -687,15 +687,15 @@
         if (on) localStorage.setItem("cvd", "on");
         else localStorage.removeItem("cvd");
       } catch (e) {
-        // blokkert lagring: valget gjelder bare denne siden
+        // blocked storage: the choice applies to this page only
       }
       applyCvd(on);
     });
   });
   applyCvd(document.documentElement.getAttribute("data-cvd") === "on");
 
-  // --- Meny ---
-  // Åpnes med knappen, lukkes med knappen, Escape eller klikk utenfor.
+  // --- Menu ---
+  // Opened with the button, closed with the button, Escape or a click outside.
   document.querySelectorAll(".site-menu").forEach(function (menu) {
     var button = menu.querySelector(".site-menu__button");
     var panel = menu.querySelector(".site-menu__panel");
@@ -711,16 +711,16 @@
     });
   });
 
-  // --- Besøksstatistikk for klikk ---
-  // Telles som hendelser i GoatCounter (src/assets/js/goatcounter.js), med engelske navn som «link/flightlog.org/flysteder/ryten/».
-  // Gjør ingenting når skriptet ikke er lastet (lokalt, eller blokkert av adblock).
+  // --- Click statistics ---
+  // Counted as events in GoatCounter (src/assets/js/goatcounter.js), with English names like «link/flightlog.org/flysteder/ryten/».
+  // Does nothing when the script is not loaded (locally, or blocked by an ad blocker).
   function track(name, title) {
     var gc = window.goatcounter;
     if (gc && gc.count) gc.count({ path: name, title: title || name, event: true });
   }
 
-  // Lenker ut (Flightlog, Yr, Windy, IPPC, veibeskrivelse …) og nedlastinger (GPX, GeoJSON, KML), på alle sider.
-  // Midtklikk (auxclick) åpner i ny fane og telles også.
+  // Outbound links (Flightlog, Yr, Windy, IPPC, directions …) and downloads (GPX, GeoJSON, KML), on all pages.
+  // Middle-click (auxclick) opens in a new tab and is counted too.
   function trackLink(ev) {
     var a = ev.target.closest && ev.target.closest("a[href]");
     if (!a) return;

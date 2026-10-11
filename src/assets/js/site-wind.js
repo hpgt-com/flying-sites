@@ -1,6 +1,6 @@
-// «Vind nå» på stedssiden: grov vurdering for starten fra MET-varselet, med samme regler som forsiden
-// (wind.js). Dataene ligger i #site-wind-data (site.njk). Uten varsel, eller når varselet er for gammelt
-// eller ikke dekker timen nå, sier boksen det i stedet for å vurdere.
+// «Vind nå» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as the home
+// page (wind.js). The data is in #site-wind-data (site.njk). Without a forecast, or when it is too old or does not
+// cover the current hour, the box says so instead of assessing.
 (function () {
   "use strict";
 
@@ -12,7 +12,7 @@
 
   var forecast = { fetched: data.fetched, times: data.times, sites: {} };
   forecast.sites[data.site.id] = data.series;
-  // Bygges med DOM-metoder, ikke innerHTML, så ingenting fra dataene tolkes som HTML.
+  // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML.
   function show(rating, parts) {
     el.className = "site-wind site-wind--" + rating;
     el.replaceChildren.apply(el, parts.map(function (p) {
@@ -24,7 +24,7 @@
     el.hidden = false;
   }
 
-  // Soloppgang og solnedgang i dag ved starten, nederst i boksen.
+  // Today's sunrise and sunset at the launch, at the bottom of the box.
   function sun(now) {
     return ["span", W.sunText(W.osloParts(now).date, data.site.lat, data.site.lon), "site-wind__sun"];
   }
@@ -54,7 +54,7 @@
   }
 
   render();
-  // Timen og varselets alder endrer seg mens siden står åpen.
+  // The current hour and the forecast's age change while the page is open.
   setInterval(render, 60000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });
 })();

@@ -1,7 +1,7 @@
-// Fargemodus settes før siden tegnes, så den ikke blinker lys først. Lastes synkront i <head> (base.njk).
-// Valget (auto, light, dark) lagres i nettleseren av menyen (common.js). Auto følger innstillingen på
-// enheten. Det samme gjelder fargeblindvennlige farger (data-cvd). Egen fil og ikke inline-skript, så
-// Content-Security-Policy kan nøye seg med script-src 'self'.
+// Sets the colour mode before the page is drawn, so it does not flash light first. Loaded synchronously in <head> (base.njk).
+// The choice (auto, light, dark) is stored in the browser by the menu (common.js); auto follows the device setting.
+// The same applies to colour-blind-friendly colours (data-cvd). A separate file rather than an inline script, so the
+// Content-Security-Policy can stay at script-src 'self'.
 (function () {
   var d = document.documentElement, choice = "auto";
   try { choice = localStorage.getItem("theme") || "auto"; } catch (e) {}
