@@ -13,7 +13,7 @@ repoet.
 ```mermaid
 flowchart LR
   subgraph repo["GitHub-repo (hpgt-com/flying-sites)"]
-    sites["Stedsfiler<br/>src/flysteder/&lt;id&gt;/index.md<br/>+ index.en.md, bilder, GPX, tegning"]
+    sites["Stedsfiler<br/>src/sites/&lt;id&gt;/index.md<br/>+ index.en.md, bilder, GPX, tegning"]
     data["Felles data<br/>src/_data/ og src/_i18n/"]
     cache["Mellomlager<br/>src/_data/cache/<br/>(luftrom, høyder)"]
     code["Maler, skript, CSS<br/>src/_includes/, src/assets/, lib/"]
@@ -73,7 +73,7 @@ flowchart TB
     comp["eleventyComputed.js<br/>lang og t (ordboken) per side"]
   end
 
-  subgraph site["Per sted og språk (flysteder.11tydata.js)"]
+  subgraph site["Per sted og språk (sites.11tydata.js)"]
     pag["Paginering over språk<br/>/flysteder/&lt;id&gt;/ og /en/sites/&lt;id&gt;/"]
     derived["derived:<br/>gangruter (lib/gpx.js + Kartverket)<br/>bilder (lib/images.js)<br/>luftrom (lib/airspace.js + cache)<br/>oversettelse (lib/translations.js)<br/>sist endret (lib/git.js)"]
   end
@@ -96,7 +96,7 @@ flowchart TB
 
 | Del | Hvor | Hva den gjør |
 |---|---|---|
-| Stedsdata | `src/flysteder/<id>/index.md` | Front matter (strukturerte data) og Markdown-tekst. Se [site-files.md](site-files.md). |
+| Stedsdata | `src/sites/<id>/index.md` | Front matter (strukturerte data) og Markdown-tekst. Se [site-files.md](site-files.md). |
 | Validering | `lib/validation.js` | Ukjente nøkler, ugyldige retninger, nivåer og kategorier, bilder med feil navn, gangruter som mangler. Feil stopper bygget. |
 | Gangruter | `lib/gpx.js` | Lengde, stigning, bevegelsestid og høydeprofil. Høyder fra Kartverket, mellomlagret per fil i `src/_data/cache/elevations/`. |
 | Bilder | `lib/images.js`, `lib/site-images.js` | WebP/JPEG i 400–2400 px uten metadata, fotograf og lisens skrevet inn. Bildene finnes ut fra filnavnet. |

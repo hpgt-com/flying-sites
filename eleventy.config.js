@@ -15,7 +15,8 @@ export default function (eleventyConfig) {
 
   // GPX kopieres med samme sti. Bildene kopieres ikke: lib/images.js lager visningsstørrelser
   // uten metadata i _site/img/, så originalene (med EXIF) aldri publiseres.
-  eleventyConfig.addPassthroughCopy("src/flysteder/**/*.gpx");
+  // Gangrutene ligger ved siden av stedssidene: src/sites/<id>/*.gpx blir /flysteder/<id>/*.gpx.
+  eleventyConfig.addPassthroughCopy({ "src/sites/**/*.gpx": "flysteder" });
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
@@ -31,16 +32,16 @@ export default function (eleventyConfig) {
 
   eleventyConfig.ignores.add("src/_data/cache/**");
   // Oversatte stedstekster (index.en.md osv.) er ikke egne sider. De leses av lib/translations.js.
-  eleventyConfig.ignores.add("src/flysteder/*/index.*.md");
+  eleventyConfig.ignores.add("src/sites/*/index.*.md");
   eleventyConfig.addWatchTarget("./lib/");
   // På Windows mister filovervåkingen filer som skrives på nytt (sed, git checkout, enkelte editorer).
   // Polling er litt tregere, men fanger alle endringer. Gjelder bare `npm start`.
   eleventyConfig.setChokidarConfig({ usePolling: true, interval: 500 });
 
   eleventyConfig.addCollection("sites", (api) => {
-    // Stedssidene finnes på hvert språk (paginering i flysteder.11tydata.js). Samlingen har én side per sted,
+    // Stedssidene finnes på hvert språk (paginering i sites.11tydata.js). Samlingen har én side per sted,
     // den norske. Lenker til andre språk lages med localeUrl.
-    const sites = api.getFilteredByGlob("src/flysteder/*/index.md").filter((s) => (s.data.language?.code ?? "nb") === "nb");
+    const sites = api.getFilteredByGlob("src/sites/*/index.md").filter((s) => (s.data.language?.code ?? "nb") === "nb");
     const errors = sites.flatMap((s) => {
       // Rå front matter, så valideringen ser bare nøklene fra stedsfilen.
       const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(fs.readFileSync(s.inputPath, "utf8"));

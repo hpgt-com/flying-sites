@@ -9,7 +9,7 @@ const drawing = (features) => ({ type: "FeatureCollection", features });
 const feature = (properties, geometry) => ({ type: "Feature", properties, geometry });
 
 test("tegningen for Sollifjellet er gyldig", () => {
-  const file = new URL("../src/flysteder/sollifjellet/sollifjellet-drawing.geojson", import.meta.url);
+  const file = new URL("../src/sites/sollifjellet/sollifjellet-drawing.geojson", import.meta.url);
   assert.deepEqual(validateDrawing(JSON.parse(fs.readFileSync(file, "utf8")), launch), []);
 });
 

@@ -12,7 +12,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Luftrom hentes fra openAIP (CC BY-NC 4.0) med `npm run airspace`, i én eller noen få sirkler som dekker alle startene (openAIP har streng fartsgrense og avviser for stor radius, så sirklene er høyst 150 km), og lagres per start og som `region.geojson` til kartlaget. Hentes og av workflowen «Update airspace» (`airspace.yml`) den 1. hver måned. Endringer kommer som PR og gjennomgås før merge. Nøkkelen ligger som repository secret `OPENAIP_API_KEY`. Stedsfilens `airspace` brukes bare til steder som ikke er hentet ennå, og til merknader (`note`).
 
 ## Innhold
-- Én mappe per sted: `src/flysteder/<id>/index.md` med front matter + tekst, og bilder/GPX i samme mappe.
+- Én mappe per sted: `src/sites/<id>/index.md` med front matter + tekst, og bilder/GPX i samme mappe.
 - Faste filnavn med stedets id foran, som bygget håndhever: bilder heter `<id>-overview-<nr>`, `<id>-takeoff-<retning>-<nr>` (f.eks. `elgen-takeoff-se-1`, retning kan mangle), `<id>-landing-<nr>` og `<id>-landing-spg-<nr>` (`.jpg`, `.png` eller `.webp`). Bygget finner bildene ut fra navnet (`lib/site-images.js`), så stedsfilen har ingen liste over bilder, og et bilde med feil navn stopper bygget. Gangruter heter `<id>-route.gpx`, eller `<id>-route-1.gpx`, `<id>-route-2.gpx` osv. når stedet har flere ruter. Filer fra Strava eller kamera må døpes om før de legges inn. Bilder importeres med `npm run images`, som gir riktig navn, skalerer ned til maks 2560 px og fjerner metadata (EXIF/GPS).
 - **Navngiving av innsamlede bilder** (`lib/photo-name.js`), så sted, type og retning kan leses fra filnavnet:
   - `<Location>_Takeoff_<Direction>_<Nr>_<Original>.jpg`, for eksempel `Storlitinden_Takeoff_SE_1_DSC04968.jpg`
@@ -22,7 +22,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
   - `npm run images -- <filer eller mappe>` leser navnene, finner stedet og importerer alle bildene. Type, retning, SPG og nummer blir med i navnet i repoet: `Storlitinden_Takeoff_SE_2_DSC04970.jpg` blir `storlitinden-takeoff-se-2.jpg`. Har ett av bildene feil navn (ukjent sted, norsk retning som SØ, retning på landing, manglende nummer), eller blir to bilder samme fil, importeres ingenting, og meldingen sier hva som er galt. Finnes bildet allerede, hoppes det over, så samme mappe kan importeres flere ganger. `--replace` bytter dem ut.
 - Import av enkeltbilder uten konvensjonen: `npm run images -- <id> <felt> <fil>`. Bildet får neste ledige nummer for feltet, uten retning.
 - **Fotograf og lisens** (`lib/photo-credit.js`, `src/_data/photoCredit.json`, `LICENSE_IMAGES.md`): bildene er CC BY-NC 4.0. Importen fjerner all metadata (GPS, kamera, redigeringshistorikk) og skriver bare tilbake fotograf, copyright, nettside og lisens (EXIF Artist/Copyright med bare ASCII, XMP dc:creator, dc:rights, xmpRights:WebStatement, cc:license og nettside, med æøå og ©). Fotografen leses fra originalen (som Lightroom skriver den), ellers brukes standarden: Kristoffer D. Hofstad, «© Kristoffer D. Hofstad | Hofstad.NET | @krishofs», https://hofstad.net. Bildene som lages ved bygging, får de samme feltene. Synlig: «Foto: Navn · CC BY-NC 4.0» under bildene på stedssiden og i bildevisningen, med lenke til fotografens nettside og lisensen. `npm run images` legger fotograf og lisens inn i bilder i repoet som mangler det. Originaler over 2 MB stopper bygget. Siden viser bare versjoner laget ved bygging (WebP/JPEG i flere størrelser), aldri originalene. Det finnes ikke lenger oversiktsbilder: Lars sine tegnede bilder fra Google Earth er fjernet, og kartet med retningsbuer og punkter har tatt over.
-- Front matter følger strukturen i eksisterende filer (se `src/flysteder/elgen/index.md` for et komplett eksempel). Nøklene er på engelsk, verdiene på norsk. `parking` er en liste (steder kan ha flere ruter med hver sin parkering). Hver linje under `launches` kan ha `categories` (PG/SPG).
+- Front matter følger strukturen i eksisterende filer (se `src/sites/elgen/index.md` for et komplett eksempel). Nøklene er på engelsk, verdiene på norsk. `parking` er en liste (steder kan ha flere ruter med hver sin parkering). Hver linje under `launches` kan ha `categories` (PG/SPG).
 - Retninger lagres som standardkoder (N, NE, E, SE, S, SW, W, NW) og vises som norske (N, NØ, Ø, SØ, S, SV, V, NV).
 - `status: utkast` betyr at stedet vises, men merkes «Ikke gjennomgått ennå». Når stedet er kontrollert, settes `status: gjennomgått` sammen med `reviewed.by` (navn) og `reviewed.date` (`'2026-09-24'`). Bygget feiler hvis status og `reviewed` ikke stemmer overens.
 - Tomme felt (`null`) vises som tydelige plassholdere eller utelates, aldri som gjettede verdier.
@@ -94,7 +94,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 - Designreferanse: `referanse/prototype/` (prototype-HTML fra designfasen, ikke kjørbar som den er). `referanse/` ligger bare lokalt og er ikke med i repoet (se `.gitignore`), fordi uttrekket fra den gamle oversikten inneholder originaltekster.
 
 ## Åpne data
-- `/flysteder.geojson` og `/flysteder.kml` lages ved hver bygging (`lib/export.js`, `src/flysteder.geojson.11ty.js`, `src/flysteder.kml.11ty.js`), så de alltid følger stedsfilene. Lenket nederst på forsiden.
+- `/flysteder.geojson` og `/flysteder.kml` lages ved hver bygging (`lib/export.js`, `src/sites.geojson.11ty.js`, `src/sites.kml.11ty.js`), så de alltid følger stedsfilene. Lenket nederst på forsiden.
 - Innhold: hovedstart (retninger, nivå, kategorier, høyde, høydeforskjell, gjennomgått), starter med egen posisjon, landinger, parkering, gangruter (lengde, høydemeter, GPX-lenke) og tegningene, med `site_id`, `site_url` og `source` per objekt. Retningsbuene er ikke med som geometri; retningene står som egenskaper. Stedstekster, farer (også objekter i tegningen med style hazard) og grunneierforhold er ikke med.
 - Lisens CC BY 4.0, kreditering «Flysteder: HPGT flysteder (https://flysteder.hpgt.com)» (`LICENSE_DATA.md`).
 - Senere: veipunktfil for instrumenter (`.cup`/`.wpt`) på samme måte.
@@ -102,7 +102,7 @@ Ny versjon av flysteder.hpgt.com. Erstatter den gamle iframe-baserte flystedsove
 ## Språk
 - Norsk er hovedspråket, engelsk ligger under `/en/` med egne adresser (`/en/sites/<id>/`, `/en/towers/`). Språkene står i `src/_data/languages.js`.
 - All fast tekst ligger i ordbøkene `src/_i18n/<språk>.json`. Tekst som mangler i et språk, vises på norsk.
-- Stedstekst oversettes i `src/flysteder/<id>/index.<språk>.md` (bare tekst; data hentes fra `index.md`). Mangler den, vises den norske teksten med en merknad. Se [docs/site-files.md](docs/site-files.md#oversettelse).
+- Stedstekst oversettes i `src/sites/<id>/index.<språk>.md` (bare tekst; data hentes fra `index.md`). Mangler den, vises den norske teksten med en merknad. Se [docs/site-files.md](docs/site-files.md#oversettelse).
 - Tall, datoer, klokkeslett og retninger følger språket (NØ/NE, 14.05/14:05).
 
 ## Statistikk

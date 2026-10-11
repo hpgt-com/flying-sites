@@ -27,7 +27,7 @@ Endringer gjort av Claude eller andre bots vises i «Sist endret» som PR-en de 
 
 ## Legge til et sted
 
-1. Lag mappen `src/flysteder/<id>/` og kopier `index.md` fra et lignende sted.
+1. Lag mappen `src/sites/<id>/` og kopier `index.md` fra et lignende sted.
 2. Fyll inn `name`, `id`, `launch`, `wind_directions`, `landings` og `parking`. Hent høydene fra Kartverket
    (`https://ws.geonorge.no/hoydedata/v1/punkt?koordsys=4258&punkter=[[lon,lat]]`).
 3. Sett `status: utkast` til stedet er gjennomgått.

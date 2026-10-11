@@ -22,7 +22,7 @@ import { IMAGE_FIELDS, listSiteImages, repoImageName } from "../lib/site-images.
 
 const yaml = createRequire(import.meta.url)("js-yaml");
 
-const SITES_DIR = "src/flysteder";
+const SITES_DIR = "src/sites";
 const IMAGE_FILE = /\.(jpe?g|png|webp)$/i;
 
 // På Windows holder sharp-cachen filen åpen, så den kan ikke skrives over. Vi leser alt inn i minnet.

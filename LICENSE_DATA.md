@@ -1,6 +1,6 @@
 # Lisens for de åpne datafilene
 
-De åpne datafilene `https://flysteder.hpgt.com/flysteder.geojson` og `https://flysteder.hpgt.com/flysteder.kml` lages ved hver bygging fra stedsfilene i `src/flysteder/`. De er lisensiert under **Creative Commons Navngivelse 4.0 Internasjonal (CC BY 4.0)**: <https://creativecommons.org/licenses/by/4.0/deed.no>
+De åpne datafilene `https://flysteder.hpgt.com/flysteder.geojson` og `https://flysteder.hpgt.com/flysteder.kml` lages ved hver bygging fra stedsfilene i `src/sites/`. De er lisensiert under **Creative Commons Navngivelse 4.0 Internasjonal (CC BY 4.0)**: <https://creativecommons.org/licenses/by/4.0/deed.no>
 
 Du kan bruke, dele og bearbeide dataene, også kommersielt, så lenge du krediterer slik:
 

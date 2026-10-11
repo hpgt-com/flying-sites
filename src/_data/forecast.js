@@ -9,7 +9,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 
 const yaml = createRequire(import.meta.url)("js-yaml");
-const SITES_DIR = "src/flysteder";
+const SITES_DIR = "src/sites";
 const CACHE_FILE = path.resolve(".cache/forecast.json");
 const CACHE_MINUTES = 30;
 const HOURS = 48;

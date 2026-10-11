@@ -1,6 +1,6 @@
 # Stedsfiler
 
-Hvert flysted er én mappe i `src/flysteder/<id>/`. Mappenavnet er stedets id (små bokstaver, æ/ø/å skrevet som
+Hvert flysted er én mappe i `src/sites/<id>/`. Mappenavnet er stedets id (små bokstaver, æ/ø/å skrevet som
 ae/o/a, bindestrek i stedet for mellomrom), og det blir adressen: `/flysteder/<id>/` og `/en/sites/<id>/`.
 
 | Fil | Påkrevd | Hva |
@@ -13,7 +13,7 @@ ae/o/a, bindestrek i stedet for mellomrom), og det blir adressen: `/flysteder/<i
 
 Bygget stopper hvis noe er feil: ukjente nøkler, ugyldige retninger eller nivåer, bilder med feil navn, gangruter
 som ikke finnes (`lib/validation.js`). Feilmeldingen sier hvilken fil og hvilket felt. Se et komplett eksempel i
-`src/flysteder/elgen/index.md`.
+`src/sites/elgen/index.md`.
 
 ## Front matter
 
