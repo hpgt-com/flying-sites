@@ -1,7 +1,7 @@
 ---
 name: Vetefjellet
 id: vetefjellet
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -19,7 +19,7 @@ wind_directions:
   - SE
   possible:
   - E
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.79861
   lon: 16.34028
@@ -29,12 +29,12 @@ landings:
   lat: 68.783847
   lon: 16.329384
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.783847
   lon: 16.329384
-  source: manuell
+  source: manual
 access:
   parking_text: Ved Røde Kors-hytta på Kvæfjordeidet, samme som Storlitinden.
   route_text: Følg stien fra hytta opp mot fjellet, samme vei som mot Storlitinden. Ta til høyre, nordover, når du er kommet opp på platået.
@@ -44,7 +44,7 @@ elevation:
   launch_masl: 527
   landing_masl: 206
   difference_m: 321
-  source: Kartverket
+  source: kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA
@@ -57,7 +57,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 - name: Evenes TMA2
   type: TMA
   class: D
@@ -70,7 +70,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 hazards:
 - title: Bølgevind
   text: Stedet er vindutsatt, og ved bølgeforhold slår vinden ned her. Unngå flyging ved bølgeforhold.

@@ -1,7 +1,7 @@
 ---
 name: Blåhatten
 id: blahatten
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -18,10 +18,10 @@ wind_directions:
   - S
   - SE
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 wind_limits:
   max_wind: 5
-  source: lokalkunnskap
+  source: local_knowledge
 launch:
   lat: 68.73083
   lon: 16.46444
@@ -31,12 +31,12 @@ landings:
   lat: 68.71339
   lon: 16.50262
   primary: true
-  source: manuell
+  source: manual
 - name: Landing Slettlia
   lat: 68.72494
   lon: 16.47306
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.714712
@@ -55,12 +55,12 @@ elevation:
   launch_masl: 475
   landing_masl: 79
   difference_m: 396
-  source: Kartverket
+  source: kartverket
 airspace:
 - name: Evenes CTR
   nearby: true
   note: Innflygingen til landingen går inn i CTR. Ring tårnet på Evenes og få klarering før start.
-  source: lokalkunnskap
+  source: local_knowledge
 hazards:
 - title: Evenes CTR
   text: Innflygingen til landingen går inn i Evenes CTR, selv om man flyr lavt og i utkanten av den. Ring tårnet på Evenes og få klarering før du flyr. Telefonnummeret står under «Telefonnumre til tårnene» i Luftrom.

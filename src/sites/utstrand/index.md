@@ -1,7 +1,7 @@
 ---
 name: Utstrand
 id: utstrand
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -18,7 +18,7 @@ wind_directions:
   - SW
   - W
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.81222
   lon: 16.09556
@@ -28,13 +28,13 @@ landings:
   lat: 68.81222
   lon: 16.09556
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.81047
   lon: 16.09912
   masl: 28
-  source: manuell
+  source: manual
 access:
   parking_text: Like ved starten, ved veien.
   route_text: Starten ligger på jordet nedenfor veien, et kort stykke fra parkeringen.
@@ -44,7 +44,7 @@ elevation:
   launch_masl: 13
   landing_masl: 13
   difference_m: 0
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Lavt og røft

@@ -23,7 +23,7 @@ aldri som gjettede verdier.
 | Nøkkel | Hva |
 |---|---|
 | `name`, `id` | Navnet som vises, og id (lik mappenavnet). |
-| `status`, `reviewed` | `utkast` eller `gjennomgått`. Gjennomgått krever `reviewed.by` (navn) og `reviewed.date` (`'2026-10-06'`). |
+| `status`, `reviewed` | `draft` (utkast) eller `reviewed` (gjennomgått). `reviewed` krever `reviewed.by` (navn) og `reviewed.date` (`'2026-10-06'`). |
 | `region` | For eksempel «Harstad og Kvæfjord» eller «Lofoten». Forsidekartet åpner over regionen i `src/_data/site.js`. |
 | `municipality` | Kommunen starten ligger i, fra Kartverket (for eksempel «Kvæfjord»). Påkrevd. Søket på forsiden finner stedet på kommunen og regionen. |
 | `external` | `flightlog_id`, `yr_id` (Yr-stedet nærmest starten), `pgearth_id` (bare når stedet finnes på Paraglidingearth). |
@@ -44,8 +44,9 @@ aldri som gjettede verdier.
 | `hazards` | Farer for hele stedet: `title` og `text`. Vises i «Før du starter». |
 | `links` | Egne lenker under «Logg og mer»: `title`, `text`, `url` (https). |
 
-`source` brukes i kildelinjen nederst på siden: `gpx`, `manuell`, `Kartverket`, `flightlog`,
-`flightlog/lokalkunnskap`, `Kartverket/flightlog`, `flightlog/gpx`, `gammel side`, `IPPC`.
+`source` brukes i kildelinjen nederst på siden: `manual` (registrert manuelt), `gpx`, `kartverket`, `flightlog`,
+`local_knowledge` (lokalkunnskap), `flightlog/local_knowledge`, `kartverket/flightlog`, `flightlog/gpx`, `ippc`, `old_site`
+(den gamle flystedsoversikten). Andre verdier stopper bygget (`SOURCES` i `lib/validation.js`).
 
 ## Tekst
 

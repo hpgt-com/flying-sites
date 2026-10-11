@@ -1,7 +1,7 @@
 ---
 name: Haugfjellet
 id: haugfjellet
-status: gjennomgått
+status: reviewed
 region: Bjerkvik
 municipality: Narvik
 external:
@@ -30,12 +30,12 @@ landings:
   lat: 68.54579
   lon: 17.50363
   primary: true
-  source: manuell
+  source: manual
 - name: Landing i fjæra i Bjerkvik sentrum
   lat: 68.55001
   lon: 17.55163
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.548157
@@ -54,7 +54,7 @@ elevation:
   launch_masl: 523
   landing_masl: 77
   difference_m: 446
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches:

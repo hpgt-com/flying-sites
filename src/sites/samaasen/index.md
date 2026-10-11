@@ -1,7 +1,7 @@
 ---
 name: Samaåsen
 id: samaasen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -18,23 +18,23 @@ wind_directions:
   - W
   - NW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.81012
   lon: 16.5263
-  source: manuell
+  source: manual
 landings:
 - name: Landing
   lat: 68.81636
   lon: 16.51841
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.80965
   lon: 16.52609
   masl: 176
-  source: manuell
+  source: manual
 access:
   parking_text: Ved veien på toppen, rett ved starten.
   route_text: Starten ligger rett ved veien. Gangruten viser turen fra landingen og opp igjen.
@@ -49,7 +49,7 @@ elevation:
   launch_masl: 171
   landing_masl: 4
   difference_m: 167
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Vestlig vind

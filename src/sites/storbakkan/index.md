@@ -1,7 +1,7 @@
 ---
 name: Storbakkan
 id: storbakkan
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -20,10 +20,10 @@ wind_directions:
   possible:
   - SE
   - E
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 wind_limits:
   max_wind: 5
-  source: lokalkunnskap
+  source: local_knowledge
 launch:
   lat: 68.66194
   lon: 16.41
@@ -33,12 +33,12 @@ landings:
   lat: 68.65611
   lon: 16.42806
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.65656
   lon: 16.42087
-  source: manuell
+  source: manual
 access:
   parking_text: I lomma ved siden av veien. Parker så du ikke er til hinder for trafikken.
   route_text: null
@@ -48,7 +48,7 @@ elevation:
   launch_masl: 340
   landing_masl: 138
   difference_m: 202
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Turbulens i mye vind

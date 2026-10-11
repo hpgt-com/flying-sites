@@ -1,7 +1,7 @@
 ---
 name: Ryten
 id: ryten
-status: gjennomgått
+status: reviewed
 region: Lofoten
 municipality: Flakstad
 external:
@@ -21,7 +21,7 @@ wind_directions:
   - S
   - SW
   - W
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.08705
   lon: 13.09203
@@ -31,7 +31,7 @@ landings:
   lat: 68.077307
   lon: 13.096445
   primary: false
-  source: manuell
+  source: manual
 - name: Vestervika
   lat: 68.071753
   lon: 13.083026
@@ -60,7 +60,7 @@ elevation:
   launch_masl: 510
   landing_masl: 0
   difference_m: 510
-  source: Kartverket/flightlog
+  source: kartverket/flightlog
 airspace: []
 hazards:
 - title: Løypestreng ved Innersand

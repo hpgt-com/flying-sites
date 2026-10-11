@@ -41,7 +41,7 @@ Endringer gjort av Claude eller andre bots vises i «Sist endret» som PR-en de 
 Når stedet er kontrollert av noen som kjenner det, sett:
 
 ```yaml
-status: gjennomgått
+status: reviewed
 reviewed:
   by: Navn Navnesen
   date: '2026-10-06'
@@ -132,10 +132,11 @@ MET og Kartverket krever ingen nøkkel. MET krever at klienten oppgir kontaktinf
 
 | Melding i bygget | Løsning |
 |---|---|
+| `ukjent source «…»` | Bruk en av de faste verdiene, se [source](site-files.md#front-matter). |
 | `ukjent nøkkel …` | Skrivefeil i front matter. Se tabellen i [site-files.md](site-files.md#front-matter). |
 | `bildet … har feil navn` | Importer med `npm run images`, eller døp om etter mønsteret. |
 | `gangruten … skal hete …` | Flere ruter skal hete `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
-| `status er «gjennomgått», men reviewed …` | Fyll inn `reviewed.by` og `reviewed.date`. |
+| `status er «reviewed», men reviewed …` | Fyll inn `reviewed.by` og `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Skrivefeil i oversettelsen. Se [Oversettelse](site-files.md#oversettelse). |
 | Vindvurderingen mangler på siden | Varselet er for gammelt, eller MET svarte ikke. Kjør «Build and deploy» manuelt. |
 | Luftromslaget sier «Kunne ikke hente luftrom» | `assets/airspace.geojson` mangler i bygget. Sjekk at `src/_data/cache/airspace/region.geojson` finnes. |

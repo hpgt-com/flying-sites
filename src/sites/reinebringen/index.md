@@ -1,7 +1,7 @@
 ---
 name: Reinebringen
 id: reinebringen
-status: gjennomgått
+status: reviewed
 region: Lofoten
 municipality: Moskenes
 external:
@@ -22,7 +22,7 @@ wind_directions:
   possible:
   - N
   - NE
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 67.92784
   lon: 13.07143
@@ -32,12 +32,12 @@ landings:
   lat: 67.932411
   lon: 13.092867
   primary: true
-  source: manuell
+  source: manual
 - name: Reine ytre havn
   lat: 67.93475
   lon: 13.096456
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 67.921983
@@ -56,7 +56,7 @@ elevation:
   launch_masl: 484
   landing_masl: 5
   difference_m: 479
-  source: Kartverket/flightlog
+  source: kartverket/flightlog
 airspace: []
 hazards:
 - title: Stupstart

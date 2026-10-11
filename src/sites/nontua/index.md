@@ -1,7 +1,7 @@
 ---
 name: Nontua
 id: nontua
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -22,7 +22,7 @@ wind_directions:
   - N
   possible:
   - NW
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.8175
   lon: 16.33889
@@ -32,21 +32,21 @@ landings:
   lat: 68.83392
   lon: 16.3468
   primary: true
-  source: manuell
+  source: manual
 - name: Landing ved traktorveien over Kaltdalen/Høgda
   lat: 68.81828
   lon: 16.36729
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering Høgda (Kasfjord kirkegård)
   lat: 68.82759
   lon: 16.37878
-  source: manuell
+  source: manual
 - name: Parkering ved Kasfjord Montessoribarnehage
   lat: 68.83283
   lon: 16.3491
-  source: manuell
+  source: manual
 - name: Parkering ved traktorveien over Kaltdalen
   lat: 68.81808
   lon: 16.367899
@@ -65,7 +65,7 @@ elevation:
   launch_masl: 564
   landing_masl: 5
   difference_m: 559
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches:

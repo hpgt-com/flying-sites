@@ -1,7 +1,7 @@
 ---
 name: Trastad
 id: trastad
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -18,31 +18,31 @@ wind_directions:
   - SW
   - W
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 wind_limits:
   max_wind: 6
-  source: lokalkunnskap
+  source: local_knowledge
 launch:
   lat: 68.78481
   lon: 16.14474
-  source: manuell
+  source: manual
 landings:
 - name: Landing ved rødt naust
   lat: 68.78234
   lon: 16.12941
   primary: true
-  source: manuell
+  source: manual
 - name: Landing på veien ved busstoppet (teknisk)
   lat: 68.78212
   lon: 16.13527
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.78587
   lon: 16.14534
   masl: 146
-  source: manuell
+  source: manual
 access:
   parking_text: Ved en bom ved en liten vei til høyre på toppen. Grunneieren har gitt klubben lov til å kjøre hit, men ikke lenger inn i Trastadmarka.
   route_text: Følg veien opp bak Trastad og ta til venstre der grusveien fortsetter. Følg veien et lite stykke og stien til høyre til starten.
@@ -52,7 +52,7 @@ elevation:
   launch_masl: 158
   landing_masl: 3
   difference_m: 155
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Grunneier

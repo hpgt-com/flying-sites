@@ -1,7 +1,7 @@
 ---
 name: Heia
 id: heia
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -21,7 +21,7 @@ wind_directions:
   possible:
   - NW
   - W
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.75889
   lon: 16.51028
@@ -31,12 +31,12 @@ landings:
   lat: 68.76222
   lon: 16.54333
   primary: true
-  source: manuell
+  source: manual
 - name: Parkeringsplassen ved Medkila skole
   lat: 68.75897
   lon: 16.5435
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.763552
@@ -55,7 +55,7 @@ elevation:
   launch_masl: 475
   landing_masl: 70
   difference_m: 405
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Teknisk landing

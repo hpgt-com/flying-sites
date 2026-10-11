@@ -1,7 +1,7 @@
 ---
 name: Reinfjellet
 id: reinfjellet
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -20,10 +20,10 @@ wind_directions:
   - E
   - NE
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 wind_limits:
   max_wind: 5
-  source: lokalkunnskap
+  source: local_knowledge
 launch:
   lat: 68.64833
   lon: 16.01167
@@ -33,7 +33,7 @@ landings:
   lat: 68.66583
   lon: 16.08139
   primary: true
-  source: manuell
+  source: manual
 parking: []
 access:
   parking_text: Ved Tomasneset på østsiden av fjellet.
@@ -44,7 +44,7 @@ elevation:
   launch_masl: 893
   landing_masl: 2
   difference_m: 891
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Maks 5 m/s

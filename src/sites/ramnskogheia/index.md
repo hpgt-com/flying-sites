@@ -1,7 +1,7 @@
 ---
 name: Ramnskogheia
 id: ramnskogheia
-status: gjennomgått
+status: reviewed
 region: Andøya
 municipality: Andøy
 external:
@@ -49,7 +49,7 @@ elevation:
   launch_masl: 485
   landing_masl: 80
   difference_m: 405
-  source: Kartverket/flightlog
+  source: kartverket/flightlog
 airspace: []
 hazards:
 - title: Andøya TMA

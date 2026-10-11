@@ -1,7 +1,7 @@
 ---
 name: Daleskallen
 id: daleskallen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -17,7 +17,7 @@ wind_directions:
   primary:
   - W
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.79583
   lon: 16.11944
@@ -27,12 +27,12 @@ landings:
   lat: 68.79613
   lon: 16.11071
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering (ca.)
   lat: 68.79613
   lon: 16.11071
-  source: manuell
+  source: manual
 access:
   parking_text: Ved jordet nedenfor veien, der man går opp til starten. Ikke stå i veien for traktor som skal inn på jordet.
   route_text: Gå rett opp gjennom åpent terreng.
@@ -42,7 +42,7 @@ elevation:
   launch_masl: 176
   landing_masl: 12
   difference_m: 164
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Lavspent under starten

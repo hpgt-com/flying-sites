@@ -1,7 +1,7 @@
 ---
 name: Svartdalsåsen
 id: svartdalsasen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -18,17 +18,17 @@ wind_directions:
   - W
   - NW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.77571
   lon: 16.46005
-  source: manuell
+  source: manual
 landings:
 - name: Landing
   lat: 68.78833
   lon: 16.47528
   primary: true
-  source: manuell
+  source: manual
 parking: []
 access:
   parking_text: Ved skytebanen på Heggenkollen.
@@ -39,7 +39,7 @@ elevation:
   launch_masl: 340
   landing_masl: 79
   difference_m: 261
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches:

@@ -1,7 +1,7 @@
 ---
 name: Steinsåsen
 id: steinsasen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -20,7 +20,7 @@ wind_directions:
   - W
   - SW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.75694
   lon: 16.43139
@@ -30,7 +30,7 @@ landings:
   lat: 68.77028
   lon: 16.41722
   primary: true
-  source: manuell
+  source: manual
 parking: []
 access:
   parking_text: Ved vannhuset ved Steinsåsvannet.
@@ -41,7 +41,7 @@ elevation:
   launch_masl: 488
   landing_masl: 131
   difference_m: 357
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Krevende landing i Storvassbotn

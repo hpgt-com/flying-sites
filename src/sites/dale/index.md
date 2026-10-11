@@ -1,7 +1,7 @@
 ---
 name: Dale
 id: dale
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -18,7 +18,7 @@ wind_directions:
   - S
   - SW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.79472
   lon: 16.11583
@@ -28,13 +28,13 @@ landings:
   lat: 68.79613
   lon: 16.11071
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering (ca.)
   lat: 68.79613
   lon: 16.11071
   masl: 12
-  source: manuell
+  source: manual
 access:
   parking_text: Ved jordet nedenfor veien, der man går opp til starten. Ikke stå i veien for traktor som skal inn på jordet.
   route_text: null
@@ -44,7 +44,7 @@ elevation:
   launch_masl: 75
   landing_masl: 12
   difference_m: 63
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Lavspent under starten

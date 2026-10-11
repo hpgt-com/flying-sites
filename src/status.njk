@@ -43,7 +43,7 @@ noindex: true
           <tr>
             <th scope="row"><a href="{{ row.url }}">{{ row.name }}</a></th>
             <td data-label="Gjennomgått">{% if row.reviewed %}{{ row.reviewed.date | formatDate }}<span class="muted"> av {{ row.reviewed.by }}</span>{% else %}<strong class="danger">Nei</strong>{% endif %}</td>
-            <td data-label="Mangler">{% if row.missing.length %}<span class="tags">{% for item in row.missing %}{{ m.tag(item, "missing") }}{% endfor %}</span>{% else %}<span class="muted">Ingenting</span>{% endif %}</td>
+            <td data-label="Mangler">{% if row.missing.length %}<span class="tags">{% for item in row.missing %}{{ m.tag(item.label, "missing") }}{% endfor %}</span>{% else %}<span class="muted">Ingenting</span>{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>

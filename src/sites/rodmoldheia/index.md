@@ -1,7 +1,7 @@
 ---
 name: Rødmoldheia
 id: rodmoldheia
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -20,7 +20,7 @@ wind_directions:
   possible:
   - SE
   - W
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.80639
   lon: 16.19278
@@ -30,17 +30,17 @@ landings:
   lat: 68.78407
   lon: 16.1989
   primary: true
-  source: manuell
+  source: manual
 - name: Landing under starten (PP2)
   lat: 68.79558
   lon: 16.20923
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.784364
   lon: 16.199507
-  source: manuell
+  source: manual
 access:
   parking_text: Ovenfor skytterbanen i Kvæfjord, etter bommen.
   route_text: Ned og bortover traktorveien mot speiderhytta, og derfra opp på fjellet i forholdsvis lett terreng.
@@ -54,7 +54,7 @@ elevation:
   launch_masl: 621
   landing_masl: 237
   difference_m: 384
-  source: Kartverket
+  source: kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA
@@ -67,7 +67,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 hazards: []
 launches:
 - directions:

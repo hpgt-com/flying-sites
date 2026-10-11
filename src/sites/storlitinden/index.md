@@ -1,7 +1,7 @@
 ---
 name: Storlitinden
 id: storlitinden
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -20,7 +20,7 @@ wind_directions:
   - SW
   possible:
   - NW
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.79667
   lon: 16.30583
@@ -30,16 +30,16 @@ landings:
   lat: 68.783847
   lon: 16.329384
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.783847
   lon: 16.329384
-  source: manuell
+  source: manual
 - name: Parkering Kvæfjordløyper
   lat: 68.77866
   lon: 16.33697
-  source: manuell
+  source: manual
 access:
   parking_text: Ved Røde Kors-hytta på Kvæfjordeidet, eller ved Kvæfjordløyper ca. 650 m lenger sør.
   route_text: Stien fra hytta er lett å finne. Stien fra Kvæfjordløyper brukes mest om vinteren, fordi den parkeringen brøytes.
@@ -58,7 +58,7 @@ elevation:
   launch_masl: 597
   landing_masl: 206
   difference_m: 391
-  source: Kartverket
+  source: kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA
@@ -71,7 +71,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 - name: Evenes TMA2
   type: TMA
   class: D
@@ -84,7 +84,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 hazards:
 - title: Bølgevind
   text: Stedet er vindutsatt, og ved bølgeforhold slår vinden ned her. Unngå flyging ved bølgeforhold.

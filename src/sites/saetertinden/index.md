@@ -1,7 +1,7 @@
 ---
 name: Sætertinden
 id: saetertinden
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -22,7 +22,7 @@ wind_directions:
   - E
   possible:
   - NE
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.58694
   lon: 16.36222
@@ -32,7 +32,7 @@ landings:
   lat: 68.56611
   lon: 16.41944
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: P hovedruta
   lat: 68.565455
@@ -60,7 +60,7 @@ elevation:
   launch_masl: 1089
   landing_masl: 4
   difference_m: 1085
-  source: Kartverket
+  source: kartverket
 airspace:
 - name: Evenes CTR
   nearby: true

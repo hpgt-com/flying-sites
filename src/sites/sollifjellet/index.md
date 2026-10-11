@@ -1,7 +1,7 @@
 ---
 name: Sollifjellet
 id: sollifjellet
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -23,7 +23,7 @@ wind_directions:
   - S
   - NW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.80389
   lon: 16.36667
@@ -33,12 +33,12 @@ landings:
   lat: 68.80194
   lon: 16.40667
   primary: true
-  source: manuell
+  source: manual
 - name: SPG-landing
   lat: 68.80195
   lon: 16.38677
   primary: false
-  source: lokalkunnskap
+  source: local_knowledge
 parking:
 - name: Parkering
   lat: 68.802129
@@ -57,7 +57,7 @@ elevation:
   launch_masl: 563
   landing_masl: 213
   difference_m: 350
-  source: Kartverket
+  source: kartverket
 airspace:
 - name: Evenes TMA1
   type: TMA
@@ -70,7 +70,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 - name: Evenes TMA2
   type: TMA
   class: D
@@ -83,7 +83,7 @@ airspace:
     value: 105
     unit: FL
   valid_from: '2023-04-20'
-  source: IPPC
+  source: ippc
 hazards:
 - title: Trakteffekt over toppen av alpinsenteret
   text: Ved masta og ved heisen trakter vinden, og den er ofte sterkere der enn ellers på fjellet. Punkt 2 i kartet.
@@ -107,7 +107,7 @@ launches:
   - SPG
   lat: 68.80604
   lon: 16.37694
-  source: lokalkunnskap
+  source: local_knowledge
   text: Eventuelt fra masta på toppen av alpinsenteret. Der trakter vinden, se «Før du starter».
 - directions:
   - N
@@ -116,7 +116,7 @@ launches:
   - PG
   lat: 68.80693
   lon: 16.37627
-  source: lokalkunnskap
+  source: local_knowledge
   text: Fra høyresiden i alpinbakken. Ikke legg ut vingen i skitraseen.
 - directions:
   - NW
@@ -124,7 +124,7 @@ launches:
   - PG
   lat: 68.80612
   lon: 16.37473
-  source: lokalkunnskap
+  source: local_knowledge
   text: I alpinanlegget, på veien som fører ned mot NØ-starten.
 - directions:
   - NW
@@ -132,7 +132,7 @@ launches:
   - PG
   lat: 68.80576
   lon: 16.36962
-  source: lokalkunnskap
+  source: local_knowledge
   text: Lenger opp på ryggen, på baksiden av fjellet.
 - directions:
   - W

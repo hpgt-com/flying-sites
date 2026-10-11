@@ -1,7 +1,7 @@
 ---
 name: Årbostadtinden
 id: arbostadtinden
-status: gjennomgått
+status: reviewed
 region: Andørja
 municipality: Ibestad
 external:
@@ -51,7 +51,7 @@ elevation:
   launch_masl: 1179
   landing_masl: 9
   difference_m: 1170
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Ledninger

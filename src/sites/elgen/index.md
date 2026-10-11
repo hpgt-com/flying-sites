@@ -1,7 +1,7 @@
 ---
 name: Elgen
 id: elgen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -25,7 +25,7 @@ wind_directions:
   - W
   - NW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.89083
   lon: 16.28194
@@ -35,17 +35,17 @@ landings:
   lat: 68.88975
   lon: 16.3043
   primary: true
-  source: manuell
+  source: manual
 - name: Landing ved kapellet (nord)
   lat: 68.91218
   lon: 16.2699
   primary: false
-  source: manuell
+  source: manual
 - name: Landing i fjæra ved Elgsnes
   lat: 68.91876
   lon: 16.26361
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: P kapellet
   lat: 68.91139
@@ -73,7 +73,7 @@ elevation:
   launch_masl: 497
   landing_masl: 8
   difference_m: 489
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Strømledning ved kapellet

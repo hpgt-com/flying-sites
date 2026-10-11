@@ -1,7 +1,7 @@
 ---
 name: Lundenesgalten
 id: lundenesgalten
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -19,7 +19,7 @@ wind_directions:
   - E
   - SE
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.90343
   lon: 16.53276
@@ -29,7 +29,7 @@ landings:
   lat: 68.89437
   lon: 16.55863
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering ved Lundenes kirkegård
   lat: 68.880912
@@ -48,7 +48,7 @@ elevation:
   launch_masl: 780
   landing_masl: 194
   difference_m: 586
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches: []

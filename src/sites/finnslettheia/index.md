@@ -1,7 +1,7 @@
 ---
 name: Finnslettheia
 id: finnslettheia
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -18,7 +18,7 @@ wind_directions:
   - E
   - SE
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.67222
   lon: 16.43333
@@ -28,12 +28,12 @@ landings:
   lat: 68.65611
   lon: 16.42806
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.65656
   lon: 16.42087
-  source: manuell
+  source: manual
 access:
   parking_text: I lomma ved siden av veien. Parker så du ikke er til hinder for trafikken.
   route_text: null
@@ -43,7 +43,7 @@ elevation:
   launch_masl: 502
   landing_masl: 138
   difference_m: 364
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches: []

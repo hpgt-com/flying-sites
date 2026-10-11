@@ -1,7 +1,7 @@
 ---
 name: Keipen
 id: keipen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -20,7 +20,7 @@ wind_directions:
   - W
   possible:
   - SE
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.85639
   lon: 16.33556
@@ -30,7 +30,7 @@ landings:
   lat: 68.83392
   lon: 16.3468
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.861073
@@ -49,7 +49,7 @@ elevation:
   launch_masl: 475
   landing_masl: 5
   difference_m: 470
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Krevende forhold
@@ -71,7 +71,7 @@ launches:
   text: Alternativ start, brukes som regel når vinden står litt SV eller S og blir skrå på hovedstarten. Dekker også V. I SØ blir det litt rotete.
   lat: 68.85193
   lon: 16.34286
-  source: manuell
+  source: manual
 reviewed:
   by: Kristoffer D. Hofstad
   date: '2026-10-06'

@@ -1,7 +1,7 @@
 ---
 name: Kilhusåsen
 id: kilhusasen
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -18,7 +18,7 @@ wind_directions:
   - W
   - NW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.80306
   lon: 16.45222
@@ -28,7 +28,7 @@ landings:
   lat: 68.79111
   lon: 16.45028
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.795118
@@ -47,7 +47,7 @@ elevation:
   launch_masl: 280
   landing_masl: 99
   difference_m: 181
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Hester ved landing

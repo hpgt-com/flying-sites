@@ -1,7 +1,7 @@
 ---
 name: Melå aksla
 id: mela-aksla
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -23,7 +23,7 @@ wind_directions:
   - W
   - NW
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.65397
   lon: 16.11531
@@ -33,12 +33,12 @@ landings:
   lat: 68.664427
   lon: 16.083105
   primary: true
-  source: manuell
+  source: manual
 - name: Alternativ landing
   lat: 68.65639
   lon: 16.08755
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.664427
@@ -57,7 +57,7 @@ elevation:
   launch_masl: 540
   landing_masl: 6
   difference_m: 534
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Ledninger ved landingen
@@ -83,7 +83,7 @@ launches:
   text: Alternativ start for SV, V og NV, der gangruten ender (756 moh). PP3, siden man ikke ser landingen herfra.
   lat: 68.6381
   lon: 16.12245
-  source: manuell
+  source: manual
 reviewed:
   by: Kristoffer D. Hofstad
   date: '2026-10-06'

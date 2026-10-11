@@ -1,7 +1,7 @@
 ---
 name: Høgfjellet
 id: hogfjellet
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -20,7 +20,7 @@ wind_directions:
   - N
   - NE
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.82333
   lon: 16.30972
@@ -30,12 +30,12 @@ landings:
   lat: 68.829074
   lon: 16.333223
   primary: true
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.829717
   lon: 16.329989
-  source: manuell
+  source: manual
 access:
   parking_text: Parker ved markeringen i kartet, så du ikke kjører opp i boligfeltet eller på jordet.
   route_text: null
@@ -49,7 +49,7 @@ elevation:
   launch_masl: 617
   landing_masl: 27
   difference_m: 590
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Høyspent over landingsjordet

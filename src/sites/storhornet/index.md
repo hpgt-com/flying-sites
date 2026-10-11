@@ -1,7 +1,7 @@
 ---
 name: Storhornet
 id: storhornet
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Kvæfjord
 external:
@@ -22,32 +22,32 @@ wind_directions:
   - NE
   - E
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.83032
   lon: 16.20122
-  source: manuell
+  source: manual
 landings:
 - name: Landing ved havet
   lat: 68.8475
   lon: 16.16306
   primary: true
-  source: manuell
+  source: manual
 - name: Landing ved parkeringen oppe
   lat: 68.8435
   lon: 16.19038
   primary: false
-  source: manuell
+  source: manual
 - name: Myra ved parkeringen oppe
   lat: 68.84283
   lon: 16.19521
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering oppe ved gjerdet
   lat: 68.84314
   lon: 16.18982
-  source: manuell
+  source: manual
 access:
   parking_text: Utgangspunkt fra Molvika. Klubben har avtale med grunneieren, så man kan kjøre skogsveien helt opp til et gjerde. Vipps 50 kr per bil til 984 17 630 når du kjører helt opp.
   route_text: Kjører man helt opp til gjerdet, sparer man ca. 40–45 min gåing. Ellers går man hele veien.
@@ -61,7 +61,7 @@ elevation:
   launch_masl: 609
   landing_masl: 19
   difference_m: 590
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches:

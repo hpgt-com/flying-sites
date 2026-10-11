@@ -1,7 +1,7 @@
 ---
 name: Hinnstein
 id: hinnstein
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -18,7 +18,7 @@ wind_directions:
   - E
   - SE
   possible: []
-  source: flightlog/lokalkunnskap
+  source: flightlog/local_knowledge
 launch:
   lat: 68.74722
   lon: 16.50278
@@ -28,17 +28,17 @@ landings:
   lat: 68.75897
   lon: 16.5435
   primary: true
-  source: manuell
+  source: manual
 - name: Landing Medkilabanen
   lat: 68.76222
   lon: 16.54333
   primary: false
-  source: manuell
+  source: manual
 parking:
 - name: Parkering
   lat: 68.75818
   lon: 16.54367
-  source: manuell
+  source: manual
 access:
   parking_text: Ved Medkila skole.
   route_text: Stien går opp mellom Hinnstein og Heia, og vanligvis rundt på baksiden av Hinnstein.
@@ -52,7 +52,7 @@ elevation:
   launch_masl: 558
   landing_masl: 53
   difference_m: 505
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards:
 - title: Teknisk landing

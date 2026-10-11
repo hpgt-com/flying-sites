@@ -1,7 +1,7 @@
 ---
 name: Nona
 id: nona
-status: gjennomgått
+status: reviewed
 region: Harstad og Kvæfjord
 municipality: Harstad
 external:
@@ -51,7 +51,7 @@ elevation:
   launch_masl: 999
   landing_masl: 6
   difference_m: 993
-  source: Kartverket
+  source: kartverket
 airspace: []
 hazards: []
 launches:
