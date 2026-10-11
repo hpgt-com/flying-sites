@@ -1,5 +1,10 @@
 # HPGT flysteder
 
+> **English:** Source code for [flysteder.hpgt.com](https://flysteder.hpgt.com), the paragliding and speedflying sites
+> around Harstad, Northern Norway, with an [English version](https://flysteder.hpgt.com/en/). The sites are available as
+> open data (GeoJSON and KML, CC BY 4.0), described in [docs/open-data.md](docs/open-data.md). The rest of the
+> documentation is in Norwegian.
+
 Kildekoden til **[flysteder.hpgt.com](https://flysteder.hpgt.com)**, flystedsoversikten til Harstad Hang og Paragliderklubb (HPGT). Oversikten viser flysteder for paraglider og speedglider i området rundt Harstad og Kvæfjord, med vindretninger, farer, luftrom, gangrute, værvarsel og en grov vindvurdering fra MET.
 
 Siden bygger videre på den gamle flystedsoversikten til Lars Sletten, som han har gitt til klubben.
@@ -17,6 +22,7 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 
 | Dokument | Innhold |
 |---|---|
+| [docs/open-data.md](docs/open-data.md) | De åpne datafilene (GeoJSON og KML): oppsettet per sted, feltene og lisensen. På engelsk, for apper og andre som bruker dataene. |
 | [docs/architecture.md](docs/architecture.md) | Hvordan siden henger sammen, med tegninger: kilder, bygging, nettleser, språk, publisering, hva som er bygget og hva som er planlagt |
 | [docs/site-files.md](docs/site-files.md) | Formatet på stedsfilene: alle feltene, tekst, nivå, bilder, tegning og oversettelse |
 | [docs/operations.md](docs/operations.md) | Oppskrifter: nytt sted, gjennomgang, statussiden, vindvarsel, luftrom, bilder, statistikk, nytt språk, feilsøking |

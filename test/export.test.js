@@ -55,3 +55,20 @@ test("KML er gyldig og har én mappe per sted, med tegn escapet", () => {
   assert.match(kml, /<coordinates>16.4,68.8<\/coordinates>/);
   assert.match(kml, /CC BY 4.0/);
 });
+
+test("KML-navnene sier sted og type, og like startgrupper står én gang", () => {
+  const twice = { ...site, data: { ...site.data, launches: [
+    { directions: ["E", "S"], categories: ["PG", "SPG"] }, { directions: ["S", "E"], categories: ["PG", "SPG"] }, { directions: ["N"], lat: 68.801, lon: 16.401 },
+  ], landings: [{ name: "Myra", lat: 68.79, lon: 16.42, primary: true }, { name: "Jordet", lat: 68.78, lon: 16.43, primary: false }] } };
+  const g = sitesToGeoJSON([twice], "https://flysteder.hpgt.com", new Date("2026-10-05T08:00:00Z"));
+  assert.deepEqual(g.features[0].properties.launch_groups, [{ categories: ["PG", "SPG"], directions: ["E", "S"] }, { categories: ["PG"], directions: ["N"] }]);
+  const kml = geoJSONToKML(g);
+  assert.match(kml, /<name>Testfjell &amp; co – start<\/name>/);
+  assert.match(kml, /<name>Testfjell &amp; co – start PG \(N\)<\/name>/);
+  assert.match(kml, /<name>Testfjell &amp; co – hovedlanding: Myra<\/name>/);
+  assert.match(kml, /<name>Testfjell &amp; co – alternativ landing: Jordet<\/name>/);
+  assert.match(kml, /<name>Testfjell &amp; co – parkering<\/name>/);
+  assert.match(kml, /PG\/SPG: Ø, S/);
+  assert.match(kml, /docs\/open-data\.md/);
+  assert.equal(g.features.find((f) => f.properties.kind === "route").properties.length_km, 1.5);
+});

@@ -139,7 +139,7 @@ scripts:
       <footer class="disclaimer">
         <p>{{ t.home.disclaimer }}</p>
         <p>{{ t.home.credit }}</p>
-        <p>{{ t.home.openData | fmt({ geojson: '<a href="' ~ ('/flysteder.geojson' | url) ~ '" download>GeoJSON</a>', kml: '<a href="' ~ ('/flysteder.kml' | url) ~ '" download>KML</a>', license: '<a href="' ~ t.home.licenseUrl ~ '">CC BY 4.0</a>' }) | safe }}</p>
+        <p>{{ t.home.openData | fmt({ geojson: '<a href="' ~ ('/flysteder.geojson' | url) ~ '" download>GeoJSON</a>', kml: '<a href="' ~ ('/flysteder.kml' | url) ~ '" download>KML</a>', license: '<a href="' ~ t.home.licenseUrl ~ '">CC BY 4.0</a>', docs: '<a href="https://github.com/hpgt-com/flying-sites/blob/main/docs/open-data.md">' ~ t.home.openDataDocs ~ '</a>' }) | safe }}</p>
         <p>{{ t.home.analytics | fmt({ goatcounter: '<a href="https://www.goatcounter.com/">GoatCounter</a>' }) | safe }}</p>
       </footer>
     </div>
