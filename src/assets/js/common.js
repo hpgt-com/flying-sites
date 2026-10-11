@@ -126,8 +126,38 @@
     return label;
   }
 
+  // Berøringsskjerm: én finger ruller siden, to fingre flytter og zoomer kartet, så man ikke blir fanget i kartet
+  // når man ruller nedover siden. Uten Leaflets dra-funksjon gir leaflet.css kartet touch-action: pan-x pan-y, så
+  // nettleseren ruller siden, mens Leaflet tar knipet (som også flytter kartet). Drar man med én finger, vises
+  // «Bruk to fingre for å flytte kartet» et øyeblikk. I fullskjerm finnes ingen side å rulle, og én finger flytter kartet.
+  var COARSE = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
+  function useTwoFingers(map) {
+    if (!COARSE) return;
+    map.dragging.disable();
+    var container = map.getContainer();
+    var hint = L.DomUtil.create("div", "map-touch-hint", container);
+    hint.textContent = t("map.twoFingers");
+    hint.setAttribute("aria-hidden", "true");
+    var timer = null;
+    container.addEventListener("touchmove", function (ev) {
+      if (map.dragging.enabled() || ev.touches.length !== 1) return;
+      hint.classList.add("map-touch-hint--on");
+      clearTimeout(timer);
+      timer = setTimeout(function () { hint.classList.remove("map-touch-hint--on"); }, 1500);
+    }, { passive: true });
+    container.addEventListener("touchstart", function (ev) {
+      if (ev.touches.length > 1) hint.classList.remove("map-touch-hint--on");
+    }, { passive: true });
+    map.on("fullscreenchange", function (ev) {
+      if (ev.on) map.dragging.enable();
+      else map.dragging.disable();
+      hint.classList.remove("map-touch-hint--on");
+    });
+  }
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
+    useTwoFingers(map);
     var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
       className: "base-tiles",
@@ -232,6 +262,7 @@
       fullscreenButton.title = label;
       fullscreenButton.setAttribute("aria-label", label);
       fullscreenButton.setAttribute("aria-pressed", String(on));
+      map.fire("fullscreenchange", { on: on });
       if (keepView) return;
       map.invalidateSize();
       map.closePopup();
