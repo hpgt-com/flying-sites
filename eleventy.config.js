@@ -13,37 +13,37 @@ import { fmt, localeUrl } from "./lib/i18n.js";
 export default function (eleventyConfig) {
   eleventyConfig.addPlugin(HtmlBasePlugin);
 
-  // GPX kopieres med samme sti. Bildene kopieres ikke: lib/images.js lager visningsstørrelser
-  // uten metadata i _site/img/, så originalene (med EXIF) aldri publiseres.
-  // Gangrutene ligger ved siden av stedssidene: src/sites/<id>/*.gpx blir /flysteder/<id>/*.gpx.
+  // GPX files are copied with the same path. Images are not copied: lib/images.js generates display sizes
+  // without metadata in _site/img/, so the originals (with EXIF) are never published.
+  // Walking routes sit next to the site pages: src/sites/<id>/*.gpx becomes /flysteder/<id>/*.gpx.
   eleventyConfig.addPassthroughCopy({ "src/sites": "flysteder" }, { filter: ["**/*.gpx"] });
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
-  // Fontene fra Fontsource (SIL OFL 1.1), bare latin og vektene som brukes. @font-face står i src/assets/css/fonts.css.
+  // Fonts from Fontsource (SIL OFL 1.1), Latin subset and used weights only. @font-face is in src/assets/css/fonts.css.
   for (const [pkg, weights] of [["barlow", [400, 500, 600]], ["barlow-condensed", [500, 600, 700]]]) {
     for (const w of weights) {
       eleventyConfig.addPassthroughCopy({ [`node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}-normal.woff2`]: `assets/fonts/${pkg}-latin-${w}-normal.woff2` });
     }
     eleventyConfig.addPassthroughCopy({ [`node_modules/@fontsource/${pkg}/LICENSE`]: `assets/fonts/LICENSE-${pkg}.txt` });
   }
-  // Luftrom fra openAIP til kartlaget (npm run airspace). Lastes først når noen slår på et luftromslag.
+  // Airspace from openAIP for the map layer (npm run airspace). Loaded only when someone turns on an airspace layer.
   eleventyConfig.addPassthroughCopy({ "src/_data/cache/airspace/region.geojson": "assets/airspace.geojson" });
 
   eleventyConfig.ignores.add("src/_data/cache/**");
-  // Oversatte stedstekster (index.en.md osv.) er ikke egne sider. De leses av lib/translations.js.
+  // Translated site texts (index.en.md etc.) are not pages of their own. They are read by lib/translations.js.
   eleventyConfig.ignores.add("src/sites/*/index.*.md");
   eleventyConfig.addWatchTarget("./lib/");
-  // På Windows mister filovervåkingen filer som skrives på nytt (sed, git checkout, enkelte editorer).
-  // Polling er litt tregere, men fanger alle endringer. Gjelder bare `npm start`.
+  // On Windows the file watcher misses files that are rewritten (sed, git checkout, some editors).
+  // Polling is a little slower but catches every change. Only affects `npm start`.
   eleventyConfig.setChokidarConfig({ usePolling: true, interval: 500 });
 
   eleventyConfig.addCollection("sites", (api) => {
-    // Stedssidene finnes på hvert språk (paginering i sites.11tydata.js). Samlingen har én side per sted,
-    // den norske. Lenker til andre språk lages med localeUrl.
+    // Site pages exist in every language (pagination in sites.11tydata.js). The collection has one page per site,
+    // the Norwegian one. Links to other languages are made with localeUrl.
     const sites = api.getFilteredByGlob("src/sites/*/index.md").filter((s) => (s.data.language?.code ?? "nb") === "nb");
     const errors = sites.flatMap((s) => {
-      // Rå front matter, så valideringen ser bare nøklene fra stedsfilen.
+      // Raw front matter, so validation only sees the keys from the site file.
       const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(fs.readFileSync(s.inputPath, "utf8"));
       return validateSite(s.data, s.inputPath, fm ? yaml.load(fm[1]) : null);
     });
@@ -55,18 +55,18 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addGlobalData("DIRECTIONS", DIRECTIONS);
 
-  // Filtrene under følger sidens språk (lang), som Nunjucks gir i this.ctx.
+  // The filters below follow the page language (lang), which Nunjucks provides in this.ctx.
   const langOf = (ctx) => ctx?.lang ?? "nb";
   eleventyConfig.addFilter("directionLabel", function (code) { return directionLabel(code, langOf(this.ctx)); });
   eleventyConfig.addFilter("directionLabels", function (list) { return sortDirections(list).map((c) => directionLabel(c, langOf(this.ctx))).join(", "); });
   eleventyConfig.addFilter("directionWord", function (code) { return directionWord(code, langOf(this.ctx)); });
-  // Tekst fra ordboken med verdier satt inn: {{ t.site.onFlightlog | fmt({ name: name }) }}.
+  // Dictionary text with values filled in: {{ t.site.onFlightlog | fmt({ name: name }) }}.
   eleventyConfig.addFilter("fmt", (text, vars) => fmt(text, vars));
-  // Intern adresse på sidens språk (eller språket som oppgis): {{ "/tarn/" | localeUrl }}.
+  // Internal URL in the page language (or the given language): {{ "/tarn/" | localeUrl }}.
   eleventyConfig.addFilter("localeUrl", function (url, code) { return localeUrl(url, code ?? langOf(this.ctx)); });
   eleventyConfig.addFilter("directionType", (code, windDirections) => directionType(windDirections, code));
   eleventyConfig.addFilter("sortDirections", sortDirections);
-  // Versjonsnummer på CSS/JS, så nettlesere henter nye filer etter en endring (lib/assets.js).
+  // Version numbers on CSS/JS, so browsers fetch new files after a change (lib/assets.js).
   eleventyConfig.addFilter("asset", assetUrl);
   eleventyConfig.addFilter("formatNumber", function (n, decimals) { return formatNumber(n, decimals, langOf(this.ctx)); });
   eleventyConfig.addFilter("formatDate", function (iso) { return formatDate(iso, langOf(this.ctx)); });
@@ -76,8 +76,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("capitalizeFirst", (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s));
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v).replace(/</g, "\\u003c"));
 
-  // Plukker ut en del av den ferdige Markdown-teksten: "intro" (før første h2) eller en h2-seksjon.
-  // heading kan være en liste, for eksempel ["Launch", "Start"] når teksten kan være oversatt eller norsk.
+  // Extracts part of the rendered Markdown: "intro" (before the first h2) or an h2 section.
+  // heading may be a list, e.g. ["Launch", "Start"] when the text may be translated or Norwegian.
   eleventyConfig.addFilter("section", (html, heading) => {
     if (!html) return "";
     const parts = String(html).split(/<h2[^>]*>([\s\S]*?)<\/h2>/);
@@ -89,11 +89,11 @@ export default function (eleventyConfig) {
     return "";
   });
 
-  // Oversikt til vedlikeholdssiden /status/.
+  // Summary for the maintenance status page /status/.
   eleventyConfig.addFilter("statusSummary", statusSummary);
 
-  // Det forsidekartet og kortet trenger om hvert sted.
-  // lang: forsidens språk. Lenkene går til stedssiden på samme språk, og ingressen er oversatt når den finnes.
+  // What the front-page map and cards need about each site.
+  // lang: the front page's language. Links go to the site page in the same language, and the intro is translated when available.
   eleventyConfig.addFilter("homeData", function (sites, lang = "nb") {
     const url = eleventyConfig.getFilter("url");
     const municipalities = new Set(sites.map((s) => s.data.municipality).filter(Boolean));
@@ -110,7 +110,7 @@ export default function (eleventyConfig) {
         primary: d.wind_directions?.primary ?? [],
         possible: d.wind_directions?.possible ?? [],
         categories: d.categories ?? [],
-        // Retningene for hver kategori, fra startene (SPG starter bare mot NØ–SV på Elgen).
+        // Directions per category, from the launches (SPG launches only facing NØ–SV at Elgen).
         byCategory: categoryDirections(d),
         level: d.level ?? null,
         elevation: d.elevation?.launch_masl ?? null,
@@ -126,7 +126,7 @@ export default function (eleventyConfig) {
 
   return {
     dir: { input: "src", output: "_site", includes: "_includes", data: "_data" },
-    // Stedstekstene er ren Markdown, uten malspråk.
+    // Site texts are plain Markdown, with no template language.
     markdownTemplateEngine: false,
     htmlTemplateEngine: "njk",
     templateFormats: ["md", "njk", "11ty.js"],

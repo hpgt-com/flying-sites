@@ -1,15 +1,15 @@
-// Bilder til stedsmappene.
+// Images for the site folders.
 //
-//   npm run images                                   Sjekker alle bilder og retter de som er for store eller har GPS-data.
-//   npm run images -- <filer eller mapper> [--replace]  Importerer bilder navngitt etter konvensjonen
-//   npm run images -- "C:/Bilder/Storlitinden_Takeoff_SE_1_DSC04968.jpg"     (se lib/photo-name.js):
-//   npm run images -- "C:/Bilder/flysteder"                                   sted og type leses fra navnet.
-//   npm run images -- <id> <felt> <fil> [--replace]  Importerer ett bilde uten konvensjonen, f.eks.
-//   npm run images -- sollifjellet takeoff "C:/Users/deg/Downloads/IMG_1234.jpg"   (får neste ledige nummer)
+//   npm run images                                   Checks all images and fixes those that are too large or have GPS data.
+//   npm run images -- <files or folders> [--replace]  Imports photos named by the convention
+//   npm run images -- "C:/Bilder/Storlitinden_Takeoff_SE_1_DSC04968.jpg"     (see lib/photo-name.js):
+//   npm run images -- "C:/Bilder/flysteder"                                   site and type are read from the name.
+//   npm run images -- <id> <field> <file> [--replace]  Imports one photo outside the convention, e.g.
+//   npm run images -- sollifjellet takeoff "C:/Users/deg/Downloads/IMG_1234.jpg"   (gets the next free number)
 //
-// Felt: takeoff, landing, overview. Bildet skaleres ned til maks MAX_ORIGINAL_SIDE px, rotasjon fra
-// kameraet rettes opp, og metadata (EXIF, GPS) fjernes. Bildet lagres i stedsmappen med navnet bygget leter
-// etter (lib/site-images.js), f.eks. storlitinden-takeoff-se-1.jpg. Stedsfilen endres ikke.
+// Fields: takeoff, landing, overview. The image is downscaled to at most MAX_ORIGINAL_SIDE px, camera rotation
+// is applied, and metadata (EXIF, GPS) is stripped. The image is saved in the site folder under the name the
+// build looks for (lib/site-images.js), e.g. storlitinden-takeoff-se-1.jpg. The site file is not changed.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -25,10 +25,10 @@ const yaml = createRequire(import.meta.url)("js-yaml");
 const SITES_DIR = "src/sites";
 const IMAGE_FILE = /\.(jpe?g|png|webp)$/i;
 
-// På Windows holder sharp-cachen filen åpen, så den kan ikke skrives over. Vi leser alt inn i minnet.
+// On Windows the sharp cache keeps files open, so they cannot be overwritten. We read everything into memory.
 sharp.cache(false);
 
-// GPS-data ligger i en egen blokk som første katalog (IFD0) i EXIF peker til med tag 0x8825.
+// GPS data lives in a separate block that the first EXIF directory (IFD0) points to with tag 0x8825.
 function hasGps(exif) {
   if (!exif || exif.length < 14) return false;
   const tiff = exif.subarray(exif.indexOf("Exif\0\0") === 0 ? 6 : 0);
@@ -48,9 +48,9 @@ function hasGps(exif) {
 
 const kb = (bytes) => `${Math.round(bytes / 1024)} kB`;
 
-// Skalerer ned, retter rotasjon og fjerner metadata. PNG forblir PNG (tegninger), alt annet blir JPEG.
-// Bare fotograf, copyright, nettside og lisens skrives tilbake (lib/photo-credit.js), fra originalen
-// eller standarden i src/_data/photoCredit.json.
+// Downscales, applies rotation and strips metadata. PNG stays PNG (drawings); everything else becomes JPEG.
+// Only photographer, copyright, website and license are written back (lib/photo-credit.js), from the original
+// or the default in src/_data/photoCredit.json.
 async function optimize(input, format) {
   const credit = creditFor(await sharp(input).metadata());
   let pipeline = sharp(input)
@@ -59,7 +59,7 @@ async function optimize(input, format) {
   if (format === ".png") pipeline = pipeline.png({ compressionLevel: 9 });
   else if (format === ".webp") pipeline = pipeline.webp({ quality: 85 });
   else pipeline = pipeline.jpeg({ quality: 85, mozjpeg: true });
-  // sharp tar ikke med metadata med mindre vi ber om det, så GPS og kameradata forsvinner.
+  // sharp drops metadata unless asked to keep it, so GPS and camera data are removed.
   return pipeline.withExif(exifFor(credit)).withXmp(xmpFor(credit)).toBuffer();
 }
 
@@ -68,8 +68,8 @@ function fail(message) {
   process.exit(1);
 }
 
-// Gir false i stedet for å avslutte når kalt med { soft: true }, så mange bilder kan importeres i én kjøring.
-// photo: { siteId, field, direction, category, nr }. Uten nr brukes neste ledige nummer for feltet.
+// Returns false instead of exiting when called with { soft: true }, so many photos can be imported in one run.
+// photo: { siteId, field, direction, category, nr }. Without nr, the next free number for the field is used.
 async function importImage(photo, sourcePath, replace, { soft = false } = {}) {
   const stop = (message) => { if (soft) { console.log(message); return false; } fail(message); };
   const { siteId, field } = photo;
@@ -83,7 +83,7 @@ async function importImage(photo, sourcePath, replace, { soft = false } = {}) {
   const name = repoImageName({ ...photo, nr });
   const format = path.extname(sourcePath).toLowerCase() === ".png" ? ".png" : ".jpg";
   const target = path.join(siteDir, name + format);
-  // Samme bilde med annen filtype regnes også som det samme bildet.
+  // The same name with a different extension counts as the same image.
   const same = fs.readdirSync(siteDir).filter((f) => path.parse(f).name === name).map((f) => path.join(siteDir, f));
   if (same.length && !replace) {
     return stop(`${path.basename(same[0])} finnes allerede. Legg til --replace for å bytte det ut.`);
@@ -111,8 +111,8 @@ function readSites() {
     });
 }
 
-// Importerer alle bildene navngitt etter konvensjonen. Type, retning, SPG og nummer fra navnet blir med i
-// filnavnet i repoet, så Storlitinden_Takeoff_SE_2_DSC04970.jpg blir storlitinden-takeoff-se-2.jpg.
+// Imports all photos named by the convention. Type, direction, SPG and number from the name carry over to the
+// file name in the repo, so Storlitinden_Takeoff_SE_2_DSC04970.jpg becomes storlitinden-takeoff-se-2.jpg.
 async function importNamed(paths, replace) {
   const sites = readSites();
   const files = paths.flatMap((p) => (fs.statSync(p).isDirectory()
@@ -171,9 +171,9 @@ const args = process.argv.slice(2);
 const replace = args.includes("--replace");
 const positional = args.filter((a) => a !== "--replace");
 
-// Tre argumenter der det første ikke er en fil, er en import (<id> <felt> <fil>). importImage sjekker resten.
-// Filer navngitt etter konvensjonen, eller mapper, importeres med sted og type fra navnet.
-// Andre filer (som stedsmappenes egne bilder) sjekkes og krympes.
+// Three arguments where the first is not a file means a single import (<id> <field> <file>); importImage checks the rest.
+// Files named by the convention, or folders, are imported with site and type taken from the name.
+// Other files (such as the site folders' own images) are checked and shrunk.
 const isNamedImport = (p) => fs.existsSync(p) && (fs.statSync(p).isDirectory() || looksLikePhotoName(path.basename(p)));
 if (positional.length === 3 && !fs.existsSync(positional[0])) {
   await importImage({ siteId: positional[0], field: positional[1] }, positional[2], replace);

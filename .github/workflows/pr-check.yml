@@ -1,7 +1,7 @@
 name: PR check
 
-# Bygger siden for hver PR mot main, så en ugyldig stedsfil eller en feil i malene stoppes før
-# den kommer på main og stopper publiseringen. Publiserer ingenting.
+# Builds the site for every PR against main, so an invalid site file or a template error is caught before
+# it reaches main and breaks publishing. Publishes nothing.
 
 on:
   pull_request:
@@ -10,8 +10,8 @@ on:
 permissions:
   contents: read
 
-# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
-# i stedet for å blokkere i opptil 6 timer.
+# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
+# instead of blocking for up to 6 hours.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,12 +31,12 @@ jobs:
 
       - run: npm test
 
-      # Valideringen av stedsfilene skjer i byggingen. Vindvarselet hoppes over, så PR-er ikke spør MET.
+      # Site file validation happens during the build. The wind forecast is skipped, so PRs do not query MET.
       - run: npm run build
         env:
           FORECAST_OFFLINE: "1"
 
-  # Stopper PR-er som legger til npm-pakker eller Actions med kjente sårbarheter (moderat eller høyere).
+  # Blocks PRs that add npm packages or Actions with known vulnerabilities (moderate or higher).
   dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -48,7 +48,7 @@ jobs:
         with:
           fail-on-severity: moderate
 
-  # Sjekker workflowene for vanlige sikkerhetsfeil i GitHub Actions (rettigheter, injeksjon, tokens).
+  # Checks the workflows for common GitHub Actions security issues (permissions, injection, tokens).
   workflow-security:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -58,5 +58,5 @@ jobs:
           persist-credentials: false
       - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
         with:
-          # Funnene skrives i loggen og stopper sjekken. Ikke opplasting til Code scanning (krever mer rettigheter).
+          # Findings are written to the log and fail the check. No upload to Code scanning (needs more permissions).
           advanced-security: false

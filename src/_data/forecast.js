@@ -1,8 +1,10 @@
-// Vindvarsel fra MET (api.met.no, samme kilde som Yr) for hver start, til vind- og regnvurderingen på forsiden og «Vind nå» på stedssidene.
-// Hentes ved hver bygging. Workflowen bygger siden to ganger i timen, men GitHub kan forsinke eller hoppe over planlagte kjøringer, så varselet kan være eldre (se maxForecastAgeHours).
-// Lokalt mellomlagres det i .cache/ i 30 minutter, så `npm start` ikke spør MET ved hver endring.
-// Feiler hentingen for et sted, mangler bare det stedet. Feiler alle, blir det ingen vindvurdering,
-// og resten av siden bygges som vanlig.
+// Wind forecast from MET (api.met.no, the same source as Yr) for each launch, for the wind and rain assessment on the
+// front page and «Vind nå» on the site pages.
+// Fetched on every build. The workflow builds the site twice an hour, but GitHub may delay or skip scheduled runs,
+// so the forecast can be older (see maxForecastAgeHours).
+// Locally it is cached in .cache/ for 30 minutes, so `npm start` does not query MET on every change.
+// If fetching fails for one site, only that site is missing. If all fail, there is no wind assessment,
+// and the rest of the site builds as usual.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -13,7 +15,7 @@ const SITES_DIR = "src/sites";
 const CACHE_FILE = path.resolve(".cache/forecast.json");
 const CACHE_MINUTES = 30;
 const HOURS = 48;
-// MET krever at klienten identifiserer seg med kontaktinfo.
+// MET requires clients to identify themselves with contact info.
 const USER_AGENT = "hpgt-flysteder/1.0 (https://flysteder.hpgt.com; 22492302+krishofs@users.noreply.github.com)";
 
 async function fetchSite(launch, altitude) {
@@ -26,7 +28,7 @@ async function fetchSite(launch, altitude) {
   const data = await response.json();
   return data.properties.timeseries.slice(0, HOURS).map((t) => {
     const d = t.data.instant.details;
-    // Nedbør neste time i mm (null når varselet ikke har den, lenger ut i tid).
+    // Precipitation over the next hour in mm (null when the forecast lacks it, further ahead).
     const rain = t.data.next_1_hours?.details?.precipitation_amount ?? null;
     return [t.time, Math.round(d.wind_from_direction), d.wind_speed, d.wind_speed_of_gust ?? null, rain];
   });
@@ -38,13 +40,13 @@ export default async function () {
     const cached = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
     if (Date.now() - Date.parse(cached.fetched) < CACHE_MINUTES * 60000) return cached;
   } catch {
-    // ingen gyldig mellomlagring
+    // no valid cache
   }
 
   const ids = fs.readdirSync(SITES_DIR).filter((id) => fs.existsSync(path.join(SITES_DIR, id, "index.md")));
   const fetched = {};
   const failed = [];
-  // Hvert sted hentes for seg. Feiler ett, får bare det stedet «Ingen varsel», resten får vurdering.
+  // Each site is fetched separately. If one fails, only that site gets «Ingen varsel»; the rest are assessed.
   for (const id of ids) {
     try {
       const text = fs.readFileSync(path.join(SITES_DIR, id, "index.md"), "utf8");
@@ -61,8 +63,8 @@ export default async function () {
   }
   if (failed.length) console.warn(`[varsel] Mangler vindvarsel for ${failed.join(", ")}.`);
 
-  // Tidene lagres én gang. Stedene hentes etter hverandre og kan starte på hver sin time hvis hentingen
-  // går over et timeskifte, så hver rad plasseres på sitt tidspunkt. Mangler en time, blir den null.
+  // Times are stored once. Sites are fetched one after another and may start at different hours if fetching
+  // spans the top of the hour, so each row is placed at its own time. A missing hour becomes null.
   const times = series[0].map((row) => row[0]);
   const sites = {};
   for (const [id, rows] of Object.entries(fetched)) {

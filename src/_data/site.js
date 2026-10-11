@@ -3,11 +3,11 @@ export default {
   url: "https://flysteder.hpgt.com",
   hpgtUrl: "https://hpgt.com",
   repoUrl: "https://github.com/hpgt-com/flying-sites",
-  // Forsidekartet zoomer til startene i denne regionen. Steder lenger unna (Lofoten, Andøya …) finnes i
-  // listen og søket, og kartet kan zoomes ut til dem.
+  // The front-page map zooms to the launches in this region. Sites further away (Lofoten, Andøya …) are in
+  // the list and search, and the map can be zoomed out to them.
   homeRegion: "Harstad og Kvæfjord",
-  // Skjema for endringsforslag. Til vi har et eget skjema går det til GitHub-issues.
-  // Besøksstatistikk (GoatCounter): anonym, uten informasjonskapsler. Se src/assets/js/goatcounter.js.
+  // Visitor statistics (GoatCounter): anonymous, no cookies. See src/assets/js/goatcounter.js.
   goatcounter: "https://hpgt-flysteder.goatcounter.com/count",
+  // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };
