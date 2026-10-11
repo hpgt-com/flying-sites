@@ -1,7 +1,7 @@
 # Drift og vedlikehold
 
 Praktiske oppskrifter for dem som vedlikeholder siden. Hvordan siden henger sammen står i
-[arkitektur.md](arkitektur.md), og formatet på stedsfilene i [stedsfiler.md](stedsfiler.md).
+[architecture.md](architecture.md), og formatet på stedsfilene i [site-files.md](site-files.md).
 
 ## Kjøre siden lokalt
 
@@ -132,10 +132,10 @@ MET og Kartverket krever ingen nøkkel. MET krever at klienten oppgir kontaktinf
 
 | Melding i bygget | Løsning |
 |---|---|
-| `ukjent nøkkel …` | Skrivefeil i front matter. Se tabellen i [stedsfiler.md](stedsfiler.md#front-matter). |
+| `ukjent nøkkel …` | Skrivefeil i front matter. Se tabellen i [site-files.md](site-files.md#front-matter). |
 | `bildet … har feil navn` | Importer med `npm run images`, eller døp om etter mønsteret. |
 | `gangruten … skal hete …` | Flere ruter skal hete `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
 | `status er «gjennomgått», men reviewed …` | Fyll inn `reviewed.by` og `reviewed.date`. |
-| `index.en.md: ukjente nøkler …` | Skrivefeil i oversettelsen. Se [Oversettelse](stedsfiler.md#oversettelse). |
+| `index.en.md: ukjente nøkler …` | Skrivefeil i oversettelsen. Se [Oversettelse](site-files.md#oversettelse). |
 | Vindvurderingen mangler på siden | Varselet er for gammelt, eller MET svarte ikke. Kjør «Build and deploy» manuelt. |
 | Luftromslaget sier «Kunne ikke hente luftrom» | `assets/airspace.geojson` mangler i bygget. Sjekk at `src/_data/cache/airspace/region.geojson` finnes. |

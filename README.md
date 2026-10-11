@@ -17,9 +17,9 @@ Har du rettelser, bilder eller nye opplysninger om et sted?
 
 | Dokument | Innhold |
 |---|---|
-| [docs/arkitektur.md](docs/arkitektur.md) | Hvordan siden henger sammen, med tegninger: kilder, bygging, nettleser, språk, publisering, hva som er bygget og hva som er planlagt |
-| [docs/stedsfiler.md](docs/stedsfiler.md) | Formatet på stedsfilene: alle feltene, tekst, nivå, bilder, tegning og oversettelse |
-| [docs/drift.md](docs/drift.md) | Oppskrifter: nytt sted, gjennomgang, statussiden, vindvarsel, luftrom, bilder, statistikk, nytt språk, feilsøking |
+| [docs/architecture.md](docs/architecture.md) | Hvordan siden henger sammen, med tegninger: kilder, bygging, nettleser, språk, publisering, hva som er bygget og hva som er planlagt |
+| [docs/site-files.md](docs/site-files.md) | Formatet på stedsfilene: alle feltene, tekst, nivå, bilder, tegning og oversettelse |
+| [docs/operations.md](docs/operations.md) | Oppskrifter: nytt sted, gjennomgang, statussiden, vindvarsel, luftrom, bilder, statistikk, nytt språk, feilsøking |
 | [SPEC.md](SPEC.md) | Spesifikasjonen: hva siden skal vise, og hvordan |
 | [SECURITY.md](SECURITY.md) | Sikkerhet: CSP, kodeskanning og innstillinger i GitHub |
 

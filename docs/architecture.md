@@ -96,7 +96,7 @@ flowchart TB
 
 | Del | Hvor | Hva den gjør |
 |---|---|---|
-| Stedsdata | `src/flysteder/<id>/index.md` | Front matter (strukturerte data) og Markdown-tekst. Se [stedsfiler.md](stedsfiler.md). |
+| Stedsdata | `src/flysteder/<id>/index.md` | Front matter (strukturerte data) og Markdown-tekst. Se [site-files.md](site-files.md). |
 | Validering | `lib/validation.js` | Ukjente nøkler, ugyldige retninger, nivåer og kategorier, bilder med feil navn, gangruter som mangler. Feil stopper bygget. |
 | Gangruter | `lib/gpx.js` | Lengde, stigning, bevegelsestid og høydeprofil. Høyder fra Kartverket, mellomlagret per fil i `src/_data/cache/elevations/`. |
 | Bilder | `lib/images.js`, `lib/site-images.js` | WebP/JPEG i 400–2400 px uten metadata, fotograf og lisens skrevet inn. Bildene finnes ut fra filnavnet. |
@@ -169,7 +169,7 @@ flowchart LR
 - **Stedstekst** oversettes i `index.<språk>.md` ved siden av `index.md`. Bare tekst: koordinater, nivå og retninger
   hentes alltid fra `index.md`. Mangler oversettelsen, vises den norske teksten med en merknad. Statussiden viser
   steder uten oversettelse, og oversettelser som er eldre enn den norske teksten.
-- **Nytt språk:** se [drift.md](drift.md#legge-til-et-språk).
+- **Nytt språk:** se [operations.md](operations.md#legge-til-et-språk).
 
 ## Publisering og arbeidsflyt
 
