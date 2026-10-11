@@ -120,6 +120,12 @@
     return new Layer("", { minZoom: 8, maxZoom: 18, opacity: 0.4, className: "hillshade-tiles", attribution: t("map.hillshadeAttribution") });
   }
 
+  // Fast engelsk nøkkel for hvert kartlag, så statistikken (map-layer/<nøkkel>) er lik på alle språk.
+  function layerLabel(map, key, label) {
+    (map.layerKeys || (map.layerKeys = {}))[label] = key;
+    return label;
+  }
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
     var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
@@ -160,16 +166,16 @@
     var gray = L.layerGroup([grayUnderlay, grayTiles]);
     topo.addTo(map);
     var baseLayers = {};
-    baseLayers[t("map.layerTopo")] = topo;
-    baseLayers[t("map.layerGray")] = gray;
-    baseLayers[t("map.layerOpenTopo")] = openTopo;
-    baseLayers[t("map.layerSatellite")] = satellite;
+    baseLayers[layerLabel(map, "topo", t("map.layerTopo"))] = topo;
+    baseLayers[layerLabel(map, "greyscale", t("map.layerGray"))] = gray;
+    baseLayers[layerLabel(map, "opentopomap", t("map.layerOpenTopo"))] = openTopo;
+    baseLayers[layerLabel(map, "satellite", t("map.layerSatellite"))] = satellite;
     map.layersControl = L.control.layers(baseLayers, null, { position: "topright" }).addTo(map);
     // Bare når noen velger et lag selv. Leaflet sender også baselayerchange når kartet lastes.
     map.layersControl.getContainer().addEventListener("change", function (ev) {
       if (!ev.target.checked) return;
       var label = ev.target.closest("label");
-      track("kartlag/" + (label ? label.textContent.trim() : "ukjent"));
+      track("map-layer/" + ((label && map.layerKeys[label.textContent.trim()]) || "unknown"));
     });
     // Termikk fra thermal.kk7.ch: statistikk fra loggede flyturer, ikke et varsel. Av som standard.
     // Flisene er i TMS-rekkefølge, og src skal oppgi domenet vårt (vilkår på thermal.kk7.ch).
@@ -178,9 +184,9 @@
         tms: true, maxNativeZoom: 13, maxZoom: 18, opacity: 0.7,
         attribution: t("map.thermalAttribution"),
       });
-      map.layersControl.addOverlay(layer, i ? t("map.layerThermals") : t("map.layerSkyways"));
+      map.layersControl.addOverlay(layer, i ? layerLabel(map, "thermals", t("map.layerThermals")) : layerLabel(map, "skyways", t("map.layerSkyways")));
     });
-    map.layersControl.addOverlay(hillshadeLayer(), t("map.layerHillshade"));
+    map.layersControl.addOverlay(hillshadeLayer(), layerLabel(map, "hillshade", t("map.layerHillshade")));
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     return map;
@@ -236,7 +242,7 @@
       onAdd: function () {
         var c = controlButton(function () {
           var on = !mapEl.classList.contains("map--fullscreen");
-          if (on) track("fullskjerm" + location.pathname);
+          if (on) track("fullscreen" + location.pathname);
           setFullscreen(on);
         });
         fullscreenButton = c.button;
@@ -363,10 +369,10 @@
   // Fire grupper med av/på i kartets lagvelger, som i IPPC. Alle er av til å begynne med, og
   // luftrommene (fra openAIP, se scripts/update-airspace.mjs) lastes først når en gruppe slås på.
   var AIRSPACE_GROUPS = [
-    { name: t("map.airspaceTma"), types: ["TMA", "CTA"], color: "#2F6FB5", dash: null },
-    { name: t("map.airspaceCtr"), types: ["CTR", "MCTR", "ATZ", "TIZ"], color: "#C0392B", dash: null },
-    { name: t("map.airspaceMilitary"), types: ["MTA", "TRA", "TSA"], color: "#7B3FA0", dash: "6 4" },
-    { name: t("map.airspaceDanger"), types: ["D", "R", "P"], color: "#C24A12", dash: "6 4" },
+    { key: "airspace-tma", name: t("map.airspaceTma"), types: ["TMA", "CTA"], color: "#2F6FB5", dash: null },
+    { key: "airspace-ctr", name: t("map.airspaceCtr"), types: ["CTR", "MCTR", "ATZ", "TIZ"], color: "#C0392B", dash: null },
+    { key: "airspace-military", name: t("map.airspaceMilitary"), types: ["MTA", "TRA", "TSA"], color: "#7B3FA0", dash: "6 4" },
+    { key: "airspace-danger", name: t("map.airspaceDanger"), types: ["D", "R", "P"], color: "#C24A12", dash: "6 4" },
   ];
 
   function formatLimit(l) {
@@ -398,7 +404,7 @@
   function addRadarLayer(map) {
     if (!map.layersControl) return;
     var group = L.layerGroup();
-    map.layersControl.addOverlay(group, t("map.layerRadar"));
+    map.layersControl.addOverlay(group, layerLabel(map, "radar", t("map.layerRadar")));
     var layers = [], times = [], timer = null, refresh = null, on = false, step = 0;
 
     var statusEl = null;
@@ -487,7 +493,7 @@
   function addAirspaceLayers(map, url) {
     if (!url || !map.layersControl) return;
     var groups = AIRSPACE_GROUPS.map(function (g) { return { def: g, layer: L.layerGroup() }; });
-    groups.forEach(function (g) { map.layersControl.addOverlay(g.layer, g.def.name); });
+    groups.forEach(function (g) { map.layersControl.addOverlay(g.layer, layerLabel(map, g.def.key, g.def.name)); });
     var loading = null, attribution = null, active = 0;
 
     // Status under lagvelgeren mens luftrommene lastes, og ved feil, så et avkrysset lag uten innhold ikke
@@ -617,7 +623,7 @@
       var button = ev.target.closest("button[data-theme-choice]");
       if (!button) return;
       var choice = button.getAttribute("data-theme-choice");
-      track("innstilling/tema/" + choice);
+      track("setting/theme/" + choice);
       try {
         if (choice === "auto") localStorage.removeItem("theme");
         else localStorage.setItem("theme", choice);
@@ -645,7 +651,7 @@
   document.querySelectorAll("[data-cvd-toggle]").forEach(function (button) {
     button.addEventListener("click", function () {
       var on = document.documentElement.getAttribute("data-cvd") !== "on";
-      track("innstilling/fargeblindvennlig/" + (on ? "på" : "av"));
+      track("setting/colorblind/" + (on ? "on" : "off"));
       try {
         if (on) localStorage.setItem("cvd", "on");
         else localStorage.removeItem("cvd");
@@ -675,7 +681,7 @@
   });
 
   // --- Besøksstatistikk for klikk ---
-  // Telles som hendelser i GoatCounter (src/assets/js/goatcounter.js), med navn som «lenke/flightlog.org/flysteder/ryten/».
+  // Telles som hendelser i GoatCounter (src/assets/js/goatcounter.js), med engelske navn som «link/flightlog.org/flysteder/ryten/».
   // Gjør ingenting når skriptet ikke er lastet (lokalt, eller blokkert av adblock).
   function track(name, title) {
     var gc = window.goatcounter;
@@ -688,8 +694,8 @@
     var a = ev.target.closest && ev.target.closest("a[href]");
     if (!a) return;
     var text = a.textContent.trim().replace(/\s+/g, " ");
-    if (a.hasAttribute("download")) track("nedlasting" + a.pathname, text + " (" + location.pathname + ")");
-    else if (a.hostname && a.hostname !== location.hostname) track("lenke/" + a.hostname.replace(/^www\./, "") + location.pathname, text);
+    if (a.hasAttribute("download")) track("download" + a.pathname, text + " (" + location.pathname + ")");
+    else if (a.hostname && a.hostname !== location.hostname) track("link/" + a.hostname.replace(/^www\./, "") + location.pathname, text);
   }
   document.addEventListener("click", trackLink);
   document.addEventListener("auxclick", trackLink);

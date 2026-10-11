@@ -317,7 +317,7 @@
   sites.forEach(function (site) {
     var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, "match", false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
     marker.bindTooltip(site.name, { direction: "top", offset: [0, -14] });
-    marker.on("click", function () { FS.track("kart/valgt/" + site.id, site.name); select(site.id, "map"); });
+    marker.on("click", function () { FS.track("map/select/" + site.id, site.name); select(site.id, "map"); });
     cluster.addLayer(marker);
     markers[site.id] = marker;
     if (site.region === homeRegion) bounds.push([site.lat, site.lon]);
@@ -568,7 +568,7 @@
       clearTimeout(missTimer);
       missTimer = setTimeout(function () {
         var q = filter.q.trim().toLowerCase();
-        if (q.length >= 3 && !visibleMatches().length) FS.track("søk/uten treff/" + q);
+        if (q.length >= 3 && !visibleMatches().length) FS.track("search/no-hits/" + q);
       }, 2000);
     });
     searchEl.addEventListener("keydown", function (ev) {
@@ -676,7 +676,7 @@
     dayPlanDaysEl.addEventListener("click", function (ev) {
       var button = ev.target.closest("button[data-select]");
       if (!button) return;
-      FS.track("dagsoversikt/valgt/" + button.getAttribute("data-select"));
+      FS.track("day-plan/select/" + button.getAttribute("data-select"));
       select(button.getAttribute("data-select"), "list");
     });
   }
@@ -714,14 +714,14 @@
     suggestButton.title = windOn ? "" : FS.t("home.suggestNeedsTime");
   }
 
-  var FILTER_NAMES = { direction: "retning", level: "nivå", category: "kategori" };
+  var FILTER_NAMES = { direction: "direction", level: "level", category: "category" };
   document.getElementById("filters").addEventListener("click", function (ev) {
     var button = ev.target.closest("button[data-filter], button[data-wind], button[data-suggest]");
     if (!button) return;
-    if (button.hasAttribute("data-suggest")) FS.track("filter/bare steder som kan passe/" + (suggest ? "av" : "på"));
+    if (button.hasAttribute("data-suggest")) FS.track("filter/suggest/" + (suggest ? "off" : "on"));
     // Hendelsesnavnene er de samme på alle språk, så tallene i GoatCounter kan legges sammen.
-    else if (button.hasAttribute("data-wind")) FS.track("filter/vind fra varsel/" + button.getAttribute("data-wind"));
-    else FS.track("filter/" + FILTER_NAMES[button.getAttribute("data-filter")] + "/" + (button.getAttribute("data-value") || "alle"));
+    else if (button.hasAttribute("data-wind")) FS.track("filter/wind/" + button.getAttribute("data-wind"));
+    else FS.track("filter/" + FILTER_NAMES[button.getAttribute("data-filter")] + "/" + (button.getAttribute("data-value") || "all"));
     if (button.hasAttribute("data-suggest")) setSuggest(!suggest);
     else if (button.hasAttribute("data-wind")) { setWind(button.getAttribute("data-wind")); setSuggest(suggest); }
     else setFilter(button.getAttribute("data-filter"), button.getAttribute("data-value"));
@@ -740,7 +740,7 @@
 
   // --- Faner: Flysteder, Vær, Info ---
   // Bytter innholdet i venstrekolonnen (på mobil over kartet). Kartet står alltid. Piltaster flytter mellom fanene.
-  var TAB_NAMES = { "tab-sites": "Flysteder", "tab-weather": "Vær", "tab-info": "Info" };
+  var TAB_NAMES = { "tab-sites": "sites", "tab-weather": "weather", "tab-info": "info" };
   var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.home-tabs [role="tab"]'));
   function showTab(button, focus) {
     tabButtons.forEach(function (b) {
@@ -752,7 +752,7 @@
     if (focus) button.focus();
   }
   tabButtons.forEach(function (b, i) {
-    b.addEventListener("click", function () { FS.track("fane/" + TAB_NAMES[b.id]); showTab(b); });
+    b.addEventListener("click", function () { FS.track("tab/" + TAB_NAMES[b.id]); showTab(b); });
     b.addEventListener("keydown", function (ev) {
       var step = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
       if (step) { ev.preventDefault(); showTab(tabButtons[(i + step + tabButtons.length) % tabButtons.length], true); }

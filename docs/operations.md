@@ -103,9 +103,11 @@ Navngiving før import: `Storlitinden_Takeoff_SE_1_DSC04968.jpg`, `Storlitinden_
   informasjonskapsler. Teller ikke på localhost.
 - Skriptet er en kopi i `src/assets/js/goatcounter.js` (CSP tillater bare egne skript). Adressen står i
   `src/_data/site.js` og i CSP-en i `base.njk`.
-- Hendelser (klikk) har faste navn på alle språk: `lenke/<domene><side>`, `nedlasting/<fil>`, `fane/…`,
-  `filter/retning|nivå|kategori/…`, `filter/vind fra varsel/…`, `kart/valgt/<id>`, `kartlag/…`, `søk/uten treff/…`,
-  `bilder<side>`, `fullskjerm<side>`, `innstilling/…`.
+- Hendelser (klikk) har faste engelske navn, like på alle språk: `link/<domene><side>`, `download/<fil>`, `tab/sites|weather|info`,
+  `filter/direction|level|category/…`, `filter/wind/…`, `filter/suggest/on|off`, `map/select/<id>`, `day-plan/select/<id>`,
+  `map-layer/<nøkkel>` (topo, greyscale, opentopomap, satellite, skyways, thermals, hillshade, radar, airspace-tma, airspace-ctr,
+  airspace-military, airspace-danger), `search/no-hits/…`, `images<side>`, `fullscreen<side>`, `setting/theme/…`,
+  `setting/colorblind/on|off`. Til og med 11.10.2026 hadde de norske navn (`lenke/…`, `fane/…`, `kart/valgt/…` osv.).
 - Egne besøk telles ikke etter at man har åpnet `https://flysteder.hpgt.com/#toggle-goatcounter` i nettleseren.
 
 ## Legge til et språk
