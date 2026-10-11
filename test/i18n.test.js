@@ -55,9 +55,9 @@ test("adresser på et annet språk", () => {
   assert.equal(localeUrl("/en/sites/ryten/", "nb"), "/flysteder/ryten/");
   assert.equal(localeUrl("/en/", "nb"), "/");
   assert.equal(localeUrl("/", "en"), "/en/");
-  assert.equal(localeUrl("/luftrom/", "en"), "/en/towers/");
+  assert.equal(localeUrl("/tarn/", "en"), "/en/towers/");
   assert.equal(localeUrl("/en/towers/", "en"), "/en/towers/");
-  assert.equal(localeUrl("/en/towers/", "nb"), "/luftrom/");
+  assert.equal(localeUrl("/en/towers/", "nb"), "/tarn/");
   assert.equal(localeUrl("/status/", "nb"), "/status/");
 });
 

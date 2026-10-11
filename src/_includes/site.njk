@@ -178,7 +178,7 @@ scripts:
         {%- set hasLaunchCategories = false -%}
         {%- for group in derived.launchGroups %}{% if group.categories.length %}{% set hasLaunchCategories = true %}{% endif %}{% endfor %}
         <ul class="launch-list{% if hasLaunchCategories %} launch-list--categories{% endif %}" aria-label="{{ t.site.launchesLabel }}">
-          {#- Starter med samme retninger er slått sammen til én linje (groupLaunches i flysteder.11tydata.js). -#}
+          {#- Starter med samme retninger er slått sammen til én linje (groupLaunches i sites.11tydata.js). -#}
           {% for group in derived.launchGroups %}
           <li>
             <span class="launch-list__badges">

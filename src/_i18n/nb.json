@@ -270,14 +270,15 @@
     "routeHeights": ", høyder fra {sources}",
     "labels": {
       "flightlog": "Flightlog",
-      "flightlog/lokalkunnskap": "Flightlog og lokalkunnskap",
-      "Kartverket": "Kartverket",
-      "Kartverket/flightlog": "Kartverket (start) og Flightlog (landing)",
+      "flightlog/local_knowledge": "Flightlog og lokalkunnskap",
+      "kartverket": "Kartverket",
+      "kartverket/flightlog": "Kartverket (start) og Flightlog (landing)",
       "flightlog/gpx": "Flightlog og GPS-spor",
-      "manuell": "registrert manuelt",
+      "manual": "registrert manuelt",
       "gpx": "fra gangrute (GPX)",
-      "gammel side": "den gamle flystedsoversikten",
-      "IPPC": "IPPC"
+      "old_site": "den gamle flystedsoversikten",
+      "ippc": "IPPC",
+      "local_knowledge": "lokalkunnskap"
     }
   },
   "images": {

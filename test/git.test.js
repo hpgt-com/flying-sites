@@ -10,7 +10,7 @@ test("KI-assistenter og boter regnes som automatiske forfattere", () => {
 });
 
 test("sist endret viser aldri en automatisk forfatter", () => {
-  const result = lastModified("src/flysteder/sollifjellet/index.md");
+  const result = lastModified("src/sites/sollifjellet/index.md");
   if (!result) return; // ikke et Git-repo
   assert.notEqual(result.name, "Claude");
   assert.ok(!String(result.name).includes("[bot]"));

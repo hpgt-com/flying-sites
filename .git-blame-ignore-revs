@@ -1,0 +1,5 @@
+# Mekaniske endringer som ikke skal telle som «Sist endret» på stedssidene (lib/git.js) eller vises i «blame» på GitHub.
+# Én full commit-hash per linje, med en kommentar over.
+
+# Engelske verdier i stedsfilene (status, source)
+205b078e729a84eb575464e540d9b90a35ed4b79

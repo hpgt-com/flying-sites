@@ -13,7 +13,7 @@ import { createRequire } from "node:module";
 import { fetchRegion, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM } from "../lib/airspace.js";
 
 const yaml = createRequire(import.meta.url)("js-yaml");
-const SITES_DIR = "src/flysteder";
+const SITES_DIR = "src/sites";
 // Margin rundt stedene, så kartet også viser luftrom et stykke utenfor (Lofoten, Bardufoss osv.).
 const MARGIN_KM = 60;
 

@@ -1,0 +1,82 @@
+---
+name: Storbakkan
+id: storbakkan
+status: reviewed
+region: Harstad og Kvæfjord
+municipality: Harstad
+external:
+  flightlog_id: 370
+  pgearth_id: null
+  yr_id: 1-330348
+level: PP2
+training_site: true
+categories:
+- PG
+season: Hele året
+wind_directions:
+  primary:
+  - SW
+  - S
+  possible:
+  - SE
+  - E
+  source: flightlog/local_knowledge
+wind_limits:
+  max_wind: 5
+  source: local_knowledge
+launch:
+  lat: 68.66194
+  lon: 16.41
+  source: flightlog
+landings:
+- name: Landing
+  lat: 68.65611
+  lon: 16.42806
+  primary: true
+  source: manual
+parking:
+- name: Parkering
+  lat: 68.65656
+  lon: 16.42087
+  source: manual
+access:
+  parking_text: I lomma ved siden av veien. Parker så du ikke er til hinder for trafikken.
+  route_text: null
+  routes: []
+  walk_time_min: null
+elevation:
+  launch_masl: 340
+  landing_masl: 138
+  difference_m: 202
+  source: kartverket
+airspace: []
+hazards:
+- title: Turbulens i mye vind
+  text: Stedet har stygt temperament når vinden frisker på, særlig på Ø og SØ. Maks 5 m/s. Landingen blir en heksegryte i vind over 5 m/s.
+launches:
+- directions:
+  - SW
+  - S
+  categories: null
+  text: Beste retning, da står vinden inn på det største hanget.
+- directions:
+  - SE
+  - E
+  categories: null
+  text: Mulig, men se Før du starter.
+reviewed:
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
+---
+
+Klassisk sted med lett tilgang og kort tur opp, brukt både til skoleturer og lange distanser. Behandle det med respekt i mye vind.
+
+## Start
+
+Gresskledd kolle ved Storvatnet på Storjorda, mellom Sørvik og Straumen. Startplass med bedre underlag enn plenen hjemme.
+
+## Landing
+
+Landing ved foten av kollen.
+
+Om vinteren og våren brukes Storbakkan som kursbakke, og da lander man på isen på Storvatnet. Sjekk at isen er trygg.

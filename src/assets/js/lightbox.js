@@ -135,7 +135,7 @@
       if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return; // la «åpne i ny fane» virke som vanlig
       ev.preventDefault();
       opener = link;
-      FS.track("bilder" + location.pathname);
+      FS.track("images" + location.pathname);
       show(index);
     });
   });
@@ -145,7 +145,7 @@
     button.hidden = false;
     button.addEventListener("click", function () {
       opener = button;
-      FS.track("bilder" + location.pathname);
+      FS.track("images" + location.pathname);
       show(0);
     });
   });

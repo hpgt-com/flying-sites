@@ -1,0 +1,26 @@
+---
+# Gamle adresser som er flyttet. GitHub Pages kan ikke sende videre fra serveren, så hver gammel adresse får en liten
+# side som sender videre straks (meta refresh), med lenke for nettlesere som ikke gjør det. Ikke i sitemap eller søk.
+pagination:
+  data: redirects
+  size: 1
+  alias: redirect
+permalink: "{{ redirect.from }}"
+eleventyExcludeFromCollections: true
+redirects:
+  - from: /luftrom/
+    to: /tarn/
+---
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url={{ redirect.to | url }}">
+<link rel="canonical" href="{{ site.url }}{{ redirect.to }}">
+<title>Flyttet</title>
+</head>
+<body>
+<p>Siden er flyttet til <a href="{{ redirect.to | url }}">{{ site.url }}{{ redirect.to }}</a>.</p>
+</body>
+</html>

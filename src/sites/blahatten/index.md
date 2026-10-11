@@ -1,0 +1,90 @@
+---
+name: Blåhatten
+id: blahatten
+status: reviewed
+region: Harstad og Kvæfjord
+municipality: Harstad
+external:
+  flightlog_id: 369
+  pgearth_id: null
+  yr_id: 1-287018
+level: PP2
+training_site: false
+categories:
+- PG
+season: Sommer og høst
+wind_directions:
+  primary:
+  - S
+  - SE
+  possible: []
+  source: flightlog/local_knowledge
+wind_limits:
+  max_wind: 5
+  source: local_knowledge
+launch:
+  lat: 68.73083
+  lon: 16.46444
+  source: flightlog
+landings:
+- name: Landing ved parkeringen
+  lat: 68.71339
+  lon: 16.50262
+  primary: true
+  source: manual
+- name: Landing Slettlia
+  lat: 68.72494
+  lon: 16.47306
+  primary: false
+  source: manual
+parking:
+- name: Parkering
+  lat: 68.714712
+  lon: 16.497431
+  source: gpx
+access:
+  parking_text: Ved Kilkam-anlegget. Kjør gammelveien mot Kilbotn og ta av mot transformatorstasjonen.
+  route_text: Opp fra Slettlia, forholdsvis bratt.
+  routes:
+  - file: blahatten-route.gpx
+    name: null
+    km: 3.8
+    elevation_gain_m: 430
+    walk_time_min: 60
+elevation:
+  launch_masl: 475
+  landing_masl: 79
+  difference_m: 396
+  source: kartverket
+airspace:
+- name: Evenes CTR
+  nearby: true
+  note: Innflygingen til landingen går inn i CTR. Ring tårnet på Evenes og få klarering før start.
+  source: local_knowledge
+hazards:
+- title: Evenes CTR
+  text: Innflygingen til landingen går inn i Evenes CTR, selv om man flyr lavt og i utkanten av den. Ring tårnet på Evenes og få klarering før du flyr. Telefonnummeret står under «Telefonnumre til tårnene» i Luftrom.
+- title: Over 5 m/s
+  text: Stedet ligger litt i le for Sørvikfjellet og kan bli turbulent.
+- title: Grunneiere
+  text: Vær forsiktig med å kjøre opp veien til Slettlia.
+launches:
+- directions:
+  - S
+  - SE
+  categories: null
+  text: Subbhang i de rette forholdene. Du kan henge i svært svak vind, helst S–SØ.
+reviewed:
+  by: Kristoffer D. Hofstad
+  date: '2026-10-06'
+---
+
+Et av de klassiske stedene, med et av de beste hangene på sørlig vind. Toppen er som en gressplen, fin både for start og topplanding.
+
+## Start
+
+Startplassen er perfekt, gressplen overalt.
+
+## Landing
+
+Hovedlandingen ligger like ved parkeringen. Alternativt i Slettlia, men den kan gi turbulens i vind. Flere myrer har også vært brukt, blant annet den store myra ved Kilkamhuset, der store kraftlinjer markerer utkanten. Se over dem først på grunn av høyspent og kabler i lufta.
