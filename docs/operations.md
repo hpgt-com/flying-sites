@@ -113,7 +113,7 @@ Navngiving før import: `Storlitinden_Takeoff_SE_1_DSC04968.jpg`, `Storlitinden_
 ## Legge til et språk
 
 1. Legg språket til i `src/_data/languages.js`: `code`, `name` (som det skrives på språket selv), `locale`
-   (for Open Graph), `prefix` (`/de`) og `slugs` (adresser: `{ flysteder: "orte", luftrom: "tuerme" }`).
+   (for Open Graph), `prefix` (`/de`) og `slugs` (adresser: `{ flysteder: "orte", tarn: "tuerme" }`).
 2. Kopier `src/_i18n/en.json` til `src/_i18n/<code>.json` og oversett verdiene. Nøkler som mangler, vises på norsk.
 3. Legg til språknavnet på norsk i `LANGUAGE_WORDS` i `lib/status.js`, så statussiden kan vise «tysk tekst».
 4. Oversett stedene i `index.<code>.md`, eller la statussiden vise hva som mangler.

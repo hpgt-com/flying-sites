@@ -62,7 +62,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("directionWord", function (code) { return directionWord(code, langOf(this.ctx)); });
   // Tekst fra ordboken med verdier satt inn: {{ t.site.onFlightlog | fmt({ name: name }) }}.
   eleventyConfig.addFilter("fmt", (text, vars) => fmt(text, vars));
-  // Intern adresse på sidens språk (eller språket som oppgis): {{ "/luftrom/" | localeUrl }}.
+  // Intern adresse på sidens språk (eller språket som oppgis): {{ "/tarn/" | localeUrl }}.
   eleventyConfig.addFilter("localeUrl", function (url, code) { return localeUrl(url, code ?? langOf(this.ctx)); });
   eleventyConfig.addFilter("directionType", (code, windDirections) => directionType(windDirections, code));
   eleventyConfig.addFilter("sortDirections", sortDirections);

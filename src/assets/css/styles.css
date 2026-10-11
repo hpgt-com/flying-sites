@@ -965,7 +965,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* Luftrom fra openAIP */
 .airspace__source { font-size: 13px; color: var(--muted); }
 
-/* ---------- Tårn (/luftrom/) ---------- */
+/* ---------- Tårn (/tarn/) ---------- */
 
 .towers-page, .simple-page { display: flex; flex-direction: column; gap: 24px; padding: 8px 16px 48px; max-width: 640px; margin: 0 auto; }
 .towers-page__intro, .simple-page__intro { display: flex; flex-direction: column; gap: 6px; }

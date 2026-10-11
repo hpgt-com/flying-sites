@@ -83,7 +83,7 @@ flowchart TB
   subgraph out["Sider og filer i _site/"]
     home["/ og /en/<br/>forside"]
     sitepg["stedssider"]
-    towers["/luftrom/ og /en/towers/"]
+    towers["/tarn/ og /en/towers/"]
     status["/status/<br/>(lib/status.js)"]
     exp["flysteder.geojson / .kml<br/>(lib/export.js)"]
     seo["sitemap.xml, robots.txt, 404"]
