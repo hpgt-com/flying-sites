@@ -1,4 +1,4 @@
-// Åpne data: alle flystedene som KML på /flysteder.kml (Google Earth, norgeskart.no, kartapper).
+// Open data: all sites as KML at /flysteder.kml (Google Earth, norgeskart.no, map apps).
 import { sitesToGeoJSON, geoJSONToKML } from "../lib/export.js";
 
 export default class {

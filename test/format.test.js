@@ -1,9 +1,9 @@
-// Tester for grupperingen av starter under «Start» på stedssiden (lib/format.js). Kjøres med `npm test`.
+// Tests for grouping launches under «Start» on the site page (lib/format.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { groupLaunches, searchPlaces } from "../lib/format.js";
 
-test("starter med samme retninger blir én linje med tekstene i rekkefølge", () => {
+test("launches with the same directions become one line with the texts in order", () => {
   const groups = groupLaunches([
     { directions: ["S", "SE", "E"], text: "Fra toppen." },
     { directions: ["N", "NE"], text: "Fra alpinbakken." },
@@ -16,7 +16,7 @@ test("starter med samme retninger blir én linje med tekstene i rekkefølge", ()
   assert.deepEqual(groups[2].texts, ["I anlegget.", "På ryggen."]);
 });
 
-test("samme retninger med ulike kategorier holdes for seg", () => {
+test("the same directions with different categories are kept apart", () => {
   const groups = groupLaunches([
     { directions: ["S"], categories: ["PG"], text: "PG." },
     { directions: ["S"], categories: ["SPG"], text: "SPG." },
@@ -24,12 +24,12 @@ test("samme retninger med ulike kategorier holdes for seg", () => {
   assert.equal(groups.length, 2);
 });
 
-test("ingen starter gir tom liste", () => {
+test("no launches give an empty list", () => {
   assert.deepEqual(groupLaunches(undefined), []);
   assert.deepEqual(groupLaunches(null), []);
 });
 
-test("retninger per kategori følger startene for kategorien", async () => {
+test("directions per category follow the launches for that category", async () => {
   const { categoryDirections } = await import("../lib/format.js");
   const elgen = {
     categories: ["PG", "SPG"],
@@ -42,7 +42,7 @@ test("retninger per kategori følger startene for kategorien", async () => {
   const r = categoryDirections(elgen);
   assert.deepEqual(r.SPG, { primary: ["NE", "E", "SE", "S", "SW"], possible: [] });
   assert.equal(r.PG.primary.length, 8);
-  // Start uten egne kategorier gjelder alle stedets kategorier, og retninger utenfor wind_directions tas ikke med.
+  // A launch without its own categories applies to all the site's categories, and directions outside wind_directions are left out.
   const solli = {
     categories: ["PG", "SPG"],
     wind_directions: { primary: ["N", "E"], possible: ["S"] },
@@ -52,7 +52,7 @@ test("retninger per kategori følger startene for kategorien", async () => {
   assert.deepEqual(categoryDirections({ categories: ["PG"], launches: [] }), {});
 });
 
-test("formatering følger språket", async () => {
+test("formatting follows the language", async () => {
   const { formatNumber, formatDate, directionLabel, formatLimit } = await import("../lib/format.js");
   assert.equal(formatNumber(3.45, 1), "3,5");
   assert.equal(formatNumber(3.45, 1, "en"), "3.5");
@@ -63,9 +63,9 @@ test("formatering følger språket", async () => {
   assert.equal(formatLimit({ ref: "GND", value: 0 }, "en"), "ground");
 });
 
-test("søket finner en start på kommunen og regioner som ikke er kommunenavn", () => {
+test("search finds a launch by municipality and by regions that are not municipality names", () => {
   const municipalities = new Set(["Harstad", "Kvæfjord", "Flakstad"]);
-  // «Kvæfjord» i regionen «Harstad og Kvæfjord» skal ikke gi treff på en start i Harstad.
+  // «Kvæfjord» in the region «Harstad og Kvæfjord» must not match a launch in Harstad.
   assert.deepEqual(searchPlaces({ municipality: "Harstad", region: "Harstad og Kvæfjord" }, municipalities), ["Harstad"]);
   assert.deepEqual(searchPlaces({ municipality: "Kvæfjord", region: "Harstad og Kvæfjord" }, municipalities), ["Kvæfjord"]);
   assert.deepEqual(searchPlaces({ municipality: "Flakstad", region: "Lofoten" }, municipalities), ["Flakstad", "Lofoten"]);

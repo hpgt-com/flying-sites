@@ -1,4 +1,4 @@
-// Åpne data: alle flystedene som GeoJSON på /flysteder.geojson, laget ved hver bygging (lib/export.js).
+// Open data: all sites as GeoJSON at /flysteder.geojson, generated on every build (lib/export.js).
 import { sitesToGeoJSON } from "../lib/export.js";
 
 export default class {

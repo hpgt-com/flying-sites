@@ -1,4 +1,4 @@
-// Tester for egne posisjoner per start (launches[].lat/lon) i lib/validation.js. Kjøres med `npm test`.
+// Tests for per-launch positions (launches[].lat/lon) in lib/validation.js. Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -15,30 +15,30 @@ function errorsFor(launches) {
   return validateSite(data, inputPath, { name: "Teststed", launches }).map((e) => e.slice(inputPath.length + 2));
 }
 
-test("start uten egen posisjon er gyldig", () => {
+test("a launch without its own position is valid", () => {
   assert.deepEqual(errorsFor([{ directions: ["N"], text: "Nordstarten" }]), []);
 });
 
-test("start med egen posisjon nær hovedstarten er gyldig", () => {
+test("a launch with its own position near the main launch is valid", () => {
   assert.deepEqual(errorsFor([{ directions: ["E"], lat: 68.855, lon: 16.265, source: "gpx" }]), []);
 });
 
-test("bare lat eller bare lon stopper bygget", () => {
+test("only lat or only lon stops the build", () => {
   assert.match(errorsFor([{ directions: ["E"], lat: 68.855 }])[0], /både lat og lon/);
 });
 
-test("posisjon langt fra hovedstarten stopper bygget (byttet lat/lon)", () => {
+test("a position far from the main launch stops the build (swapped lat/lon)", () => {
   assert.match(errorsFor([{ directions: ["E"], lat: 16.25, lon: 68.85 }])[0], /km fra launch/);
 });
 
-test("no_fixed_landing sammen med landinger stopper bygget", () => {
+test("no_fixed_landing together with landings stops the build", () => {
   const data = { name: "Teststed", id: "teststed", status: "draft", municipality: "Harstad", launch: { lat: 68.85, lon: 16.25 },
     no_fixed_landing: true, landings: [{ name: "Jordet", lat: 68.84, lon: 16.25 }] };
   const errors = validateSite(data, inputPath, { name: "Teststed" });
   assert.ok(errors.some((e) => /no_fixed_landing/.test(e)));
 });
 
-test("ukjent source stopper bygget, så verdiene holdes like", () => {
+test("an unknown source stops the build, so the values stay consistent", () => {
   const data = { name: "Teststed", id: "teststed", status: "draft", municipality: "Harstad", launch: { lat: 68.85, lon: 16.25, source: "manuell" } };
   const errors = validateSite(data, inputPath, { name: "Teststed" });
   assert.ok(errors.some((e) => e.includes("ukjent source «manuell»")), errors.join("\n"));

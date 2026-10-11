@@ -1,4 +1,4 @@
-// Tester for vindvurderingen (src/assets/js/wind.js). Kjøres med `npm test`.
+// Tests for the wind assessment (src/assets/js/wind.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -7,42 +7,42 @@ import { t } from "../lib/i18n.js";
 
 await import("../src/assets/js/wind.js");
 const W = globalThis.FlyingSitesWind;
-// Norske tekster fra ordboken (src/_i18n/nb.json), som på siden.
+// Norwegian strings from the dictionary (src/_i18n/nb.json), as on the site.
 W.useText((key, vars) => t(`js.${key}`, "nb", vars ?? {}));
 const rules = JSON.parse(fs.readFileSync(new URL("../src/_data/windRules.json", import.meta.url), "utf8"));
 
 const site = { primary: ["SW", "W"], possible: ["S"], maxWind: null };
 const rate = (wind, s = site) => W.rateWind(s, wind, rules);
 
-// Varsel med én verdi per time fra `start` (ISO, UTC).
+// Forecast with one value per hour from `start` (ISO, UTC).
 function hourly(start, hours) {
   const t0 = Date.parse(start);
   return Array.from({ length: hours }, (_, i) => new Date(t0 + i * 3600000).toISOString().replace(".000Z", "Z"));
 }
 
-test("hovedretning, passe vind og små kast gir «Kan passe»", () => {
+test("main direction, moderate wind and small gusts give «Kan passe»", () => {
   assert.deepEqual(rate({ dir: 247, speed: 4, gust: 6 }), { rating: "ok", reasons: [], codes: [] });
 });
 
-test("manglende kast gjør aldri vurderingen bedre", () => {
+test("missing gusts never improve the assessment", () => {
   const r = rate({ dir: 247, speed: 6, gust: null });
   assert.equal(r.rating, "maybe");
   assert.match(r.reasons.join(), /mangler kast/);
 });
 
-test("kast mer enn maxGustSpread over middelvinden gir «Usikkert»", () => {
+test("gusts more than maxGustSpread above the mean wind give «Usikkert»", () => {
   assert.equal(rate({ dir: 247, speed: 3, gust: 3 + rules.maxGustSpread + 1 }).rating, "maybe");
 });
 
-test("kast over maxGust gir «For mye vind» selv med lav middelvind", () => {
+test("gusts above maxGust give «For mye vind» even with low mean wind", () => {
   assert.equal(rate({ dir: 247, speed: 5, gust: rules.maxGust + 1 }).rating, "high");
 });
 
-test("middelvind over felles grense gir «For mye vind»", () => {
+test("mean wind above the common limit gives «For mye vind»", () => {
   assert.equal(rate({ dir: 247, speed: rules.maxWind + 0.5, gust: rules.maxWind + 1 }).rating, "high");
 });
 
-test("stedets egen grense brukes i stedet for felles grense", () => {
+test("the site's own limit is used instead of the common limit", () => {
   const local = { ...site, maxWind: 5 };
   const r = rate({ dir: 247, speed: 6, gust: 7 }, local);
   assert.equal(r.rating, "high");
@@ -50,39 +50,39 @@ test("stedets egen grense brukes i stedet for felles grense", () => {
   assert.equal(rate({ dir: 247, speed: 4.5, gust: 6 }, local).rating, "ok");
 });
 
-test("svak vind gir «Usikkert», fordi retningen er usikker", () => {
+test("light wind gives «Usikkert», because the direction is uncertain", () => {
   const r = rate({ dir: 247, speed: rules.minWind - 0.5, gust: 2 });
   assert.equal(r.rating, "maybe");
   assert.match(r.reasons.join(), /Svak vind/);
 });
 
-test("mulig retning gir «Usikkert», feil retning gir «Passer ikke»", () => {
+test("possible direction gives «Usikkert», wrong direction gives «Passer ikke»", () => {
   assert.equal(rate({ dir: 180, speed: 4, gust: 5 }).rating, "maybe");
   assert.equal(rate({ dir: 90, speed: 4, gust: 5 }).rating, "no");
 });
 
-test("retning nær kanten mot en sektor som ikke er hovedretning gir «Usikkert»", () => {
-  // SV er 225°, sektoren går fra 202,5° til 247,5°, og V (270°) er også hovedretning.
-  assert.equal(rate({ dir: 205, speed: 4, gust: 5 }).rating, "maybe"); // nær S (mulig)
-  assert.equal(rate({ dir: 250, speed: 4, gust: 5 }).rating, "ok"); // mellom SV og V, begge hovedretning
-  assert.equal(rate({ dir: 288, speed: 4, gust: 5 }).rating, "maybe"); // nær NV (ikke egnet)
+test("a direction near the edge of a sector that is not a main direction gives «Usikkert»", () => {
+  // SW is 225°, the sector runs from 202.5° to 247.5°, and W (270°) is also a main direction.
+  assert.equal(rate({ dir: 205, speed: 4, gust: 5 }).rating, "maybe"); // near S (possible)
+  assert.equal(rate({ dir: 250, speed: 4, gust: 5 }).rating, "ok"); // between SW and W, both main directions
+  assert.equal(rate({ dir: 288, speed: 4, gust: 5 }).rating, "maybe"); // near NW (not suitable)
   assert.equal(rate({ dir: 225, speed: 4, gust: 5 }).rating, "ok");
 });
 
-test("retning rundt nord regnes riktig (355° og 5° er N)", () => {
+test("directions around north are handled correctly (355° and 5° are N)", () => {
   assert.equal(W.directionCode(355), "N");
   assert.equal(W.directionCode(5), "N");
   assert.equal(W.directionCode(-10), "N");
   assert.equal(W.directionCode(360), "N");
 });
 
-test("regn fra rainNo gir «Passer ikke», også når vinden passer", () => {
+test("rain from rainNo gives «Passer ikke», even when the wind is suitable", () => {
   const r = rate({ dir: 247, speed: 4, gust: 6, rain: rules.rainNo });
   assert.equal(r.rating, "no");
   assert.match(r.reasons[0], /^Regn meldt \(0,5 mm\)$/);
 });
 
-test("litt nedbør gir høyst «Usikkert», og ingen eller manglende nedbør endrer ingenting", () => {
+test("light precipitation gives at most «Usikkert», and no or missing precipitation changes nothing", () => {
   const r = rate({ dir: 247, speed: 4, gust: 6, rain: rules.rainMaybe });
   assert.equal(r.rating, "maybe");
   assert.match(r.reasons.join(), /Litt nedbør meldt \(0,1 mm\)/);
@@ -90,18 +90,18 @@ test("litt nedbør gir høyst «Usikkert», og ingen eller manglende nedbør end
   assert.equal(rate({ dir: 247, speed: 4, gust: 6, rain: null }).rating, "ok");
 });
 
-test("for mye vind går foran regn", () => {
+test("too much wind takes precedence over rain", () => {
   assert.equal(rate({ dir: 247, speed: rules.maxWind + 1, gust: 12, rain: 2 }).rating, "high");
 });
 
-test("nedbør leses fra varselet, og eldre varsel uten nedbør gir rain null", () => {
+test("precipitation is read from the forecast, and an older forecast without precipitation gives rain null", () => {
   const forecast = { times: ["2026-10-05T12:00:00Z"], sites: { a: [[247, 4, 6, 1.2]], b: [[247, 4, 6]] } };
   assert.equal(W.windAt(forecast, "a", 0).rain, 1.2);
   assert.equal(W.windAt(forecast, "b", 0).rain, null);
   assert.equal(W.formatRain(1.24), "1,2 mm");
 });
 
-test("varsel eldre enn maxForecastAgeHours er for gammelt", () => {
+test("a forecast older than maxForecastAgeHours is too old", () => {
   const now = Date.parse("2026-10-04T12:00:00Z");
   const fetched = (h) => ({ fetched: new Date(now - h * 3600000).toISOString() });
   assert.equal(W.isStale(fetched(1), rules, now), false);
@@ -109,7 +109,7 @@ test("varsel eldre enn maxForecastAgeHours er for gammelt", () => {
   assert.equal(W.isStale({ fetched: "tull" }, rules, now), true);
 });
 
-test("«nå» finner timen som gjelder, og +3/+6 timer fra den", () => {
+test("«nå» finds the current hour, and +3/+6 hours from it", () => {
   const times = hourly("2026-10-04T10:00:00Z", 48);
   const now = Date.parse("2026-10-04T12:40:00Z");
   assert.equal(W.slotIndex(times, "0", now), 2);
@@ -118,53 +118,53 @@ test("«nå» finner timen som gjelder, og +3/+6 timer fra den", () => {
   assert.equal(W.slotIndex(times, "off", now), -1);
 });
 
-test("«nå» flytter seg til neste time ved timeskifte (forsiden tegner da på nytt)", () => {
+test("«nå» moves to the next hour when the hour changes (the home page then redraws)", () => {
   const times = hourly("2026-10-04T10:00:00Z", 48);
-  // 11.50 og 12.10 UTC: samme valg, men en annen time i varselet.
+  // 11:50 and 12:10 UTC: same choice, but a different hour in the forecast.
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T11:50:00Z")), 1);
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T12:10:00Z")), 2);
   assert.equal(W.slotIndex(times, "3", Date.parse("2026-10-04T11:50:00Z")), 4);
   assert.equal(W.slotIndex(times, "3", Date.parse("2026-10-04T12:10:00Z")), 5);
 });
 
-test("utløpt varsel gir ingen «nå», selv om siste time ligger i fortiden", () => {
+test("an expired forecast gives no «nå», even though the last hour is in the past", () => {
   const times = hourly("2026-10-01T10:00:00Z", 48);
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T12:00:00Z")), -1);
-  // Siste time gjelder i én time, ikke lenger.
+  // The last hour is valid for one hour, no longer.
   const last = Date.parse(times.at(-1));
   assert.equal(W.slotIndex(times, "0", last + 30 * 60000), 47);
   assert.equal(W.slotIndex(times, "0", last + 61 * 60000), -1);
   assert.equal(W.slotIndex(times, "3", last), -1);
 });
 
-test("«i morgen kl. 12» er norsk tid, også like etter midnatt", () => {
-  // Sommertid (UTC+2): kl. 12 norsk tid er 10:00 UTC.
+test("«i morgen kl. 12» is Norwegian time, also just after midnight", () => {
+  // Summer time (UTC+2): 12:00 Norwegian time is 10:00 UTC.
   const summer = hourly("2026-06-10T12:00:00Z", 48);
-  const s = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T22:30:00Z")); // 00.30 norsk tid 11. juni
+  const s = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T22:30:00Z")); // 00:30 Norwegian time on 11 June
   assert.equal(summer[s], "2026-06-12T10:00:00Z");
-  const s2 = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T21:30:00Z")); // 23.30 norsk tid 10. juni
+  const s2 = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T21:30:00Z")); // 23:30 Norwegian time on 10 June
   assert.equal(summer[s2], "2026-06-11T10:00:00Z");
-  // Vintertid (UTC+1): kl. 12 norsk tid er 11:00 UTC.
+  // Winter time (UTC+1): 12:00 Norwegian time is 11:00 UTC.
   const winter = hourly("2026-12-01T00:00:00Z", 48);
-  const w = W.slotIndex(winter, "tomorrow", Date.parse("2026-12-01T23:15:00Z")); // 00.15 norsk tid 2. des
-  assert.equal(w, -1); // 3. des kl. 12 er utenfor de 48 timene
+  const w = W.slotIndex(winter, "tomorrow", Date.parse("2026-12-01T23:15:00Z")); // 00:15 Norwegian time on 2 December
+  assert.equal(w, -1); // 3 December at 12:00 is outside the 48 hours
   const w2 = W.slotIndex(winter, "tomorrow", Date.parse("2026-12-01T08:00:00Z"));
   assert.equal(winter[w2], "2026-12-02T11:00:00Z");
 });
 
-test("«i morgen kl. 12» over overgangen til vintertid", () => {
-  // Natt til 25. oktober 2026 går klokka tilbake. Kl. 12 norsk tid 25. okt er 11:00 UTC.
+test("«i morgen kl. 12» across the switch to winter time", () => {
+  // The clocks go back in the night to 25 October 2026. 12:00 Norwegian time on 25 Oct is 11:00 UTC.
   const times = hourly("2026-10-24T00:00:00Z", 48);
   const i = W.slotIndex(times, "tomorrow", Date.parse("2026-10-24T09:00:00Z"));
   assert.equal(times[i], "2026-10-25T11:00:00Z");
 });
 
-test("klokkeslett vises i norsk tid", () => {
+test("times are shown in Norwegian time", () => {
   assert.equal(W.formatClock(Date.parse("2026-06-10T22:05:00Z")), "00.05");
   assert.equal(W.formatClock(Date.parse("2026-12-10T08:30:00Z")), "09.30");
 });
 
-test("steder uten varsel eller med hull i varselet gir ingen vind", () => {
+test("sites without a forecast or with gaps in it give no wind", () => {
   const forecast = { sites: { a: [[200, 4, 5], null] } };
   assert.deepEqual(W.windAt(forecast, "a", 0), { dir: 200, speed: 4, gust: 5, rain: null });
   assert.equal(W.windAt(forecast, "a", 1), null);
@@ -172,10 +172,10 @@ test("steder uten varsel eller med hull i varselet gir ingen vind", () => {
   assert.equal(W.windAt(forecast, "a", -1), null);
 });
 
-test("soloppgang og solnedgang i Harstad, med midnattssol og mørketid", () => {
+test("sunrise and sunset in Harstad, with midnight sun and polar night", () => {
   const clock = (ms) => W.formatClock(ms);
   const oct = W.sunTimes("2026-10-09", 68.8, 16.3);
-  // Rundt 07.37 og 17.45 denne dagen. Formelen er nøyaktig til et par minutter, så testen tillater 4.
+  // Around 07:37 and 17:45 on this day. The formula is accurate to a couple of minutes, so the test allows 4.
   assert.ok(Math.abs(oct.rise - Date.parse("2026-10-09T05:37:00Z")) < 4 * 60000, clock(oct.rise));
   assert.ok(Math.abs(oct.set - Date.parse("2026-10-09T15:45:00Z")) < 4 * 60000, clock(oct.set));
   assert.deepEqual(W.sunTimes("2026-06-21", 68.8, 16.3), { polar: "day" });
@@ -184,12 +184,12 @@ test("soloppgang og solnedgang i Harstad, med midnattssol og mørketid", () => {
   assert.match(W.sunText("2026-10-09", 68.8, 16.3), /^Sola opp 07\.3\d, ned 17\.4\d\.$/);
 });
 
-test("dagsoversikten slår sammen timer med samme vurdering og hopper over mørke timer", () => {
+test("the day plan merges hours with the same assessment and skips dark hours", () => {
   const times = hourly("2026-10-09T00:00:00Z", 24);
   const good = [247, 4, 6, 0], unsure = [247, 6, null, 0], wrong = [90, 4, 6, 0];
-  // Norsk tid er UTC+2 i oktober. Sola er oppe omtrent 07.37–17.46 i Harstad.
+  // Norwegian time is UTC+2 in October. The sun is up roughly 07:37–17:46 in Harstad.
   const rows = times.map((t, i) => (i >= 8 && i < 11 ? good : i === 11 ? unsure : i >= 12 && i < 14 ? good : wrong));
-  rows[2] = good; // kl. 04 norsk tid, mørkt
+  rows[2] = good; // 04:00 Norwegian time, dark
   const forecast = { times, sites: { x: rows } };
   const days = W.dayWindows(forecast, { id: "x", ...site }, rules, 68.8, 16.3);
   assert.deepEqual(Object.keys(days), ["2026-10-09"]);
@@ -198,5 +198,5 @@ test("dagsoversikten slår sammen timer med samme vurdering og hopper over mørk
   ]);
   const first = days["2026-10-09"][0];
   assert.deepEqual([first.dir, first.min, first.max, first.gust], ["SW", 4, 4, 6]);
-  assert.equal(days["2026-10-09"][1].gust, null); // kast mangler i varselet
+  assert.equal(days["2026-10-09"][1].gust, null); // gusts missing from the forecast
 });
