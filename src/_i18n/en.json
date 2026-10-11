@@ -449,7 +449,8 @@
       "radarLoading": "Loading radar …",
       "radarError": "Could not load radar.",
       "radarTime": "Radar at {time}",
-      "radarAttribution": "Radar: weather data by <a href=\"https://www.rainviewer.com/\">Rain Viewer</a>"
+      "radarAttribution": "Radar: weather data by <a href=\"https://www.rainviewer.com/\">Rain Viewer</a>",
+      "twoFingers": "Use two fingers to move the map"
     },
     "site": {
       "route": "Walking route",

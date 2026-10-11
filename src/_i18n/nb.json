@@ -449,7 +449,8 @@
       "radarLoading": "Laster radar …",
       "radarError": "Kunne ikke hente radar.",
       "radarTime": "Radar kl. {time}",
-      "radarAttribution": "Radar: data fra <a href=\"https://www.rainviewer.com/\">Rain Viewer</a>"
+      "radarAttribution": "Radar: data fra <a href=\"https://www.rainviewer.com/\">Rain Viewer</a>",
+      "twoFingers": "Bruk to fingre for å flytte kartet"
     },
     "site": {
       "route": "Gangrute",
