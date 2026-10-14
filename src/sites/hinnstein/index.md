@@ -34,6 +34,11 @@ landings:
   lon: 16.54333
   primary: false
   source: manual
+- name: Jordet ved Rema 1000 Kilamyra
+  lat: 68.73863
+  lon: 16.56528
+  primary: false
+  source: local_knowledge
 parking:
 - name: Parkering
   lat: 68.75818
@@ -53,10 +58,18 @@ elevation:
   landing_masl: 53
   difference_m: 505
   source: kartverket
-airspace: []
+airspace:
+- name: Evenes CTR
+  nearby: true
+  note: Kontrollsonen begynner rett sør for jordet ved Kilamyra. Ikke fly sør for jordet.
+  source: local_knowledge
 hazards:
 - title: Teknisk landing
   text: Landingen er parkeringsplassen ved Medkila skole, med lyktestolper rundt. Den er vanskelig om det står biler der. Barnehage og barneskole ligger like ved.
+- title: Evenes CTR ved Kilamyra
+  text: Kontrollsonen til Evenes begynner rett sør for jordet ved Kilamyra. Ikke fly sør for jordet.
+- title: Grunneier på Kilamyra
+  text: Bonden som eier jordet ved Kilamyra har sagt ja til landing, så lenge gresset ikke blir ødelagt når det nærmer seg slåttetid. Land et annet sted når gresset står høyt.
 launches:
 - directions:
   - E
@@ -77,3 +90,11 @@ Fint underlag, men litt ujevnt. Starten mot øst er kort og ulendt.
 ## Landing
 
 Hovedlandingen er parkeringsplassen ved Medkila skole, som også er alternativ landing for Heia. Alternativ landing er fotballbanen på Medkila (Medkilabanen), som er hovedlandingen for Heia.
+
+Jordet nedenfor Rema 1000 Kilamyra er en større alternativ landing, ca. 2,6 km fra starten. Det gjør Hinnstein mer tilgjengelig for dem som ikke liker parkeringsplassen ved Medkila. De fleste vinger skal nå dit med god margin.
+
+- Vimpler på flere gårder i nærheten viser vinden.
+- Sjøen på østsiden gir en fin innflyging når man lander mot vest.
+- Lyktestolper langs veien gjør innflyging mot øst krevende.
+- Jordet heller noe ned mot sjøen, fra vest mot øst.
+- På sørøstlig vind kan det være rotor bak skogen vest for jordet.
