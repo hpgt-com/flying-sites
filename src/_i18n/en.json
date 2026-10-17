@@ -105,7 +105,7 @@
     "notamTitle": "NOTAM and airspace",
     "towersTitle": "Towers",
     "towersSubtitle": "Phone numbers for the control towers",
-    "disclaimer": "This overview is a rough guide to flying sites in the HPGT area. The club takes no responsibility for information about safety, airspace or landowner agreements. Every pilot and student decides for themselves whether the site and conditions are OK.",
+    "disclaimer": "The club takes no responsibility for information about safety, airspace or landowner agreements.",
     "credit": "The site builds on the old site guide by Lars Sletten, which he has given to the club.",
     "openData": "Open data: {geojson} and {kml} (Google Earth, norgeskart.no). Free to use with attribution, {license}. {docs}.",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
@@ -126,7 +126,8 @@
     "allDirections": "All directions",
     "directionHelp": "Tap the directions the wind comes from. You can choose several.",
     "tapAgain": "Tap again to open the site ›",
-    "now": "Now"
+    "now": "Now",
+    "aboutSummary": "About the site: responsibility, open data and statistics"
   },
   "site": {
     "hazardsTitle": "Before you launch",

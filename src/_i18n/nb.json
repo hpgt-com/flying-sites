@@ -105,7 +105,7 @@
     "notamTitle": "NOTAM og luftrom",
     "towersTitle": "Tårn",
     "towersSubtitle": "Telefonnumre til tårnene",
-    "disclaimer": "Oversikten er en grov guide til flysteder i HPGTs område. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold. Hver pilot og elev vurderer selv om stedet og forholdene er OK.",
+    "disclaimer": "Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold.",
     "credit": "Siden bygger videre på den gamle flystedsoversikten til Lars Sletten, som han har gitt til klubben.",
     "openData": "Åpne data: {geojson} og {kml} (Google Earth, norgeskart.no). Fritt til bruk med kreditering, {license}. {docs}.",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/deed.no",
@@ -126,7 +126,8 @@
     "allDirections": "Alle retninger",
     "directionHelp": "Trykk på retningene vinden kommer fra. Du kan velge flere.",
     "tapAgain": "Trykk igjen for å åpne flystedet ›",
-    "now": "Nå"
+    "now": "Nå",
+    "aboutSummary": "Om siden: ansvar, åpne data og statistikk"
   },
   "site": {
     "hazardsTitle": "Før du starter",

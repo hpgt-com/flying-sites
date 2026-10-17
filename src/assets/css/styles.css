@@ -482,7 +482,7 @@ p { margin: 0; }
 .home-pane { order: 5; display: flex; flex-direction: column; gap: 14px; }
 .home-pane--sites { display: contents; }
 .home-pane[hidden] { display: none; }
-.home .disclaimer { order: 7; margin-top: 12px; }
+.home .disclaimer { order: 7; }
 .map--home { flex: 1; min-height: 0; height: auto; border-radius: 0; border: 0; }
 @media (prefers-reduced-motion: reduce) { .home__map, .home .searchbar { transition: none; } }
 
@@ -638,6 +638,9 @@ p { margin: 0; }
 
 .disclaimer { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .disclaimer p { margin: 0; }
+.about { display: flex; flex-direction: column; gap: 8px; }
+.about > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--link); font-weight: 600; }
+.about > p + p { margin-top: 8px; }
 
 /* Status on the map: the pill at the top, and the details below it when opened (home.js). */
 .map-status { position: absolute; top: 10px; left: 58px; right: 58px; z-index: 1001; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
