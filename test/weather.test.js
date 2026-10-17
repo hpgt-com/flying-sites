@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { metRows, mergeSites } from "../lib/weather/met.js";
+import { metRows, metUpdated, mergeSites } from "../lib/weather/met.js";
 import { loadWeather, readWeather, writeWeather } from "../lib/weather/index.js";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "weather-"));
@@ -27,6 +27,15 @@ test("sites that start an hour later are placed at their own times", () => {
   assert.deepEqual(forecast.sites.b, [null, [200, 5, 7, 0.1]]);
   assert.equal(forecast.fetched, "2026-10-17T10:05:00.000Z");
   assert.equal(mergeSites({}), null);
+});
+
+test("MET's update time is kept, the oldest across the sites", () => {
+  assert.equal(metUpdated({ properties: { meta: { updated_at: "2026-10-17T08:12:31Z" } } }), "2026-10-17T08:12:31Z");
+  assert.equal(metUpdated({ properties: {} }), null);
+  const rows = [["10:00", 180, 3, 5, 0]];
+  const forecast = mergeSites({ a: rows, b: rows, c: rows }, new Date(), { a: "2026-10-17T08:12:31Z", b: "2026-10-17T07:40:02Z", c: null });
+  assert.equal(forecast.updated, "2026-10-17T07:40:02Z");
+  assert.equal(mergeSites({ a: rows }).updated, null);
 });
 
 test("with WEATHER_FETCH=0 the build only reads the file, and never fetches", async () => {

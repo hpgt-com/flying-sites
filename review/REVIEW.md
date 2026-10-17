@@ -33,12 +33,12 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 6 | Verifiser domenet `flysteder.hpgt.com` i organisasjonsinnstillingene (Pages, Verified domains), og vurder DNSSEC. CAA finnes allerede (se [Sammenligning](#sammenligning-med-andre-reviews)) | Sikkerhet | XS | Middels |
 | 7 | ~~Rett lenken til `/luftrom/` i `src/_includes/site.njk:273` til `/tarn/`~~ Rettet (på engelsk ga den 404) | Feil | XS | Lav |
 | 8 | ~~Legg til lenkesjekk, HTML-validering og axe/pa11y i PR-sjekken (punkt 7 hadde blitt fanget)~~ Gjort: `check:links`, `check:html` og `check:a11y` i PR-sjekken | Kvalitet | S | Middels |
-| 9 | Byggeprovenance og SBOM (`actions/attest-build-provenance`, `anchore/sbom-action`), OpenSSF Scorecard og harden-runner | DevSecOps | S | Middels |
+| 9 | ~~Byggeprovenance og SBOM (`actions/attest-build-provenance`, `anchore/sbom-action`), OpenSSF Scorecard og harden-runner~~ Gjort: provenance og SBOM (`npm sbom`, ingen tredjeparts action) attesteres for Pages-arkivet, og Scorecard kjører. harden-runner er utelatt fordi den sender data om hver kjøring til StepSecurity (eiernes valg) | DevSecOps | S | Middels |
 | 10 | PWA/offline: service worker som cacher sidene, GPX og kartfliser for området | Brukeropplevelse | M | Høy |
 | 11 | Mobil: kartet først, tidslinje i stedet for knapper, og en «flyvindu»-stripe per sted (se prototypen) | Design | M | Høy |
 | 12 | Én vedlikeholder til i CODEOWNERS og med admin. Slå på «Automatically delete head branches» | Styring | XS | Middels |
 | 13 | ~~Ugyldige vinddata gir «Kan passe»: valider tall i `rateWind` og innfør en «ukjent»-tilstand~~ Rettet: ugyldige timer gir «Ingen varsel» | Korrekthet | S | Høy |
-| 14 | Lagre METs `updated_at` i tillegg til egen hentetid, og vis begge | Datatillit | XS | Middels |
+| 14 | ~~Lagre METs `updated_at` i tillegg til egen hentetid, og vis begge~~ Gjort: «Varsel fra MET oppdatert … hentet …» på forsiden | Datatillit | XS | Middels |
 | 15 | ~~Ikke send rå søketekst til GoatCounter (`search/no-hits/` + tekst)~~ Rettet: bare antallet telles | Personvern | XS | Middels |
 | 16 | ~~Triager `npm audit`: 9 funn i byggeavhengighetene (5 high, 4 moderate)~~ Rettet med Eleventy 3.1.7: 0 funn | Forsyningskjede | S | Middels |
 

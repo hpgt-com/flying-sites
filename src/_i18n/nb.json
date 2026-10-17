@@ -349,6 +349,7 @@
       "staleTitle": "Varselet er for gammelt.",
       "staleHome": "Det ble hentet {when}. Vindvurderingen er slått av til siden er oppdatert. Last inn siden på nytt, eller sjekk Yr eller Windy.",
       "fetched": "Varsel fra MET hentet {when}.",
+      "fetchedUpdated": "Varsel fra MET oppdatert {updated}, hentet {when}.",
       "notCovered": "Varselet dekker ikke dette tidspunktet.",
       "showing": "Viser vind kl. {time}{tomorrow}.",
       "tomorrowSuffix": " i morgen",
