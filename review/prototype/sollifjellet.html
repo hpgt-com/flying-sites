@@ -8,7 +8,7 @@
 <!-- Prototype av en stedsside, mobil først. Stedsdata er kopiert fra src/sites/sollifjellet/index.md og
      src/_data/cache/airspace/sollifjellet.json. Varselet hentes live fra api.met.no (i produksjon via edge-proxy).
      Bildene lastes fra flysteder.hpgt.com. Feiler hentingen av varselet, vises merkede demodata. -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
 :root {
   --bg: #f4f6f5; --panel: #fff; --ink: #14201b; --muted: #5d6b65; --line: #dde3e0; --accent: #1d5c63; --accent-soft: #d6e7e8;
@@ -371,7 +371,7 @@ details.more > summary span { color: var(--ink); font-weight: 600; }
   <a href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a>
 </nav>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 "use strict";
 // ---------- Stedsdata (fra src/sites/sollifjellet/index.md) ----------
