@@ -28,7 +28,7 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 1 | Flytt vindvarselet ut av byggingen (edge-proxy med cache, se [Målarkitektur](#målarkitektur)) | Arkitektur | M | Høy |
 | 2 | Cache bildene i CI (`actions/cache` på `.cache`/`_site/img`) eller generer dem bare når de endres | CI/CD | S | Høy |
 | 3 | ~~Del opp airspace-workflowen i en hentejobb med lesetilgang og en PR-jobb med skrivetilgang~~ Gjort, med støtte for GitHub App-token (appen må opprettes, se docs/operations.md) | DevSecOps | S | Høy |
-| 4 | `npm ci --ignore-scripts` i alle workflows (ingen avhengigheter har install-script i dag) | Forsyningskjede | XS | Middels |
+| 4 | ~~`npm ci --ignore-scripts` i alle workflows (ingen avhengigheter har install-script i dag)~~ Gjort | Forsyningskjede | XS | Middels |
 | 5 | Legg til `/.well-known/security.txt` (RFC 9116) som peker på Report a vulnerability | Sikkerhet | XS | Lav |
 | 6 | Verifiser domenet `flysteder.hpgt.com` i organisasjonsinnstillingene (Pages, Verified domains), og vurder DNSSEC. CAA finnes allerede (se [Sammenligning](#sammenligning-med-andre-reviews)) | Sikkerhet | XS | Middels |
 | 7 | Rett lenken til `/luftrom/` i `src/_includes/site.njk:273` til `/tarn/` | Feil | XS | Lav |
