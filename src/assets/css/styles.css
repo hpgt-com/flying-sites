@@ -1060,7 +1060,15 @@ p { margin: 0; }
 .wind-windows__none { font-size: 14px; color: var(--muted); }
 .now-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
 .now-links .btn { justify-content: center; }
-.block--log .link-group { margin: 4px 0 -4px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+/* Lenker: each group is a small label with its buttons right below, and more room between the groups. The buttons are
+   calmer than elsewhere on the page. */
+.link-group { display: flex; flex-direction: column; gap: 6px; }
+/* Margin, not gap: the content of <details> is laid out inside its own box, so the gap on the details does not reach it. */
+.link-group + .link-group { margin-top: 16px; }
+.link-group__title { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.block--log .now-links .btn { min-height: 40px; font-size: 15px; }
+.block--log .big-btn { min-height: 44px; font-size: 15px; }
+.block--log .big-btn--two-line { min-height: 52px; }
 
 /* Start: the rose with the legend beside it. */
 .launch-head { display: flex; gap: 16px; align-items: center; }

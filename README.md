@@ -16,9 +16,8 @@ It builds on Lars Sletten's old flying site guide, which he has handed over to t
 
 Do you have corrections, photos or new information about a site?
 
-- Press **«Foreslå endring»** ("Suggest a change") at the bottom of the site page. It opens a form here on GitHub
-  (requires an account).
-- Or tell someone in the club directly.
+- Tell someone in the club, or open an issue here on GitHub (requires an account). A form on the site that does not
+  need a GitHub account is planned.
 
 ## Documentation
 
