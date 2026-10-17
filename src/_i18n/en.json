@@ -356,6 +356,7 @@
       "staleTitle": "The forecast is too old.",
       "staleHome": "It was fetched {when}. The wind assessment is turned off until the site is updated. Reload the page, or check Yr or Windy.",
       "fetched": "MET forecast fetched {when}.",
+      "fetchedUpdated": "MET forecast updated {updated}, fetched {when}.",
       "notCovered": "The forecast does not cover this time.",
       "showing": "Showing wind at {time}{tomorrow}.",
       "tomorrowSuffix": " tomorrow",
