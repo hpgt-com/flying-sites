@@ -32,6 +32,13 @@ jobs:
 
       - run: npm test
 
+      # Image variants from the deploy build on main (same key as in deploy.yml), so the PR build is quicker.
+      # Only restored, never saved, so a PR cannot change what main uses.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: _site/img
+          key: site-img-${{ hashFiles('src/sites/**/*.jpg', 'lib/images.js', 'lib/photo-credit.js', 'lib/site-images.js', 'package-lock.json') }}
+
       # Site file validation happens during the build. The wind forecast is skipped, so PRs do not query MET.
       - run: npm run build
         env:

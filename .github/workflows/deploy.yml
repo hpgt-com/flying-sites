@@ -50,6 +50,15 @@ jobs:
       - id: pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
+      # The image variants (lib/images.js) take most of the build time. eleventy-img skips a variant whose file already
+      # exists (the file name holds a hash of the source image and the options), so the folder is kept between builds.
+      # The key changes when an image, the image code or a package changes, and then every variant is made again:
+      # there are no restore-keys, so variants of removed images are never carried over and published.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: _site/img
+          key: site-img-${{ hashFiles('src/sites/**/*.jpg', 'lib/images.js', 'lib/photo-credit.js', 'lib/site-images.js', 'package-lock.json') }}
+
       # Fails if a site file is invalid.
       - run: npm run build
         env:
