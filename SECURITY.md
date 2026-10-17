@@ -31,8 +31,10 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   deploy job has the publishing permissions (`pages`, `id-token`).
 - The airspace workflow is split in two jobs: `fetch` installs the npm packages (`npm ci --ignore-scripts`) and
   runs the script with read-only access and the openAIP key; `pr` has write access to push the branch and open the
-  PR, but runs no npm code. The fetched files go from one to the other as an artifact.
-- Secrets (`OPENAIP_API_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
+  PR, but runs no npm code. The fetched files go from one to the other as an artifact. When the club's GitHub App
+  is set up, `pr` uses a short-lived app token limited to this repository (contents and pull requests), so the PR
+  check runs on the airspace PRs too.
+- Secrets (`OPENAIP_API_KEY`, `AIRSPACE_APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
   key files.
 
 ## GitHub settings (done by someone with admin access)
@@ -54,13 +56,15 @@ GitHub in autumn 2026.
     «Require branches to be up to date» off. A check can only be selected once it has run recently.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
     (once CodeQL has run on `main`).
-  - Bypass list: Repository admin, «For pull requests only». PRs from the airspace workflow are created with the
-    GitHub token and do not trigger the PR check, so they must be merged with «Bypass rules». Direct pushes to
-    `main` are still blocked.
+  - Bypass list: Repository admin, «For pull requests only». Without the GitHub App (see docs/operations.md),
+    PRs from the airspace workflow are created with the GitHub token and do not trigger the PR check, so they must
+    be merged with «Bypass rules». With the app they get the checks like any other PR, and the bypass is only a
+    fallback. Direct pushes to `main` are still blocked.
 - [ ] **Advanced Security**: Private vulnerability reporting, Dependency graph, Dependabot alerts,
   Dependabot security updates, Secret scanning and Push protection on. Code scanning must be set to
   Advanced (our `code-scanning.yml`), not Default setup.
 - [ ] **Actions → General**, Workflow permissions: «Read repository contents and packages permissions»,
-  and «Allow GitHub Actions to create and approve pull requests» on (needed by the airspace workflow).
+  and «Allow GitHub Actions to create and approve pull requests» on (needed by the airspace workflow only while
+  the GitHub App is not set up; turn it off once the app works).
 - [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» on.
 - [ ] **Collaborators and teams** and **GitHub Apps**: as few people as possible with write and admin access.

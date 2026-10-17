@@ -2,8 +2,13 @@ name: Update airspace
 
 # Fetches airspace from openAIP for all sites once a month (the AIRAC cycle is 28 days).
 # Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing happens.
-# Requires the repository secret OPENAIP_API_KEY, and «Allow GitHub Actions to create and approve pull
-# requests» enabled under Settings → Actions → General.
+# Requires the repository secret OPENAIP_API_KEY.
+#
+# The PR is created with a GitHub App token when the app is set up (repository variable AIRSPACE_APP_CLIENT_ID
+# and secret AIRSPACE_APP_PRIVATE_KEY, see docs/operations.md). The PR check then runs on the PR like on any
+# other, and it can be merged without «Bypass rules». Without the app, the workflow falls back to GITHUB_TOKEN:
+# that needs «Allow GitHub Actions to create and approve pull requests» under Settings → Actions → General, and
+# PRs created with GITHUB_TOKEN do not trigger the PR check.
 #
 # Two jobs, so third-party code never runs with write access:
 #   fetch  installs the npm packages and runs the script, with read-only access and the openAIP key.
@@ -79,8 +84,21 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      # Short-lived token from the club's GitHub App, limited to this repository and to the two permissions the
+      # job needs. It is revoked when the job ends. Skipped when the app is not set up.
+      - id: app
+        if: vars.AIRSPACE_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.AIRSPACE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AIRSPACE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       # The token is kept because the job pushes a branch for the PR. It uploads no artifacts and runs no npm code.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
+        with:
+          token: ${{ steps.app.outputs.token || github.token }}
 
       # Replaces the cache folder with the fetched one, so removed files are removed here too.
       - run: rm -rf src/_data/cache/airspace
@@ -92,7 +110,7 @@ jobs:
 
       - name: Lag PR
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
         run: |
           branch="airspace/$(date +%Y-%m-%d)"
           git config user.name "github-actions[bot]"
