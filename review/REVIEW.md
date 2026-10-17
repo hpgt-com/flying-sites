@@ -32,7 +32,7 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 5 | ~~Legg til `/.well-known/security.txt` (RFC 9116) som peker på Report a vulnerability~~ Gjort | Sikkerhet | XS | Lav |
 | 6 | Verifiser domenet `flysteder.hpgt.com` i organisasjonsinnstillingene (Pages, Verified domains), og vurder DNSSEC. CAA finnes allerede (se [Sammenligning](#sammenligning-med-andre-reviews)) | Sikkerhet | XS | Middels |
 | 7 | ~~Rett lenken til `/luftrom/` i `src/_includes/site.njk:273` til `/tarn/`~~ Rettet (på engelsk ga den 404) | Feil | XS | Lav |
-| 8 | Legg til lenkesjekk, HTML-validering og axe/pa11y i PR-sjekken (punkt 7 hadde blitt fanget) | Kvalitet | S | Middels |
+| 8 | ~~Legg til lenkesjekk, HTML-validering og axe/pa11y i PR-sjekken (punkt 7 hadde blitt fanget)~~ Gjort: `check:links`, `check:html` og `check:a11y` i PR-sjekken | Kvalitet | S | Middels |
 | 9 | ~~Byggeprovenance og SBOM (`actions/attest-build-provenance`, `anchore/sbom-action`), OpenSSF Scorecard og harden-runner~~ Gjort: provenance og SBOM (`npm sbom`, ingen tredjeparts action) attesteres for Pages-arkivet, og Scorecard kjører. harden-runner er utelatt fordi den sender data om hver kjøring til StepSecurity (eiernes valg) | DevSecOps | S | Middels |
 | 10 | ~~PWA/offline: service worker som cacher sidene, GPX og kartfliser for området~~ Gjort: installerbar, og besøkte sider, GPX og Kartverket-fliser man har sett virker offline | Brukeropplevelse | M | Høy |
 | 11 | Mobil: kartet først, tidslinje i stedet for knapper, og en «flyvindu»-stripe per sted (se prototypen) | Design | M | Høy |

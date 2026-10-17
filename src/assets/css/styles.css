@@ -327,6 +327,9 @@ p { margin: 0; }
   z-index: 0;
 }
 .leaflet-container { font-family: var(--font-body); }
+/* Map credits: opaque, so the text keeps its contrast over a dark map, and underlined links, so they do not rely on colour. */
+.leaflet-container .leaflet-control-attribution { background: var(--card); color: var(--muted); }
+.leaflet-container .leaflet-control-attribution a { color: var(--link); text-decoration: underline; }
 .leaflet-container img { max-width: none !important; }
 .leaflet-control-layers-toggle { width: 44px !important; height: 44px !important; }
 .leaflet-touch .leaflet-bar a { width: 40px; height: 40px; line-height: 40px; }
@@ -663,10 +666,10 @@ p { margin: 0; }
 
 .rose-facts { display: flex; gap: 16px; align-items: center; }
 .facts { margin: 0; }
-.facts > div { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--line); }
-.facts > div:last-child { border-bottom: 1px solid var(--line); }
+.facts > dl { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--line); }
+.facts > dl:last-child { border-bottom: 1px solid var(--line); }
 .facts dt { font-size: 14px; color: var(--muted); }
-.facts dd { margin: 0; }
+.facts dl, .facts dd { margin: 0; }
 /* Level, category and season separately, on one line. */
 .facts > .facts__trio { flex-direction: row; flex-wrap: wrap; gap: 10px 24px; }
 .facts__trio > div { display: flex; flex-direction: column; gap: 4px; }
@@ -768,7 +771,7 @@ p { margin: 0; }
   gap: 12px;
 }
 .site-page__aside > .block > h2 { font-size: 24px; }
-.site-page__aside .facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.site-page__aside .facts > dl:last-child { border-bottom: 0; padding-bottom: 0; }
 /* Vær: the meteogram in its own frame and the links compact on one line, with the description to the right. */
 .block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
 .block--weather .meteogram img { border: 0; border-radius: 6px; }
@@ -897,6 +900,7 @@ p { margin: 0; }
 /* ---------- Image viewer (lightbox.js) ---------- */
 
 .lightbox-link { display: block; cursor: zoom-in; }
+.lightbox-link[hidden] { display: none; }
 .lightbox {
   width: 100vw;
   height: 100vh;

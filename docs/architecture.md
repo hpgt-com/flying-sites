@@ -21,7 +21,7 @@ flowchart LR
   end
 
   subgraph actions["GitHub Actions"]
-    prcheck["PR check<br/>tests + build"]
+    prcheck["PR check<br/>tests + build,<br/>links, HTML, axe"]
     deploy["Build and deploy<br/>on merge + twice an hour<br/>(weather → build → deploy)"]
     airspace["Update airspace<br/>1st of each month → PR"]
     scan["Code scanning<br/>CodeQL"]
@@ -205,7 +205,7 @@ sequenceDiagram
 
 | Workflow | When | What |
 |---|---|---|
-| `pr-check.yml` | Every PR | Tests and build (`build`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
+| `pr-check.yml` | Every PR | Tests, build, link check and HTML validation (`build`), axe in Chromium on a few pages (`accessibility`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
 | `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Four jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed"), `deploy` publishes, and `attest` signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |

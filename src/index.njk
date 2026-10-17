@@ -19,7 +19,7 @@ scripts:
   <div class="home__left">
     <header class="topbar">
       <span class="logo">{{ t.common.siteTitle }}</span>
-      <span class="topbar__end">{{ m.siteMenu() }}</span>
+      <div class="topbar__end">{{ m.siteMenu() }}</div>
     </header>
 
     <div class="home__intro">
@@ -65,7 +65,7 @@ scripts:
         <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
         <div class="compass" role="group" aria-labelledby="f-direction">
           {% for code in ["NW", "N", "NE", "W", null, "E", "SW", "S", "SE"] %}
-          <button type="button" data-filter="direction" data-value="{{ code or '' }}" aria-pressed="{{ 'false' if code else 'true' }}"{% if not code %} class="compass__all"{% endif %}{% if code %} aria-label="{{ code | directionWord | capitalizeFirst }}"{% endif %}>{{ (code | directionLabel) if code else t.home.all }}</button>
+          <button type="button" data-filter="direction" data-value="{{ code or '' }}" aria-pressed="{{ 'false' if code else 'true' }}"{% if not code %} class="compass__all"{% endif %}{% if code %} aria-label="{{ code | directionLabel }}, {{ code | directionWord }}"{% endif %}>{{ (code | directionLabel) if code else t.home.all }}</button>
           {% endfor %}
         </div>
       </div>

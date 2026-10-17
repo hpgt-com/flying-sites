@@ -44,6 +44,52 @@ jobs:
         env:
           FORECAST_OFFLINE: "1"
 
+      # Every internal link and image points to a file that exists (lib/link-check.js). No network.
+      - run: npm run check:links
+
+      # HTML validation of every page (.htmlvalidate.mjs lists the rules turned off, and why).
+      - run: npm run check:html
+
+      # The built pages for the accessibility check, without the image variants (large, and not needed for the check).
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: |
+            _site
+            !_site/img
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  # axe-core in Chromium on a few pages that cover the templates, in light and dark mode (scripts/check-a11y.mjs).
+  # Fails on findings with impact serious or critical.
+  accessibility:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      - run: npm ci --ignore-scripts
+
+      # The Chromium that matches the Playwright version in package-lock.json, with the system libraries it needs.
+      - run: npx playwright install --with-deps chromium
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site
+          path: _site
+
+      - run: npm run check:a11y
+
   # Blocks PRs that add npm packages or Actions with known vulnerabilities (moderate or higher).
   dependency-review:
     runs-on: ubuntu-latest
