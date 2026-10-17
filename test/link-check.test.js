@@ -19,6 +19,8 @@ test("finds href, src and every URL in srcset, but not data in script blocks", (
   const html = `<a href="/tarn/">x</a><img src="a.jpg" srcset="/img/a-400.webp 400w, /img/a-800.webp 800w">
     <script type="application/json">{"url":"/missing/"}</script><script src="/assets/js/site.js"></script>`;
   assert.deepEqual(extractLinks(html), ["/tarn/", "a.jpg", "/img/a-400.webp", "/img/a-800.webp", "/assets/js/site.js"]);
+  // End tags with a space or in capitals still end the block, and links after it are found.
+  assert.deepEqual(extractLinks(`<SCRIPT>{"u":"/x/"}</SCRIPT ><a href="/a/">a</a><script>{"u":"/y/"}</script\n><a href='/b/'>b</a>`), ["/a/", "/b/"]);
 });
 
 test("external links are skipped, and the site's own address and the path prefix are removed", () => {
