@@ -70,6 +70,12 @@ export default function (eleventyConfig) {
   // Version numbers on CSS/JS, so browsers fetch new files after a change (lib/assets.js).
   eleventyConfig.addFilter("asset", assetUrl);
   eleventyConfig.addFilter("formatNumber", function (n, decimals) { return formatNumber(n, decimals, langOf(this.ctx)); });
+  // Distance in km between two points with lat and lon (great circle), for the glide from launch to landing.
+  eleventyConfig.addFilter("distanceKm", (a, b) => {
+    const r = Math.PI / 180;
+    const h = Math.sin(((b.lat - a.lat) * r) / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(((b.lon - a.lon) * r) / 2) ** 2;
+    return 12742 * Math.asin(Math.sqrt(h));
+  });
   eleventyConfig.addFilter("formatDate", function (iso) { return formatDate(iso, langOf(this.ctx)); });
   eleventyConfig.addFilter("feetToMeters", feetToMeters);
   eleventyConfig.addFilter("formatLimit", function (limit) { return formatLimit(limit, langOf(this.ctx)); });

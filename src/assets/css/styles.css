@@ -734,10 +734,13 @@ p { margin: 0; }
 .launch-list--categories .launch-list__badges { grid-area: dir; }
 .launch-list--categories .launch-list__categories { grid-area: cat; }
 .launch-list--categories .launch-list__texts { grid-area: text; }
+.launch-list__now { grid-column: 1; }
+.launch-list--categories li { grid-template-areas: "dir text" "cat text" "now text"; grid-template-rows: auto auto 1fr; }
+.launch-list--categories .launch-list__now { grid-area: now; }
 .launch-list__categories { display: flex; flex-wrap: wrap; gap: 4px; }
 .launch-list__categories:empty { display: none; }
 @media (min-width: 640px) {
-  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text"; }
+  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text" "now cat text"; grid-template-rows: auto 1fr; }
   .launch-list__categories:empty { display: flex; }
 }
 .launch-list__texts { display: flex; flex-direction: column; gap: 6px; }
@@ -858,19 +861,96 @@ p { margin: 0; }
 .metadata dd { margin: 0; }
 .page-footer .disclaimer { font-size: 13px; }
 
-/* Light refresh on mobile: the parts of the site page as calm cards, with a little less space between them. */
-@media (max-width: 1023px) {
-  .site-page, .site-page__grid, .site-page__main, .site-page__aside { gap: 20px; }
-  .site-page__main > .block, .site-page__aside > .block {
-    padding: 16px; background: var(--card); border: 1px solid var(--line-soft); border-radius: 16px;
-  }
-  .site-page__main > .block h2, .site-page__aside > .block h2 { font-size: 28px; }
-  .block--title h1 { font-size: 42px; }
+/* ---------- Site page v2: hero, «Kan jeg fly her nå?», cards in one column, action bar at the bottom ---------- */
+.site-v2 { max-width: 760px; gap: 16px; padding-bottom: 96px; }
+.site-page__body { display: flex; flex-direction: column; gap: 16px; }
+.site-page__body > .block:not(.block--notice) {
+  padding: 18px 16px; background: var(--card); border: 1px solid var(--line-soft); border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(28, 43, 51, 0.04), 0 4px 16px rgba(28, 43, 51, 0.05);
+}
+.site-page__body > .block h2 { font-size: 28px; }
+.site-page__body > .lead { margin: 0; }
+
+.hero {
+  position: relative; display: flex; align-items: flex-end; min-height: 280px; margin: 0 -16px; overflow: hidden;
+  background: linear-gradient(160deg, #2E5E6E, #1C2B33);
+}
+.hero__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17, 25, 29, 0) 35%, rgba(17, 25, 29, 0.82) 100%); }
+.hero__text { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px; color: #FFFFFF; }
+.hero h1 { font-size: 46px; color: #FFFFFF; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35); }
+.hero__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.hero__chips li {
+  padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #FFFFFF;
+  background: rgba(17, 25, 29, 0.45); border: 1px solid rgba(255, 255, 255, 0.55);
+}
+.hero__chips .hero__chip--warn { background: #8A2C0D; border-color: #8A2C0D; }
+
+/* «Kan jeg fly her nå?» */
+.block--now .site-wind { border-left-width: 8px; }
+.block--now .site-wind strong { font-size: 19px; }
+.wind-chart { display: flex; flex-direction: column; gap: 4px; }
+.wind-chart__bars { display: flex; align-items: flex-end; gap: 2px; height: 110px; padding-top: 18px; border-bottom: 1px solid var(--line); }
+.wind-chart__col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.wind-chart__col--now { outline: 2px solid var(--text); outline-offset: 1px; border-radius: 2px; }
+.wind-chart__gust, .wind-chart__bar { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 2px 2px 0 0; }
+.wind-chart__gust { opacity: 0.35; }
+.wind-chart__arrow { position: absolute; top: -18px; left: 50%; width: 14px; margin-left: -7px; font-size: 13px; line-height: 14px; text-align: center; color: var(--muted); }
+.wind-chart--ok { background: var(--wind-ok); }
+.wind-chart--maybe { background: var(--wind-maybe); }
+.wind-chart--high { background: var(--wind-high); }
+.wind-chart--no { background: var(--wind-no); }
+.wind-chart__axis { display: flex; gap: 2px; font-size: 11px; color: var(--muted); }
+.wind-chart__tick { flex: 1; overflow: visible; white-space: nowrap; }
+.wind-chart__key { margin: 0; font-size: 12px; color: var(--muted); }
+.wind-windows { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.wind-windows__item { padding: 5px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; background: var(--surface); border-left: 4px solid var(--wind-no); }
+.wind-windows--ok { border-left-color: var(--wind-ok); }
+.wind-windows--maybe { border-left-color: var(--wind-maybe); }
+.wind-windows__none { font-size: 14px; color: var(--muted); }
+.now-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.now-links .btn { justify-content: center; }
+.now-note { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* Startplasser: the rose with the wind now, and each group of launches with «Passer nå» or «Ikke nå». */
+.launch-head { display: flex; gap: 16px; align-items: center; }
+.launch-head .rose { flex: none; }
+.launch-head__text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.launch-now { margin: 0; font-weight: 700; }
+.launch-list__now { justify-self: start; align-self: start; padding: 2px 8px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--surface); color: var(--muted); white-space: nowrap; }
+.launch-list__now--ok { background: var(--wind-ok); color: #FFFFFF; }
+.launch-list__now--maybe { background: var(--wind-maybe); color: #1C2B33; }
+.launch-list__now--high { background: var(--wind-high); color: #FFFFFF; }
+
+/* Landing og adkomst */
+.glide { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface); }
+.glide__label { color: var(--fjord); font-weight: 600; }
+.block--landing h3 { margin: 6px 0 0; }
+
+/* Mobile: the action bar at the bottom of the screen. */
+.action-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1500; display: flex; gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 16px rgba(28, 43, 51, 0.08);
+}
+.action-bar a {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px;
+  font-weight: 700; text-decoration: none; color: var(--text); background: var(--card); border: 1px solid var(--rose-border);
+}
+.action-bar .action-bar__primary { flex: 1.4; color: var(--on-color); background: var(--text); border-color: var(--text); }
+@media (min-width: 800px) {
+  .hero { margin: 0; border-radius: 22px; min-height: 380px; }
+  .hero h1 { font-size: 64px; }
+  .hero__text { padding: 28px 28px; }
+  .site-page__body > .block:not(.block--notice) { padding: 24px; }
+  .action-bar { left: 50%; right: auto; bottom: 16px; width: 520px; margin-left: -260px; border: 1px solid var(--line); border-radius: 16px; }
+}
+/* Desktop: directions and GPX are in Landing og adkomst, and the map is on screen, so no action bar. */
+@media (min-width: 1024px) {
+  .action-bar { display: none; }
+  .site-v2 { padding-bottom: 48px; }
 }
 @media (min-width: 1024px) {
-  .section-nav { display: none; }
-  .fold > summary { cursor: default; pointer-events: none; min-height: 0; }
-  .fold > summary::after, .fold[open] > summary::after { content: none; }
   .site-page { max-width: 1200px; padding: 16px 40px 64px; gap: 28px; }
   /* Two columns. Før du starter sits at top right beside the title, and the content on the left
      starts right below the title even if the box is taller (it spans two rows). */
@@ -1223,9 +1303,15 @@ body.sheet-open { overflow: hidden; }
   .results__name { font-size: 16px; }
   .results .direction { font-size: 12px; padding: 0 5px; min-width: 22px; }
   .results h2 { font-size: 20px; }
-  .filters-toggle, .filters-done, .filters-backdrop { display: none; }
-  .filters-more, .filters-more.is-open { display: flex; position: static; max-height: none; overflow: visible; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+  /* Desktop: the filters fold out under the button in the panel, instead of as a panel from the bottom. */
+  .filters-done, .filters-backdrop { display: none; }
+  .filters-toggle { min-height: 38px; }
+  .filters-more.is-open {
+    position: static; max-height: none; overflow: visible; padding: 12px; background: var(--card); box-shadow: none;
+    border: 1px solid var(--line); border-radius: 12px;
+  }
   .filters-more.is-open::before { content: none; }
+  body.sheet-open { overflow: auto; }
   /* Status card on top of the map, to the right of the zoom buttons. */
   .home__map { position: relative; }
   .home__map .map-info { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
