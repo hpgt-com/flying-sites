@@ -962,6 +962,9 @@ p { margin: 0; }
 }
 .metadata dt { font-weight: 600; color: var(--text); }
 .metadata dd { margin: 0; }
+.sources-details { display: inline; }
+.sources-details summary { display: inline; cursor: pointer; color: var(--link); text-decoration: underline; }
+.sources-details[open] { display: block; margin-top: 4px; }
 .page-footer .disclaimer { font-size: 13px; }
 
 /* ---------- Site page v2: hero, «Kan jeg fly her nå?», cards in one column, action bar at the bottom ---------- */

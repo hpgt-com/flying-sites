@@ -252,7 +252,8 @@
     "linksTitle": "Lenker",
     "linksWeather": "Vær",
     "linksLog": "Logg",
-    "linksMore": "Mer om stedet"
+    "linksMore": "Mer om stedet",
+    "sourcesDetails": "Detaljer"
   },
   "sources": {
     "launch": "Startkoordinat",
@@ -275,7 +276,17 @@
       "old_site": "den gamle flystedsoversikten",
       "ippc": "IPPC",
       "local_knowledge": "lokalkunnskap"
-    }
+    },
+    "short": {
+      "flightlog": "Flightlog",
+      "kartverket": "Kartverket",
+      "openaip": "openAIP",
+      "ippc": "IPPC",
+      "gpx": "GPS-spor",
+      "old_site": "den gamle flystedsoversikten",
+      "local_knowledge": "lokalkunnskap"
+    },
+    "and": "og"
   },
   "images": {
     "overview": "Oversikt",

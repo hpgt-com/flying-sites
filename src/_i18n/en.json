@@ -252,7 +252,8 @@
     "linksTitle": "Links",
     "linksWeather": "Weather",
     "linksLog": "Log",
-    "linksMore": "More about the site"
+    "linksMore": "More about the site",
+    "sourcesDetails": "Details"
   },
   "sources": {
     "launch": "Launch coordinate",
@@ -275,7 +276,17 @@
       "old_site": "the old site guide",
       "ippc": "IPPC",
       "local_knowledge": "local knowledge"
-    }
+    },
+    "short": {
+      "flightlog": "Flightlog",
+      "kartverket": "Kartverket",
+      "openaip": "openAIP",
+      "ippc": "IPPC",
+      "gpx": "GPS tracks",
+      "old_site": "the old site guide",
+      "local_knowledge": "local knowledge"
+    },
+    "and": "and"
   },
   "images": {
     "overview": "Overview",

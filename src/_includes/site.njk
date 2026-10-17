@@ -389,7 +389,8 @@ scripts:
       <dt>{{ t.site.reviewed }}</dt>
       <dd>{% if notReviewed %}<strong class="danger">{{ t.common.notReviewed }}</strong>{% else %}{{ reviewed.date | formatDate }} {{ t.site.by }} {{ reviewed.by }}{% endif %}</dd>
       <dt>{{ t.site.sources }}</dt>
-      <dd>{{ derived.sources }}</dd>
+      {#- The source names on one line, and what each field comes from folded below, for those who want to check. -#}
+      <dd>{{ derived.sourcesShort }}{% if derived.sources %} <details class="sources-details"><summary>{{ t.site.sourcesDetails }}</summary>{{ derived.sources }}</details>{% endif %}</dd>
     </dl>
     <p class="disclaimer">{{ t.site.footerDisclaimer }}</p>
   </footer>
