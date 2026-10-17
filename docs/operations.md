@@ -80,7 +80,8 @@ the menu and is marked `noindex`. It shows per site:
 ## Airspace
 
 - Fetched from openAIP on the 1st of each month (`airspace.yml`). If anything has changed, it arrives as a PR that
-  should be read through before merging.
+  should be read through before merging. The workflow has two jobs: `fetch` gets the data with read-only access,
+  and `pr` opens the PR only if something changed (it is skipped otherwise).
 - **Fetch now:** Actions → «Update airspace» → «Run workflow», or `npm run airspace` locally.
 - The key is stored as the repository secret `OPENAIP_API_KEY`. The update does not work without it.
 - Airspace notes (for example that the approach enters Evenes CTR) go in the site file's `airspace`.
