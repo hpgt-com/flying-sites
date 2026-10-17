@@ -176,6 +176,24 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .alist li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
 .alist li span:last-child { color: var(--muted); text-align: right; }
 
+/* Høydesnitt for luftrom (fra styles.css på den ekte siden) */
+.airspace-profile { display: block; width: 100%; max-width: 440px; height: auto; margin: 2px 0 4px; font-family: system-ui; }
+.airspace-profile text { paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; fill: var(--ink); font-size: 13px; }
+.airspace-profile__band { fill: color-mix(in srgb, var(--high) 13%, transparent); }
+.airspace-profile__limit { stroke: var(--high); stroke-width: 2; }
+.airspace-profile text.airspace-profile__name { font-weight: 600; font-size: 14px; stroke: none; }
+.airspace-profile text.airspace-profile__floor { fill: var(--muted); stroke: none; }
+.airspace-profile__terrain { fill: color-mix(in srgb, var(--accent) 22%, var(--panel)); stroke: var(--line); stroke-width: 1; }
+.airspace-profile__arrow { stroke: var(--ink); stroke-width: 1.8; }
+.airspace-profile__head { fill: var(--ink); }
+.airspace-profile__arrow--warn { stroke: var(--high); }
+.airspace-profile__head--warn { fill: var(--high); }
+.airspace-profile text.airspace-profile__gap { font-family: system-ui; font-size: 22px; font-weight: 700; }
+.airspace-profile text.airspace-profile__gap--warn { fill: var(--high); }
+.airspace-profile text.airspace-profile__small { fill: var(--muted); font-size: 12px; }
+.airspace-profile__launch { fill: var(--ink); stroke: var(--panel); stroke-width: 2; }
+.airspace-profile__landing { fill: var(--panel); stroke: var(--ink); stroke-width: 2.5; }
+
 /* Photos */
 .gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: thin; }
 .gallery figure { margin: 0; scroll-snap-align: start; position: relative; }
@@ -551,22 +569,9 @@ function renderMapLaunches() {
 }
 
 // Luftrom som vertikalt snitt: landing, start og TMA-gulv, så man ser hvor mye høyde man har.
+// Samme høydesnitt som på den ekte siden (lib/airspace-profile.js), kopiert fra bygget.
 function renderAir() {
-  const W = 320, H = 150, max = 1600, y = (m) => H - 14 - (m / max) * (H - 24);
-  const { tmaFloorM, nearbyTmaM } = SITE.airspace, clear = tmaFloorM - SITE.launchMasl;
-  $("#airviz").innerHTML = `<svg class="airsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evenes TMA1 starter ${clear} meter over start">
-    <rect x="0" y="0" width="${W}" height="${y(tmaFloorM)}" fill="color-mix(in srgb, var(--high) 14%, transparent)"/>
-    <line x1="0" x2="${W}" y1="${y(tmaFloorM)}" y2="${y(tmaFloorM)}" stroke="var(--high)" stroke-width="1.5"/>
-    <text x="6" y="${y(tmaFloorM) - 6}" font-size="11" fill="var(--high)" font-weight="600">Evenes TMA1 · 1372 m (4500 ft)</text>
-    <line x1="210" x2="${W}" y1="${y(nearbyTmaM)}" y2="${y(nearbyTmaM)}" stroke="var(--high)" stroke-dasharray="3 3" opacity=".7"/>
-    <text x="${W - 4}" y="${y(nearbyTmaM) - 4}" font-size="10" fill="var(--muted)" text-anchor="end">TMA2 762 m (3,5 km Ø)</text>
-    <path d="M0 ${y(0)} L40 ${y(120)} L90 ${y(SITE.launchMasl)} L130 ${y(480)} L200 ${y(SITE.landingMasl)} L${W} ${y(40)} L${W} ${H} L0 ${H} Z" fill="color-mix(in srgb, var(--accent) 22%, var(--panel))"/>
-    <circle cx="90" cy="${y(SITE.launchMasl)}" r="4" fill="var(--ink)"/><text x="98" y="${y(SITE.launchMasl) + 4}" font-size="11" fill="var(--ink)">Start 563</text>
-    <circle cx="200" cy="${y(SITE.landingMasl)}" r="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><text x="208" y="${y(SITE.landingMasl) + 4}" font-size="11" fill="var(--ink)">Landing 213</text>
-    <line x1="60" x2="60" y1="${y(SITE.launchMasl) - 2}" y2="${y(tmaFloorM) + 2}" stroke="var(--ink)" stroke-width="1.2" marker-start="url(#a)" marker-end="url(#a)"/>
-    <defs><marker id="a" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="var(--ink)"/></marker></defs>
-    <text x="54" y="${(y(SITE.launchMasl) + y(tmaFloorM)) / 2 + 4}" font-size="12" font-weight="700" fill="var(--ink)" text-anchor="end">${clear} m</text>
-  </svg>`;
+  $("#airviz").innerHTML = `<svg class="airspace-profile" viewBox="0 0 360 190" role="img" aria-labelledby="ap-title"><title id="ap-title">Evenes TMA1 begynner 809 m over starten: grensen er 1372 moh, og starten ligger på 563 moh.</title><defs><marker id="ap-head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="airspace-profile__head"/></marker></defs><rect x="0" y="0" width="360" height="62" class="airspace-profile__band"/><line x1="0" x2="360" y1="62" y2="62" class="airspace-profile__limit"/><text x="10" y="24" class="airspace-profile__name">Evenes TMA1 · Klasse D</text><text x="10" y="42" class="airspace-profile__floor">fra 1372 moh (4500 ft)</text><polygon points="0,164.6 56,146.1 118,135.4 178,152 262,165.6 360,171.1 360,190 0,190" class="airspace-profile__terrain"/><line x1="118" x2="118" y1="128.4" y2="65" class="airspace-profile__arrow" marker-start="url(#ap-head)" marker-end="url(#ap-head)"/><text x="108" y="94.7" text-anchor="end" class="airspace-profile__gap">809 m</text><text x="108" y="109.7" text-anchor="end" class="airspace-profile__small">over start</text><circle cx="118" cy="135.4" r="5.5" class="airspace-profile__launch"/><text x="130" y="140.4" class="airspace-profile__label">Start 563 moh</text><circle cx="262" cy="165.6" r="5" class="airspace-profile__landing"/><text x="262" y="154.6" text-anchor="middle" class="airspace-profile__label">Landing 213 moh</text></svg>`;
 }
 
 function renderGallery() {
@@ -602,7 +607,8 @@ function renderGlide() {
     `<div class="fact"><b>${g.drop} m</b><span>høydeforskjell</span></div>` +
     `<div class="fact big"><b>${nf(g.ratio, 1)} : 1</b><span>glidetall, rett linje</span></div>`;
   // Profil: x = avstand, y = høyde. Høyden strekkes, så formen på terrenget synes; faktoren står i hjørnet.
-  const W = 640, H = 230, PL = 44, R = 12, T = 24, B = 26;
+  // Bredden følger boksen, så teksten holder 12 px også på mobil.
+  const W = Math.round(Math.max(320, Math.min(640, $("#gprofile").clientWidth || 640))), H = W < 480 ? 250 : 230, PL = 40, R = 10, T = 24, B = 26;
   const lo = Math.floor((Math.min(...t) - 40) / 50) * 50, hi = Math.ceil((SITE.launchMasl + 30) / 50) * 50;
   const x = (i) => PL + (i / g.n) * (W - PL - R), y = (m) => T + (1 - (m - lo) / (hi - lo)) * (H - T - B);
   const exag = ((H - T - B) / (hi - lo)) / ((W - PL - R) / g.dist);
@@ -615,7 +621,7 @@ function renderGlide() {
   // Eksempel: et glidetall på 8 : 1 i stille luft, og hvor høyt man da er over landingen.
   const EX = 8, exEnd = SITE.launchMasl - g.dist / EX, over = Math.round(exEnd - g.h1);
   svg += `<line x1="${x(0)}" y1="${y(SITE.launchMasl)}" x2="${x(g.n)}" y2="${y(exEnd)}" stroke="var(--ok)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`;
-  svg += `<text x="${x(g.n) - 4}" y="${y(exEnd) - 8}" text-anchor="end" style="fill:var(--ok)" class="lbl">Eksempel ${EX} : 1 → ${over} m over landing</text>`;
+  svg += `<text x="${x(g.n) - 4}" y="${y(exEnd) - 8}" text-anchor="end" style="fill:var(--ok)" class="lbl">${W < 480 ? "" : "Eksempel "}${EX} : 1 → ${over} m over landing</text>`;
   // Rett linje med glidetallet som trengs.
   svg += `<line x1="${x(0)}" y1="${y(SITE.launchMasl)}" x2="${x(g.n)}" y2="${y(g.h1)}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 5"/>`;
   // Laveste klaring mellom linja og terrenget; etiketten under terrengkanten.
@@ -674,6 +680,7 @@ function bind() {
 
 (async function main() {
   renderGallery(); renderAir(); initMap(); bind(); renderGlideSeg(); renderGlide();
+  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(renderGlide, 150); });
   $("#glideSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { glideIdx = +b.dataset.i; renderGlideSeg(); renderGlide(); } });
   try { const f = await loadForecast(); state.rows = f.rows; state.updated = f.updated; }
   catch (err) { console.warn("Demodata:", err); state.rows = demoRows(); state.demo = true; state.updated = Date.now(); }
