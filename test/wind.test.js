@@ -118,6 +118,14 @@ test("«nå» finds the current hour, and +3/+6 hours from it", () => {
   assert.equal(W.slotIndex(times, "off", now), -1);
 });
 
+test("the timeline on the home page: any number of hours from now, as far as the forecast goes", () => {
+  const times = hourly("2026-10-04T10:00:00Z", 48);
+  const now = Date.parse("2026-10-04T12:40:00Z");
+  assert.equal(W.slotIndex(times, "20", now), 22);
+  assert.equal(W.slotIndex(times, "45", now), 47);
+  assert.equal(W.slotIndex(times, "46", now), -1);
+});
+
 test("«nå» moves to the next hour when the hour changes (the home page then redraws)", () => {
   const times = hourly("2026-10-04T10:00:00Z", 48);
   // 11:50 and 12:10 UTC: same choice, but a different hour in the forecast.

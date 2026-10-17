@@ -141,8 +141,9 @@ set in `src/_data/photoCredit.json`.
 - The script is a copy in `src/assets/js/goatcounter.js` (the CSP allows only the site's own scripts). The URL is set
   in `src/_data/site.js` and in the CSP in `base.njk`.
 - Events (clicks) have fixed English names, the same in all languages: `link/<domain><page>`, `download/<file>`,
-  `tab/sites|weather|info`, `filter/direction|level|category/…`, `filter/wind/…`, `filter/suggest/on|off`,
-  `map/select/<id>`, `day-plan/select/<id>`, `map-layer/<key>` (topo, greyscale, opentopomap, satellite, skyways,
+  `tab/sites|weather` (`tab/info` until the Info tab moved into the menu), `filter/direction|level|category/…`,
+  `filter/wind/<hours from now>`, `filter/suggest/on|off`, `map/select/<id>`, `map/status` (the status details opened),
+  `list/show-all`, `list/open/<id>` (second tap in the list on mobile), `day-plan/select/<id>`, `map-layer/<key>` (topo, greyscale, opentopomap, satellite, skyways,
   thermals, hillshade, radar, airspace-tma, airspace-ctr, airspace-military, airspace-danger), `search/no-hits` (only counted, the search text is not sent),
   `images<page>`, `fullscreen<page>`, `setting/theme/…`, `setting/colorblind/on|off`. Up to and including
   11.10.2026 they had Norwegian names (`lenke/…`, `fane/…`, `kart/valgt/…` etc.).

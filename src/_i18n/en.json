@@ -72,7 +72,9 @@
     "notReviewed": "Not reviewed yet",
     "notSet": "Not set",
     "notRegistered": "Not registered yet",
-    "siteTitle": "HPGT flying sites"
+    "siteTitle": "HPGT flying sites",
+    "openData": "Open data",
+    "suggestChange": "Suggest a change"
   },
   "home": {
     "description": "Paragliding and speedflying sites in the HPGT area (Harstad, Northern Norway). Filter by wind direction, level and category.",
@@ -80,50 +82,20 @@
     "tabsLabel": "Content",
     "tabSites": "Sites",
     "tabWeather": "Weather",
-    "tabInfo": "Info",
     "searchLabel": "Search for a site",
     "searchPlaceholder": "Name or area, e.g. Kvæfjord",
-    "windFromForecast": "Wind from forecast",
-    "slots": [
-      [
-        "off",
-        "Off",
-        "Off"
-      ],
-      [
-        "0",
-        "Now",
-        "Now"
-      ],
-      [
-        "3",
-        "+3 h",
-        "In 3 hours"
-      ],
-      [
-        "6",
-        "+6 h",
-        "In 6 hours"
-      ],
-      [
-        "tomorrow",
-        "Tomorrow",
-        "Tomorrow at 12:00"
-      ]
-    ],
     "suggest": "Only sites that may work now",
     "rulesSummary": "How are wind and rain assessed?",
     "rules": "Rough assessment from the MET forecast for the launch: more than {maxWind} m/s (or the site's own limit) or gusts above {maxGust} m/s is too much. Light wind, missing gusts, gusts more than {maxGustSpread} m/s above the mean wind, a direction near the edge and light rain (from {rainMaybe} mm in the next hour) give “uncertain”. Rain ({rainNo} mm or more in the next hour) gives “not suitable”. The forecast does not see local conditions. Always check for yourself.",
     "direction": "Wind direction",
     "all": "All",
-    "levelAndCategory": "Level and category",
     "filters": "Filters",
     "filtersDone": "Show the sites",
     "level": "Level",
     "category": "Category",
     "sitesCount": "{n} sites",
     "noResults": "No sites match the filters.",
-    "resultsNote": "A rough guide: every pilot decides for themselves whether the site and conditions are OK. More under Info.",
+    "resultsNote": "A rough guide: each pilot decides whether the site and the conditions are OK.",
     "weatherIntro": "Measured wind from weather stations on the map will come here. Until then: the weather stations and forecasts below.",
     "weatherLabel": "Weather",
     "flybart": "Weather stations in the area in one place",
@@ -151,7 +123,12 @@
     "windLegendArrow": "The raised sector shows where the wind comes from",
     "dayPlanTitle": "When might it work?",
     "dayPlanNote": "Daylight periods where the MET wind forecast might work (green) or is uncertain (yellow), for the sites matching the filters. After each period: most common direction, mean wind and highest gust in brackets (m/s). Rough assessment, always check for yourself.",
-    "openDataDocs": "About the data format"
+    "openDataDocs": "About the data format",
+    "eyebrow": "Harstad, Kvæfjord and around",
+    "allDirections": "All directions",
+    "directionHelp": "Tap the directions the wind comes from. You can choose several.",
+    "tapAgain": "Tap again to open the site ›",
+    "now": "Now"
   },
   "site": {
     "hazardsTitle": "Before you launch",
@@ -361,19 +338,11 @@
       "rain": "rain {rain}",
       "today": "today",
       "at": "at {time}",
-      "slots": {
-        "0": "now",
-        "3": "in 3 h",
-        "6": "in 6 h",
-        "tomorrow": "tomorrow"
-      },
       "staleTitle": "The forecast is too old.",
       "staleHome": "It was fetched {when}. The wind assessment is turned off until the site is updated. Reload the page, or check Yr or Windy.",
       "fetched": "MET forecast fetched {when}.",
       "fetchedUpdated": "MET forecast updated {updated}, fetched {when}.",
       "notCovered": "The forecast does not cover this time.",
-      "showing": "Showing wind at {time}{tomorrow}.",
-      "tomorrowSuffix": " tomorrow",
       "staleSite": "The forecast is too old",
       "staleSiteText": "The wind assessment is turned off until the site is updated. Check Yr or Windy.",
       "noneNow": "No wind assessment now",
@@ -389,7 +358,8 @@
       "sun": "Sunrise {rise}, sunset {set}.",
       "sunPolarDay": "Midnight sun, the sun does not set.",
       "sunPolarNight": "Polar night, the sun does not rise above the horizon.",
-      "mapWind": "{speed} ({gust}) m/s"
+      "mapWind": "{speed} ({gust}) m/s",
+      "showingWhen": "Showing wind {when}."
     },
     "summary": {
       "places": {
@@ -425,7 +395,6 @@
       "showSitesIn": "Show sites in {region}",
       "closeCard": "Close the card for {name}",
       "launchMasl": "Launch {m} m asl",
-      "windAt": "Wind {slot} (at {time}): ",
       "siteLimit": "The site's own limit: {limit} m/s.",
       "noForecastNow": "No wind forecast for the site at this time.",
       "noForecast": "No wind forecast for the site",
@@ -447,15 +416,30 @@
       "noneSuggest": "No sites may work at this time. {reason} Turn off “Only sites that may work” to see all.",
       "noName": "No sites have a name containing “{q}”.",
       "noResults": "No sites match the filters.",
-      "levelAndCategory": "Level and category",
       "filters": "Filters",
-      "selected": "{n} selected",
       "noHits": "No matches.",
       "manyHits": "{n} matches, see the list below the map.",
       "suggest": "Only sites that may work",
-      "suggestTomorrow": " tomorrow at 12:00",
-      "suggestNeedsTime": "Choose a time for the wind first",
-      "emptyCard": "Tap a site on the map or in the list to see more."
+      "emptyCard": "Tap a site on the map or in the list to see more.",
+      "showAll": "Show all {n}",
+      "showFewer": "Show fewer",
+      "showSites": {
+        "one": "Show 1 site",
+        "other": "Show {n} sites"
+      },
+      "statusNone": "None may work",
+      "statusMostly": "mostly {dir}",
+      "statusWind": "Mostly {dir} {speed} m/s{gust}",
+      "statusGust": ", gusts {g}",
+      "whenNow": "now",
+      "whenToday": "at {time}",
+      "whenTomorrow": "tomorrow at {time}",
+      "whenDay": "{day} at {time}",
+      "windAt": "Wind {when}: ",
+      "see": "See ›",
+      "seeName": "See {name}",
+      "allDirections": "All directions",
+      "directionsChosen": "Direction: {list}"
     },
     "map": {
       "fullscreenOpen": "Show the map in full screen",
