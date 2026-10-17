@@ -80,6 +80,8 @@ Other commands:
 - The site is also rebuilt twice an hour, so the wind assessment on the home page uses a fresh forecast. GitHub may
   delay or skip scheduled runs. If the forecast is more than 6 hours old, the wind assessment is turned off. To fetch
   a new forecast immediately, run «Build and deploy» manually under Actions.
+- The image variants (`_site/img`) are cached between builds in CI, so a build without image changes skips them.
+  The cache is replaced whenever an image, the image code or a package changes.
 - Changes go through a branch and a pull request. The PR check builds the site and stops invalid site files.
 - Airspace is fetched automatically on the 1st of each month. Changes arrive as a PR, which is reviewed before
   publishing.
