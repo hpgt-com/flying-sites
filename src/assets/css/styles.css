@@ -1439,9 +1439,11 @@ body.sheet-open { overflow: hidden; }
   .search-input { min-height: 40px; }
   .suggest-switch { min-height: 30px; font-size: 14px; }
   .filters-done, .filters-backdrop { display: none; }
+  /* Right below the search bar, which stays at the top while the list scrolls: also sticky, so the panel opens where the
+     button is, also far down the list. At the top it pushes the list down; further down it lies over the list. */
   .filters-more.is-open {
-    position: static; max-height: none; overflow: visible; padding: 14px; background: var(--card); box-shadow: none;
-    border: 1px solid var(--line); border-radius: 12px;
+    position: sticky; top: 60px; z-index: 1050; max-height: calc(100vh - 76px); overflow-y: auto; padding: 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgba(28, 43, 51, 0.18);
   }
   .filters-more.is-open::before { content: none; }
   body.sheet-open { overflow: auto; }
