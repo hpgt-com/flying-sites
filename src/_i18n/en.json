@@ -188,7 +188,17 @@
     "routeLength": "{km} km.",
     "time": "Time",
     "minutesOnFoot": "About {min} min on foot",
-    "profile": "Elevation profile",
+    "profile": {
+      "launch": "Launch",
+      "landing": "Landing",
+      "floor": "from {m} m asl ({limit})",
+      "gap": "{m} m",
+      "gapNegative": "{m} m",
+      "overLaunch": "above launch",
+      "launchAbove": "launch above limit",
+      "ariaAbove": "{name} starts {m} m above the launch: the limit is {limit} m asl, and the launch is at {launch} m asl.",
+      "ariaBelow": "The launch is {m} m above the lower limit of {name}: the limit is {limit} m asl, and the launch is at {launch} m asl."
+    },
     "chooseRoute": "Choose walking route",
     "profileLabel": "Elevation profile of the walking route",
     "profilePosition": "Position along the route",

@@ -8,6 +8,7 @@ import {
 import { validateSite } from "./lib/validation.js";
 import { statusSummary } from "./lib/status.js";
 import { assetUrl } from "./lib/assets.js";
+import { airspaceProfile } from "./lib/airspace-profile.js";
 import { fmt, localeUrl } from "./lib/i18n.js";
 
 export default function (eleventyConfig) {
@@ -73,6 +74,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("feetToMeters", feetToMeters);
   eleventyConfig.addFilter("formatLimit", function (limit) { return formatLimit(limit, langOf(this.ctx)); });
   eleventyConfig.addFilter("limitMasl", function (limit) { return limitMasl(limit, langOf(this.ctx)); });
+  // Height profile from launch to the airspace floor (lib/airspace-profile.js): {{ ceiling | airspaceProfile(launch, landing) | safe }}.
+  eleventyConfig.addFilter("airspaceProfile", function (ceiling, launchMasl, landingMasl) { return airspaceProfile(ceiling, launchMasl, landingMasl, langOf(this.ctx)); });
   eleventyConfig.addFilter("capitalizeFirst", (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s));
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v).replace(/</g, "\\u003c"));
 
