@@ -5,8 +5,9 @@ runs in the browser. The diagrams are Mermaid and render as diagrams on GitHub.
 
 In short: **a static site with no server and no database.** All content lives as files in the repository. GitHub
 Actions builds the site with Eleventy and publishes it to GitHub Pages, twice an hour and on every change. Data that
-must be fresh (the wind forecast) is fetched at build time. Data that is slow to fetch (airspace, heights) is cached
-in the repository.
+must be fresh (the wind forecast) is fetched in its own job just before the build. Data that is slow to fetch
+(airspace, heights) is cached in the repository. Each kind of external data is a module, see
+[Data modules](#data-modules).
 
 ## Overview
 
@@ -21,12 +22,12 @@ flowchart LR
 
   subgraph actions["GitHub Actions"]
     prcheck["PR check<br/>tests + build"]
-    deploy["Build and deploy<br/>on merge + twice an hour"]
+    deploy["Build and deploy<br/>on merge + twice an hour<br/>(weather → build → deploy)"]
     airspace["Update airspace<br/>1st of each month → PR"]
     scan["Code scanning<br/>CodeQL"]
   end
 
-  subgraph ext["External sources at build time"]
+  subgraph ext["External sources"]
     met["MET Locationforecast<br/>(wind forecast)"]
     kv["Kartverket elevation data<br/>(walking routes)"]
     oaip["openAIP<br/>(airspace)"]
@@ -68,7 +69,7 @@ flowchart TB
   subgraph global["Shared data (src/_data/)"]
     lang["languages.js<br/>nb, en (prefix, URLs)"]
     i18n["i18n.js ← src/_i18n/nb.json, en.json<br/>(Norwegian as fallback)"]
-    fc["forecast.js<br/>fetches MET for each launch"]
+    fc["forecast.js, windgram.js<br/>read .cache/weather/<br/>(lib/weather/)"]
     rules["windRules.json, towers.json,<br/>site.js, photoCredit.json"]
     comp["eleventyComputed.js<br/>lang and t (the dictionary) per page"]
   end
@@ -101,7 +102,7 @@ flowchart TB
 | Walking routes | `lib/gpx.js` | Length, elevation gain, moving time and elevation profile. Heights from Kartverket, cached per file in `src/_data/cache/elevations/`. |
 | Images | `lib/images.js`, `lib/site-images.js` | WebP/JPEG at 400–2400 px without metadata, with photographer and licence embedded. Images are found by file name. |
 | Airspace | `lib/airspace.js`, `lib/airspace-profile.js`, `scripts/update-airspace.mjs` | openAIP per launch, the "ceiling" above the launch and its height profile, notes from the site file. The map layer uses `region.geojson`. |
-| Wind forecast | `src/_data/forecast.js` | 48 hours of wind, gusts and precipitation per launch from MET. If one site fails, only that site is missing. |
+| Weather | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | 48 hours of wind, gusts and precipitation per launch from MET, and winds aloft from Open-Meteo. Read from `.cache/weather/`, see [Data modules](#data-modules). If one site fails, only that site is missing. |
 | Languages | `lib/i18n.js`, `lib/translations.js` | Dictionaries, URLs per language and translated site text. See below. |
 | Status | `lib/status.js` | What is missing per site, for `/status/`. |
 | Open data | `lib/export.js` | GeoJSON and KML with launches, landings, parking and walking routes (CC BY 4.0). |
@@ -196,10 +197,33 @@ sequenceDiagram
 | Workflow | When | What |
 |---|---|---|
 | `pr-check.yml` | Every PR | Tests and build (`build`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
-| `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Builds with a fresh MET forecast and publishes. Fetches the full Git history for «Sist endret» ("Last changed"). |
+| `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Three jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed"), `deploy` publishes. |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
 | Dependabot | Monthly | PRs with updated packages and Actions. |
+
+## Data modules
+
+External data is split into modules. Each module has one job: fetch from its source, write files in a fixed format,
+and let the site read the files. The templates never fetch anything themselves, so a module can change how or where
+it fetches (a workflow today, a backend later) without the site noticing.
+
+| Module | Source | Code | Fetched | Stored in | Read by |
+|---|---|---|---|---|---|
+| Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
+| Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
+| Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
+| Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
+
+- **Committed or not:** data that changes rarely and should be reviewed (airspace) is committed and arrives as a PR.
+  Data that is only valid for a few hours (weather) is never committed.
+- **Failure:** a module that fails leaves out its own part, not the whole site. A weather source that fails is
+  written as `null`, and the site builds without the wind assessment or winds aloft.
+- **Locally**, `npm start` fetches the weather by itself when `.cache/weather/` is missing or older than 30 minutes.
+  In CI the build only reads the files (`WEATHER_FETCH=0`), and the PR check skips the weather (`FORECAST_OFFLINE=1`).
+- **Shared code:** `lib/site-files.js` reads the front matter of all sites for the scripts.
+- **Next step:** when the weather is served from a backend (see [Planned](#planned)), the `weather` job and the
+  schedule in `deploy.yml` can go, and the site is only built when the content changes.
 
 ## What has been built
 
