@@ -349,8 +349,6 @@
       "noneNowText": "Varselet dekker ikke timen nå. Sjekk Yr eller Windy.",
       "windNow": "Vind nå, kl. {time}",
       "roughNote": "Grov vurdering fra MET-varselet, sjekk alltid selv.",
-      "notNow": "Ikke nå",
-      "launchNow": "Vinden nå: {text}",
       "chartLabel": "Vind de neste 48 timene. Søylen er middelvind, den lyse delen er kast, og pilen viser hvor vinden kommer fra.",
       "chartKey": "Søyle: vind · lys: kast · pil: retning",
       "window": "{day} kl. {from}–{to} {rating}",

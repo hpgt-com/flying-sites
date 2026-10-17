@@ -753,8 +753,6 @@ p { margin: 0; }
   max-width: 640px;
   margin: 0 auto;
 }
-.site-page__grid { display: flex; flex-direction: column; gap: 32px; }
-.site-page__main, .site-page__aside { display: flex; flex-direction: column; gap: 32px; }
 
 .block { display: flex; flex-direction: column; gap: 12px; margin: 0; }
 /* Mobile: links to the parts of the page in a row that stays at the top while scrolling (site.njk). */
@@ -851,13 +849,10 @@ p { margin: 0; }
 .launch-list--categories .launch-list__badges { grid-area: dir; }
 .launch-list--categories .launch-list__categories { grid-area: cat; }
 .launch-list--categories .launch-list__texts { grid-area: text; }
-.launch-list__now { grid-column: 1; }
-.launch-list--categories li { grid-template-areas: "dir text" "cat text" "now text"; grid-template-rows: auto auto 1fr; }
-.launch-list--categories .launch-list__now { grid-area: now; }
 .launch-list__categories { display: flex; flex-wrap: wrap; gap: 4px; }
 .launch-list__categories:empty { display: none; }
 @media (min-width: 640px) {
-  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text" "now cat text"; grid-template-rows: auto 1fr; }
+  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text"; }
   .launch-list__categories:empty { display: flex; }
 }
 .launch-list__texts { display: flex; flex-direction: column; gap: 6px; }
@@ -909,15 +904,6 @@ p { margin: 0; }
 .images-missing { font-size: 14px; color: var(--muted); }
 .images-credit { font-size: 13px; color: var(--muted); }
 
-/* Right column: each part in a white card (Fakta, Vær, Bilder, Logg og mer), as in the prototype. */
-.site-page__aside > .block {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px 16px 16px;
-  gap: 12px;
-}
-.site-page__aside > .block > h2 { font-size: 24px; }
 /* Vær: the meteogram in its own frame and the links compact on one line, with the description to the right. */
 .block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
 .block--weather .meteogram img { border: 0; border-radius: 6px; }
@@ -979,12 +965,15 @@ p { margin: 0; }
 /* ---------- Site page v2: hero, «Kan jeg fly her nå?», cards in one column, action bar at the bottom ---------- */
 .site-v2 { max-width: 760px; gap: 16px; padding-bottom: 96px; }
 .site-page__body { display: flex; flex-direction: column; gap: 16px; }
-.site-page__body > .block:not(.block--notice) {
+/* The column wrappers only matter on desktop. On mobile the parts follow each other, and the links row can stay at the
+   top of the screen all the way down. */
+.site-page__top, .site-page__main, .site-page__aside { display: contents; }
+.site-page__body .block:not(.block--notice) {
   padding: 18px 16px; background: var(--card); border: 1px solid var(--line-soft); border-radius: 18px;
   box-shadow: 0 1px 2px rgba(28, 43, 51, 0.04), 0 4px 16px rgba(28, 43, 51, 0.05);
 }
-.site-page__body > .block h2 { font-size: 28px; }
-.site-page__body > .lead { margin: 0; }
+.site-page__body .block h2 { font-size: 28px; }
+.site-page__body .lead { margin: 0; }
 
 .hero {
   position: relative; display: flex; align-items: flex-end; min-height: 280px; margin: 0 -16px; overflow: hidden;
@@ -1019,7 +1008,7 @@ p { margin: 0; }
 .block--now[data-rating="high"], .hour-card--high { --r: var(--wind-high); }
 .block--now[data-rating="none"] { --r: var(--line); }
 .block--now, .hour-card { --rs: color-mix(in srgb, var(--r) 16%, var(--card)); --rt: color-mix(in srgb, var(--r) 45%, var(--text)); }
-.site-page__body > .block.block--now { border-top: 6px solid var(--r); }
+.site-page__body .block.block--now { border-top: 6px solid var(--r); }
 .site-page__body .block--now .now-eyebrow { margin: 0; font: 700 13px var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
 [data-theme="dark"] .site-page__body .block--now .now-eyebrow { color: var(--link); }
 .block--now .site-wind { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; background: none; }
@@ -1028,12 +1017,15 @@ p { margin: 0; }
 .block--now[data-rating="maybe"] .site-wind .site-wind__icon, .hour-card--maybe .hour-card__icon { color: #1C2B33; }
 .block--now .site-wind .site-wind__word { font: 700 36px/1 var(--font-heading); color: var(--rt); }
 .block--now .site-wind strong { font-size: 17px; }
-.hour-cards { display: flex; gap: 6px; margin: 0; padding: 2px 2px 6px; list-style: none; overflow-x: auto; scrollbar-width: thin; }
+/* min-width: 0, so the row scrolls inside the card instead of making the card wider. position: relative, so the text for
+   screen readers in each card (absolutely positioned) stays inside the row and does not make the page wider than the screen. */
+.hour-cards { position: relative; display: flex; gap: 6px; min-width: 0; max-width: 100%; margin: 0; padding: 2px 2px 6px; list-style: none; overflow-x: auto; scrollbar-width: thin; }
 .hour-card {
   flex: 0 0 54px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px 8px;
   border-radius: 10px; background: var(--rs); border-bottom: 4px solid var(--r);
 }
 .hour-card--now { outline: 2px solid var(--text); outline-offset: 1px; }
+.hour-cards:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 10px; }
 .hour-card__hour { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .hour-card__icon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--r); color: #FFFFFF; font-size: 12px; font-weight: 700; }
 .hour-card__bar { position: relative; width: 8px; height: 40px; border-radius: 4px; background: color-mix(in srgb, var(--r) 22%, transparent); }
@@ -1067,16 +1059,10 @@ p { margin: 0; }
 .now-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .now-links .btn { justify-content: center; }
 
-/* Startplasser: the rose with the wind now, and each group of launches with «Passer nå» or «Ikke nå». */
+/* Start: the rose with the legend beside it. */
 .launch-head { display: flex; gap: 16px; align-items: center; }
 .launch-head .rose { flex: none; }
 .launch-head__text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.launch-now { margin: 0; font-weight: 700; }
-.launch-list__now { justify-self: start; align-self: start; padding: 2px 8px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--surface); color: var(--muted); white-space: nowrap; }
-/* Light tint with dark text, as the rating chips in the list on the home page, so the text has enough contrast. */
-.launch-list__now--ok { background: color-mix(in srgb, var(--wind-ok) 16%, var(--card)); color: color-mix(in srgb, var(--wind-ok) 45%, var(--text)); }
-.launch-list__now--maybe { background: color-mix(in srgb, var(--wind-maybe) 16%, var(--card)); color: color-mix(in srgb, var(--wind-maybe) 45%, var(--text)); }
-.launch-list__now--high { background: color-mix(in srgb, var(--wind-high) 16%, var(--card)); color: color-mix(in srgb, var(--wind-high) 45%, var(--text)); }
 
 /* Landing og adkomst */
 .glide { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface); }
@@ -1099,7 +1085,7 @@ p { margin: 0; }
   .hero h1 { font-size: 64px; }
   .hero__rose { top: auto; bottom: 22px; right: 26px; }
   .hero__text { padding: 28px 28px; }
-  .site-page__body > .block:not(.block--notice) { padding: 24px; }
+  .site-page__body .block:not(.block--notice) { padding: 24px; }
   .action-bar { left: 50%; right: auto; bottom: 16px; width: 520px; margin-left: -260px; border: 1px solid var(--line); border-radius: 16px; }
 }
 /* Desktop: directions and GPX are in Landing og adkomst, and the map is on screen, so no action bar. */
@@ -1107,24 +1093,27 @@ p { margin: 0; }
   .action-bar { display: none; }
   .site-v2 { padding-bottom: 48px; }
 }
-@media (min-width: 1024px) {
-  .site-page { max-width: 1200px; padding: 16px 40px 64px; gap: 28px; }
-  /* Two columns. Før du starter sits at top right beside the title, and the content on the left
-     starts right below the title even if the box is taller (it spans two rows). */
-  .site-page__grid {
+@media (min-width: 1100px) {
+  /* Two columns under the image. «Før du starter» sits at the top right beside the introduction and «Kan jeg fly her nå?»,
+     and Luftrom, Bilder and «Logg og mer» follow right below it. The left top part spans two rows, so each column
+     continues right below its own parts. */
+  .site-v2 { max-width: 1200px; padding: 16px 40px 48px; }
+  .site-page__body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 400px;
-    grid-template-areas: "title notice" "main notice" "main aside" "footer aside";
-    grid-template-rows: auto auto 1fr auto;
-    gap: 0 56px;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-areas: "top notice" "top aside" "main aside" "footer aside";
+    grid-template-rows: auto auto auto 1fr;
+    gap: 0 28px;
     align-items: start;
   }
-  .site-page__grid > .block--title { grid-area: title; }
-  .site-page__grid > .block--notice { grid-area: notice; }
-  .site-page__main { grid-area: main; gap: 40px; padding-top: 32px; }
-  .site-page__aside { grid-area: aside; gap: 36px; padding-top: 28px; }
-  .site-page__grid > .page-footer { grid-area: footer; margin-top: 40px; }
-  .block--title h1 { font-size: 60px; }
+  .site-page__top, .site-page__main, .site-page__aside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .site-page__top { grid-area: top; }
+  .site-page__body > .block--notice { grid-area: notice; }
+  .site-page__main { grid-area: main; padding-top: 16px; }
+  .site-page__aside { grid-area: aside; padding-top: 16px; align-self: start; }
+  .site-page__body > .page-footer { grid-area: footer; margin-top: 24px; }
+  .site-page__aside .block h2 { font-size: 24px; }
+  .section-nav { margin: 0; border-radius: 0 0 12px 12px; }
   .map--site { height: 440px; }
 }
 
