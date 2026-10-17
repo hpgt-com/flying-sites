@@ -6,7 +6,6 @@ region: Lofoten
 municipality: Flakstad
 external:
   flightlog_id: 7506
-  pgearth_id: null
   yr_id: 1-275166
 level: PP2
 training_site: false

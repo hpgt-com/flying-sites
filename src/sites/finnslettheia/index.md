@@ -6,7 +6,6 @@ region: Harstad og Kvæfjord
 municipality: Harstad
 external:
   flightlog_id: 4327
-  pgearth_id: null
   yr_id: 1-330261
 level: PP2
 training_site: false
