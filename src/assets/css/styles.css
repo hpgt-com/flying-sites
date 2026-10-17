@@ -159,9 +159,11 @@ p { margin: 0; }
 }
 .site-menu__panel[hidden] { display: none; }
 .site-menu__label { margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
-.site-menu__links { display: grid; border-top: 1px solid var(--line); padding-top: 6px; }
-.site-menu__links a { min-height: 44px; display: flex; align-items: center; font-weight: 600; text-decoration: none; }
-.site-menu__sub { margin-left: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.site-menu__links { display: grid; margin-top: -4px; }
+.site-menu__links a { min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+.site-menu__links a + a { border-top: 1px solid var(--line-soft); }
+.site-menu__icon { flex: none; color: var(--muted); }
+.site-menu__sub { margin-left: -4px; font-size: 13px; font-weight: 500; color: var(--muted); }
 .site-menu__links .external-icon { margin-left: auto; }
 .switch {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
@@ -773,7 +775,7 @@ p { margin: 0; }
   font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);
 }
 .site-page h2[id], .site-page section[id] { scroll-margin-top: 64px; }
-/* Parts that fold on mobile (Fakta, Bilder, «Logg og mer», winds aloft). The heading is the button. */
+/* Parts that can be folded (the points in the map, the details in «Kan jeg fly her nå?», the elevation profile). The heading is the button. */
 .fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
 .fold > summary::-webkit-details-marker { display: none; }
 .fold > summary::after { content: "+"; font: 600 24px/1 var(--font-body); color: var(--muted); }
@@ -1056,8 +1058,9 @@ p { margin: 0; }
 .wind-windows--ok { border-left-color: var(--wind-ok); }
 .wind-windows--maybe { border-left-color: var(--wind-maybe); }
 .wind-windows__none { font-size: 14px; color: var(--muted); }
-.now-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.now-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
 .now-links .btn { justify-content: center; }
+.block--log .link-group { margin: 4px 0 -4px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
 /* Start: the rose with the legend beside it. */
 .launch-head { display: flex; gap: 16px; align-items: center; }
@@ -1095,7 +1098,7 @@ p { margin: 0; }
 }
 @media (min-width: 1100px) {
   /* Two columns under the image. «Før du starter» sits at the top right beside the introduction and «Kan jeg fly her nå?»,
-     and Luftrom, Bilder and «Logg og mer» follow right below it. The left top part spans two rows, so each column
+     and Luftrom, Bilder and Lenker follow right below it. The left top part spans two rows, so each column
      continues right below its own parts. */
   .site-v2 { max-width: 1200px; padding: 16px 40px 48px; }
   .site-page__body {

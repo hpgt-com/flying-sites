@@ -48,7 +48,7 @@ scripts:
     </div>
   </section>
   {#- Desktop: two columns under the image. Left: the introduction and «Kan jeg fly her nå?», then Start, Kart and Landing og
-      adkomst. Right: «Før du starter» beside them, then Luftrom, Bilder and «Logg og mer». The HTML order is the mobile order,
+      adkomst. Right: «Før du starter» beside them, then Luftrom, Bilder and Lenker. The HTML order is the mobile order,
       so screen readers and the keyboard follow what is seen. -#}
   <div class="site-page__body">
     <div class="site-page__top">
@@ -88,11 +88,6 @@ scripts:
         </div>
         {% endif %}
       </details>
-      <div class="now-links">
-        <a class="btn" href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener">Yr{{ m.external() }}</a>
-        <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">Windy{{ m.external() }}</a>
-        <a class="btn" href="https://flybart.net/" target="_blank" rel="noopener">Flybart{{ m.external() }}</a>
-      </div>
     </section>
     </div>
     <section class="block block--notice{% if not local.hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
@@ -120,7 +115,7 @@ scripts:
       <a href="#h-landing">{{ t.site.landingShort }}</a>
       <a href="#h-airspace">{{ t.site.airspace }}</a>
       <a href="#h-images">{{ t.site.images }}</a>
-      <a href="#h-log">{{ t.site.logShort }}</a>
+      <a href="#h-log">{{ t.site.linksTitle }}</a>
     </nav>
       {# 4. Launch #}
       <section class="block block--launch" aria-labelledby="h-launch">
@@ -356,18 +351,29 @@ scripts:
         </details>
       </section>
       {# 9. Log and more #}
+      {#- Links: the weather services for the launch, the flight log and the site's own links (links in the site file, for
+          example the ski resort with lift opening hours). In the right column on desktop. -#}
       <section class="block block--log" aria-labelledby="h-log">
         <details class="fold" open>
-        <summary><h2 id="h-log">{{ t.site.log }}</h2></summary>
+        <summary><h2 id="h-log">{{ t.site.linksTitle }}</h2></summary>
+        <h3 class="link-group">{{ t.site.linksWeather }}</h3>
+        <div class="now-links">
+          {% if external.yr_id %}<a class="btn" href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener">Yr{{ m.external() }}</a>{% endif %}
+          <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">Windy{{ m.external() }}</a>
+          <a class="btn" href="https://flybart.net/" target="_blank" rel="noopener">Flybart{{ m.external() }}</a>
+        </div>
+        <h3 class="link-group">{{ t.site.linksLog }}</h3>
         {% if external.flightlog_id %}
         <a class="big-btn big-btn--dark" href="https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id={{ external.flightlog_id }}" target="_blank" rel="noopener">{{ t.site.onFlightlog | fmt({ name: name }) }}{{ m.external() }}</a>
         {% else %}
         <span class="big-btn big-btn--empty">{{ t.site.noFlightlog }}</span>
         {% endif %}
-        {#- Other links for the site (links in the site file), for example the ski resort with lift opening hours. -#}
+        {% if local.links.length %}
+        <h3 class="link-group">{{ t.site.linksMore }}</h3>
         {% for l in local.links %}
         <a class="big-btn big-btn--two-line" href="{{ l.url }}" target="_blank" rel="noopener"><span>{{ l.title }}{% if l.text %}<small>{{ l.text }}</small>{% endif %}</span>{{ m.external() }}</a>
         {% endfor %}
+        {% endif %}
         </details>
       </section>
     </div>
