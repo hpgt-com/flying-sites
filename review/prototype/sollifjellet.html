@@ -158,6 +158,18 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .btn { display: block; text-align: center; padding: 10px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); font-weight: 600; font-size: 14px; }
 .btn.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 
+/* Glide */
+.glide { margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.glide-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+.seg button { border: 0; background: none; border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.seg button[aria-selected="true"] { background: var(--ink); color: var(--panel); }
+.gfacts { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
+.gfacts .fact.big b { font-size: 26px; letter-spacing: -.01em; }
+.gsvg { display: block; width: 100%; height: auto; margin-top: 8px; }
+.gsvg text { font: 12px system-ui, sans-serif; fill: var(--muted); paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+.gsvg .lbl { fill: var(--ink); font-weight: 600; }
+
 /* Airspace */
 .airsvg { width: 100%; height: auto; display: block; margin: 6px 0 8px; }
 .alist { margin: 0; padding: 0; list-style: none; font-size: 13.5px; }
@@ -246,6 +258,13 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
   <!-- 5. Landing og adkomst -->
   <section class="card a-land" id="landing" aria-labelledby="land-h">
     <h2 id="land-h">Landing og adkomst</h2>
+    <div class="glide" id="glide">
+      <div class="glide-head"><h3 style="margin:0">Glid til landing</h3><div class="seg" id="glideSeg" role="tablist" aria-label="Velg landing"></div></div>
+      <div class="gfacts" id="gfacts"></div>
+      <div id="gprofile"></div>
+      <p class="small" id="gwind" style="margin:4px 0 0"></p>
+      <p class="small muted" style="margin:4px 0 0">Stiplet svart: rett linje fra start til landing. Prikket grønn: eksempel med glidetall 8 : 1 i stille luft. Terreng fra Kartverket. Synk, løft og vind er ikke regnet med, så tallene er et utgangspunkt, ikke en vurdering.</p>
+    </div>
     <div class="facts"><div class="fact"><b>1,5 km</b><span>gangrute</span></div><div class="fact"><b>330 m</b><span>stigning</span></div><div class="fact"><b>35 min</b><span>til fots</span></div></div>
     <h3>Landing</h3>
     <p style="margin:0">Stor myr ved parkeringsplassen, så landing og bil ligger samme sted. SPG lander på en egen landingsplass i skogen utenfor alpinanlegget. I selve bakken flyr man bare når alpinsenteret gir lov.</p>
@@ -303,7 +322,9 @@ const SITE = {
     { name: "Ryggen", dirs: ["NW"], cats: ["PG"], lat: 68.80576, lon: 16.36962, text: "Lenger opp på ryggen, på baksiden av fjellet." },
   ],
   unsuitable: { dirs: ["W", "SW"], text: "Ikke egnet, men mulig i svak vind med krabbevinkel fra toppen eller i bakvind." },
-  landings: [{ name: "Landing (myra)", lat: 68.80194, lon: 16.40667, cls: "landing" }, { name: "SPG-landing", lat: 68.80195, lon: 16.38677, cls: "spg" }],
+  // terrain: Kartverket-høyder i 49 punkter langs rett linje fra start til landingen (hentet 17.10.2026). Landingens høyde er siste punkt.
+  landings: [{ name: "Landing (myra)", short: "Hovedlanding", lat: 68.80194, lon: 16.40667, cls: "landing", terrain: [562.7, 557.6, 550.2, 542.6, 535.2, 527.4, 519.3, 509.1, 500, 486.7, 471.9, 456, 447, 440.8, 429, 423.7, 416.6, 409.1, 400, 391, 383.2, 375.4, 369, 363.7, 356.8, 348.1, 343.3, 336.6, 329.3, 323, 318.6, 311.7, 302.9, 291.2, 281.5, 272.9, 261.6, 256.8, 254.4, 253, 248.3, 242.6, 237.3, 229.9, 222.9, 218.3, 216, 214.3, 212.8] },
+    { name: "SPG-landing", short: "SPG-landing", lat: 68.80195, lon: 16.38677, cls: "spg", terrain: [562.7, 561.3, 557.7, 553.7, 550.1, 546.2, 542, 537.3, 533.2, 528.3, 522.9, 517.3, 511.2, 505.7, 502.3, 497.1, 489.5, 480.7, 472.1, 461.8, 454.2, 447.1, 443.8, 440.2, 435.8, 430.6, 426.3, 423.2, 419.9, 416.2, 413.1, 408.6, 402.3, 395.7, 388.5, 383, 379.8, 376.4, 371, 365.4, 360.6, 356.4, 352.5, 348.8, 345.3, 342.1, 339.4, 337.8, 336.1] }],
   hazard: { name: "Masta og heisen: trakteffekt", lat: 68.80604, lon: 16.37694 },
   route: [[68.802129,16.404942],[68.802075,16.404765],[68.802128,16.403201],[68.802037,16.401148],[68.803574,16.390139],[68.804174,16.385021],[68.804439,16.383698],[68.805557,16.375285],[68.805531,16.374876],[68.80527,16.374115],[68.805127,16.373354],[68.80483,16.372822],[68.804386,16.371466],[68.80435,16.370944]],
   airspace: { tmaFloorM: 1372, nearbyTmaM: 762 },
@@ -555,7 +576,75 @@ function renderGallery() {
   $("#hero").style.backgroundImage = `url("${IMG}${SITE.images[0][0]}-1600-${SITE.images[0][1]}.webp")`;
 }
 
-function update() { renderStatus(); placeSel(); renderLaunches(); renderMapLaunches(); }
+// ---------- Glid til landing ----------
+let glideIdx = 0, glideLine = null;
+function geo(a, b) {
+  const r = Math.PI / 180, h = Math.sin((b.lat - a.lat) * r / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin((b.lon - a.lon) * r / 2) ** 2;
+  const dist = 2 * 6371000 * Math.asin(Math.sqrt(h));
+  const y = Math.sin((b.lon - a.lon) * r) * Math.cos(b.lat * r), x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lon - a.lon) * r);
+  return { dist, bearing: (Math.atan2(y, x) / r + 360) % 360 };
+}
+const nf = (n, d = 0) => n.toFixed(d).replace(".", ",");
+function glideData(l) {
+  const { dist, bearing } = geo(SITE, l), t = l.terrain, h0 = SITE.launchMasl, h1 = Math.round(t[t.length - 1]);
+  const drop = h0 - h1, n = t.length - 1;
+  // Laveste høyde mellom glidelinja og terrenget, uten de første og siste 10 % (der linja møter bakken).
+  let min = { m: Infinity, i: 0 };
+  t.forEach((z, i) => { if (i < n * 0.1 || i > n * 0.9) return; const line = h0 - drop * (i / n), c = line - z; if (c < min.m) min = { m: c, i }; });
+  return { dist, bearing, drop, h1, ratio: dist / drop, min, n };
+}
+function renderGlideSeg() {
+  $("#glideSeg").innerHTML = SITE.landings.map((l, i) => `<button role="tab" aria-selected="${i === glideIdx}" data-i="${i}">${esc(l.short)}</button>`).join("");
+}
+function renderGlide() {
+  const l = SITE.landings[glideIdx], g = glideData(l), t = l.terrain;
+  $("#gfacts").innerHTML = `<div class="fact"><b>${nf(g.dist / 1000, 1)} km</b><span>avstand (${DIR_NB[code(g.bearing)]})</span></div>` +
+    `<div class="fact"><b>${g.drop} m</b><span>høydeforskjell</span></div>` +
+    `<div class="fact big"><b>${nf(g.ratio, 1)} : 1</b><span>glidetall, rett linje</span></div>`;
+  // Profil: x = avstand, y = høyde. Høyden strekkes, så formen på terrenget synes; faktoren står i hjørnet.
+  const W = 640, H = 230, PL = 44, R = 12, T = 24, B = 26;
+  const lo = Math.floor((Math.min(...t) - 40) / 50) * 50, hi = Math.ceil((SITE.launchMasl + 30) / 50) * 50;
+  const x = (i) => PL + (i / g.n) * (W - PL - R), y = (m) => T + (1 - (m - lo) / (hi - lo)) * (H - T - B);
+  const exag = ((H - T - B) / (hi - lo)) / ((W - PL - R) / g.dist);
+  const ground = t.map((z, i) => `${x(i).toFixed(1)},${y(z).toFixed(1)}`).join(" ");
+  let svg = `<svg class="gsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Terrengprofil fra start til ${esc(l.short)}: ${nf(g.dist / 1000, 1)} km, ${g.drop} m ned, glidetall ${nf(g.ratio, 1)} til 1.">`;
+  for (let m = Math.ceil(lo / 100) * 100; m <= hi; m += 100) svg += `<line x1="${PL}" x2="${W - R}" y1="${y(m)}" y2="${y(m)}" stroke="var(--line)" stroke-width="1"/><text x="${PL - 6}" y="${y(m) + 4}" text-anchor="end">${m}</text>`;
+  const kmStep = g.dist > 1200 ? 500 : 250;
+  for (let d = 0; d <= g.dist; d += kmStep) svg += `<text x="${(PL + (d / g.dist) * (W - PL - R)).toFixed(1)}" y="${H - 8}" text-anchor="middle">${nf(d / 1000, d % 1000 ? 2 : 0)} km</text>`;
+  svg += `<polygon points="${x(0)},${y(lo)} ${ground} ${x(g.n)},${y(lo)}" fill="color-mix(in srgb, var(--accent) 20%, var(--panel))" stroke="var(--accent)" stroke-width="1.5"/>`;
+  // Eksempel: et glidetall på 8 : 1 i stille luft, og hvor høyt man da er over landingen.
+  const EX = 8, exEnd = SITE.launchMasl - g.dist / EX, over = Math.round(exEnd - g.h1);
+  svg += `<line x1="${x(0)}" y1="${y(SITE.launchMasl)}" x2="${x(g.n)}" y2="${y(exEnd)}" stroke="var(--ok)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`;
+  svg += `<text x="${x(g.n) - 4}" y="${y(exEnd) - 8}" text-anchor="end" style="fill:var(--ok)" class="lbl">Eksempel ${EX} : 1 → ${over} m over landing</text>`;
+  // Rett linje med glidetallet som trengs.
+  svg += `<line x1="${x(0)}" y1="${y(SITE.launchMasl)}" x2="${x(g.n)}" y2="${y(g.h1)}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 5"/>`;
+  // Laveste klaring mellom linja og terrenget; etiketten under terrengkanten.
+  const ci = g.min.i, cl = SITE.launchMasl - g.drop * (ci / g.n), cm = Math.round(g.min.m);
+  svg += `<line x1="${x(ci)}" x2="${x(ci)}" y1="${y(cl)}" y2="${y(t[ci])}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  svg += `<text x="${x(ci)}" y="${Math.max(y(cl), y(t[ci])) + 18}" text-anchor="middle" class="lbl">${cm < 0 ? `${-cm} m under terrenget` : `${cm} m over terrenget`}</text>`;
+  svg += `<text x="${x(ci)}" y="${Math.max(y(cl), y(t[ci])) + 33}" text-anchor="middle">${cm < 0 ? "her går linja inn i lia" : "på det laveste"}</text>`;
+  svg += `<circle cx="${x(0)}" cy="${y(SITE.launchMasl)}" r="5" fill="var(--ink)"/><text x="${x(0) + 8}" y="${y(SITE.launchMasl) - 9}" class="lbl">Start ${SITE.launchMasl}</text>`;
+  svg += `<circle cx="${x(g.n)}" cy="${y(g.h1)}" r="5" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.5"/><text x="${x(g.n) - 8}" y="${y(g.h1) + 18}" text-anchor="end" class="lbl">${esc(l.short)} ${g.h1}</text>`;
+  svg += (exag >= 1.3 ? `<text x="${W - R}" y="12" text-anchor="end">høyden strukket ×${nf(exag, 1)}</text>` : "") + `</svg>`;
+  $("#gprofile").innerHTML = svg;
+  renderGlideWind();
+  if (map) {
+    if (glideLine) glideLine.remove();
+    glideLine = L.polyline([[SITE.lat, SITE.lon], [l.lat, l.lon]], { color: "#c8402f", weight: 2.5, dashArray: "6 6" }).addTo(map).bindTooltip(`Glidelinje til ${l.short}: ${nf(g.ratio, 1)} : 1`);
+  }
+}
+// Vind langs glidelinja for valgt time: komponenten av bakkevinden fra MET langs retningen til landingen.
+function renderGlideWind() {
+  const w = cur(), el = $("#gwind");
+  if (!w) { el.textContent = ""; return; }
+  const g = glideData(SITE.landings[glideIdx]);
+  const head = w.speed * Math.cos(((w.dir - g.bearing) * Math.PI) / 180);
+  const when = state.idx === 0 ? "Nå" : dayHour.format(w.time);
+  el.innerHTML = Math.abs(head) < 1 ? `${esc(when)}: nesten ingen vind langs linja (${DIR_NB[code(w.dir)]} ${Math.round(w.speed)} m/s).`
+    : `${esc(when)}: <b>${Math.round(Math.abs(head))} m/s ${head > 0 ? "motvind" : "medvind"}</b> langs linja (${DIR_NB[code(w.dir)]} ${Math.round(w.speed)} m/s ved start, fra MET).`;
+}
+
+function update() { renderStatus(); placeSel(); renderLaunches(); renderMapLaunches(); renderGlideWind(); }
 function setIdx(i) { const n = Math.max(0, Math.min(state.rows.length - 1, i)); if (n !== state.idx) { state.idx = n; update(); } }
 
 function bind() {
@@ -584,7 +673,8 @@ function bind() {
 }
 
 (async function main() {
-  renderGallery(); renderAir(); initMap(); bind();
+  renderGallery(); renderAir(); initMap(); bind(); renderGlideSeg(); renderGlide();
+  $("#glideSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { glideIdx = +b.dataset.i; renderGlideSeg(); renderGlide(); } });
   try { const f = await loadForecast(); state.rows = f.rows; state.updated = f.updated; }
   catch (err) { console.warn("Demodata:", err); state.rows = demoRows(); state.demo = true; state.updated = Date.now(); }
   state.idx = Math.max(0, state.rows.findIndex((r) => r.time + HOUR > Date.now()));

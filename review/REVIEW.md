@@ -316,6 +316,7 @@ Vurderingen er en forenklet kopi av `rateWind` i `src/assets/js/wind.js`, med st
 - **Luftrom som snitt:** start, landing og TMA-gulv tegnet i høyden, slik at «809 m til Evenes TMA1» er det første man ser.
 - **Mobil:** toppfeltet viser navnet når man har rullet forbi bildet, seksjonsmenyen er klebrig og markerer hvor man er, og en bunnlinje har Veibeskrivelse, GPX og Kart. Kartet flyttes ikke av én finger før man har trykket på det.
 - **Desktop:** to kolonner, med farer og luftrom til høyre.
+- **Glid til landing** (øverst i «Landing og adkomst»): avstand, høydeforskjell og glidetall for rett linje til hovedlandingen eller SPG-landingen, og en terrengprofil med ekte høyder fra Kartverket langs linja. Profilen viser laveste klaring mellom linja og terrenget, en eksempellinje for 8 : 1 med høyden over landingen, og vinden langs linja for valgt time. Glidelinja tegnes også i kartet. Ingen farger eller grenser, siden det er en faglig avgjørelse for klubben.
 
 Stedsdataene er kopiert inn fra `src/sites/sollifjellet/index.md` og luftrom-cachen, bildene lastes fra flysteder.hpgt.com, og varselet hentes live fra MET for 563 moh. Startplassene har fått korte navn (Toppen, Masta, Alpinbakken, Veien i anlegget, Ryggen). Det finnes ikke i stedsfilen i dag, men et `name`-felt per start ville gjort både denne visningen og kartet tydeligere.
 
