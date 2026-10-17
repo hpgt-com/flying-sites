@@ -129,7 +129,6 @@ p { margin: 0; }
 .topbar a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; font-size: 15px; }
 .logo { font-family: var(--font-heading); font-weight: 700; font-size: 22px; white-space: nowrap; flex-shrink: 0; }
 .back-link { gap: 6px; white-space: nowrap; flex-shrink: 0; text-decoration: none; font-size: 16px !important; font-weight: 500 !important; }
-.topbar__region { font-size: 15px; color: var(--muted); }
 .topbar__end { display: flex; align-items: center; gap: 0 12px; flex-wrap: wrap; justify-content: flex-end; }
 .theme-toggle { display: flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
 .theme-toggle button {
@@ -819,20 +818,6 @@ p { margin: 0; }
 .hazard strong { font-size: 16px; }
 .hazard span { font-size: 15px; line-height: 1.45; }
 
-.rose-facts { display: flex; gap: 16px; align-items: center; }
-.facts { margin: 0; }
-.facts > dl { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--line); }
-.facts > dl:last-child { border-bottom: 1px solid var(--line); }
-.facts dt { font-size: 14px; color: var(--muted); }
-.facts dl, .facts dd { margin: 0; }
-/* Level, category and season separately, on one line. */
-.facts > .facts__trio { flex-direction: row; flex-wrap: wrap; gap: 10px 24px; }
-.facts__trio > div { display: flex; flex-direction: column; gap: 4px; }
-.elevations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.elevations > span { display: flex; flex-direction: column; gap: 2px; }
-.elevations .muted { font-size: 13px; }
-.elevations strong { font-size: 18px; font-weight: 600; }
-.elevations .missing { font-size: 15px; }
 .airspace { display: flex; flex-direction: column; gap: 8px; }
 .airspace > .muted, .airspace > .missing { font-size: 14px; line-height: 1.45; }
 
@@ -929,7 +914,6 @@ p { margin: 0; }
   gap: 12px;
 }
 .site-page__aside > .block > h2 { font-size: 24px; }
-.site-page__aside .facts > dl:last-child { border-bottom: 0; padding-bottom: 0; }
 /* Vær: the meteogram in its own frame and the links compact on one line, with the description to the right. */
 .block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
 .block--weather .meteogram img { border: 0; border-radius: 6px; }
@@ -947,7 +931,6 @@ p { margin: 0; }
 }
 .site-wind strong { font-size: 16px; }
 .site-wind span { font-size: 14px; line-height: 1.45; color: var(--muted); }
-.site-wind .site-wind__time { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
 .site-wind--ok { border-left-color: var(--wind-ok); }
 .site-wind--maybe { border-left-color: var(--wind-maybe); }
 .site-wind--high { border-left-color: var(--wind-high); }
