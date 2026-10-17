@@ -307,7 +307,6 @@ Vurderingen er en forenklet kopi av `rateWind` i `src/assets/js/wind.js`, med st
 
 `review/prototype/sollifjellet.html` viser hvordan en stedsside kan se ut med samme tankegang. Den er laget mobil-først.
 
-- **Kort fortalt først:** det en ny eller tilreisende pilot trenger, på sju korte linjer rett under bildet: start, landing, parkering, veien opp, hva man må passe på, nivå og en linje om været nå. Veibeskrivelse og gangrute ligger rett under. Resten av siden er for den som vil vite mer.
 - **Detaljer skjult til man ber om dem:** timeskort, regelverdier og termikk ligger under «Detaljer» i værkortet, og glid til landing ligger sammenfoldet med et sammendrag på én linje.
 - **Ikke «Ring tårnet» som knapp:** nummeret til Evenes tårn står bare i luftromskortet, som «Skal du over 1372 moh? Da er du inne i Evenes TMA1 og trenger klarering». En stor knapp ga inntrykk av at man alltid må ringe.
 - **Status først:** et kort rett under bildet med vurdering, vind og kast for valgt time, og hvorfor.
