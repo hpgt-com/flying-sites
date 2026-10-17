@@ -73,6 +73,9 @@ Other commands:
 | `npm run images -- <files or folder>` | Imports images named by the convention, e.g. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (see [SPEC.md](SPEC.md#content)). All images are imported, and the build finds them by file name. |
 | `npm run images -- <id> <field> <file>` | Imports one image for a site with the correct name and size. |
 | `npm run airspace` | Fetches airspace from openAIP (requires `OPENAIP_API_KEY`). |
+| `npm run check:links` | After the build: checks that every internal link and image in `_site/` points to a file that exists. |
+| `npm run check:html` | After the build: validates the HTML of every page (`.htmlvalidate.mjs`). |
+| `npm run check:a11y` | After the build: axe accessibility check of a few pages in Chromium (`npx playwright install chromium` first). |
 
 ## Publishing
 
@@ -82,7 +85,8 @@ Other commands:
   a new forecast immediately, run «Build and deploy» manually under Actions.
 - The image variants (`_site/img`) are cached between builds in CI, so a build without image changes skips them.
   The cache is replaced whenever an image, the image code or a package changes.
-- Changes go through a branch and a pull request. The PR check builds the site and stops invalid site files.
+- Changes go through a branch and a pull request. The PR check builds the site and stops invalid site files, broken
+  internal links, invalid HTML and serious accessibility errors.
 - Airspace is fetched automatically on the 1st of each month. Changes arrive as a PR, which is reviewed before
   publishing.
 - Dependabot proposes updates to packages and Actions once a month.

@@ -17,10 +17,24 @@ npm run build   # builds into _site/
 `FORECAST_OFFLINE=1 npm run build` builds without fetching the wind forecast from MET (faster, and works offline).
 Locally, the forecast is cached in `.cache/` for 30 minutes.
 
+The quality checks in the PR check can be run locally after the build:
+
+```bash
+npm run check:links   # internal links and images point to files that exist (no network)
+npm run check:html    # HTML validation of every page, rules in .htmlvalidate.mjs
+npx playwright install chromium   # once
+npm run check:a11y    # axe in Chromium on a few pages, light and dark mode
+```
+
+`check:a11y` fails only on findings with impact «serious» or «critical», and lists the rest. With a Chromium already
+installed, set `CHROMIUM_PATH` instead of running `playwright install`. Pages checked: `PAGES` in
+`scripts/check-a11y.mjs`.
+
 ## Workflow
 
 1. Create a branch and make the change.
-2. Open a pull request. The PR check runs the tests and builds the site. Invalid site files make it fail.
+2. Open a pull request. The PR check runs the tests, builds the site, and checks links, HTML and accessibility.
+   Invalid site files, broken internal links, invalid HTML or serious accessibility errors make it fail.
 3. Merge to `main`. The site is published automatically after a few minutes.
 
 Changes made by Claude or other bots appear in «Sist endret» ("Last changed") as the PR they came from

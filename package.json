@@ -10,7 +10,10 @@
     "clean": "node -e \"require('fs').rmSync('_site',{recursive:true,force:true})\"",
     "images": "node scripts/optimize-images.mjs",
     "airspace": "node scripts/update-airspace.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "check:links": "node scripts/check-links.mjs",
+    "check:html": "html-validate \"_site/**/*.html\"",
+    "check:a11y": "node scripts/check-a11y.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -19,8 +22,11 @@
   "devDependencies": {
     "@11ty/eleventy": "^3.1.7",
     "@11ty/eleventy-img": "^7.0.0",
+    "axe-core": "^4.14.0",
+    "html-validate": "^11.16.2",
     "js-yaml": "^5.4.2",
-    "markdown-it": "^15.0.2"
+    "markdown-it": "^15.0.2",
+    "playwright": "^1.64.0"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

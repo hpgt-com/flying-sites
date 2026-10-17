@@ -22,7 +22,7 @@ scripts:
 <div class="site-page">
   <header class="topbar">
     <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
-    <span class="topbar__end">{% if region %}<span class="topbar__region">{{ region }}</span>{% endif %}{{ m.siteMenu() }}</span>
+    <div class="topbar__end">{% if region %}<span class="topbar__region">{{ region }}</span>{% endif %}{{ m.siteMenu() }}</div>
   </header>
 
   <div class="site-page__grid">
@@ -109,7 +109,7 @@ scripts:
         {#- Access as numbers when the site has one walking route: length, elevation gain and walking time. -#}
         {% set oneRoute = routes[0] if routes.length == 1 else null %}
         {% if oneRoute %}
-        <div class="access-stats" aria-label="{{ t.site.routeStats }}">
+        <div class="access-stats" role="group" aria-label="{{ t.site.routeStats }}">
           <div><strong>{{ oneRoute.lengthKm | formatNumber(1) }}</strong> <span>{{ t.site.km }}</span><small>{{ t.site.route }}</small></div>
           {% if oneRoute.elevationGain %}<div><strong>{{ (oneRoute.elevationGain / 10) | round * 10 }}</strong> <span>m</span><small>{{ t.site.climb }}</small></div>{% endif %}
           {% if oneRoute.walkTimeMin %}<div><strong>{{ oneRoute.walkTimeMin }}</strong> <span>{{ t.units.minutes }}</span><small>{{ t.site.onFoot }}</small></div>{% endif %}
@@ -211,8 +211,8 @@ scripts:
           {{ m.rose(wind_directions, 120) }}
           {{ m.legend(wind_directions) }}
         </div>
-        <dl class="facts">
-          <div class="facts__trio">
+        <div class="facts">
+          <dl class="facts__trio">
             <div>
               <dt>{{ t.site.level }}</dt>
               <dd class="tags">
@@ -230,22 +230,22 @@ scripts:
               <dd class="tags">{{ m.tag(local.season) }}</dd>
             </div>
             {% endif %}
-          </div>
+          </dl>
           {% if wind_limits and wind_limits.max_wind %}
-          <div>
+          <dl>
             <dt>{{ t.site.maxWind }}</dt>
             <dd>{{ wind_limits.max_wind }} m/s <span class="muted">{{ t.site.maxWindNote }}</span></dd>
-          </div>
+          </dl>
           {% endif %}
-          <div>
+          <dl>
             <dt>{{ t.site.heights }}</dt>
             <dd class="elevations">
               {% for label, value, unit in [[t.site.heightLaunch, elevation.launch_masl, t.units.masl], [t.site.heightLanding, elevation.landing_masl, t.units.masl], [t.site.heightDiff, elevation.difference_m, "m"]] %}
               <span><span class="muted">{{ label }}</span>{% if value or value === 0 %}<strong>{{ value }} {{ unit }}</strong>{% else %}<span class="missing">{{ t.site.notRegistered }}</span>{% endif %}</span>
               {% endfor %}
             </dd>
-          </div>
-          <div>
+          </dl>
+          <dl>
             <dt>{{ t.site.airspaceOverLaunch }}</dt>
             <dd class="airspace">
               {% if derived.airspace %}
@@ -288,8 +288,8 @@ scripts:
               {% if not mainAirspace.length %}<span class="missing">{{ t.site.airspaceMissing | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }}</span>{% endif %}
               {% endif %}
             </dd>
-          </div>
-        </dl>
+          </dl>
+        </div>
       </section>
 
       {# 7. Weather #}
@@ -387,7 +387,6 @@ scripts:
     </dl>
     <p class="disclaimer">{{ t.site.footerDisclaimer }}</p>
   </footer>
-</div>
   </div>
 </div>
 
