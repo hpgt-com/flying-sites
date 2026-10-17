@@ -51,7 +51,6 @@
     renderCards(now);
     renderChart(now);
     renderWindows();
-    renderLaunches(wind, rating.rating);
     var text = FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
       (wind.gust != null ? ", " + FS.t("wind.gust", { g: Math.round(wind.gust) }) : "") +
       (wind.rain != null && wind.rain >= data.rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "");
@@ -165,25 +164,6 @@
     if (!items.length) items.push(make("li", "wind-windows__none", FS.t("wind.noWindows")));
     windowsEl.replaceChildren.apply(windowsEl, items);
     windowsEl.hidden = false;
-  }
-
-  // Startplasser: the wind now, and for each group of launches whether the wind comes from one of its directions.
-  var launchNowEl = document.getElementById("launch-now");
-  function renderLaunches(wind, rating) {
-    var code = wind ? W.directionCode(wind.dir) : null;
-    if (launchNowEl) {
-      launchNowEl.hidden = !wind;
-      if (wind) launchNowEl.textContent = FS.t("wind.launchNow", { text: W.RATINGS[rating].label + ", " + FS.DIRECTION_LABELS[code] + " " + Math.round(wind.speed) + " m/s" });
-    }
-    document.querySelectorAll(".launch-list li[data-dirs]").forEach(function (li) {
-      var chip = li.querySelector(".launch-list__now");
-      if (!chip) return;
-      var fits = wind && li.getAttribute("data-dirs").split(" ").indexOf(code) !== -1;
-      var r = fits ? rating : "no";
-      chip.className = "launch-list__now launch-list__now--" + r;
-      chip.textContent = fits ? W.RATINGS[rating].label : FS.t("wind.notNow");
-      chip.hidden = !wind;
-    });
   }
 
   render();

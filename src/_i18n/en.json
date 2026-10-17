@@ -72,9 +72,7 @@
     "notReviewed": "Not reviewed yet",
     "notSet": "Not set",
     "notRegistered": "Not registered yet",
-    "siteTitle": "HPGT flying sites",
-    "openData": "Open data",
-    "suggestChange": "Suggest a change"
+    "siteTitle": "HPGT flying sites"
   },
   "home": {
     "description": "Paragliding and speedflying sites in the HPGT area (Harstad, Northern Norway). Filter by wind direction, level and category.",
@@ -235,7 +233,6 @@
     "haveImages": "Do you have photos from here?",
     "sendImages": "Send them in",
     "issueImages": "Photos: {name}",
-    "log": "Log and more",
     "onFlightlog": "{name} on Flightlog",
     "noFlightlog": "Not linked to Flightlog yet",
     "suggestChange": "Suggest a change",
@@ -257,8 +254,11 @@
     "siteMaxWind": "The site has its own wind limit: {m} m/s.",
     "next48": "When might it work? Next 48 hours",
     "landingShort": "Landing",
-    "logShort": "Log",
-    "levelNotSet": "Level not set"
+    "levelNotSet": "Level not set",
+    "linksTitle": "Links",
+    "linksWeather": "Weather",
+    "linksLog": "Log",
+    "linksMore": "More about the site"
   },
   "sources": {
     "launch": "Launch coordinate",
@@ -349,8 +349,6 @@
       "noneNowText": "The forecast does not cover the current hour. Check Yr or Windy.",
       "windNow": "Wind now, at {time}",
       "roughNote": "Rough assessment from the MET forecast, always check for yourself.",
-      "notNow": "Not now",
-      "launchNow": "Wind now: {text}",
       "chartLabel": "Wind for the next 48 hours. The bar is the mean wind, the light part is gusts, and the arrow shows where the wind comes from.",
       "chartKey": "Bar: wind · light: gust · arrow: direction",
       "window": "{day} {from}–{to} {rating}",

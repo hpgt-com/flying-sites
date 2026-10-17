@@ -72,9 +72,7 @@
     "notReviewed": "Ikke gjennomgått ennå",
     "notSet": "Ikke satt",
     "notRegistered": "Ikke registrert ennå",
-    "siteTitle": "HPGT flysteder",
-    "openData": "Åpne data",
-    "suggestChange": "Foreslå endring"
+    "siteTitle": "HPGT flysteder"
   },
   "home": {
     "description": "Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.",
@@ -235,7 +233,6 @@
     "haveImages": "Har du bilder herfra?",
     "sendImages": "Send dem inn",
     "issueImages": "Bilder: {name}",
-    "log": "Logg og mer",
     "onFlightlog": "{name} på Flightlog",
     "noFlightlog": "Ikke koblet til Flightlog ennå",
     "suggestChange": "Foreslå endring",
@@ -257,8 +254,11 @@
     "siteMaxWind": "Stedet har egen vindgrense: {m} m/s.",
     "next48": "Når kan det passe? Neste 48 timer",
     "landingShort": "Landing",
-    "logShort": "Logg",
-    "levelNotSet": "Nivå ikke satt"
+    "levelNotSet": "Nivå ikke satt",
+    "linksTitle": "Lenker",
+    "linksWeather": "Vær",
+    "linksLog": "Logg",
+    "linksMore": "Mer om stedet"
   },
   "sources": {
     "launch": "Startkoordinat",
@@ -349,8 +349,6 @@
       "noneNowText": "Varselet dekker ikke timen nå. Sjekk Yr eller Windy.",
       "windNow": "Vind nå, kl. {time}",
       "roughNote": "Grov vurdering fra MET-varselet, sjekk alltid selv.",
-      "notNow": "Ikke nå",
-      "launchNow": "Vinden nå: {text}",
       "chartLabel": "Vind de neste 48 timene. Søylen er middelvind, den lyse delen er kast, og pilen viser hvor vinden kommer fra.",
       "chartKey": "Søyle: vind · lys: kast · pil: retning",
       "window": "{day} kl. {from}–{to} {rating}",
