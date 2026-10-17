@@ -34,7 +34,7 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   PR, but runs no npm code. The fetched files go from one to the other as an artifact. When the club's GitHub App
   is set up, `pr` uses a short-lived app token limited to this repository (contents and pull requests), so the PR
   check runs on the airspace PRs too.
-- Secrets (`OPENAIP_API_KEY`, `AIRSPACE_APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
+- Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
   key files.
 
 ## GitHub settings (done by someone with admin access)

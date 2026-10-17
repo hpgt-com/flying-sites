@@ -84,20 +84,23 @@ the menu and is marked `noindex`. It shows per site:
   and `pr` opens the PR only if something changed (it is skipped otherwise).
 - **Fetch now:** Actions → «Update airspace» → «Run workflow», or `npm run airspace` locally.
 - The key is stored as the repository secret `OPENAIP_API_KEY`. The update does not work without it.
-- **GitHub App for the airspace PRs** (recommended). Without it the PR is created with the GitHub token, which
+- **GitHub App «HPGT Flying Sites»** (recommended). The club's app for automation in GitHub Actions; today it is
+  only used by the airspace workflow. Without it the PR is created with the GitHub token, which
   does not trigger the PR check, so the PR must be merged with «Bypass rules». With it the PR gets the checks like
   any other. Setting it up (someone with admin access to hpgt-com):
-  1. hpgt-com → Settings → Developer settings → GitHub Apps → New GitHub App. Name e.g. «HPGT airspace»,
-     homepage `https://flysteder.hpgt.com`, Webhook off. Repository permissions: Contents = Read and write,
-     Pull requests = Read and write (Metadata = Read is added automatically). Nothing else. «Only on this account».
+  1. hpgt-com → Settings → Developer settings → GitHub Apps → New GitHub App. Name «HPGT Flying Sites»,
+     homepage `https://flysteder.hpgt.com`, Webhook «Active» off. Repository permissions: Contents = Read and
+     write, Pull requests = Read and write (Metadata = Read is added automatically). Nothing else. «Only on this
+     account». Give it only what the workflows using it need; widen it when a new task needs more. Anything that
+     runs outside GitHub or takes input from the public (such as a form) should get its own app instead.
   2. On the app page: note the **Client ID**, and «Generate a private key» (downloads a `.pem` file).
   3. «Install App» → hpgt-com → «Only select repositories» → flying-sites.
-  4. In flying-sites → Settings → Secrets and variables → Actions: the variable `AIRSPACE_APP_CLIENT_ID` (the
-     Client ID) under Variables, and the secret `AIRSPACE_APP_PRIVATE_KEY` (the whole content of the `.pem` file)
+  4. In flying-sites → Settings → Secrets and variables → Actions: the variable `APP_CLIENT_ID` (the
+     Client ID) under Variables, and the secret `APP_PRIVATE_KEY` (the whole content of the `.pem` file)
      under Secrets. Then delete the `.pem` file.
   5. Run Actions → «Update airspace» → «Run workflow». If a PR is created, it should get the PR check. Then
      «Allow GitHub Actions to create and approve pull requests» can be turned off (Settings → Actions → General).
-  The workflow uses the app only when `AIRSPACE_APP_CLIENT_ID` is set, and falls back to the GitHub token otherwise.
+  The workflow uses the app only when `APP_CLIENT_ID` is set, and falls back to the GitHub token otherwise.
 - Airspace notes (for example that the approach enters Evenes CTR) go in the site file's `airspace`.
 - The towers' phone numbers are only in `src/_data/towers.json` (with names per language in `names`).
 
@@ -143,7 +146,7 @@ set in `src/_data/photoCredit.json`.
 | What | Where | Used for |
 |---|---|---|
 | `OPENAIP_API_KEY` | GitHub → Settings → Secrets | Monthly airspace fetch |
-| GitHub App «HPGT airspace»: `AIRSPACE_APP_CLIENT_ID` (variable), `AIRSPACE_APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Creating the airspace PRs so the PR check runs |
+| GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
