@@ -36,10 +36,10 @@ Do you have corrections, photos or new information about a site?
 | `src/sites/<id>/index.md` | One site: structured data at the top (front matter), text below. |
 | `src/sites/<id>/index.en.md` | English text for the site (optional, see `lib/translations.js`). If missing, the Norwegian text is shown with a notice. |
 | `src/sites/<id>/` | Images (`<id>-overview-1.jpg`, `<id>-takeoff-se-1.jpg`, `<id>-landing-1.jpg`, `<id>-landing-spg-1.jpg`), walking routes (`<id>-route.gpx`) and the map drawing (`<id>-drawing.geojson`: points, lines and areas, see `lib/drawing.js`). |
-| `src/_data/` | Towers (`towers.json`), shared wind limits (`windRules.json`), wind forecast (`forecast.js`) and cached airspace. |
+| `src/_data/` | Towers (`towers.json`), shared wind limits (`windRules.json`), the weather (`forecast.js`, `windgram.js`, read from `lib/weather/`) and cached airspace. |
 | `src/_includes/` | Page templates for the home page and the site pages. |
 | `src/assets/` | CSS, JavaScript and images. |
-| `lib/`, `scripts/` | Validation, GPX, images, airspace and maintenance scripts. |
+| `lib/`, `scripts/` | Validation, GPX, images, airspace, weather and maintenance scripts. See [Data modules](docs/architecture.md#data-modules). |
 | `src/_i18n/` | Dictionaries for Norwegian and English (all fixed text in templates and scripts). |
 | `docs/` | Documentation, see above. |
 
@@ -77,7 +77,8 @@ Other commands:
 ## Publishing
 
 - Everything merged to `main` is published automatically to GitHub Pages.
-- The site is also rebuilt twice an hour, so the wind assessment on the home page uses a fresh forecast. GitHub may
+- The site is also rebuilt twice an hour, so the wind assessment on the home page uses a fresh forecast. The forecast
+  is fetched in its own job (`weather`) before the build, and the build only reads it. GitHub may
   delay or skip scheduled runs. If the forecast is more than 6 hours old, the wind assessment is turned off. To fetch
   a new forecast immediately, run «Build and deploy» manually under Actions.
 - The image variants (`_site/img`) are cached between builds in CI, so a build without image changes skips them.
