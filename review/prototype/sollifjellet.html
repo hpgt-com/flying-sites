@@ -56,16 +56,17 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .pill { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.2); backdrop-filter: blur(4px); }
 
 /* Layout */
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "status" "warn" "nav" "launch" "map" "land" "air" "photos" "foot"; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "brief" "nav" "warn" "status" "launch" "map" "land" "air" "photos" "foot"; }
 .card { background: var(--panel); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
-.a-status { grid-area: status; margin-top: -26px; position: relative; z-index: 2; }
+.a-status { grid-area: status; }
+.a-brief { grid-area: brief; margin-top: -26px; position: relative; z-index: 2; }
 .a-warn { grid-area: warn; } .a-nav { grid-area: nav; } .a-launch { grid-area: launch; } .a-map { grid-area: map; }
 .a-land { grid-area: land; } .a-air { grid-area: air; } .a-photos { grid-area: photos; } .a-foot { grid-area: foot; }
 @media (min-width: 900px) {
   .hero { height: 320px; }
   .hero h1 { font-size: 48px; }
   .wrap { grid-template-columns: minmax(0, 1fr) 360px; column-gap: 20px; align-items: start;
-    grid-template-areas: "status warn" "nav nav" "launch air" "map air" "land photos" "foot foot"; }
+    grid-template-areas: "brief warn" "status air" "launch air" "map photos" "land photos" "foot foot"; }
   .a-warn { margin-top: -26px; position: relative; z-index: 2; }
   .a-air { position: sticky; top: 70px; }
   .a-nav { display: none; }
@@ -97,6 +98,26 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 /* Ingen kort skal kunne gjøre siden bredere enn skjermen (timeskortene ruller inne i sitt eget felt). */
 .wrap > * { min-width: 0; }
 
+/* Kort fortalt: det en ny eller tilreisende pilot trenger først */
+.brief h2 { margin-bottom: 6px; }
+.brief dl { display: grid; grid-template-columns: 82px 1fr; margin: 0; }
+.brief dt, .brief dd { padding: 9px 0; border-top: 1px solid var(--line); margin: 0; }
+.brief dt { font-weight: 650; font-size: 14px; }
+.brief dd { font-size: 14.5px; line-height: 1.45; }
+.brief dd small { color: var(--muted); font-size: 13px; }
+.brief .nowline { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); }
+.brief .nowline .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.brief .nowline span:last-child { color: var(--accent); white-space: nowrap; margin-left: auto; font-size: 13.5px; }
+.brief .btns { margin-top: 12px; }
+
+/* Mer: detaljer som er skjult til man ber om dem */
+details.more { margin-top: 10px; border-top: 1px solid var(--line); }
+details.more > summary { list-style: none; cursor: pointer; padding: 10px 0 2px; font-weight: 600; font-size: 14px; color: var(--accent); display: flex; justify-content: space-between; gap: 8px; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::after { content: "Vis"; font-weight: 500; color: var(--muted); }
+details.more[open] > summary::after { content: "Skjul"; }
+details.more > summary span { color: var(--ink); font-weight: 600; }
+
 /* Regler ved tallene */
 .rules { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .rules li { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 3px 9px 3px 7px; border-radius: 999px; background: var(--bg); }
@@ -120,11 +141,10 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .hday { flex: none; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 2px; align-self: center; }
 
 /* Tårn */
-.towerline { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.towerline { font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); }
 .towerline b { display: block; color: var(--ink); }
 .towerline span { font-size: 13px; color: var(--muted); }
 .towerline i { font-style: normal; font-weight: 700; white-space: nowrap; }
-.actionbar a.tower { border-color: var(--ink); }
 
 /* Hazards */
 .warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); box-shadow: none; }
@@ -171,7 +191,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .tag.no, .tag.none { color: var(--ink); }
 
 /* Map */
-#map { height: 340px; border-radius: 12px; margin-top: 6px; }
+#map { height: 340px; border-radius: 12px; margin-top: 6px; position: relative; isolation: isolate; z-index: 0; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
 .pin { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #fff; box-shadow: var(--shadow); display: grid; place-items: center; font: 700 11px/1 system-ui; color: #fff; }
@@ -191,7 +211,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .btn.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 
 /* Glide */
-.glide { margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.glide { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line); border-top: 0; }
 .glide-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
 .seg button { border: 0; background: none; border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
@@ -247,7 +267,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 <body>
 <header class="topbar" id="topbar">
   <a href="index.html">‹ Alle steder</a><span class="title">Sollifjellet</span><span class="sp"></span>
-  <div class="desk-actions"><a class="btn primary" id="dirDesk" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" id="towerDesk">Ring tårnet</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a></div>
+  <div class="desk-actions"><a class="btn primary" id="dirDesk" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a></div>
   <button class="iconbtn" id="share" aria-label="Del"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 10V2M5 5l3-3 3 3M3 9v4h10V9"/></svg></button>
   <button class="iconbtn" id="theme" aria-label="Bytt fargetema"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
 </header>
@@ -260,19 +280,37 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 </section>
 
 <main class="wrap">
-  <!-- 1. Svaret først -->
+  <!-- 0. Kort fortalt: start, landing, parkering, veien opp og det man må passe på, før alt annet -->
+  <section class="card brief a-brief" id="kort" aria-labelledby="brief-h">
+    <h2 id="brief-h">Kort fortalt</h2>
+    <dl>
+      <dt>Start</dt><dd>På toppen, 563 moh. Passer i vind fra <b>S, SØ og Ø</b>. <small>Andre startplasser for N–NØ og NV, se under.</small></dd>
+      <dt>Landing</dt><dd>Stor myr ved parkeringen, 213 moh. <small>SPG har egen landing i skogen.</small></dd>
+      <dt>Parkering</dt><dd>Ved Sollifjellet alpinsenter, rett ved landingen.</dd>
+      <dt>Opp</dt><dd>Heisen når bakken er åpen, ellers sti: 1,5 km, 330 m opp, ca. 35 min.</dd>
+      <dt>Pass på</dt><dd>Vinden er sterkere ved masta og heisen. Utsatt for bølge ved sterk vind fra S–SØ.</dd>
+      <dt>Nivå</dt><dd>PP2 · treningssted · PG og SPG · hele året</dd>
+      <dt>Nå</dt><dd><a class="nowline" href="#vaer"><span class="dot none" id="briefDot"></span><span id="briefNow">Henter varsel …</span><span>Se vær ›</span></a></dd>
+    </dl>
+    <div class="btns"><a class="btn primary" id="dirBrief" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>Gangrute (GPX)</a></div>
+  </section>
+
+  <!-- 1. Været -->
   <section class="card a-status" id="vaer" aria-labelledby="status-h">
-    <h2 id="status-h" class="visually-hidden" style="position:absolute;left:-9999px">Vær og vurdering</h2>
+    <h2 id="status-h">Vær</h2>
     <div class="now">
       <div class="badge none" id="badge"></div>
       <div class="now-text" aria-live="polite"><span class="when" id="when">Henter varsel …</span><b id="verdict">–</b><div class="why" id="why"></div></div>
     </div>
-    <ul class="rules" id="rules" aria-label="Reglene for valgt time"></ul>
-    <p class="thermal" id="thermal" hidden></p>
     <div class="uselaunch" id="uselaunch" hidden></div>
     <div class="chart" id="chart" role="slider" tabindex="0" aria-label="Velg time i varselet" aria-valuemin="0" aria-valuemax="47"></div>
-    <div class="hours" id="hours" aria-label="Time for time"></div>
     <div class="windows" id="windows"></div>
+    <details class="more" id="wxmore">
+      <summary>Detaljer: time for time, regler og termikk</summary>
+      <div class="hours" id="hours" aria-label="Time for time"></div>
+      <ul class="rules" id="rules" aria-label="Reglene for valgt time"></ul>
+      <p class="thermal" id="thermal" hidden></p>
+    </details>
     <div class="demo" id="demo">Viser demodata, fordi varselet ikke kunne hentes. Tallene er ikke ekte.</div>
     <div class="ext">
       <a href="https://www.yr.no/nb/værvarsel/daglig-tabell/1-294009" target="_blank" rel="noopener">Yr ↗</a>
@@ -291,7 +329,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
   </section>
 
   <nav class="a-nav" id="secnav" aria-label="Seksjoner">
-    <a href="#vaer">Vær</a><a href="#farer">Farer</a><a href="#start">Start</a><a href="#kart">Kart</a><a href="#landing">Landing og adkomst</a><a href="#luftrom">Luftrom</a><a href="#bilder">Bilder</a>
+    <a href="#kort">Kort fortalt</a><a href="#farer">Farer</a><a href="#vaer">Vær</a><a href="#start">Start</a><a href="#kart">Kart</a><a href="#landing">Landing og adkomst</a><a href="#luftrom">Luftrom</a><a href="#bilder">Bilder</a>
   </nav>
 
   <!-- 3. Startplasser, vurdert mot vinden -->
@@ -311,13 +349,14 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
   <!-- 5. Landing og adkomst -->
   <section class="card a-land" id="landing" aria-labelledby="land-h">
     <h2 id="land-h">Landing og adkomst</h2>
-    <div class="glide" id="glide">
-      <div class="glide-head"><h3 style="margin:0">Glid til landing</h3><div class="seg" id="glideSeg" role="tablist" aria-label="Velg landing"></div></div>
+    <details class="more glide" id="glide">
+      <summary>Glid til landing: <span id="glideSum"></span></summary>
+      <div class="glide-head" style="margin-top:8px"><div class="seg" id="glideSeg" role="tablist" aria-label="Velg landing"></div></div>
       <div class="gfacts" id="gfacts"></div>
       <div id="gprofile"></div>
       <p class="small" id="gwind" style="margin:4px 0 0"></p>
       <p class="small muted" style="margin:4px 0 0">Stiplet svart: rett linje fra start til landing. Prikket grønn: eksempel med glidetall 8 : 1 i stille luft. Terreng fra Kartverket. Synk, løft og vind er ikke regnet med, så tallene er et utgangspunkt, ikke en vurdering.</p>
-    </div>
+    </details>
     <div class="facts"><div class="fact"><b>1,5 km</b><span>gangrute</span></div><div class="fact"><b>330 m</b><span>stigning</span></div><div class="fact"><b>35 min</b><span>til fots</span></div></div>
     <h3>Landing</h3>
     <p style="margin:0">Stor myr ved parkeringsplassen, så landing og bil ligger samme sted. SPG lander på en egen landingsplass i skogen utenfor alpinanlegget. I selve bakken flyr man bare når alpinsenteret gir lov.</p>
@@ -356,7 +395,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 
 <nav class="actionbar" aria-label="Snarveier">
   <a class="primary" id="dirBar" target="_blank" rel="noopener">Veibeskrivelse</a>
-  <a id="towerBar" class="tower">Ring tårnet</a>
+  <a href="#kart">Kart</a>
   <a href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a>
 </nav>
 
@@ -384,7 +423,7 @@ const SITE = {
   airspace: { tmaFloorM: 1372, nearbyTmaM: 762 },
   // Tårnet som styrer luftrommet over start (nummer fra src/_data/towers.json). Knappen vises bare når stedet har
   // kontrollert luftrom (TMA/CTR) over eller nær start; på den ekte siden kan det avledes av luftromsdataene.
-  tower: { name: "Evenes tårn", phone: "+47 67 03 41 23", reason: "Evenes TMA1 (klasse D) over start fra 1372 moh. Inn i den trengs klarering." },
+  tower: { name: "Evenes tårn", phone: "+47 67 03 41 23", limit: 1372, airspace: "Evenes TMA1" },
   images: [
     ["sollifjellet-overview-1", "9DxP-po_MD", "Oversikt"], ["sollifjellet-takeoff-se-1", "jS4NJDhj5A", "Start mot SØ"],
     ["sollifjellet-takeoff-se-2", "7mc9WxaOE3", "Start mot SØ"], ["sollifjellet-takeoff-nw-1", "sTVlFnCFQr", "Start mot NV"], ["sollifjellet-landing-1", "zmqGndZIbz", "Landing"],
@@ -562,12 +601,18 @@ function markHour() {
 
 // ---------- Tårn ----------
 function renderTower() {
-  const t = SITE.tower;
-  ["#towerBar", "#towerDesk"].forEach((q) => { const a = $(q); if (!t) { a.hidden = true; return; } a.href = "tel:" + t.phone.replace(/\s/g, ""); a.title = `${t.name} ${t.phone}`; });
-  const line = $("#towerLine");
+  // Ikke en knapp i bunnlinja: de fleste flyvninger her skjer under grensen, og en stor «Ring tårnet» gir inntrykk
+  // av at man alltid må ringe. Nummeret står derfor bare her, knyttet til når det er aktuelt.
+  const t = SITE.tower, line = $("#towerLine");
   if (!t) { line.hidden = true; return; }
   line.href = "tel:" + t.phone.replace(/\s/g, "");
-  line.innerHTML = `<span><b>Ring ${esc(t.name)}</b><span>${esc(t.reason)}</span></span><i>${esc(t.phone.replace("+47 ", ""))}</i>`;
+  line.innerHTML = `<span><b>Skal du over ${t.limit} moh?</b><span>Da er du inne i ${esc(t.airspace)} og trenger klarering fra ${esc(t.name)}.</span></span><i>${esc(t.phone.replace("+47 ", ""))}</i>`;
+}
+
+function renderBriefNow() {
+  const w = state.rows[Math.max(0, state.rows.findIndex((r) => r && r.time + HOUR > Date.now()))], x = rate(w);
+  $("#briefDot").className = "dot " + x.r;
+  $("#briefNow").textContent = w ? `${LABEL[x.r]}: ${DIR_NB[code(w.dir)]} ${Math.round(w.speed)} m/s${w.gust != null ? `, kast ${Math.round(w.gust)}` : ""}` : "Ingen varsel";
 }
 
 function renderStatus() {
@@ -721,6 +766,7 @@ function renderGlideSeg() {
 }
 function renderGlide() {
   const l = SITE.landings[glideIdx], g = glideData(l), t = l.terrain;
+  $("#glideSum").textContent = `${nf(g.dist / 1000, 1)} km, ${g.drop} m ned, ${nf(g.ratio, 1)} : 1`;
   $("#gfacts").innerHTML = `<div class="fact"><b>${nf(g.dist / 1000, 1)} km</b><span>avstand (${DIR_NB[code(g.bearing)]})</span></div>` +
     `<div class="fact"><b>${g.drop} m</b><span>høydeforskjell</span></div>` +
     `<div class="fact big"><b>${nf(g.ratio, 1)} : 1</b><span>glidetall, rett linje</span></div>`;
@@ -784,7 +830,7 @@ function bind() {
   $("#windows").addEventListener("click", (e) => { const b = e.target.closest(".win"); if (b) setIdx(+b.dataset.i); });
   $("#launches").addEventListener("click", (e) => { const b = e.target.closest(".mapbtn"); if (b && map) { map.setView([+b.dataset.lat, +b.dataset.lon], 16); $("#kart").scrollIntoView(); } });
   const dir = `https://www.google.com/maps/dir/?api=1&destination=${SITE.parking[0]},${SITE.parking[1]}`;
-  ["#dirBtn", "#dirBar", "#dirDesk"].forEach((s) => ($(s).href = dir));
+  ["#dirBtn", "#dirBar", "#dirDesk", "#dirBrief"].forEach((s) => ($(s).href = dir));
   $("#share").onclick = async () => { try { await navigator.share({ title: "Sollifjellet", url: location.href }); } catch { try { await navigator.clipboard.writeText(location.href); } catch {} } };
   $("#theme").onclick = () => { const dark = matchMedia("(prefers-color-scheme: dark)").matches, c = document.documentElement.dataset.theme; document.documentElement.dataset.theme = (c ? c === "dark" : dark) ? "light" : "dark"; renderChart(); };
   // Toppfeltet viser navnet når heroen er rullet forbi, og seksjonsmenyen markerer hvor man er.
@@ -800,6 +846,7 @@ function bind() {
   renderGallery(); renderAir(); initMap(); bind(); renderGlideSeg(); renderGlide(); renderTower();
   $("#hours").addEventListener("click", (e) => { const b = e.target.closest(".hcard"); if (b) setIdx(+b.dataset.i); });
   const thermalLoad = loadThermal().catch((err) => console.warn("Termikk:", err));
+  $("#glide").addEventListener("toggle", (e) => { if (e.target.open) renderGlide(); });
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(renderGlide, 150); });
   $("#glideSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { glideIdx = +b.dataset.i; renderGlideSeg(); renderGlide(); } });
   try { const f = await loadForecast(); state.rows = f.rows; state.updated = f.updated; }
@@ -807,7 +854,8 @@ function bind() {
   state.idx = Math.max(0, state.rows.findIndex((r) => r.time + HOUR > Date.now()));
   $("#demo").classList.toggle("on", state.demo);
   $("#fresh").textContent = `Varsel fra MET Norge for ${SITE.launchMasl} moh, oppdatert kl. ${clock(state.updated)}.`;
-  renderChart(); renderWindows(); renderHours(); update();
+  renderChart(); renderWindows(); renderHours(); update(); renderBriefNow();
+  $("#wxmore").addEventListener("toggle", markHour);
   thermalLoad.then(renderThermal);
 })();
 </script>
