@@ -15,11 +15,20 @@ name: Update airspace
 #          The result is handed on as an artifact.
 #   pr     has write access to push the branch and open the PR, but installs and runs nothing from npm.
 #          It only copies the fetched files into place and commits them.
+#
+# «Run workflow» has the option «Test the GitHub App token only». It runs just the test-app-token job, which gets
+# a read-only token from the app and reads the repository, to check that the app is set up correctly. It fetches
+# no airspace, pushes nothing and opens no PR.
 
 on:
   schedule:
     - cron: "0 6 1 * *" # the 1st of every month at 06:00 UTC
   workflow_dispatch:
+    inputs:
+      test_app_token:
+        description: "Test the GitHub App token only (no airspace fetch, no PR)"
+        type: boolean
+        default: false
 
 # No access by default. Each job asks for what it needs.
 permissions: {}
@@ -28,6 +37,8 @@ permissions: {}
 # instead of blocking for up to 6 hours.
 jobs:
   fetch:
+    # Skipped when only testing the app token. On the monthly schedule there are no inputs, so it always runs.
+    if: ${{ !inputs.test_app_token }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -127,3 +138,35 @@ jobs:
             echo '```'
           } > pr.md
           gh pr create --title "Luftrom fra openAIP $(date +%d.%m.%Y)" --body-file pr.md
+
+  # Checks that the GitHub App is set up: APP_CLIENT_ID, APP_PRIVATE_KEY and the installation on this repository.
+  test-app-token:
+    if: ${{ inputs.test_app_token }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Sjekk at APP_CLIENT_ID er satt
+        if: vars.APP_CLIENT_ID == ''
+        run: |
+          echo "::error::Variabelen APP_CLIENT_ID mangler (Settings → Secrets and variables → Actions → Variables)."
+          exit 1
+
+      # Read-only token: the test only reads, even though the app may write.
+      - id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: read
+
+      - name: Les repoet med app-tokenet
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+          REPO: ${{ github.repository }}
+        run: |
+          name=$(gh api "repos/$REPO" --jq .full_name)
+          echo "Appen $APP_SLUG[bot] fikk token og kunne lese $name."
+          echo "### App-tokenet fungerer" >> "$GITHUB_STEP_SUMMARY"
+          echo "Appen \`$APP_SLUG[bot]\` fikk et token og kunne lese \`$name\`. Luftroms-PR-ene lages med appen." >> "$GITHUB_STEP_SUMMARY"

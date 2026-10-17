@@ -98,8 +98,11 @@ the menu and is marked `noindex`. It shows per site:
   4. In flying-sites → Settings → Secrets and variables → Actions: the variable `APP_CLIENT_ID` (the
      Client ID) under Variables, and the secret `APP_PRIVATE_KEY` (the whole content of the `.pem` file)
      under Secrets. Then delete the `.pem` file.
-  5. Run Actions → «Update airspace» → «Run workflow». If a PR is created, it should get the PR check. Then
-     «Allow GitHub Actions to create and approve pull requests» can be turned off (Settings → Actions → General).
+  5. Test the app: Actions → «Update airspace» → «Run workflow», tick «Test the GitHub App token only». The job
+     `test-app-token` gets a read-only token from the app and reads the repository; it fetches no airspace and
+     opens no PR. Green means the app works. Then «Allow GitHub Actions to create and approve pull requests» can
+     be turned off (Settings → Actions → General). The next airspace PR comes from `hpgt-flying-sites[bot]`
+     and gets the PR check.
   The workflow uses the app only when `APP_CLIENT_ID` is set, and falls back to the GitHub token otherwise.
 - Airspace notes (for example that the approach enters Evenes CTR) go in the site file's `airspace`.
 - The towers' phone numbers are only in `src/_data/towers.json` (with names per language in `names`).
