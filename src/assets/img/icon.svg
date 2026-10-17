@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- App icon: a paraglider wing over a mountain, in the site's colours. icon-192.png, icon-512.png and
+       apple-touch-icon.png are made from this file. The motif stays inside the middle 80 %, so the icon can be
+       used as maskable (Android crops it to a circle or rounded square). -->
+  <rect width="512" height="512" fill="#2E5E6E"/>
+  <path d="M96 402 L226 238 L282 304 L330 254 L416 402 Z" fill="#8FBCC7"/>
+  <path d="M226 238 L282 304 L262 318 Z" fill="#F3F5F4" opacity="0.55"/>
+  <path d="M138 176 C196 118 316 118 374 176 C316 156 196 156 138 176 Z" fill="#C24A12"/>
+  <path d="M150 170 L246 252 M362 170 L266 252 M200 154 L250 252 M312 154 L262 252" stroke="#F3F5F4" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="256" cy="262" r="11" fill="#F3F5F4"/>
+</svg>

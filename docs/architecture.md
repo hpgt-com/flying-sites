@@ -128,12 +128,15 @@ flowchart LR
   sitewind["site-wind.js<br/>«Vind nå» on the site page"]
   lightbox["lightbox.js<br/>image viewer"]
   goat["goatcounter.js<br/>(copy, CSP allows only own scripts)"]
+  pwa["pwa.js<br/>registers the service worker,<br/>«Du er offline» notice"]
+  sw["sw.js (service worker)<br/>pages, files, GPX and<br/>Kartverket tiles offline"]
 
   j1 --> common
   common --> home & site & sitewind & lightbox
   j2 --> home & site
   j3 --> wind --> home & sitewind
   common -- "FS.track()" --> goat
+  common --> pwa --> sw
 ```
 
 - **The wind assessment** (`wind.js`) is pure logic without DOM access and is tested in `test/wind.test.js`. The rules
@@ -143,6 +146,12 @@ flowchart LR
   ("OK to fly").
 - **Category and direction are linked:** with SPG selected, the directions of the launches marked SPG are used
   (`categoryDirections` in `lib/format.js`), in the filter, the rose and the assessment.
+- **Offline and app:** the site can be installed from the browser (`/manifest.webmanifest`, one per language). The
+  service worker (`/sw.js`, made by `src/sw.11ty.js` from `lib/service-worker.js` and `lib/pwa.js`) stores the pages
+  the visitor opens, the site's own files, GPX files and the Kartverket map tiles that have been shown (at most 300),
+  so a site checked at home also works on the mountain. Pages are fetched from the network first, so the forecast is
+  fresh when there is coverage. The static cache follows the content of the stored files, and the pages and tiles are
+  kept across deploys. Nothing is downloaded in advance beyond the front pages, the offline pages and the scripts.
 - **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself, and images and
   data only from the sources above. A new external source must be added there. See [SECURITY.md](../SECURITY.md).
 

@@ -18,6 +18,10 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
 - Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
   scripts), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
   GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
+  `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
+- The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles
+  (fetched with CORS and without cookies, at most 300). Responses from GoatCounter, Yr and other third parties are
+  never stored, and only complete same-origin or CORS responses are kept (no opaque responses).
 - `Referrer-Policy: strict-origin-when-cross-origin`.
 - Leaflet, markercluster and the fonts are served from the site itself. No scripts or fonts from a CDN.
 - Images are published without EXIF metadata (`lib/images.js`).

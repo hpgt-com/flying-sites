@@ -5,8 +5,9 @@
 {#- Security. GitHub Pages does not let us set HTTP headers, so the policy is a meta tag (frame-ancestors
     does not work then). Scripts only from the site itself. Images from the map tiles (Kartverket, OpenTopoMap,
     EOX, thermal.kk7.ch) and the Yr meteogram. Styles allow inline, because Leaflet and the map markers set
-    style on elements. A new external source (map layer, image, script) must be added here, or it is blocked. -#}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+    style on elements. A new external source (map layer, image, script) must be added here, or it is blocked.
+    The web app manifest and the service worker (src/sw.11ty.js) come only from the site itself. -#}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {#- Site pages: mobile browsers otherwise turn «Sollifjellet 567 moh» into a map link (taking it for an address).
@@ -30,6 +31,10 @@
 <meta property="og:image" content="{{ shareImage | htmlBaseUrl(site.url) }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4">
+{#- Installable as an app, with the front page in the page's language as start page (src/manifest.webmanifest.11ty.js). -#}
+<link rel="manifest" href="{{ '/manifest.webmanifest' | localeUrl }}">
+<link rel="icon" href="/assets/img/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 {#- Pages in several languages (paginated over languages, see src/_data/languages.js) link to each other,
     so search engines show the right language. Norwegian is the default (x-default). -#}
 {% if language %}{% for l in languages %}<link rel="alternate" hreflang="{{ l.code }}" href="{{ page.url | localeUrl(l.code) | htmlBaseUrl(site.url) }}">
@@ -57,6 +62,8 @@
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
 <script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>
 <script src="{{ "/assets/js/common.js" | asset }}"></script>
+{#- The service worker, for offline use (src/assets/js/pwa.js). The URLs are given here, so they follow the path prefix. -#}
+<script src="{{ "/assets/js/pwa.js" | asset }}" data-sw="{{ '/sw.js' | url }}" data-scope="{{ '/' | url }}"></script>
 {% for script in scripts %}<script src="{{ script | asset }}"></script>
 {% endfor %}
 </body>

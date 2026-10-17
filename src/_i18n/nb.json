@@ -313,6 +313,13 @@
     "description": "Telefonnumre til tårnene rundt HPGTs flysteder.",
     "intro": "Ring tårnet når du skal fly i kontrollert luftrom. Sjekk alltid luftrom og NOTAM i {ippc} før du flyr."
   },
+  "pwa": {
+    "shortName": "Flysteder",
+    "description": "Flysteder for paragliding og speedflying rundt Harstad, med kart, startplasser, landinger og vindvurdering.",
+    "offlineTitle": "Du er offline",
+    "offlineText": "Denne siden er ikke lagret på enheten ennå. Sider du har åpnet før, kart du har sett og GPX-filer du har lastet ned, virker uten nett. Prøv igjen når du har dekning.",
+    "offlineHome": "Forsiden virker uten nett om du har åpnet den før"
+  },
   "js": {
     "ratings": {
       "ok": "Kan passe",
@@ -507,6 +514,9 @@
       "maybeOnly": "Bare usikre tidsrom ({n})",
       "partial": "Varselet går bare til kl. {time} denne dagen.",
       "windTitle": "{dir} {speed} m/s, kast opptil {gust}"
+    },
+    "offline": {
+      "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok."
     }
   }
 }
