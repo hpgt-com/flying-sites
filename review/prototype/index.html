@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flyvindu – prototype</title>
+<meta name="description" content="Prototype: beslutningsstøtte for flysteder rundt Harstad. Hvor og når kan det passe å fly de neste 48 timene?">
+<!-- Prototype: én fil, ingen bygging. Data hentes live:
+     - flysteder fra den åpne GeoJSON-filen på flysteder.hpgt.com (CORS: *)
+     - vindvarsel fra api.met.no direkte i nettleseren (i produksjon: via en cachende edge-proxy, se REVIEW.md)
+     Feiler hentingen, vises demodata så prototypen alltid kan vises. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+:root {
+  --bg: #f4f6f5; --panel: #ffffff; --ink: #14201b; --muted: #5d6b65; --line: #dde3e0; --accent: #1d5c63;
+  --ok: #1e8a4c; --maybe: #d39200; --high: #c8402f; --no: #a7b1ac; --night: rgba(20, 32, 27, .07);
+  --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  --radius: 12px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1513; --panel: #17201d; --ink: #e6ece9; --muted: #95a39d; --line: #2a3632; --accent: #6cc3c9;
+    --ok: #3fbf74; --maybe: #e9b130; --high: #ef6a57; --no: #4b5753; --night: rgba(255,255,255,.05);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1513; --panel: #17201d; --ink: #e6ece9; --muted: #95a39d; --line: #2a3632; --accent: #6cc3c9;
+  --ok: #3fbf74; --maybe: #e9b130; --high: #ef6a57; --no: #4b5753; --night: rgba(255,255,255,.05);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button { font: inherit; color: inherit; }
+.app { display: grid; grid-template-columns: minmax(360px, 460px) 1fr; height: 100dvh; }
+.panel { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-right: 1px solid var(--line); }
+.map { min-height: 0; position: relative; }
+#map { height: 100%; width: 100%; background: var(--bg); }
+
+header.top { padding: 16px 16px 8px; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.brand h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+.brand small { color: var(--muted); font-weight: 500; }
+.fresh { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+.fresh b { color: var(--ink); font-weight: 600; }
+.demo { display: none; margin-top: 8px; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--maybe) 18%, transparent); font-size: 12.5px; }
+.demo.on { display: block; }
+
+/* Answer first: one sentence for the selected time */
+.answer { margin: 8px 16px 0; padding: 12px 14px; border-radius: var(--radius); background: var(--bg); }
+.answer strong { display: block; font-size: 17px; line-height: 1.3; }
+.answer span { color: var(--muted); font-size: 13px; }
+
+/* Time scrubber */
+.scrub { padding: 12px 16px 6px; position: sticky; top: 0; background: var(--panel); z-index: 2; }
+.scrub-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.scrub-head b { font-size: 15px; }
+.scrub-head .now-btn { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 2px 10px; font-size: 13px; cursor: pointer; }
+.timeline { position: relative; height: 34px; border-radius: 8px; overflow: hidden; display: flex; cursor: pointer; touch-action: none; }
+.timeline .h { flex: 1; position: relative; }
+.timeline .h.night { background: var(--night); }
+.timeline .bar { position: absolute; left: 1px; right: 1px; bottom: 0; border-radius: 2px 2px 0 0; }
+.timeline .h.day0 { border-left: 1px solid var(--line); }
+.cursor { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); pointer-events: none; }
+.cursor::after { content: ""; position: absolute; top: -3px; left: -4px; border: 5px solid transparent; border-top-color: var(--ink); }
+.days { display: flex; font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.days span { overflow: hidden; white-space: nowrap; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 10px; border-bottom: 1px solid var(--line); }
+.chip { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.search { flex: 1 1 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 12px; font: inherit; color: inherit; }
+
+.list { overflow: auto; flex: 1; padding: 6px 8px 24px; }
+.group { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 8px 6px; }
+.row { display: grid; grid-template-columns: 12px 1fr auto; gap: 4px 10px; align-items: center; width: 100%; text-align: left;
+  border: 0; background: none; padding: 9px 8px; border-radius: 10px; cursor: pointer; }
+.row:hover, .row:focus-visible { background: var(--bg); outline: none; }
+.row .dot { width: 12px; height: 12px; border-radius: 50%; }
+.row .name { font-weight: 600; }
+.row .meta { color: var(--muted); font-size: 13px; text-align: right; white-space: nowrap; }
+.row .strip { grid-column: 2 / 4; display: flex; height: 8px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.row .strip i { flex: 1; }
+.row .strip i.sel { outline: 2px solid var(--ink); outline-offset: -1px; z-index: 1; }
+.row .why { grid-column: 2 / 4; color: var(--muted); font-size: 12.5px; }
+
+.ok { background: var(--ok); } .maybe { background: var(--maybe); } .high { background: var(--high); } .no { background: var(--no); } .none { background: var(--line); }
+
+/* Detail */
+.detail { overflow: auto; flex: 1; padding: 12px 16px 32px; display: none; }
+.detail.on { display: block; }
+.back { border: 0; background: none; color: var(--accent); padding: 4px 0; cursor: pointer; font-weight: 600; }
+.detail h2 { margin: 6px 0 2px; font-size: 26px; letter-spacing: -.01em; }
+.detail .sub { color: var(--muted); margin: 0 0 12px; }
+.facts { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.facts dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; font-size: 14px; }
+.facts dt { color: var(--muted); }
+.windows { display: grid; gap: 6px; margin: 4px 0 16px; }
+.window { padding: 8px 12px; border-radius: 10px; border-left: 4px solid; background: var(--bg); font-size: 14px; }
+.window.ok { border-color: var(--ok); } .window.maybe { border-color: var(--maybe); }
+.window, .window.ok, .window.maybe { background: var(--bg); }
+.hours { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.hours th { text-align: left; color: var(--muted); font-weight: 500; padding: 4px 6px; position: sticky; top: 0; background: var(--panel); }
+.hours td { padding: 5px 6px; border-top: 1px solid var(--line); }
+.hours tr.night td { color: var(--muted); }
+.hours tr.sel td { background: var(--bg); font-weight: 600; }
+.arrow { display: inline-block; width: 14px; text-align: center; }
+.cta { display: block; text-align: center; margin: 16px 0 8px; padding: 11px; border-radius: 10px; background: var(--ink); color: var(--panel); text-decoration: none; font-weight: 600; }
+.disclaimer { color: var(--muted); font-size: 12.5px; }
+
+/* Map markers */
+.mk { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid var(--panel); box-shadow: var(--shadow); display: grid; place-items: center; }
+.mk svg { width: 20px; height: 20px; }
+.mk.sel { outline: 3px solid var(--ink); }
+.legend { position: absolute; z-index: 500; left: 12px; bottom: 22px; background: var(--panel); border-radius: 10px; padding: 6px 10px; box-shadow: var(--shadow); font-size: 12.5px; display: flex; gap: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.leaflet-container { font: inherit; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 42dvh 1fr; }
+  .map { grid-row: 1; position: relative; }
+  .panel { grid-row: 2; border-right: 0; border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; margin-top: -14px; z-index: 600; box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+  header.top { padding-top: 10px; }
+  .legend { bottom: 22px; }
+}
+@media (prefers-reduced-motion: no-preference) { .row, .chip { transition: background .15s; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel" aria-label="Flysteder og tid">
+    <header class="top">
+      <div class="brand"><h1>Flyvindu <small>· Harstad og omegn</small></h1>
+        <button class="chip" id="theme" aria-label="Bytt fargetema"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button></div>
+      <p class="fresh" id="fresh">Henter varsel …</p>
+      <p class="demo" id="demo">Viser demodata, fordi varselet eller stedene ikke kunne hentes. Tallene er ikke ekte.</p>
+    </header>
+    <div class="answer" id="answer" aria-live="polite"><strong>…</strong><span></span></div>
+    <div class="scrub">
+      <div class="scrub-head"><b id="when">–</b><button class="now-btn" id="nowBtn">Nå</button></div>
+      <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Tidspunkt i varselet" aria-valuemin="0" aria-valuemax="47"></div>
+      <div class="days" id="days"></div>
+    </div>
+    <div class="filters" id="filters">
+      <input class="search" id="q" type="search" placeholder="Søk sted eller kommune" aria-label="Søk sted eller kommune">
+      <button class="chip" data-cat="PG" aria-pressed="false">PG</button>
+      <button class="chip" data-cat="SPG" aria-pressed="false">SPG</button>
+      <button class="chip" data-cat="PPG" aria-pressed="false">PPG</button>
+      <button class="chip" data-level="PP2" aria-pressed="false">Passer PP2</button>
+      <button class="chip" data-region aria-pressed="true">Bare nærområdet</button>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="detail" id="detail"></div>
+  </aside>
+  <main class="map"><div id="map"></div>
+    <div class="legend" aria-hidden="true"><span><i class="ok"></i>Kan passe</span><span><i class="maybe"></i>Usikkert</span><span><i class="high"></i>For mye</span><span><i class="no"></i>Feil retning</span></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+"use strict";
+// ---------- Konfig ----------
+const GEOJSON = "https://flysteder.hpgt.com/flysteder.geojson";
+const MET = "https://api.met.no/weatherapi/locationforecast/2.0/complete";
+const RULES = { maxWind: 7, maxGust: 10, maxGustSpread: 4, minWind: 2, sectorMargin: 10, rainMaybe: 0.1, rainNo: 0.5 };
+const HOME = { lat: 68.70, lon: 16.35, radiusKm: 45 };
+const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+const DIR_NB = { N: "N", NE: "NØ", E: "Ø", SE: "SØ", S: "S", SW: "SV", W: "V", NW: "NV" };
+const LABEL = { ok: "Kan passe", maybe: "Usikkert", high: "For mye vind", no: "Feil retning eller regn", none: "Ingen data" };
+const ORDER = { ok: 0, maybe: 1, high: 2, no: 3, none: 4 };
+const HOUR = 3600e3;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const state = { sites: [], times: [], idx: 0, selected: null, cats: new Set(), pp2: false, region: true, q: "", demo: false, fetched: null };
+
+// ---------- Tid og sol ----------
+const oslo = new Intl.DateTimeFormat("nb-NO", { timeZone: "Europe/Oslo", weekday: "short", hour: "2-digit", minute: "2-digit" });
+const osloDay = new Intl.DateTimeFormat("nb-NO", { timeZone: "Europe/Oslo", weekday: "long" });
+const osloHour = (ms) => Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Oslo", hour: "2-digit", hourCycle: "h23" }).format(ms));
+const clock = (ms) => new Intl.DateTimeFormat("nb-NO", { timeZone: "Europe/Oslo", hour: "2-digit", minute: "2-digit" }).format(ms);
+
+// Soloppgang/-nedgang (samme formel som wind.js på dagens side).
+function sun(ms, lat, lon) {
+  const rad = Math.PI / 180, d = new Date(ms);
+  const noon = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12);
+  const n = Math.round(noon / 864e5 + 2440587.5 - 2451545 + 0.0008), j = n - lon / 360;
+  const m = (357.5291 + 0.98560028 * j) % 360;
+  const c = 1.9148 * Math.sin(m * rad) + 0.02 * Math.sin(2 * m * rad) + 0.0003 * Math.sin(3 * m * rad);
+  const l = (m + c + 282.9372) % 360;
+  const t = 2451545 + j + 0.0053 * Math.sin(m * rad) - 0.0069 * Math.sin(2 * l * rad);
+  const sd = Math.sin(l * rad) * Math.sin(23.4397 * rad), cd = Math.cos(Math.asin(sd));
+  const ch = (Math.sin(-0.833 * rad) - Math.sin(lat * rad) * sd) / (Math.cos(lat * rad) * cd);
+  if (ch < -1) return { day: true }; if (ch > 1) return { night: true };
+  const h = Math.acos(ch) / rad / 360, toMs = (x) => (x - 2440587.5) * 864e5;
+  return { rise: toMs(t - h), set: toMs(t + h) };
+}
+function isLight(ms) {
+  const s = sun(ms, HOME.lat, HOME.lon);
+  if (s.day) return true; if (s.night) { const h = osloHour(ms); return h >= 10 && h < 14; }
+  return ms + HOUR > s.rise && ms < s.set;
+}
+
+// ---------- Vindvurdering (forenklet utgave av rateWind i wind.js) ----------
+const code = (deg) => DIRS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
+const typeOf = (s, c) => s.primary.includes(c) ? "primary" : s.possible.includes(c) ? "possible" : "none";
+function rate(site, w) {
+  if (!w) return { r: "none", why: [] };
+  if (w.speed > RULES.maxWind) return { r: "high", why: [`over ${RULES.maxWind} m/s`] };
+  if (w.gust != null && w.gust > RULES.maxGust) return { r: "high", why: [`kast over ${RULES.maxGust} m/s`] };
+  if (w.rain != null && w.rain >= RULES.rainNo) return { r: "no", why: ["regn"] };
+  const t = typeOf(site, code(w.dir));
+  if (t === "none") return { r: "no", why: ["retning passer ikke"] };
+  const why = [];
+  if (t === "possible") why.push("mulig retning");
+  else if (typeOf(site, code(w.dir - RULES.sectorMargin)) !== "primary" || typeOf(site, code(w.dir + RULES.sectorMargin)) !== "primary") why.push("nær kanten av sektoren");
+  if (w.rain != null && w.rain >= RULES.rainMaybe) why.push("litt regn");
+  if (w.speed < RULES.minWind) why.push("svak vind");
+  if (w.gust == null) why.push("kast mangler");
+  else if (w.gust - w.speed > RULES.maxGustSpread) why.push("stor kastforskjell");
+  return { r: why.length ? "maybe" : "ok", why };
+}
+
+// ---------- Data ----------
+function km(a, b) {
+  const r = Math.PI / 180, h = Math.sin((b.lat - a.lat) * r / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin((b.lon - a.lon) * r / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+async function loadSites() {
+  const res = await fetch(GEOJSON, { signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error("GeoJSON " + res.status);
+  const gj = await res.json();
+  return gj.features.filter((f) => f.properties.kind === "launch" && f.properties.main).map((f) => {
+    const p = f.properties, [lon, lat] = f.geometry.coordinates;
+    return { id: p.site_id, name: p.site_name, url: p.site_url, municipality: p.municipality, lat, lon,
+      primary: p.directions_primary || [], possible: p.directions_possible || [], level: p.level, categories: p.categories || [],
+      elevation: p.elevation_m, drop: p.height_difference_m, reviewed: p.reviewed };
+  });
+}
+
+// MET-varsel per sted. Respekterer Expires via sessionStorage, så en reload ikke spør MET på nytt.
+async function loadForecast(site) {
+  const key = `met:${site.lat.toFixed(3)},${site.lon.toFixed(3)}`;
+  try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now() < c.expires) return c; } catch {}
+  const u = `${MET}?lat=${site.lat.toFixed(4)}&lon=${site.lon.toFixed(4)}${site.elevation ? "&altitude=" + Math.round(site.elevation) : ""}`;
+  const res = await fetch(u, { signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error("MET " + res.status);
+  const data = await res.json();
+  const rows = data.properties.timeseries.slice(0, 48).map((t) => ({ time: Date.parse(t.time), dir: t.data.instant.details.wind_from_direction,
+    speed: t.data.instant.details.wind_speed, gust: t.data.instant.details.wind_speed_of_gust ?? null, rain: t.data.next_1_hours?.details?.precipitation_amount ?? null }));
+  const out = { rows, updated: Date.parse(data.properties.meta.updated_at), expires: Date.parse(res.headers.get("expires")) || Date.now() + 30 * 60e3 };
+  try { sessionStorage.setItem(key, JSON.stringify(out)); } catch {}
+  return out;
+}
+
+// Demodata: et værsystem som dreier fra SV til NV, slik at prototypen viser variasjon også uten nett.
+function demo() {
+  state.demo = true;
+  const start = Math.floor(Date.now() / HOUR) * HOUR;
+  if (!state.sites.length) state.sites = DEMO_SITES.map((s) => ({ ...s, url: "#", categories: ["PG"], reviewed: true }));
+  state.sites.forEach((s, k) => {
+    s.rows = Array.from({ length: 48 }, (_, i) => {
+      const dir = (225 + i * 2.2 + k * 7) % 360, speed = Math.max(0.5, 4 + 4 * Math.sin((i + k) / 7) + (s.elevation || 400) / 400);
+      return { time: start + i * HOUR, dir, speed, gust: speed + 2 + (i % 5), rain: i > 30 && i < 36 ? 0.6 : 0 };
+    });
+  });
+  state.fetched = Date.now();
+}
+const DEMO_SITES = [
+  ["storlitinden", "Storlitinden", 68.63, 16.12, ["SE", "S", "SW"], ["NW"], 597], ["sollifjellet", "Sollifjellet", 68.65, 16.15, ["SE", "S"], ["SW"], 567],
+  ["keipen", "Keipen", 68.79, 16.53, ["SW", "W"], [], 475], ["nona", "Nona", 68.77, 16.43, ["W", "NW"], ["SW"], 999],
+  ["ryten", "Ryten", 68.73, 16.42, ["SW"], ["S"], 510], ["samaasen", "Samåsen", 68.80, 16.49, ["NW", "N"], [], 171],
+].map(([id, name, lat, lon, primary, possible, elevation]) => ({ id, name, lat, lon, primary, possible, elevation, level: "PP2", municipality: "Harstad" }));
+
+// ---------- Visning ----------
+let map, markers = {};
+function initMap() {
+  // Uten Leaflet (CDN blokkert) fungerer lista og tidslinja fortsatt.
+  if (!window.L) { document.querySelector(".map").hidden = true; return; }
+  map = L.map("map", { zoomControl: true, attributionControl: true }).setView([HOME.lat, HOME.lon], 9);
+  L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png",
+    { maxZoom: 17, attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>' }).addTo(map);
+}
+function arrowSvg(deg) {
+  // Pila peker dit vinden blåser (fra-retning + 180).
+  return `<svg viewBox="0 0 20 20" style="transform:rotate(${(deg + 180) % 360}deg)"><path d="M10 2 L15 14 L10 11 L5 14 Z" fill="#fff"/></svg>`;
+}
+const at = (s, i = state.idx) => s.rows?.[i] ?? null;
+const visible = () => state.sites.filter((s) =>
+  (!state.region || km(s, HOME) <= HOME.radiusKm) &&
+  (!state.cats.size || s.categories.some((c) => state.cats.has(c))) &&
+  (!state.pp2 || s.level === "PP2") &&
+  (!state.q || (s.name + " " + (s.municipality || "")).toLowerCase().includes(state.q.toLowerCase())));
+
+function renderMarkers() {
+  if (!map) return;
+  const vis = new Set(visible().map((s) => s.id));
+  for (const s of state.sites) {
+    const w = at(s), r = rate(s, w).r;
+    const html = `<div class="mk ${r}${state.selected === s.id ? " sel" : ""}">${w ? arrowSvg(w.dir) : ""}</div>`;
+    const icon = L.divIcon({ html, className: "", iconSize: [30, 30], iconAnchor: [15, 15] });
+    if (!markers[s.id]) {
+      markers[s.id] = L.marker([s.lat, s.lon], { icon, title: s.name, keyboard: true }).on("click", () => select(s.id));
+    } else markers[s.id].setIcon(icon);
+    markers[s.id].setZIndexOffset(1000 - ORDER[r] * 200);
+    if (vis.has(s.id)) markers[s.id].addTo(map); else markers[s.id].remove();
+  }
+}
+
+function renderTimeline() {
+  const tl = $("#timeline"), sites = visible();
+  tl.innerHTML = state.times.map((t, i) => {
+    // Høyden på søylen = andel steder som kan passe (grønn) eller er usikre (gul) denne timen.
+    const rs = sites.map((s) => rate(s, at(s, i)).r), ok = rs.filter((r) => r === "ok").length, mb = rs.filter((r) => r === "maybe").length, n = rs.length || 1;
+    const dayStart = osloHour(t) === 0 && i > 0;
+    return `<div class="h${isLight(t) ? "" : " night"}${dayStart ? " day0" : ""}" data-i="${i}">` +
+      `<div class="bar maybe" style="height:${((ok + mb) / n) * 100}%"></div><div class="bar ok" style="height:${(ok / n) * 100}%"></div></div>`;
+  }).join("") + `<div class="cursor" id="cursor"></div>`;
+  // Dagnavn under tidslinja.
+  const spans = []; let cur = null;
+  state.times.forEach((t) => { const d = osloDay.format(t); if (!cur || cur.d !== d) spans.push(cur = { d, n: 0 }); cur.n++; });
+  $("#days").innerHTML = spans.map((s) => `<span style="flex:${s.n}">${s.n > 3 ? esc(s.d) : ""}</span>`).join("");
+  placeCursor();
+}
+function placeCursor() {
+  const c = $("#cursor"); if (!c) return;
+  c.style.left = `calc(${((state.idx + 0.5) / state.times.length) * 100}% - 1px)`;
+  const tl = $("#timeline"); tl.setAttribute("aria-valuenow", state.idx); tl.setAttribute("aria-valuetext", oslo.format(state.times[state.idx]));
+  $("#when").textContent = state.idx === 0 ? `Nå · ${clock(state.times[0])}` : oslo.format(state.times[state.idx]);
+}
+
+function bestWindow(s) {
+  for (let i = state.idx; i < state.times.length; i++) {
+    const r = rate(s, at(s, i)).r;
+    if ((r === "ok" || r === "maybe") && isLight(state.times[i])) {
+      let j = i; while (j + 1 < state.times.length && rate(s, at(s, j + 1)).r === r && isLight(state.times[j + 1])) j++;
+      return { i, j, r };
+    }
+  }
+  return null;
+}
+
+const usikre = (n) => n === 1 ? "1 sted er usikkert" : `${n} steder er usikre`;
+function renderList() {
+  const sites = visible().map((s) => ({ s, ...rate(s, at(s)), w: at(s), next: bestWindow(s) }));
+  sites.sort((a, b) => ORDER[a.r] - ORDER[b.r] || (a.next?.i ?? 99) - (b.next?.i ?? 99) || a.s.name.localeCompare(b.s.name, "nb"));
+  const groups = { ok: "Kan passe", maybe: "Usikkert", later: "Senere i perioden", rest: "Ikke nå" };
+  const by = { ok: [], maybe: [], later: [], rest: [] };
+  sites.forEach((x) => (x.r === "ok" || x.r === "maybe" ? by[x.r] : x.next ? by.later : by.rest).push(x));
+  by.later.sort((a, b) => a.next.i - b.next.i);
+  const row = (x) => {
+    const w = x.w, strip = state.times.map((t, i) => `<i class="${rate(x.s, at(x.s, i)).r}${i === state.idx ? " sel" : ""}"${isLight(t) ? "" : ' style="opacity:.45"'}></i>`).join("");
+    const wind = w ? `${DIR_NB[code(w.dir)]} ${Math.round(w.speed)}${w.gust != null ? "–" + Math.round(w.gust) : ""} m/s` : "–";
+    const why = x.r === "ok" || x.r === "maybe" ? x.why.join(", ") : x.next ? `${LABEL[x.next.r]} ${oslo.format(state.times[x.next.i])}` : LABEL[x.r];
+    return `<button class="row" data-id="${esc(x.s.id)}"><span class="dot ${x.r}"></span><span class="name">${esc(x.s.name)}</span>` +
+      `<span class="meta">${esc(wind)}</span><span class="strip" aria-hidden="true">${strip}</span>` +
+      (why ? `<span class="why">${esc(why)}</span>` : "") + `</button>`;
+  };
+  $("#list").innerHTML = Object.entries(by).filter(([, l]) => l.length)
+    .map(([k, l]) => `<div class="group">${groups[k]} · ${l.length}</div>${l.map(row).join("")}`).join("") ||
+    `<p class="group">Ingen steder passer filteret.</p>`;
+  // Svaret først: én setning for valgt tidspunkt.
+  const okN = by.ok.length, mbN = by.maybe.length, first = by.later[0];
+  $("#answer").innerHTML = okN || mbN
+    ? `<strong>${okN ? `${okN} sted${okN > 1 ? "er" : ""} kan passe` : usikre(mbN)}${okN && mbN ? `, ${usikre(mbN)}` : ""}</strong><span>${esc([...by.ok, ...by.maybe].slice(0, 3).map((x) => x.s.name).join(", "))}</span>`
+    : first ? `<strong>Ingenting nå. Neste vindu: ${esc(first.s.name)} ${esc(oslo.format(state.times[first.next.i]))}</strong><span>${esc(LABEL[first.next.r])}</span>`
+    : `<strong>Ingen vindu de neste 48 timene</strong><span>Med reglene: maks ${RULES.maxWind} m/s, kast maks ${RULES.maxGust} m/s.</span>`;
+}
+
+function rose(s, size = 96) {
+  const c = size / 2, r = c - 4;
+  const wedge = (i) => { const a0 = ((i * 45 - 22.5 - 90) * Math.PI) / 180, a1 = ((i * 45 + 22.5 - 90) * Math.PI) / 180;
+    return `M${c} ${c} L${c + r * Math.cos(a0)} ${c + r * Math.sin(a0)} A${r} ${r} 0 0 1 ${c + r * Math.cos(a1)} ${c + r * Math.sin(a1)} Z`; };
+  const w = at(s);
+  const fill = (d) => s.primary.includes(d) ? "var(--accent)" : s.possible.includes(d) ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "var(--bg)";
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Retninger: ${esc(s.primary.map((d) => DIR_NB[d]).join(", "))}">` +
+    DIRS.map((d, i) => `<path d="${wedge(i)}" fill="${fill(d)}" stroke="var(--panel)" stroke-width="1.5"/>`).join("") +
+    (w ? `<g transform="rotate(${w.dir} ${c} ${c})"><line x1="${c}" y1="${c - r}" x2="${c}" y2="${c}" stroke="var(--ink)" stroke-width="2.5"/><circle cx="${c}" cy="${c - r + 3}" r="4" fill="var(--ink)"/></g>` : "") +
+    `<circle cx="${c}" cy="${c}" r="3" fill="var(--ink)"/></svg>`;
+}
+
+function windows(s) {
+  const out = []; let cur = null;
+  state.times.forEach((t, i) => {
+    const r = rate(s, at(s, i)).r, good = (r === "ok" || r === "maybe") && isLight(t);
+    if (good && cur && cur.r === r && cur.j === i - 1) cur.j = i;
+    else if (good) out.push(cur = { i, j: i, r }); else cur = null;
+  });
+  return out;
+}
+
+function renderDetail() {
+  const s = state.sites.find((x) => x.id === state.selected), el = $("#detail");
+  if (!s) { el.classList.remove("on"); $("#list").style.display = ""; return; }
+  $("#list").style.display = "none"; el.classList.add("on");
+  const ws = windows(s);
+  const rows = state.times.map((t, i) => {
+    const w = at(s, i), x = rate(s, w);
+    return `<tr class="${isLight(t) ? "" : "night"}${i === state.idx ? " sel" : ""}" data-i="${i}"><td>${esc(oslo.format(t))}</td>` +
+      `<td>${w ? `<span class="arrow" style="transform:rotate(${(w.dir + 180) % 360}deg)">↑</span> ${DIR_NB[code(w.dir)]}` : "–"}</td>` +
+      `<td>${w ? `${Math.round(w.speed)}${w.gust != null ? " (" + Math.round(w.gust) + ")" : ""}` : "–"}</td>` +
+      `<td>${w?.rain ? w.rain.toFixed(1) : ""}</td><td><span class="dot ${x.r}" style="display:inline-block;width:10px;height:10px;border-radius:50%"></span> ${esc(LABEL[x.r])}</td></tr>`;
+  }).join("");
+  el.innerHTML = `<button class="back" id="back">‹ Alle steder</button>
+    <h2>${esc(s.name)}</h2><p class="sub">${esc(s.municipality || "")}${s.elevation ? ` · ${s.elevation} moh` : ""}${s.drop ? ` · ${s.drop} m høydeforskjell` : ""}</p>
+    <div class="facts">${rose(s)}<dl><dt>Retning</dt><dd>${esc(s.primary.map((d) => DIR_NB[d]).join(", ") || "–")}${s.possible.length ? ` (mulig ${esc(s.possible.map((d) => DIR_NB[d]).join(", "))})` : ""}</dd>
+      <dt>Nivå</dt><dd>${esc(s.level || "–")}</dd><dt>Kategori</dt><dd>${esc(s.categories.join(", ") || "–")}</dd>
+      <dt>Gjennomgått</dt><dd>${s.reviewed ? "Ja" : "Nei"}</dd></dl></div>
+    <h3>Flyvinduer i dagslys</h3>
+    <div class="windows">${ws.length ? ws.map((w) => `<div class="window ${w.r}"><b>${esc(oslo.format(state.times[w.i]))}–${esc(clock(state.times[w.j] + HOUR))}</b> · ${esc(LABEL[w.r])}</div>`).join("") : '<p class="disclaimer">Ingen vinduer de neste 48 timene.</p>'}</div>
+    <h3>Time for time</h3>
+    <table class="hours"><thead><tr><th>Tid</th><th>Fra</th><th>m/s (kast)</th><th>mm</th><th>Vurdering</th></tr></thead><tbody>${rows}</tbody></table>
+    ${s.id === "sollifjellet" ? `<a class="cta" href="sollifjellet.html">Åpne prototypen av stedssiden</a>` : ""}
+    <a class="cta" href="${esc(s.url)}" target="_blank" rel="noopener">Farer, landing og adkomst på flysteder.hpgt.com ↗</a>
+    <p class="disclaimer">Grov vurdering fra MET-varselet, aldri «OK å fly». Sjekk alltid fare, luftrom (IPPC) og forholdene selv.</p>`;
+  $("#back").onclick = () => select(null);
+  el.querySelectorAll("tr[data-i]").forEach((tr) => tr.onclick = () => setIdx(+tr.dataset.i));
+}
+
+function render() { renderTimeline(); renderList(); renderMarkers(); renderDetail(); }
+function setIdx(i) {
+  state.idx = Math.max(0, Math.min(state.times.length - 1, i));
+  placeCursor(); renderList(); renderMarkers(); if (state.selected) renderDetail();
+}
+function select(id) {
+  state.selected = id; renderMarkers(); renderDetail();
+  if (id && map) { const s = state.sites.find((x) => x.id === id); map.panTo([s.lat, s.lon]); }
+  try { history.replaceState(null, "", id ? "#" + id : location.pathname); } catch {}
+}
+
+// ---------- Interaksjon ----------
+function bind() {
+  const tl = $("#timeline");
+  const fromEvent = (e) => { const r = tl.getBoundingClientRect(); return Math.floor(((e.clientX - r.left) / r.width) * state.times.length); };
+  let drag = false;
+  tl.addEventListener("pointerdown", (e) => { drag = true; tl.setPointerCapture(e.pointerId); setIdx(fromEvent(e)); });
+  tl.addEventListener("pointermove", (e) => { if (drag) setIdx(fromEvent(e)); });
+  tl.addEventListener("pointerup", () => (drag = false));
+  tl.addEventListener("keydown", (e) => {
+    const d = { ArrowRight: 1, ArrowLeft: -1, PageUp: 6, PageDown: -6 }[e.key];
+    if (d) { e.preventDefault(); setIdx(state.idx + d); } else if (e.key === "Home") setIdx(0);
+  });
+  $("#nowBtn").onclick = () => setIdx(0);
+  $("#list").addEventListener("click", (e) => { const b = e.target.closest(".row"); if (b) select(b.dataset.id); });
+  $("#q").addEventListener("input", (e) => { state.q = e.target.value; render(); });
+  $("#filters").addEventListener("click", (e) => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on);
+    if (b.dataset.cat) on ? state.cats.add(b.dataset.cat) : state.cats.delete(b.dataset.cat);
+    if (b.dataset.level) state.pp2 = on;
+    if ("region" in b.dataset) state.region = on;
+    render();
+  });
+  $("#theme").onclick = () => {
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches, cur = document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = (cur ? cur === "dark" : dark) ? "light" : "dark";
+  };
+}
+
+// ---------- Oppstart ----------
+(async function main() {
+  initMap(); bind();
+  try {
+    state.sites = await loadSites();
+    // Hentes i små grupper, så MET ikke får 30 samtidige kall fra én nettleser.
+    let updated = 0;
+    for (let k = 0; k < state.sites.length; k += 4) {
+      await Promise.all(state.sites.slice(k, k + 4).map(async (s) => {
+        try { const f = await loadForecast(s); s.rows = f.rows; updated = Math.max(updated, f.updated); } catch { s.rows = null; }
+      }));
+    }
+    if (!state.sites.some((s) => s.rows)) throw new Error("ingen varsel");
+    state.fetched = updated;
+  } catch (err) {
+    console.warn("Demodata:", err);
+    demo();
+  }
+  // Felles tidsakse: første stedet med data. Rader som ikke matcher tidspunktet blir «ingen data».
+  const ref = state.sites.find((s) => s.rows).rows;
+  state.times = ref.map((r) => r.time);
+  for (const s of state.sites) if (s.rows) { const by = new Map(s.rows.map((r) => [r.time, r])); s.rows = state.times.map((t) => by.get(t) ?? null); }
+  const now = Date.now(); state.idx = Math.max(0, state.times.findIndex((t) => t + HOUR > now));
+  $("#fresh").innerHTML = `Varsel fra <b>MET Norge</b>, oppdatert <b>${esc(clock(state.fetched))}</b> · ${state.sites.length} steder`;
+  $("#demo").classList.toggle("on", state.demo);
+  render();
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash && state.sites.some((s) => s.id === hash)) select(hash);
+})();
+</script>
+</body>
+</html>
