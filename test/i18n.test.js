@@ -50,6 +50,20 @@ test("all t. lookups in the templates and FS.t lookups in the scripts exist in n
   assert.deepEqual(missing, []);
 });
 
+test("text printed in the templates is text, not a group of keys", () => {
+  // «{{ t.site.profile }}» printed «[object Object]» when a group got the same name as a heading.
+  const nb = read("nb");
+  const groups = [];
+  const dir = (d) => fs.readdirSync(d).map((f) => path.join(d, f));
+  for (const f of [...dir("src"), ...dir("src/_includes")].filter((f) => f.endsWith(".njk"))) {
+    for (const m of fs.readFileSync(f, "utf8").matchAll(/\{\{-?\s*t\.((?:[a-z]\w*\.)*[a-z]\w*)\s*(?:-?\}\}|\|)/gi)) {
+      const value = m[1].split(".").reduce((o, k) => o?.[k], nb);
+      if (typeof value === "object" && value !== null) groups.push(`${f}: t.${m[1]}`);
+    }
+  }
+  assert.deepEqual(groups, []);
+});
+
 test("URLs in another language", () => {
   assert.equal(localeUrl("/flysteder/ryten/", "en"), "/en/sites/ryten/");
   assert.equal(localeUrl("/en/sites/ryten/", "nb"), "/flysteder/ryten/");

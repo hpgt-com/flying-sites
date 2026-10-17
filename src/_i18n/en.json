@@ -188,7 +188,8 @@
     "routeLength": "{km} km.",
     "time": "Time",
     "minutesOnFoot": "About {min} min on foot",
-    "profile": {
+    "profile": "Elevation profile",
+    "airspaceProfile": {
       "launch": "Launch",
       "landing": "Landing",
       "floor": "from {m} m asl ({limit})",
