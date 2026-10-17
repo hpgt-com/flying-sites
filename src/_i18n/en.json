@@ -72,7 +72,8 @@
     "notReviewed": "Not reviewed yet",
     "notSet": "Not set",
     "notRegistered": "Not registered yet",
-    "siteTitle": "HPGT flying sites"
+    "siteTitle": "HPGT flying sites",
+    "aboutLink": "About the site and privacy"
   },
   "home": {
     "description": "Paragliding and speedflying sites in the HPGT area (Harstad, Northern Norway). Filter by wind direction, level and category.",
@@ -105,11 +106,8 @@
     "notamTitle": "NOTAM and airspace",
     "towersTitle": "Towers",
     "towersSubtitle": "Phone numbers for the control towers",
-    "disclaimer": "The club takes no responsibility for information about safety, airspace or landowner agreements.",
-    "credit": "The site builds on the old site guide by Lars Sletten, which he has given to the club.",
     "openData": "Open data: {geojson} and {kml} (Google Earth, norgeskart.no). Free to use with attribution, {license}. {docs}.",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-    "analytics": "Visits are counted anonymously with {goatcounter}, without cookies.",
     "showingAll": "Showing all {n} sites",
     "mapLabel": "Map of flying sites. Each launch is a wind rose.",
     "selectHint": "Tap a site on the map or in the list to see more.",
@@ -126,8 +124,7 @@
     "allDirections": "All directions",
     "directionHelp": "Tap the directions the wind comes from. You can choose several.",
     "tapAgain": "Tap again to open the site ›",
-    "now": "Now",
-    "aboutSummary": "About the site: responsibility, open data and statistics"
+    "now": "Now"
   },
   "site": {
     "hazardsTitle": "Before you launch",
@@ -527,5 +524,35 @@
     "offline": {
       "notice": "You are offline. The page may be out of date, and the wind assessment is only shown while the forecast is fresh enough."
     }
+  },
+  "about": {
+    "title": "About the site and privacy",
+    "description": "Who makes HPGT flying sites, where the data comes from, the licences and how the site handles personal data.",
+    "intro": "HPGT flying sites is an overview of paragliding and speedflying sites in the HPGT area, made and maintained by the club's members.",
+    "responsibilityTitle": "Responsibility",
+    "responsibility": "The overview is a rough guide. The club takes no responsibility for information about safety, airspace or landowner agreements. Every pilot and student decides for themselves whether the site and conditions are OK, and always checks airspace and NOTAM in IPPC before flying.",
+    "wind": "The wind assessment is a rough assessment from the MET forecast for each launch. It does not see local conditions, and never says it is «OK to fly».",
+    "credit": "The site builds on Lars Sletten's old site guide, which he has given to the club.",
+    "sourcesTitle": "Sources and licences",
+    "sourcesIntro": "Each site page shows at the bottom which sources the site is based on, and what each field comes from under «Details». The data comes from:",
+    "sourceKartverket": "maps, heights and elevation profiles (CC BY 4.0).",
+    "sourceOpenaip": "airspace over the launches (CC BY-NC 4.0). Not for navigation.",
+    "metName": "Norwegian Meteorological Institute (MET)",
+    "sourceMet": "the wind forecast for each launch (CC BY 4.0), and the meteograms from Yr (delivered by NRK and MET).",
+    "sourceOpenMeteo": "winds aloft (CC BY 4.0).",
+    "sourceFlightlog": "launch coordinates and directions for many sites, and links to the sites there.",
+    "sourceMaps": "Map layers: OpenTopoMap and OpenStreetMap contributors (CC BY-SA), satellite imagery from Sentinel-2 cloudless by EOX (CC BY-NC-SA 4.0), thermals from thermal.kk7.ch (CC BY-NC-SA 4.0) and precipitation radar from RainViewer.",
+    "sourceLocal": "Local knowledge from the club's members, and walking routes logged with GPS on the way up.",
+    "sourcePhotos": "Photos: the photographer and licence are below the photos on each site page.",
+    "sourcesNote": "The credits the maps and licences require are also shown with the data itself: in the map, below the airspace figure and below the photos.",
+    "privacyTitle": "Privacy",
+    "privacyStats": "The site counts visits anonymously with {goatcounter}, without cookies. It counts which pages are visited and some clicks (for example tabs, filters and map layers), not who visits them.",
+    "privacySearch": "What you type in the search field is never sent anywhere. Searches without hits are only counted as a number.",
+    "privacyStorage": "Your choices for colour mode and colour-blind-friendly colours are only stored in your browser. Once you have visited a page, the browser may store it and the map tiles you have seen, so it works offline.",
+    "privacyThirdParty": "Maps, satellite imagery, thermals, radar and the Yr meteogram are loaded from the services that make them, and they see your IP address, as with any website. The fonts are served from the site itself.",
+    "privacyNoAccount": "The site has no login and no forms, and stores no personal data about you.",
+    "dataTitle": "Open data",
+    "changesTitle": "Errors or new information?",
+    "changes": "Tell someone in the club. If you have a GitHub account, you can also open an issue on {github}. A form on the site that does not need a GitHub account is coming."
   }
 }

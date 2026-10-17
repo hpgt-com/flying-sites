@@ -392,7 +392,7 @@ scripts:
       {#- The source names on one line, and what each field comes from folded below, for those who want to check. -#}
       <dd>{{ derived.sourcesShort }}{% if derived.sources %} <details class="sources-details"><summary>{{ t.site.sourcesDetails }}</summary>{{ derived.sources }}</details>{% endif %}</dd>
     </dl>
-    <p class="disclaimer">{{ t.site.footerDisclaimer }}</p>
+    <p class="disclaimer">{{ t.site.footerDisclaimer }} <a href="{{ '/om/' | localeUrl }}">{{ t.common.aboutLink }}</a></p>
   </footer>
   </div>
   {#- Mobile: the three things you need on the way, always at the bottom of the screen. -#}

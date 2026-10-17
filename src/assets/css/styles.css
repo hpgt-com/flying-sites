@@ -638,9 +638,11 @@ p { margin: 0; }
 
 .disclaimer { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .disclaimer p { margin: 0; }
-.about { display: flex; flex-direction: column; gap: 8px; }
-.about > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--link); font-weight: 600; }
-.about > p + p { margin-top: 8px; }
+/* Om siden og personvern (src/about.njk). */
+.about-part { display: flex; flex-direction: column; gap: 10px; }
+.about-part h2 { font-size: 26px; }
+.about-part p { margin: 0; line-height: 1.55; }
+.about-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; line-height: 1.5; }
 
 /* Status on the map: the pill at the top, and the details below it when opened (home.js). */
 .map-status { position: absolute; top: 10px; left: 58px; right: 58px; z-index: 1001; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }

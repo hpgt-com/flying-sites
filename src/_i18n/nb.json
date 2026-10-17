@@ -72,7 +72,8 @@
     "notReviewed": "Ikke gjennomgått ennå",
     "notSet": "Ikke satt",
     "notRegistered": "Ikke registrert ennå",
-    "siteTitle": "HPGT flysteder"
+    "siteTitle": "HPGT flysteder",
+    "aboutLink": "Om siden og personvern"
   },
   "home": {
     "description": "Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.",
@@ -105,11 +106,8 @@
     "notamTitle": "NOTAM og luftrom",
     "towersTitle": "Tårn",
     "towersSubtitle": "Telefonnumre til tårnene",
-    "disclaimer": "Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold.",
-    "credit": "Siden bygger videre på den gamle flystedsoversikten til Lars Sletten, som han har gitt til klubben.",
     "openData": "Åpne data: {geojson} og {kml} (Google Earth, norgeskart.no). Fritt til bruk med kreditering, {license}. {docs}.",
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/deed.no",
-    "analytics": "Siden teller besøk anonymt med {goatcounter}, uten informasjonskapsler.",
     "showingAll": "Viser alle {n} flysteder",
     "mapLabel": "Kart over flysteder. Hver start er en vindrose.",
     "selectHint": "Trykk på et flysted i kartet eller i listen for å se mer.",
@@ -126,8 +124,7 @@
     "allDirections": "Alle retninger",
     "directionHelp": "Trykk på retningene vinden kommer fra. Du kan velge flere.",
     "tapAgain": "Trykk igjen for å åpne flystedet ›",
-    "now": "Nå",
-    "aboutSummary": "Om siden: ansvar, åpne data og statistikk"
+    "now": "Nå"
   },
   "site": {
     "hazardsTitle": "Før du starter",
@@ -527,5 +524,35 @@
     "offline": {
       "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok."
     }
+  },
+  "about": {
+    "title": "Om siden og personvern",
+    "description": "Hvem som lager HPGT flysteder, hvor dataene kommer fra, lisensene og hvordan siden behandler personopplysninger.",
+    "intro": "HPGT flysteder er en oversikt over flysteder for paraglider og speedglider i HPGTs område, laget og vedlikeholdt av klubbens medlemmer.",
+    "responsibilityTitle": "Ansvar",
+    "responsibility": "Oversikten er en grov guide. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller grunneierforhold. Hver pilot og elev vurderer selv om stedet og forholdene er OK, og sjekker alltid luftrom og NOTAM i IPPC før flyging.",
+    "wind": "Vindvurderingen er en grov vurdering fra MET-varselet for hver start. Den ser ikke lokale forhold, og sier aldri at det er «OK å fly».",
+    "credit": "Siden bygger videre på den gamle flystedsoversikten til Lars Sletten, som han har gitt til klubben.",
+    "sourcesTitle": "Kilder og lisenser",
+    "sourcesIntro": "Hver stedsside viser nederst hvilke kilder stedet bygger på, og hva hvert felt kommer fra under «Detaljer». Dataene kommer fra:",
+    "sourceKartverket": "kart, høyder og høydeprofiler (CC BY 4.0).",
+    "sourceOpenaip": "luftrom over startene (CC BY-NC 4.0). Ikke for navigasjon.",
+    "metName": "Meteorologisk institutt (MET)",
+    "sourceMet": "vindvarselet for hver start (CC BY 4.0), og meteogrammene fra Yr (levert av NRK og MET).",
+    "sourceOpenMeteo": "vind i høyden (CC BY 4.0).",
+    "sourceFlightlog": "startkoordinater og retninger for mange steder, og lenker til stedene der.",
+    "sourceMaps": "Kartlag: OpenTopoMap og OpenStreetMap-bidragsytere (CC BY-SA), satellittbilder fra Sentinel-2 cloudless av EOX (CC BY-NC-SA 4.0), termikk fra thermal.kk7.ch (CC BY-NC-SA 4.0) og nedbørsradar fra RainViewer.",
+    "sourceLocal": "Lokalkunnskap fra klubbens medlemmer, og gangruter logget med GPS på tur.",
+    "sourcePhotos": "Bilder: fotograf og lisens står under bildene på hver stedsside.",
+    "sourcesNote": "Kreditering som kartet og lisensene krever, står også ved selve dataene: i kartet, under luftromsfiguren og under bildene.",
+    "privacyTitle": "Personvern",
+    "privacyStats": "Siden teller besøk anonymt med {goatcounter}, uten informasjonskapsler. Det telles hvilke sider som blir besøkt og noen klikk (for eksempel faner, filtre og kartlag), ikke hvem som besøker dem.",
+    "privacySearch": "Det du skriver i søkefeltet, blir aldri sendt noe sted. Søk uten treff telles bare som et antall.",
+    "privacyStorage": "Valgene for fargemodus og fargeblindvennlige farger lagres bare i nettleseren din. Når du har besøkt en side, kan nettleseren lagre den, og kartflisene du har sett, så den virker uten nett.",
+    "privacyThirdParty": "Kart, satellittbilder, termikk, radar og Yr-meteogrammet hentes fra tjenestene som lager dem, og de ser da IP-adressen din, slik alle nettsider gjør. Skriftene ligger på siden selv.",
+    "privacyNoAccount": "Siden har ingen innlogging og ingen skjema, og lagrer ingen personopplysninger om deg.",
+    "dataTitle": "Åpne data",
+    "changesTitle": "Feil eller nye opplysninger?",
+    "changes": "Si fra til noen i klubben. Har du en GitHub-konto, kan du også lage en sak på {github}. Et skjema på siden som ikke krever GitHub-konto, kommer."
   }
 }
