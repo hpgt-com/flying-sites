@@ -607,9 +607,12 @@ p { margin: 0; }
 .selected__elev { margin: -2px 0 0; font-size: 14px; color: var(--muted); }
 .results .direction { font-size: 13px; padding: 1px 6px; min-width: 26px; }
 .results .direction--none { padding: 0 5px; }
-.results__open { display: none; font-size: 14px; font-weight: 700; color: var(--fjord); }
+/* «Trykk igjen for å åpne flystedet ›»: a link laid over the bottom of the selected item, with room made for it. */
+.results__list li { position: relative; }
+.results__open { display: none; position: absolute; left: 64px; bottom: 10px; font-size: 14px; font-weight: 700; color: var(--fjord); text-decoration: none; }
 [data-theme="dark"] .results__open { color: var(--link); }
-.results__item--selected .results__open { display: block; }
+.results__item--selected { padding-bottom: 34px; }
+.results__item--selected + .results__open { display: block; }
 .results__group { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
 .results__group-title { font-size: 18px; }
 .results__group .muted { margin: 0; font-size: 14px; line-height: 1.4; }
@@ -736,7 +739,8 @@ p { margin: 0; }
   .results__item { padding: 8px 10px; gap: 10px; }
   .results__name { font-size: 17px; }
   /* Desktop: one click shows the site in the map and the card, which links to the site page. */
-  .results__item--selected .results__open { display: none; }
+  .results__item--selected { padding-bottom: 8px; }
+  .results__item--selected + .results__open { display: none; }
 }
 
 /* ---------- Site page ---------- */

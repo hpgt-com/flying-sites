@@ -105,9 +105,10 @@ scripts:
                 {#- Launch altitude to the right of the name, when recorded. -#}
                 <span class="results__head"><span class="results__name">{{ s.data.name }}</span>{% if s.data.elevation and s.data.elevation.launch_masl %}<span class="results__elev">{{ s.data.elevation.launch_masl }} {{ t.units.masl }}</span>{% endif %}</span>
                 <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
-                <span class="results__open">{{ t.home.tapAgain }}</span>
               </span>
             </button>
+            {#- Shown on the selected site on mobile. A second tap on the site opens it (home.js clicks this link). -#}
+            <a class="results__open" href="{{ s.url | localeUrl(lang) | url }}" tabindex="-1">{{ t.home.tapAgain }}</a>
           </li>
           {% endfor %}
         </ul>

@@ -233,6 +233,7 @@
   var statusIconEl = statusEl && statusEl.querySelector(".map-status__icon");
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
   var RATING_KEYS = { ok: "ok", maybe: "maybe", high: "high", no: "no" };
+  var DIRECTION_KEYS = { N: "N", NE: "NE", E: "E", SE: "SE", S: "S", SW: "SW", W: "W", NW: "NW" };
   function renderStatus(sum, shownText) {
     if (!statusEl) return;
     var rating = null, text = shownText;
@@ -463,8 +464,9 @@
     // Mobile: a second tap on the selected site in the list opens the site page. The first tap shows it in the map.
     if (origin === "list" && mobile && id === selectedId) {
       FS.track("list/open/" + id);
-      // Always a path on this site: one leading slash, so the address cannot become another site or a script.
-      location.href = "/" + site.url.replace(/^\/+/, "");
+      // The link is in the page from the build (index.njk), so the address never comes from the script.
+      var link = listEl.querySelector('[data-id="' + id + '"] .results__open');
+      if (link) link.click();
       return;
     }
     selectedId = id;
@@ -557,8 +559,9 @@
         // The same rose as in the map: the wind sector in the rating colour, and the ring. The rating is looked up in a
         // fixed list, so only known class names reach the markup.
         var ringRating = assessment ? RATING_KEYS[assessment.rating] : null;
+        var windCode = assessment ? DIRECTION_KEYS[W.directionCode(assessment.wind.dir)] : null;
         li.querySelector(".results__rose").innerHTML = '<span class="results__ring' + (ringRating ? " results__ring--" + ringRating : "") + '">' +
-          FS.roseSvg(site, 34, false, ringRating ? { code: W.directionCode(assessment.wind.dir), rating: ringRating, edge: true } : null) + "</span>";
+          FS.roseSvg(site, 34, false, ringRating && windCode ? { code: windCode, rating: ringRating, edge: true } : null) + "</span>";
         var windEl = button.querySelector(".results__wind");
         if (!windEl) {
           windEl = document.createElement("span");
