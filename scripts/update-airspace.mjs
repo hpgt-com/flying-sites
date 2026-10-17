@@ -9,11 +9,9 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
+import { readSites } from "../lib/site-files.js";
 import { fetchRegion, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM } from "../lib/airspace.js";
 
-const yaml = createRequire(import.meta.url)("js-yaml");
-const SITES_DIR = "src/sites";
 // Margin around the sites, so the map also shows airspace some way beyond them (Lofoten, Bardufoss etc.).
 const MARGIN_KM = 60;
 
@@ -23,12 +21,7 @@ if (!apiKey) {
   process.exit(1);
 }
 
-const sites = fs.readdirSync(SITES_DIR)
-  .filter((id) => fs.existsSync(path.join(SITES_DIR, id, "index.md")))
-  .map((id) => {
-    const text = fs.readFileSync(path.join(SITES_DIR, id, "index.md"), "utf8");
-    return { id, data: yaml.load(/^---\r?\n([\s\S]*?)\r?\n---/.exec(text)[1]) };
-  });
+const sites = readSites();
 
 // Airspace is fetched in one or more circles that together cover all launches, plus margin. openAIP
 // rejects too large a radius (216 km gave 400), so the sites in Lofoten, on Andøya and in Bjerkvik cannot be

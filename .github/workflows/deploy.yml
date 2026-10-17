@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Build twice an hour, so the front-page wind assessment has a fresh MET forecast.
+  # Build twice an hour, so the front-page wind assessment has a fresh MET forecast (the weather job).
   # GitHub does not guarantee scheduled runs: they can be delayed for hours or skipped under heavy load,
   # especially around the top of the hour. Hence the odd minutes, and the forecast is accepted until it is 6 hours old
   # (maxForecastAgeHours in src/_data/windRules.json).
@@ -12,8 +12,15 @@ on:
   schedule:
     - cron: "17,47 * * * *"
 
-# The build job is read-only. Only the deploy job has publishing permissions (pages, id-token),
-# and it runs no code from the repo. Actions are pinned to commit SHAs (Dependabot updates them).
+# Four jobs:
+#   weather  fetches the MET wind forecast and the Open-Meteo winds aloft (lib/weather/, npm run weather) and hands
+#            them on as an artifact. Read-only, no secrets. A source that fails is written as null, so the job does
+#            not stop publishing.
+#   build    builds the site with the fetched weather and never queries MET or Open-Meteo itself (WEATHER_FETCH=0).
+#   deploy   publishes. Only this job has publishing permissions (pages, id-token), and it runs no code from the repo.
+#   attest   signs build provenance and the SBOM for the published archive (see the job below).
+# When the weather moves to a backend, the weather job and the schedule below can go.
+# Actions are pinned to commit SHAs (Dependabot updates them).
 permissions:
   contents: read
 
@@ -24,7 +31,37 @@ concurrency:
 # Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
 # instead of blocking for up to 6 hours.
 jobs:
+  weather:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      - run: npm ci --ignore-scripts
+
+      - run: npm run weather
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: weather
+          path: .cache/weather
+          # .cache starts with a dot, and hidden folders are left out by default.
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
   build:
+    needs: weather
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -61,10 +98,16 @@ jobs:
           path: _site/img
           key: site-img-${{ hashFiles('src/sites/**/*.jpg', 'lib/images.js', 'lib/photo-credit.js', 'lib/site-images.js', 'package-lock.json') }}
 
-      # Fails if a site file is invalid.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: weather
+          path: .cache/weather
+
+      # Fails if a site file is invalid. The weather comes from the weather job only (WEATHER_FETCH=0).
       - run: npm run build
         env:
           PATH_PREFIX: ${{ steps.pages.outputs.base_path }}/
+          WEATHER_FETCH: "0"
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

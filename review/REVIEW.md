@@ -25,7 +25,7 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 
 | # | Tiltak | Type | Innsats | Effekt |
 |---|---|---|---|---|
-| 1 | Flytt vindvarselet ut av byggingen (edge-proxy med cache, se [Målarkitektur](#målarkitektur)) | Arkitektur | M | Høy |
+| 1 | Flytt vindvarselet ut av byggingen (edge-proxy med cache, se [Målarkitektur](#målarkitektur)). Første steg gjort: værmodulen (`lib/weather/`) henter i en egen jobb før byggingen, og byggingen bare leser filene. Gjenstår: backend, så byggingen ikke trenger å gå to ganger i timen | Arkitektur | M | Høy |
 | 2 | ~~Cache bildene i CI (`actions/cache` på `.cache`/`_site/img`) eller generer dem bare når de endres~~ Gjort: `_site/img` caches | CI/CD | S | Høy |
 | 3 | ~~Del opp airspace-workflowen i en hentejobb med lesetilgang og en PR-jobb med skrivetilgang~~ Gjort, med støtte for GitHub App-token (appen må opprettes, se docs/operations.md) | DevSecOps | S | Høy |
 | 4 | ~~`npm ci --ignore-scripts` i alle workflows (ingen avhengigheter har install-script i dag)~~ Gjort | Forsyningskjede | XS | Middels |
