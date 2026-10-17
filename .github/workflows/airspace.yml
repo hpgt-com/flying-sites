@@ -4,32 +4,43 @@ name: Update airspace
 # Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing happens.
 # Requires the repository secret OPENAIP_API_KEY, and «Allow GitHub Actions to create and approve pull
 # requests» enabled under Settings → Actions → General.
+#
+# Two jobs, so third-party code never runs with write access:
+#   fetch  installs the npm packages and runs the script, with read-only access and the openAIP key.
+#          The result is handed on as an artifact.
+#   pr     has write access to push the branch and open the PR, but installs and runs nothing from npm.
+#          It only copies the fetched files into place and commits them.
 
 on:
   schedule:
     - cron: "0 6 1 * *" # the 1st of every month at 06:00 UTC
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
+# No access by default. Each job asks for what it needs.
+permissions: {}
 
 # Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
 # instead of blocking for up to 6 hours.
 jobs:
-  update:
+  fetch:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
     steps:
-      # The token is kept because the job pushes a branch for the PR. It uploads no artifacts.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      - run: npm ci --ignore-scripts
 
       - name: Hent luftrom fra openAIP
         # shell: bash enables pipefail, so a script error stops the job even though output goes through tee.
@@ -38,19 +49,56 @@ jobs:
         env:
           OPENAIP_API_KEY: ${{ secrets.OPENAIP_API_KEY }}
 
-      - name: Lag PR hvis noe er endret
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Sjekk om noe er endret
+        id: diff
         run: |
           if [ -z "$(git status --porcelain src/_data/cache/airspace)" ]; then
             echo "Ingen endringer i luftrom."
-            exit 0
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # The whole cache folder (so files removed by the script stay removed) and the script's output for the PR text.
+      - if: steps.diff.outputs.changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: airspace
+          path: |
+            src/_data/cache/airspace
+            luftrom.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  pr:
+    needs: fetch
+    if: needs.fetch.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # The token is kept because the job pushes a branch for the PR. It uploads no artifacts and runs no npm code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
+
+      # Replaces the cache folder with the fetched one, so removed files are removed here too.
+      - run: rm -rf src/_data/cache/airspace
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: airspace
+          path: .
+
+      - name: Lag PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           branch="airspace/$(date +%Y-%m-%d)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git add src/_data/cache/airspace
+          git add -A src/_data/cache/airspace
           git commit -m "Oppdater luftrom fra openAIP"
           git push -u origin "$branch"
           {

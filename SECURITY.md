@@ -29,6 +29,9 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
 - CodeQL analyses the JavaScript and the workflows on PRs, on `main` and weekly.
 - Actions are pinned to commit SHAs and updated by Dependabot. Workflows have read-only access by default. Only the
   deploy job has the publishing permissions (`pages`, `id-token`).
+- The airspace workflow is split in two jobs: `fetch` installs the npm packages (`npm ci --ignore-scripts`) and
+  runs the script with read-only access and the openAIP key; `pr` has write access to push the branch and open the
+  PR, but runs no npm code. The fetched files go from one to the other as an artifact.
 - Secrets (`OPENAIP_API_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
   key files.
 
