@@ -25,7 +25,8 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   build (`lib/security-txt.js`), so `Expires` is always about a year ahead.
 
 **The repository and publishing**
-- All changes go through a PR. «PR check» runs tests and the build (`build`), dependency review
+- All changes go through a PR. «PR check» runs tests, the build, link check and HTML validation (`build`), axe
+  (`accessibility`), dependency review
   (`dependency-review`, stops packages with known vulnerabilities) and zizmor (`workflow-security`, security issues
   in the workflows).
 - CodeQL analyses the JavaScript and the workflows on PRs, on `main` and weekly.
