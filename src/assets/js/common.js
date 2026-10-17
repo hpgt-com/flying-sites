@@ -74,8 +74,10 @@
     svg += lifted;
     svg += '<circle cx="80" cy="80" r="9" class="rose__center"></circle>';
     if (labels) {
-      svg += '<text x="80" y="2" text-anchor="middle">' + DIRECTION_LABELS.N + '</text><text x="80" y="168" text-anchor="middle">' + DIRECTION_LABELS.S + "</text>" +
-        '<text x="-4" y="85" text-anchor="middle">' + DIRECTION_LABELS.W + '</text><text x="164" y="85" text-anchor="middle">' + DIRECTION_LABELS.E + "</text>";
+      // The letters come from the dictionary, so they are escaped like other text.
+      var lab = function (code) { return escapeHtml(DIRECTION_LABELS[code]); };
+      svg += '<text x="80" y="2" text-anchor="middle">' + lab("N") + '</text><text x="80" y="168" text-anchor="middle">' + lab("S") + "</text>" +
+        '<text x="-4" y="85" text-anchor="middle">' + lab("W") + '</text><text x="164" y="85" text-anchor="middle">' + lab("E") + "</text>";
     }
     return svg + "</svg>";
   }
