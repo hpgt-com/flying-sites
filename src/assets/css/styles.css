@@ -1006,6 +1006,9 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .leaflet-control-layers-overlays label { min-height: 32px; display: flex; align-items: center; }
 /* Site text not yet translated (shown in Norwegian on a page in another language). */
 .translation-note { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--notice-bg); color: var(--notice-text); font-size: 14px; }
+/* Shown at the top of the page while the visitor is offline (pwa.js). */
+.offline-notice { position: sticky; top: 0; z-index: 2000; margin: 0; padding: 8px 16px; background: var(--notice-bg); color: var(--notice-text); border-bottom: 1px solid var(--notice-line); font-size: 14px; text-align: center; }
+.offline-notice[hidden] { display: none; }
 .airspace-status { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; max-width: 220px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); }
 .airspace-status--error { background: var(--hazard-bg); color: var(--hazard-text); border-color: var(--hazard-text); }
 .airspace-status button { display: block; margin-top: 6px; min-height: 32px; padding: 4px 10px; border: 1px solid currentColor; border-radius: 6px; background: var(--card); color: var(--text); font: inherit; cursor: pointer; }

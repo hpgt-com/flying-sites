@@ -1,0 +1,28 @@
+---
+layout: base.njk
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/offline/' | localeUrl(language.code) }}"
+bodyClass: page-offline
+noindex: true
+eleventyComputed:
+  name: "{{ t.pwa.offlineTitle }}"
+---
+{#- Shown by the service worker (lib/service-worker.js) for a page that is not stored when there is no network. -#}
+{%- import "macros.njk" as m with context -%}
+<div class="simple-page">
+  <header class="topbar">
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
+  </header>
+
+  <div class="simple-page__intro">
+    <h1>{{ t.pwa.offlineTitle }}</h1>
+    <p class="muted">{{ t.pwa.offlineText }}</p>
+  </div>
+
+  <nav class="link-list" aria-label="{{ t.pwa.offlineTitle }}">
+    {{ m.linkRow('/' | localeUrl, t.common.allSites, t.pwa.offlineHome, false) }}
+  </nav>
+</div>

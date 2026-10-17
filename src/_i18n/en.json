@@ -313,6 +313,13 @@
     "description": "Phone numbers for the control towers around the HPGT flying sites.",
     "intro": "Call the tower when you are going to fly in controlled airspace. Always check airspace and NOTAMs in {ippc} before you fly."
   },
+  "pwa": {
+    "shortName": "Flying sites",
+    "description": "Paragliding and speedflying sites around Harstad, with maps, launches, landings and wind assessment.",
+    "offlineTitle": "You are offline",
+    "offlineText": "This page is not stored on the device yet. Pages you have opened before, maps you have seen and GPX files you have downloaded work without a connection. Try again when you have coverage.",
+    "offlineHome": "The front page works offline if you have opened it before"
+  },
   "js": {
     "ratings": {
       "ok": "May work",
@@ -506,6 +513,9 @@
       "maybeOnly": "Only uncertain periods ({n})",
       "partial": "The forecast only runs until {time}:00 this day.",
       "windTitle": "{dir} {speed} m/s, gusts up to {gust}"
+    },
+    "offline": {
+      "notice": "You are offline. The page may be out of date, and the wind assessment is only shown while the forecast is fresh enough."
     }
   }
 }
