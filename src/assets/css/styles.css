@@ -474,8 +474,9 @@ p { margin: 0; }
 .home__eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
 [data-theme="dark"] .home__eyebrow { color: var(--link); }
 .home__intro h1 { font-size: 30px; }
-.home__map { order: 3; position: sticky; top: 0; z-index: 1200; display: flex; flex-direction: column; height: var(--map-h); margin: 0 -16px; background: var(--bg); transition: height 0.2s; }
-/* The map gets smaller after scrolling without moving the list: the space it gives up is kept as margin below, which
+.home__map { order: 3; position: sticky; top: 0; z-index: 1200; display: flex; flex-direction: column; height: var(--map-h); margin: 0 -16px; background: var(--bg); }
+/* The size changes at once, not animated: an animated height made Leaflet redraw the map for every frame while scrolling,
+   which lagged on older phones. The map gets smaller after scrolling without moving the list: the space it gives up is kept as margin below, which
    is scrolled past already. While searching the list moves up, so the hits are close to the field. */
 .home--small:not(.home--search) .home__map { margin-bottom: calc(300px - var(--map-h)); }
 .home-tabs { order: 4; }
@@ -484,7 +485,6 @@ p { margin: 0; }
 .home-pane[hidden] { display: none; }
 .home .disclaimer { order: 7; }
 .map--home { flex: 1; min-height: 0; height: auto; border-radius: 0; border: 0; }
-@media (prefers-reduced-motion: reduce) { .home__map, .home .searchbar { transition: none; } }
 
 /* Tabs: Flysteder and Vær, with an icon. */
 .home-tabs { display: flex; border-bottom: 1px solid var(--line); }
@@ -499,7 +499,7 @@ p { margin: 0; }
    when the field gets focus. */
 .searchbar {
   order: 5; position: sticky; top: var(--map-h); z-index: 1100; display: flex; gap: 8px; margin: 0 -16px; padding: 8px 16px;
-  background: var(--bg); transition: top 0.2s;
+  background: var(--bg);
 }
 .search-input {
   flex: 1; min-width: 0; min-height: 46px; box-sizing: border-box; padding: 0 14px 0 40px;
