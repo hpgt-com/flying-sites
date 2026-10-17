@@ -232,6 +232,7 @@
   var statusSubEl = document.getElementById("map-status-sub");
   var statusIconEl = statusEl && statusEl.querySelector(".map-status__icon");
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
+  var RATING_KEYS = { ok: "ok", maybe: "maybe", high: "high", no: "no" };
   function renderStatus(sum, shownText) {
     if (!statusEl) return;
     var rating = null, text = shownText;
@@ -462,7 +463,8 @@
     // Mobile: a second tap on the selected site in the list opens the site page. The first tap shows it in the map.
     if (origin === "list" && mobile && id === selectedId) {
       FS.track("list/open/" + id);
-      location.href = site.url;
+      // Always a path on this site: one leading slash, so the address cannot become another site or a script.
+      location.href = "/" + site.url.replace(/^\/+/, "");
       return;
     }
     selectedId = id;
@@ -552,9 +554,11 @@
         var button = li.querySelector("button");
         button.classList.toggle("results__item--selected", site.id === selectedId);
         li.querySelector(".directions").innerHTML = directionBadges(site);
-        // The same rose as in the map: the wind sector in the rating colour, and the ring.
-        li.querySelector(".results__rose").innerHTML = '<span class="results__ring' + (assessment ? " results__ring--" + assessment.rating : "") + '">' +
-          FS.roseSvg(site, 34, false, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating, edge: true } : null) + "</span>";
+        // The same rose as in the map: the wind sector in the rating colour, and the ring. The rating is looked up in a
+        // fixed list, so only known class names reach the markup.
+        var ringRating = assessment ? RATING_KEYS[assessment.rating] : null;
+        li.querySelector(".results__rose").innerHTML = '<span class="results__ring' + (ringRating ? " results__ring--" + ringRating : "") + '">' +
+          FS.roseSvg(site, 34, false, ringRating ? { code: W.directionCode(assessment.wind.dir), rating: ringRating, edge: true } : null) + "</span>";
         var windEl = button.querySelector(".results__wind");
         if (!windEl) {
           windEl = document.createElement("span");

@@ -24,7 +24,7 @@
     var row = make("div", "site-wind__verdict");
     row.append(make("span", "site-wind__icon", ICONS[rating] || ICONS.none), make("span", "site-wind__word", parts[0]));
     row.firstChild.setAttribute("aria-hidden", "true");
-    el.replaceChildren.apply(el, [row].concat(parts.slice(1).map(function (p) { return make(p[0], p[2], p[1]); })));
+    el.replaceChildren.apply(el, [row].concat(parts.slice(1).map(function (p) { return make(p[0] === "strong" ? "strong" : "span", p[2], p[1]); })));
     el.hidden = false;
   }
 
