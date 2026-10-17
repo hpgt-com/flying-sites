@@ -97,11 +97,13 @@
   var windIndex = -1; // forecast index for the chosen time, set by assessAll()
   function slotLabel(slot) { return FS.t("wind.slots." + slot); }
 
-  function fetchedText() {
-    var fetched = Date.parse(forecast.fetched);
-    var today = W.osloParts(Date.now()).date, day = W.osloParts(fetched).date;
-    return (day === today ? FS.t("wind.today") : day.slice(8, 10) + "." + day.slice(5, 7)) + " " + FS.t("wind.at", { time: W.formatClock(fetched) });
+  // «i dag kl. 08:47», or «16.10 kl. 23:47» for another day.
+  function whenText(iso) {
+    var ms = Date.parse(iso);
+    var today = W.osloParts(Date.now()).date, day = W.osloParts(ms).date;
+    return (day === today ? FS.t("wind.today") : day.slice(8, 10) + "." + day.slice(5, 7)) + " " + FS.t("wind.at", { time: W.formatClock(ms) });
   }
+  function fetchedText() { return whenText(forecast.fetched); }
 
   // Returns true when the forecast has just become too old, so the caller can redraw the page.
   function checkStale() {
@@ -119,7 +121,10 @@
   // Text below the wind selector: when the forecast was fetched, and which time the assessment applies to.
   function updateForecastStatus(index) {
     if (!forecast || stale) return;
-    var text = FS.escapeHtml(FS.t("wind.fetched", { when: fetchedText() }));
+    // MET's own update time (the model run) when the forecast has it, as well as when it was fetched.
+    var text = FS.escapeHtml(Number.isFinite(Date.parse(forecast.updated))
+      ? FS.t("wind.fetchedUpdated", { updated: whenText(forecast.updated), when: fetchedText() })
+      : FS.t("wind.fetched", { when: fetchedText() }));
     if (windSlot !== "off") {
       text = index < 0
         ? "<strong>" + FS.escapeHtml(FS.t("wind.notCovered")) + "</strong> " + text
