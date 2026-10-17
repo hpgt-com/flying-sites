@@ -1,5 +1,7 @@
 # HPGT flysteder
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hpgt-com/flying-sites/badge)](https://scorecard.dev/viewer/?uri=github.com/hpgt-com/flying-sites)
+
 Source code for **[flysteder.hpgt.com](https://flysteder.hpgt.com)**, the flying site guide of Harstad Hang og
 Paragliderklubb (HPGT). It shows paragliding and speedflying sites around Harstad and Kvæfjord, Northern Norway, with
 wind directions, hazards, airspace, walking routes, weather forecasts and a rough wind assessment based on MET data.

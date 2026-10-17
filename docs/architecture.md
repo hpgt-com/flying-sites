@@ -196,9 +196,10 @@ sequenceDiagram
 | Workflow | When | What |
 |---|---|---|
 | `pr-check.yml` | Every PR | Tests and build (`build`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
-| `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Builds with a fresh MET forecast and publishes. Fetches the full Git history for «Sist endret» ("Last changed"). |
+| `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Builds with a fresh MET forecast and publishes. Fetches the full Git history for «Sist endret» ("Last changed"). The `attest` job signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
+| `scorecard.yml` | Push to `main`, Mondays, branch protection changes | OpenSSF Scorecard (supply-chain good practice). Results in Code scanning and behind the README badge. |
 | Dependabot | Monthly | PRs with updated packages and Actions. |
 
 ## What has been built
