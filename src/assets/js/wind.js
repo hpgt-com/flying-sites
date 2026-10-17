@@ -92,6 +92,22 @@
     return "none";
   }
 
+  // Checks and cleans one hour of wind before it is assessed. Direction and mean wind must be real numbers
+  // (direction 0–360, wind not negative), or the hour has no valid wind and null is returned. Without this, a
+  // missing or broken value (undefined, NaN, a string) slips past every limit, since comparisons with it are
+  // always false, and the hour could come out as «Kan passe». Gusts and precipitation that are not valid numbers
+  // count as missing, which never makes the assessment better (missing gusts give at most «Usikkert»).
+  function isNumber(x) { return typeof x === "number" && Number.isFinite(x); }
+  function cleanWind(wind) {
+    if (!wind || !isNumber(wind.dir) || wind.dir < 0 || wind.dir > 360 || !isNumber(wind.speed) || wind.speed < 0) return null;
+    return {
+      dir: wind.dir,
+      speed: wind.speed,
+      gust: isNumber(wind.gust) && wind.gust >= 0 ? wind.gust : null,
+      rain: isNumber(wind.rain) && wind.rain >= 0 ? wind.rain : null,
+    };
+  }
+
   // reasons: [[code, values], ...]. Returns both texts and codes, so the page can count reasons without reading the text.
   function result(rating, reasons) {
     return {
@@ -105,7 +121,11 @@
   // If anything is missing (gusts) or uncertain, it is never better than «Usikkert».
   // site: { primary, possible, maxWind }. maxWind is the site's own limit (wind_limits.max_wind), otherwise null.
   // wind: { dir, speed, gust }.
-  function rateWind(site, wind, rules) {
+  function rateWind(site, rawWind, rules) {
+    // Callers get the wind from windAt, which already leaves out invalid hours. If an invalid hour reaches this
+    // point anyway, it is never better than «Passer ikke».
+    var wind = cleanWind(rawWind);
+    if (!wind) return result("no", [["noData"]]);
     var hasOwnLimit = site.maxWind != null;
     var limit = hasOwnLimit ? site.maxWind : rules.maxWind;
     if (wind.speed > limit) {
@@ -140,11 +160,12 @@
   }
 
   // Wind (and next-hour precipitation) for a site at a forecast index, or null when the site has no forecast
-  // (fetch failed). rain is null when the forecast has no precipitation (older forecast or far ahead).
+  // (fetch failed) or the hour has no valid wind (see cleanWind): the page then shows «Ingen varsel» instead of
+  // a number. rain is null when the forecast has no precipitation (older forecast or far ahead).
   function windAt(forecast, id, index) {
     var series = forecast && forecast.sites && forecast.sites[id];
     var row = series && index >= 0 ? series[index] : null;
-    return row ? { dir: row[0], speed: row[1], gust: row[2], rain: row[3] != null ? row[3] : null } : null;
+    return row ? cleanWind({ dir: row[0], speed: row[1], gust: row[2], rain: row[3] }) : null;
   }
 
   // Sunrise and sunset for a calendar day ("2026-10-09") at a place, using the standard sunrise formula

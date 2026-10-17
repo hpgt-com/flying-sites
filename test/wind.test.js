@@ -159,6 +159,39 @@ test("«i morgen kl. 12» across the switch to winter time", () => {
   assert.equal(times[i], "2026-10-25T11:00:00Z");
 });
 
+test("invalid wind is never «Kan passe»", () => {
+  // Comparisons with undefined, NaN or a string are always false, so such values used to slip past every limit.
+  for (const speed of [undefined, null, NaN, Infinity, "5", -1]) {
+    const r = rate({ dir: 247, speed, gust: 3 });
+    assert.equal(r.rating, "no", `speed ${String(speed)}`);
+    assert.deepEqual(r.codes, ["noData"]);
+    assert.match(r.reasons.join(), /Mangler gyldige vinddata/);
+  }
+  for (const dir of [undefined, null, NaN, "247", -10, 400]) {
+    assert.equal(rate({ dir, speed: 4, gust: 6 }).rating, "no", `dir ${String(dir)}`);
+  }
+  assert.equal(rate(null).rating, "no");
+});
+
+test("invalid gusts and rain count as missing", () => {
+  // A broken gust is treated like a missing one: at best «Usikkert», never «Kan passe».
+  for (const gust of [NaN, "6", -2]) {
+    const r = rate({ dir: 247, speed: 4, gust });
+    assert.equal(r.rating, "maybe", `gust ${String(gust)}`);
+    assert.deepEqual(r.codes, ["noGust"]);
+  }
+  // Broken precipitation is ignored, like missing precipitation.
+  assert.equal(rate({ dir: 247, speed: 4, gust: 6, rain: NaN }).rating, "ok");
+});
+
+test("hours without valid wind give no wind, so the page shows «Ingen varsel»", () => {
+  const forecast = { sites: { a: [[247, null, 5, 0], [null, 4, 5, 0], [247, 4, null, null], [247, 4, 5, -1]] } };
+  assert.equal(W.windAt(forecast, "a", 0), null);
+  assert.equal(W.windAt(forecast, "a", 1), null);
+  assert.deepEqual(W.windAt(forecast, "a", 2), { dir: 247, speed: 4, gust: null, rain: null });
+  assert.deepEqual(W.windAt(forecast, "a", 3), { dir: 247, speed: 4, gust: 5, rain: null });
+});
+
 test("times are shown in Norwegian time", () => {
   assert.equal(W.formatClock(Date.parse("2026-06-10T22:05:00Z")), "00.05");
   assert.equal(W.formatClock(Date.parse("2026-12-10T08:30:00Z")), "09.30");
