@@ -100,7 +100,7 @@ flowchart TB
 | Validation | `lib/validation.js` | Unknown keys, invalid directions, levels and categories, wrongly named images, missing walking routes. Errors stop the build. |
 | Walking routes | `lib/gpx.js` | Length, elevation gain, moving time and elevation profile. Heights from Kartverket, cached per file in `src/_data/cache/elevations/`. |
 | Images | `lib/images.js`, `lib/site-images.js` | WebP/JPEG at 400–2400 px without metadata, with photographer and licence embedded. Images are found by file name. |
-| Airspace | `lib/airspace.js`, `scripts/update-airspace.mjs` | openAIP per launch, the "ceiling" above the launch, notes from the site file. The map layer uses `region.geojson`. |
+| Airspace | `lib/airspace.js`, `lib/airspace-profile.js`, `scripts/update-airspace.mjs` | openAIP per launch, the "ceiling" above the launch and its height profile, notes from the site file. The map layer uses `region.geojson`. |
 | Wind forecast | `src/_data/forecast.js` | 48 hours of wind, gusts and precipitation per launch from MET. If one site fails, only that site is missing. |
 | Languages | `lib/i18n.js`, `lib/translations.js` | Dictionaries, URLs per language and translated site text. See below. |
 | Status | `lib/status.js` | What is missing per site, for `/status/`. |

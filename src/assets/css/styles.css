@@ -964,6 +964,24 @@ body:has(.lightbox[open]) { overflow: hidden; }
 
 /* Airspace from openAIP */
 .airspace__source { font-size: 13px; color: var(--muted); }
+/* Height profile under «Luftrom over start» (lib/airspace-profile.js). Text gets a halo in the card colour,
+   so it stays readable where it crosses the terrain or the airspace band. */
+.airspace-profile { display: block; width: 100%; max-width: 440px; height: auto; margin: 2px 0 4px; font-family: var(--font-body); }
+.airspace-profile text { paint-order: stroke; stroke: var(--card); stroke-width: 4px; stroke-linejoin: round; fill: var(--text); font-size: 13px; }
+.airspace-profile__band { fill: color-mix(in srgb, var(--accent) 13%, transparent); }
+.airspace-profile__limit { stroke: var(--accent); stroke-width: 2; }
+.airspace-profile text.airspace-profile__name { font-weight: 600; font-size: 14px; stroke: none; }
+.airspace-profile text.airspace-profile__floor { fill: var(--muted); stroke: none; }
+.airspace-profile__terrain { fill: var(--area); stroke: var(--rose-border); stroke-width: 1; }
+.airspace-profile__arrow { stroke: var(--text); stroke-width: 1.8; }
+.airspace-profile__head { fill: var(--text); }
+.airspace-profile__arrow--warn { stroke: var(--accent); }
+.airspace-profile__head--warn { fill: var(--accent); }
+.airspace-profile text.airspace-profile__gap { font-family: var(--font-heading); font-size: 22px; font-weight: 700; }
+.airspace-profile text.airspace-profile__gap--warn { fill: var(--accent); }
+.airspace-profile text.airspace-profile__small { fill: var(--muted); font-size: 12px; }
+.airspace-profile__launch { fill: var(--text); stroke: var(--card); stroke-width: 2; }
+.airspace-profile__landing { fill: var(--card); stroke: var(--text); stroke-width: 2.5; }
 
 /* ---------- Towers (/tarn/) ---------- */
 

@@ -261,6 +261,9 @@ scripts:
                 {% if a.lower | limitMasl %}{{ m.tag(a.lower | limitMasl) }}{% endif %}
                 {% if ceiling.aboveLaunch != null and ceiling.aboveLaunch < 0 %}{{ m.tag(t.site.launchAboveLimit, "warning") }}{% endif %}
               </span>
+              {#- Terrain, launch, landing and the airspace floor, with the height over the launch (lib/airspace-profile.js).
+                  Only fixed airspace: areas activated by NOTAM are not part of the ceiling. -#}
+              {{ ceiling | airspaceProfile(elevation.launch_masl, elevation.landing_masl) | safe }}
               {% if a.note %}<span class="muted">{{ a.note }}</span>{% endif %}
               {% else %}
               <span class="muted">{{ t.site.noAirspace }}</span>

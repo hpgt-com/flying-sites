@@ -188,7 +188,17 @@
     "routeLength": "{km} km.",
     "time": "Tid",
     "minutesOnFoot": "Ca. {min} min til fots",
-    "profile": "Høydeprofil",
+    "profile": {
+      "launch": "Start",
+      "landing": "Landing",
+      "floor": "fra {m} moh ({limit})",
+      "gap": "{m} m",
+      "gapNegative": "{m} m",
+      "overLaunch": "over start",
+      "launchAbove": "start over grensen",
+      "ariaAbove": "{name} begynner {m} m over starten: grensen er {limit} moh, og starten ligger på {launch} moh.",
+      "ariaBelow": "Starten ligger {m} m over nedre grense for {name}: grensen er {limit} moh, og starten ligger på {launch} moh."
+    },
     "chooseRoute": "Velg gangrute",
     "profileLabel": "Høydeprofil for gangruten",
     "profilePosition": "Posisjon langs ruten",
