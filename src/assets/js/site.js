@@ -3,6 +3,38 @@
   "use strict";
 
   var FS = window.FlyingSites;
+
+  // On mobile, the points in the map and the winds aloft start folded, so the page is shorter. They are open in the HTML,
+  // so desktop and pages without JavaScript show everything.
+  if (window.matchMedia("(max-width: 1023px)").matches) {
+    document.querySelectorAll("details[data-fold-mobile]").forEach(function (d) { d.open = false; });
+  }
+
+  // The row of links to the parts of the page: the part in view is marked, and the row scrolls so its link is visible.
+  // The part counts as in view once its heading has passed under the row. At the bottom of the page the last part is
+  // marked, also when it is too short to reach the top.
+  var nav = document.querySelector(".section-nav");
+  if (nav) {
+    var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
+    var targets = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
+    var current = null, queued = false;
+    var mark = function () {
+      queued = false;
+      var line = nav.getBoundingClientRect().bottom + 24, on = -1;
+      targets.forEach(function (el, i) { if (el && el.getBoundingClientRect().top <= line) on = i; });
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) on = targets.length - 1;
+      if (on === current) return;
+      current = on;
+      links.forEach(function (a, i) {
+        if (i === on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+      });
+      var link = links[on];
+      if (link) nav.scrollTo({ left: link.offsetLeft - nav.clientWidth / 2 + link.offsetWidth / 2, behavior: "smooth" });
+    };
+    window.addEventListener("scroll", function () { if (!queued) { queued = true; requestAnimationFrame(mark); } }, { passive: true });
+    mark();
+  }
+
   var data = FS.readJson("site-data");
   var mapEl = document.getElementById("site-map");
   if (!data || !mapEl) return;
@@ -11,7 +43,7 @@
   // The walking route must be visible on both light and dark maps (dark mode, see styles.css).
   function inkColor() { return FS.isDark() ? "#F3F5F4" : "#1C2B33"; }
   var INK = inkColor();
-  // The mouse wheel only zooms with Ctrl/Cmd, see «Zoom with the mouse wheel» below.
+  // The mouse wheel only zooms with Ctrl/Cmd (FS.wheelNeedsCtrl below).
   var map = FS.createMap(mapEl, { scrollWheelZoom: true });
   var bounds = [];
   var routeLines = [];
@@ -212,24 +244,8 @@
     });
   });
 
-  // --- Zoom with the mouse wheel ---
-  // The mouse wheel scrolls the page as normal. With Ctrl (or Cmd on Mac) it zooms the map, as in Google Maps.
-  // Without Ctrl a short hint is shown. Zoom buttons and +/- on the keyboard (when the map has focus) work as before.
-  var hint = document.createElement("div");
-  hint.className = "map-hint";
-  hint.setAttribute("aria-hidden", "true");
-  hint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? FS.t("site.zoomHintMac") : FS.t("site.zoomHint");
-  mapEl.appendChild(hint);
-  var hintTimer = null;
-  // Caught before Leaflet sees the event (capture), so Leaflet's own zoom only gets scrolling with Ctrl/Cmd.
-  // Leaflet then also stops the browser from zooming the whole page.
-  mapEl.addEventListener("wheel", function (ev) {
-    if (ev.ctrlKey || ev.metaKey) { hint.classList.remove("is-visible"); return; }
-    ev.stopPropagation();
-    hint.classList.add("is-visible");
-    clearTimeout(hintTimer);
-    hintTimer = setTimeout(function () { hint.classList.remove("is-visible"); }, 1200);
-  }, true);
+  // The mouse wheel scrolls the page, and zooms the map only with Ctrl/Cmd (common.js).
+  FS.wheelNeedsCtrl(map);
 
   // Zooms so the whole site is shown: launches, landing, parking, walking routes and direction arcs.
   function fitAll() {

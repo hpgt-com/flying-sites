@@ -47,7 +47,7 @@
   --accent: #D65A1E;
   --dir-primary: #5B9BAB;
   --dir-primary-text: #11191D;
-  --possible: #3F7482;
+  --possible: #366A77;
   --hazard-bg: #3A1E16;
   --hazard-text: #F6C9B8;
   --notice-bg: #33290F;
@@ -129,7 +129,6 @@ p { margin: 0; }
 .topbar a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; font-size: 15px; }
 .logo { font-family: var(--font-heading); font-weight: 700; font-size: 22px; white-space: nowrap; flex-shrink: 0; }
 .back-link { gap: 6px; white-space: nowrap; flex-shrink: 0; text-decoration: none; font-size: 16px !important; font-weight: 500 !important; }
-.topbar__region { font-size: 15px; color: var(--muted); }
 .topbar__end { display: flex; align-items: center; gap: 0 12px; flex-wrap: wrap; justify-content: flex-end; }
 .theme-toggle { display: flex; border: 1px solid var(--rose-border); border-radius: 999px; padding: 2px; }
 .theme-toggle button {
@@ -162,6 +161,8 @@ p { margin: 0; }
 .site-menu__label { margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .site-menu__links { display: grid; border-top: 1px solid var(--line); padding-top: 6px; }
 .site-menu__links a { min-height: 44px; display: flex; align-items: center; font-weight: 600; text-decoration: none; }
+.site-menu__sub { margin-left: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.site-menu__links .external-icon { margin-left: auto; }
 .switch {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
   font: inherit; color: var(--text); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; min-height: 44px;
@@ -449,84 +450,112 @@ p { margin: 0; }
 
 /* ---------- Home page ---------- */
 
+/* Mobile: one column in the order topbar, title, map, tabs, search and list. The map stays at the top of the screen while
+   the list scrolls under it (sticky), with the search bar right below. --map-h is the map height: smaller once the list
+   has been scrolled (home--small) and while searching (home--search), set by home.js. */
 .home {
+  --map-h: 300px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   padding: 12px 16px 40px;
   max-width: 640px;
   margin: 0 auto;
 }
+.home--small { --map-h: 180px; }
+.home--search { --map-h: 130px; }
 .home__left { display: contents; }
 .home .topbar { order: 1; }
-.home__intro { order: 2; display: flex; flex-direction: column; gap: 6px; }
-.home__intro h1 { font-size: 32px; }
-/* Mobile: tabs, then the selected tab's content, then the map (with selected site and legend below), then the list.
-   The Flysteder tab is display: contents, so the filters come before the map and the list after. */
-.home-tabs { order: 3; }
-.home-pane { order: 4; display: flex; flex-direction: column; gap: 16px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font: 700 24px/1 var(--font-heading); }
+.logo img { border-radius: 7px; }
+.home__intro { order: 2; display: flex; flex-direction: column; gap: 2px; }
+.home__eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
+[data-theme="dark"] .home__eyebrow { color: var(--link); }
+.home__intro h1 { font-size: 30px; }
+.home__map { order: 3; position: sticky; top: 0; z-index: 1200; display: flex; flex-direction: column; height: var(--map-h); margin: 0 -16px; background: var(--bg); transition: height 0.2s; }
+/* The map gets smaller after scrolling without moving the list: the space it gives up is kept as margin below, which
+   is scrolled past already. While searching the list moves up, so the hits are close to the field. */
+.home--small:not(.home--search) .home__map { margin-bottom: calc(300px - var(--map-h)); }
+.home-tabs { order: 4; }
+.home-pane { order: 5; display: flex; flex-direction: column; gap: 14px; }
 .home-pane--sites { display: contents; }
 .home-pane[hidden] { display: none; }
-.filters { order: 4; }
-.home__map { order: 5; display: flex; flex-direction: column; gap: 10px; }
-.home__legend .legend { flex-direction: row; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; }
-.results { order: 6; }
-.results__note { margin: 4px 0 0; font-size: 13px; }
-/* Tabs: Flysteder, Vær, Info. */
+.home .disclaimer { order: 7; margin-top: 12px; }
+.map--home { flex: 1; min-height: 0; height: auto; border-radius: 0; border: 0; }
+@media (prefers-reduced-motion: reduce) { .home__map, .home .searchbar { transition: none; } }
+
+/* Tabs: Flysteder and Vær, with an icon. */
 .home-tabs { display: flex; border-bottom: 1px solid var(--line); }
 .home-tabs button {
-  flex: 1; min-height: 44px; padding: 0 8px; font: 600 15px var(--font-body); color: var(--muted); cursor: pointer;
-  background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 8px;
+  font: 600 16px var(--font-body); color: var(--muted); cursor: pointer; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
 }
-.home-tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--text); }
+.home-tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--fjord); }
 .home-tabs button:focus-visible { outline: 3px solid var(--fjord); outline-offset: -3px; }
 
-.map--home { height: min(70vh, 560px); }
-
-.filters { display: flex; flex-direction: column; gap: 16px; }
-/* Search field at the top of the filters. 16px font, so iPhone does not zoom in when the field gets focus. */
+/* Search and «Filter» in one row, right below the map while the list scrolls. 16px font, so iPhone does not zoom in
+   when the field gets focus. */
+.searchbar {
+  order: 5; position: sticky; top: var(--map-h); z-index: 1100; display: flex; gap: 8px; margin: 0 -16px; padding: 8px 16px;
+  background: var(--bg); transition: top 0.2s;
+}
 .search-input {
-  width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 14px 0 40px;
+  flex: 1; min-width: 0; min-height: 46px; box-sizing: border-box; padding: 0 14px 0 40px;
   font: inherit; font-size: 16px; color: var(--text); background: var(--card);
-  border: 1px solid var(--rose-border); border-radius: 22px;
+  border: 1px solid var(--rose-border); border-radius: 23px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%237F9396' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: 14px center;
 }
-.search-hits { display: flex; flex-wrap: wrap; gap: 6px; }
-.search-hits .pill { min-height: 40px; }
 .search-input:focus-visible { outline: 3px solid var(--fjord); outline-offset: 1px; border-color: var(--fjord); }
+.search-hits { order: 5; display: flex; flex-wrap: wrap; gap: 6px; }
+.search-hits[hidden] { display: none; }
+.search-hits .pill { min-height: 40px; }
 .filter { display: flex; flex-direction: column; gap: 8px; }
 .filter__title { font-size: 14px; font-weight: 600; color: var(--muted); }
-.compass {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  width: 240px;
-}
-.compass button {
-  height: 56px;
-  border-radius: 12px;
-  font-size: 20px;
-  font-weight: 600;
-  cursor: pointer;
-  background: var(--card);
-  color: var(--text);
-  border: 2px solid var(--line);
-}
-.compass .compass__all { font-size: 16px; background: var(--surface); }
-.compass button[aria-pressed="true"] { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
 
-.selected {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  scroll-margin-top: 12px;
+/* Direction in the filter: a small wind rose with eight sectors to tap (index.njk). Each sector is a button covering the
+   whole rose, clipped to its wedge, so the whole sector can be tapped. Several directions can be on. */
+.dirpick { display: grid; grid-template-columns: 148px minmax(0, 1fr); gap: 14px; align-items: center; }
+.dirpick__text { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.dirpick__text strong { font-size: 17px; color: var(--text); }
+.dirrose { position: relative; width: 148px; height: 148px; border-radius: 50%; overflow: hidden; background: var(--line); }
+.dirrose__sector {
+  position: absolute; inset: 0; padding: 0; border: 0; background: var(--surface); color: var(--text); font: 700 13px var(--font-body); cursor: pointer;
 }
-.selected { position: relative; }
+.dirrose__sector span { position: absolute; transform: translate(-50%, -50%); }
+.dirrose__sector[aria-pressed="true"] { background: var(--fjord); color: #FFFFFF; }
+[data-theme="dark"] .dirrose__sector[aria-pressed="true"] { background: var(--dir-primary); color: var(--dir-primary-text); }
+.dirrose__sector:focus-visible { outline: none; background: var(--line); }
+.dirrose__sector[aria-pressed="true"]:focus-visible { background: var(--inverse-bg); color: var(--inverse-text); }
+/* Wedges of 42° (a 3° gap on each side shows the background as a line between them), and the label at 35 % from the
+   centre. Points at 75 % reach past the circle, which is cut off by the round corners. */
+.dirrose__sector--n { clip-path: polygon(50% 50%, 23.1% -20%, 50% -25%, 76.9% -20%); }
+.dirrose__sector--ne { clip-path: polygon(50% 50%, 80.5% -18.5%, 103% -3%, 118.5% 19.5%); }
+.dirrose__sector--e { clip-path: polygon(50% 50%, 120% 23.1%, 125% 50%, 120% 76.9%); }
+.dirrose__sector--se { clip-path: polygon(50% 50%, 118.5% 80.5%, 103% 103%, 80.5% 118.5%); }
+.dirrose__sector--s { clip-path: polygon(50% 50%, 76.9% 120%, 50% 125%, 23.1% 120%); }
+.dirrose__sector--sw { clip-path: polygon(50% 50%, 19.5% 118.5%, -3% 103%, -18.5% 80.5%); }
+.dirrose__sector--w { clip-path: polygon(50% 50%, -20% 76.9%, -25% 50%, -20% 23.1%); }
+.dirrose__sector--nw { clip-path: polygon(50% 50%, -18.5% 19.5%, -3% -3%, 19.5% -18.5%); }
+.dirrose__sector--n span { left: 50%; top: 15%; }
+.dirrose__sector--ne span { left: 74.7%; top: 25.3%; }
+.dirrose__sector--e span { left: 85%; top: 50%; }
+.dirrose__sector--se span { left: 74.7%; top: 74.7%; }
+.dirrose__sector--s span { left: 50%; top: 85%; }
+.dirrose__sector--sw span { left: 25.3%; top: 74.7%; }
+.dirrose__sector--w span { left: 15%; top: 50%; }
+.dirrose__sector--nw span { left: 25.3%; top: 25.3%; }
+.dirrose__all {
+  position: absolute; left: 50%; top: 50%; z-index: 1; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%;
+  border: 2px solid var(--line); background: var(--card); color: var(--text); font: 700 13px var(--font-body); cursor: pointer;
+}
+.dirrose__all[aria-pressed="true"] { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
+
+/* Selected site on desktop: a card on the map (home.js). On mobile the short line on the map (map-note) is used. */
+.selected {
+  position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
 .selected__top { display: flex; gap: 14px; align-items: center; }
 .selected__close {
   position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer;
@@ -536,47 +565,148 @@ p { margin: 0; }
 .selected__name { font-size: 28px; font-weight: 700; line-height: 1; }
 .selected__text { font-size: 15px; line-height: 1.45; color: var(--muted); }
 .selected .tag { font-size: 13px; padding: 2px 8px; }
+.home__map .selected { display: none; }
+.map-note {
+  position: absolute; left: 8px; right: 8px; bottom: 80px; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 40px; padding: 4px 6px 4px 12px; border-radius: 12px; background: var(--card); box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); font-size: 14px;
+}
+.map-note[hidden] { display: none; }
+.map-note > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.map-note a { flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 10px; font-weight: 700; text-decoration: none; }
+/* The small map has little room: the selected site is marked in the list right below, so the line on the map is hidden. */
+.home--small:not(.home--search) .map-note { display: none; }
+.home--search .map-note { bottom: 26px; }
 
-.results { display: flex; flex-direction: column; gap: 8px; }
-.results h2 { font-size: 22px; }
+/* The list: a rose for each site with the wind sector and rating ring, the name and height, directions and the rating. */
+.results { order: 6; display: flex; flex-direction: column; gap: 8px; }
+.results h2 { font: 700 12px var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .results__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.results__li--more { display: none; }
 .results__item {
-  width: 100%;
-  min-height: 56px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: var(--text);
-  background: var(--card);
-  border: 2px solid var(--line-soft);
+  width: 100%; min-height: 56px; text-align: left; display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px;
+  border-radius: 14px; cursor: pointer; color: var(--text); background: var(--card); border: 1px solid var(--line-soft); font: inherit;
+  box-shadow: 0 1px 2px rgba(28, 43, 51, 0.04);
 }
 .results__item:hover { border-color: var(--rose-border); }
-.results__item--selected { border-color: var(--text); }
+.results__item--selected { border-color: var(--fjord); box-shadow: 0 0 0 2px var(--fjord); }
+.results__item:active { background: var(--surface); }
+.results__rose:empty { display: none; }
+.results__ring { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #FFFFFF; border: 1px solid var(--rose-border); }
+.results__ring--ok { border: 3px solid var(--wind-ok); }
+.results__ring--maybe { border: 3px solid var(--wind-maybe); }
+.results__ring--high { border: 3px solid var(--wind-high); }
+.results__ring--no { border: 3px solid var(--wind-no); }
+.results__ring .rose { display: block; }
+.results__ring .rose .sector--wind-edge { stroke: none; }
+/* The rose keeps the light colours in the dark theme, as on the map. */
+[data-theme="dark"] .results__rose { --dir-primary: #3D7A8A; --possible: #8FBCC7; --rose-border: #9FB1B4; --rose-none: #FFFFFF; --map-ink: #1C2B33; }
+.results__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .results__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.results__name { font-weight: 600; font-size: 17px; }
+.results__name { font-weight: 700; font-size: 18px; }
 .results__elev { font-size: 14px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .selected__elev { margin: -2px 0 0; font-size: 14px; color: var(--muted); }
 .results .direction { font-size: 13px; padding: 1px 6px; min-width: 26px; }
 .results .direction--none { padding: 0 5px; }
+/* «Trykk igjen for å åpne flystedet ›»: a link laid over the bottom of the selected item, with room made for it. */
+.results__list li { position: relative; }
+.results__open { display: none; position: absolute; left: 64px; bottom: 10px; font-size: 14px; font-weight: 700; color: var(--fjord); text-decoration: none; }
+[data-theme="dark"] .results__open { color: var(--link); }
+.results__item--selected { padding-bottom: 34px; }
+.results__item--selected + .results__open { display: block; }
 .results__group { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
 .results__group-title { font-size: 18px; }
 .results__group .muted { margin: 0; font-size: 14px; line-height: 1.4; }
+.results__more { align-self: flex-start; min-height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid var(--rose-border); background: var(--card); color: var(--text); font: 600 15px var(--font-body); cursor: pointer; }
+.results__more[hidden] { display: none; }
+.results__note { margin: 4px 0 0; font-size: 13px; }
+/* The rating as a chip with a symbol: the same colours and symbols as on the site page. */
+.rating-chip { display: inline-flex; align-items: center; gap: 5px; margin-right: 6px; padding: 2px 9px 2px 3px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.rating-chip > span { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; color: #FFFFFF; font-size: 11px; }
+.rating-chip--ok { background: color-mix(in srgb, var(--wind-ok) 16%, var(--card)); color: color-mix(in srgb, var(--wind-ok) 45%, var(--text)); }
+.rating-chip--maybe { background: color-mix(in srgb, var(--wind-maybe) 16%, var(--card)); color: color-mix(in srgb, var(--wind-maybe) 45%, var(--text)); }
+.rating-chip--high { background: color-mix(in srgb, var(--wind-high) 16%, var(--card)); color: color-mix(in srgb, var(--wind-high) 45%, var(--text)); }
+.rating-chip--no { background: var(--surface); color: var(--muted); }
+.rating-chip--ok > span { background: var(--wind-ok); }
+.rating-chip--maybe > span { background: var(--wind-maybe); color: #1C2B33; }
+.rating-chip--high > span { background: var(--wind-high); }
+.rating-chip--no > span { background: var(--wind-no); }
 
 .before-you-go { display: flex; flex-direction: column; gap: 8px; }
 .before-you-go h2 { font-size: 22px; }
 
 .disclaimer { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.disclaimer p { margin: 0; }
+
+/* Status on the map: the pill at the top, and the details below it when opened (home.js). */
+.map-status { position: absolute; top: 10px; left: 58px; right: 58px; z-index: 1001; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.map-status > * { pointer-events: auto; }
+.map-status__pill {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 34px; padding: 3px 12px 3px 4px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); color: var(--text); font: 700 15px var(--font-body); cursor: pointer;
+  box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); white-space: nowrap;
+}
+.map-status__pill:not([class*="--"]) { padding-left: 12px; }
+.map-status__icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--wind-no); color: #FFFFFF; font-size: 13px; }
+.map-status__icon[hidden] { display: none; }
+.map-status__sub { overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 13px; color: var(--muted); }
+.map-status__pill--ok { background: color-mix(in srgb, var(--wind-ok) 14%, var(--card)); border-color: var(--wind-ok); }
+.map-status__pill--maybe { background: color-mix(in srgb, var(--wind-maybe) 16%, var(--card)); border-color: var(--wind-maybe); }
+.map-status__pill--high { background: color-mix(in srgb, var(--wind-high) 14%, var(--card)); border-color: var(--wind-high); }
+.map-status__pill--ok .map-status__icon { background: var(--wind-ok); }
+.map-status__pill--maybe .map-status__icon { background: var(--wind-maybe); color: #1C2B33; }
+.map-status__pill--high .map-status__icon { background: var(--wind-high); }
+.map-info {
+  display: flex; flex-direction: column; gap: 8px; width: min(360px, 100%); max-height: calc(var(--map-h) - 60px); overflow-y: auto; padding: 10px 12px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--card); box-shadow: 0 4px 18px rgba(28, 43, 51, 0.3); font-size: 14px; line-height: 1.45;
+}
+.map-info[hidden] { display: none; }
+.map-info .legend { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; margin: 0; }
+
+/* The timeline at the bottom of the map: «Nå», the time and the slider over a track in the rating colours. */
+.timeline {
+  position: absolute; left: 8px; right: 8px; bottom: 26px; z-index: 1000; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px;
+  border-radius: 14px; background: var(--card); background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25);
+}
+.timeline[hidden] { display: none; }
+.timeline__now {
+  flex: none; min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--rose-border); background: var(--card); color: var(--text);
+  font: 700 15px var(--font-body); cursor: pointer;
+}
+.timeline__now[aria-pressed="true"] { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
+.timeline__time { flex: none; min-width: 5.5em; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timeline__track { position: relative; flex: 1; min-width: 0; height: 36px; }
+.timeline__bar { position: absolute; left: 0; right: 0; top: 12px; height: 6px; border-radius: 3px; background: var(--line); }
+.timeline__days { position: absolute; left: 0; right: 0; top: 22px; height: 14px; font-size: 11px; color: var(--muted); }
+.timeline__days span { position: absolute; padding-left: 3px; border-left: 1px solid var(--muted); line-height: 12px; }
+.timeline input[type="range"] { position: absolute; left: 0; right: 0; top: 4px; width: 100%; height: 22px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+.timeline input[type="range"]::-webkit-slider-runnable-track { height: 22px; background: transparent; }
+.timeline input[type="range"]::-moz-range-track { height: 22px; background: transparent; }
+.timeline input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--card); border: 3px solid var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+.timeline input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--card); border: 3px solid var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+.timeline input[type="range"]:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 11px; }
+
+/* Smaller map: the timeline shrinks to the slider, the extra buttons and the details are hidden. While searching the
+   timeline is hidden too. */
+.home--small .map-status__sub, .home--search .map-status__sub { display: none; }
+.home--small .timeline__time { min-width: 0; font-size: 14px; }
+.home--small .map-reset, .home--search .map-reset, .home--search .leaflet-control-zoom { display: none; }
+.home--search .timeline { display: none; }
+/* The attribution below the map on one line (moved there by home.js), and no scale on mobile, where the map is small. */
+.home__map .map-attribution {
+  flex: none; margin: 0; padding: 1px 8px; font-size: 11px; line-height: 16px; white-space: nowrap; overflow-x: auto; scrollbar-width: none;
+  background: var(--card); color: var(--muted); border-bottom: 1px solid var(--line);
+}
+.home__map .map-attribution::-webkit-scrollbar { display: none; }
+.home__map .map-attribution a { color: var(--link); text-decoration: underline; }
+.home__map .leaflet-control-scale { display: none; }
 
 @media (min-width: 1100px) {
-  /* Desktop: left column and map. No right column: selected site, status and legend sit on top of the map. */
+  /* Desktop: the left column and the map filling the rest. The status, timeline and selected site sit on the map. */
   body.page-home { height: 100vh; overflow: hidden; }
   .home {
+    --map-h: 100vh;
     display: grid;
-    grid-template-columns: 380px minmax(0, 1fr);
+    grid-template-columns: 400px minmax(0, 1fr);
     max-width: none;
     height: 100vh;
     padding: 0;
@@ -585,29 +715,32 @@ p { margin: 0; }
   .home__left {
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 16px;
     overflow-y: auto;
     padding: 20px 24px 32px;
     border-right: 1px solid var(--line);
   }
-  .home__left > *, .home .topbar { order: 0; }
-  .home-pane, .home-pane--sites { display: flex; flex-direction: column; gap: 22px; }
+  .home__left > *, .home .topbar, .home-pane--sites > * { order: 0; }
+  .home-pane, .home-pane--sites { display: flex; flex-direction: column; gap: 14px; }
   .home-pane[hidden] { display: none; }
-  .home__map { height: 100vh; order: 0; position: relative; display: block; }
-  .map--home { height: 100%; border: none; border-radius: 0; }
-  .home__intro h1 { font-size: 42px; }
-  /* Selected site: card at bottom right, hidden until something is selected. */
-  .home__map .selected { position: absolute; right: 14px; bottom: 14px; z-index: 1000; width: 360px; max-height: calc(100% - 200px); overflow-y: auto; box-shadow: 0 4px 22px rgba(28, 43, 51, 0.3); }
+  .home__map { position: relative; height: 100vh; margin: 0; order: 0; }
+  .map--home { border: none; }
+  .searchbar { position: static; margin: 0; padding: 0; }
+  .home__intro h1 { font-size: 34px; }
+  .home__map .selected { display: flex; position: absolute; right: 14px; bottom: 80px; z-index: 1000; width: 360px; max-height: calc(100% - 200px); overflow-y: auto; box-shadow: 0 4px 22px rgba(28, 43, 51, 0.3); }
   .home__map .selected:not(.selected--active) { display: none; }
-  /* Legend: small line at bottom left, semi-transparent. */
-  .home__map .home__legend {
-    position: absolute; left: 12px; bottom: 26px; z-index: 1000; max-width: calc(100% - 410px);
-    display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line);
-    background: var(--card); background: color-mix(in srgb, var(--card) 88%, transparent);
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(28, 43, 51, 0.2);
-  }
-  .home__map .home__legend .legend { gap: 4px 12px; font-size: 13px; margin: 0; }
-  .home__map .wind-legend__arrow { flex-basis: auto; }
+  .map-note { display: none !important; }
+  .map-status { left: 64px; right: auto; align-items: flex-start; }
+  .map-status__pill { flex-direction: row; }
+  .map-status__sub { margin-left: 4px; }
+  .timeline { left: 50%; right: auto; bottom: 22px; width: min(560px, calc(100% - 120px)); transform: translateX(-50%); }
+  .home__map .leaflet-control-scale { display: block; }
+  .home__map .map-attribution { position: absolute; right: 0; bottom: 0; z-index: 1000; border: 0; border-top-left-radius: 6px; background: color-mix(in srgb, var(--card) 85%, transparent); }
+  .results__item { padding: 8px 10px; gap: 10px; }
+  .results__name { font-size: 17px; }
+  /* Desktop: one click shows the site in the map and the card, which links to the site page. */
+  .results__item--selected { padding-bottom: 8px; }
+  .results__item--selected + .results__open { display: none; }
 }
 
 /* ---------- Site page ---------- */
@@ -624,6 +757,31 @@ p { margin: 0; }
 .site-page__main, .site-page__aside { display: flex; flex-direction: column; gap: 32px; }
 
 .block { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+/* Mobile: links to the parts of the page in a row that stays at the top while scrolling (site.njk). */
+.section-nav {
+  position: sticky; top: 0; z-index: 1100; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  margin: -12px -16px; padding: 8px 16px; background: var(--bg); background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line-soft);
+}
+.section-nav::-webkit-scrollbar { display: none; }
+/* Faded at the edges, so it is clear the row scrolls sideways when the links do not fit. */
+.section-nav {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent);
+}
+.section-nav a[aria-current="true"] { background: var(--inverse-bg); color: var(--inverse-text); border-color: var(--inverse-bg); }
+.section-nav a {
+  flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px;
+  font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);
+}
+.site-page h2[id], .site-page section[id] { scroll-margin-top: 64px; }
+/* Parts that fold on mobile (Fakta, Bilder, «Logg og mer», winds aloft). The heading is the button. */
+.fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { content: "+"; font: 600 24px/1 var(--font-body); color: var(--muted); }
+.fold[open] > summary::after { content: "–"; }
+.fold > summary > h2, .fold > summary > h3 { margin: 0; }
+.fold[open] { display: flex; flex-direction: column; gap: 12px; }
 /* HTML order is the mobile order (title, Før du starter, content, right column), so screen readers
    and keyboard follow what is seen. No `order` here. */
 .block--title { gap: 10px; }
@@ -664,20 +822,6 @@ p { margin: 0; }
 .hazard strong { font-size: 16px; }
 .hazard span { font-size: 15px; line-height: 1.45; }
 
-.rose-facts { display: flex; gap: 16px; align-items: center; }
-.facts { margin: 0; }
-.facts > dl { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--line); }
-.facts > dl:last-child { border-bottom: 1px solid var(--line); }
-.facts dt { font-size: 14px; color: var(--muted); }
-.facts dl, .facts dd { margin: 0; }
-/* Level, category and season separately, on one line. */
-.facts > .facts__trio { flex-direction: row; flex-wrap: wrap; gap: 10px 24px; }
-.facts__trio > div { display: flex; flex-direction: column; gap: 4px; }
-.elevations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.elevations > span { display: flex; flex-direction: column; gap: 2px; }
-.elevations .muted { font-size: 13px; }
-.elevations strong { font-size: 18px; font-weight: 600; }
-.elevations .missing { font-size: 15px; }
 .airspace { display: flex; flex-direction: column; gap: 8px; }
 .airspace > .muted, .airspace > .missing { font-size: 14px; line-height: 1.45; }
 
@@ -707,10 +851,13 @@ p { margin: 0; }
 .launch-list--categories .launch-list__badges { grid-area: dir; }
 .launch-list--categories .launch-list__categories { grid-area: cat; }
 .launch-list--categories .launch-list__texts { grid-area: text; }
+.launch-list__now { grid-column: 1; }
+.launch-list--categories li { grid-template-areas: "dir text" "cat text" "now text"; grid-template-rows: auto auto 1fr; }
+.launch-list--categories .launch-list__now { grid-area: now; }
 .launch-list__categories { display: flex; flex-wrap: wrap; gap: 4px; }
 .launch-list__categories:empty { display: none; }
 @media (min-width: 640px) {
-  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text"; }
+  .launch-list--categories li { grid-template-columns: 100px 92px minmax(0, 1fr); grid-template-areas: "dir cat text" "now cat text"; grid-template-rows: auto 1fr; }
   .launch-list__categories:empty { display: flex; }
 }
 .launch-list__texts { display: flex; flex-direction: column; gap: 6px; }
@@ -771,7 +918,6 @@ p { margin: 0; }
   gap: 12px;
 }
 .site-page__aside > .block > h2 { font-size: 24px; }
-.site-page__aside .facts > dl:last-child { border-bottom: 0; padding-bottom: 0; }
 /* Vær: the meteogram in its own frame and the links compact on one line, with the description to the right. */
 .block--weather .meteogram { padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
 .block--weather .meteogram img { border: 0; border-radius: 6px; }
@@ -789,7 +935,6 @@ p { margin: 0; }
 }
 .site-wind strong { font-size: 16px; }
 .site-wind span { font-size: 14px; line-height: 1.45; color: var(--muted); }
-.site-wind .site-wind__time { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
 .site-wind--ok { border-left-color: var(--wind-ok); }
 .site-wind--maybe { border-left-color: var(--wind-maybe); }
 .site-wind--high { border-left-color: var(--wind-high); }
@@ -831,6 +976,137 @@ p { margin: 0; }
 .metadata dd { margin: 0; }
 .page-footer .disclaimer { font-size: 13px; }
 
+/* ---------- Site page v2: hero, «Kan jeg fly her nå?», cards in one column, action bar at the bottom ---------- */
+.site-v2 { max-width: 760px; gap: 16px; padding-bottom: 96px; }
+.site-page__body { display: flex; flex-direction: column; gap: 16px; }
+.site-page__body > .block:not(.block--notice) {
+  padding: 18px 16px; background: var(--card); border: 1px solid var(--line-soft); border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(28, 43, 51, 0.04), 0 4px 16px rgba(28, 43, 51, 0.05);
+}
+.site-page__body > .block h2 { font-size: 28px; }
+.site-page__body > .lead { margin: 0; }
+
+.hero {
+  position: relative; display: flex; align-items: flex-end; min-height: 280px; margin: 0 -16px; overflow: hidden;
+  background: linear-gradient(160deg, #2E5E6E, #1C2B33);
+}
+.hero__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17, 25, 29, 0) 35%, rgba(17, 25, 29, 0.82) 100%); }
+.hero__text { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px; color: #FFFFFF; }
+.hero h1 { font-size: 46px; color: #FFFFFF; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35); }
+.hero__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.hero__chips li {
+  padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #FFFFFF;
+  background: rgba(17, 25, 29, 0.45); border: 1px solid rgba(255, 255, 255, 0.55);
+}
+.hero__chips .hero__chip--warn { background: #8A2C0D; border-color: #8A2C0D; }
+.hero__chips .hero__chip--muted { border-style: dashed; font-weight: 500; }
+.hero__eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); }
+/* The site's directions on the image: a white disc so the rose reads on any photo. Light colours also in the dark theme. */
+.hero__rose {
+  position: absolute; right: 14px; top: 14px; z-index: 2; display: grid; place-items: center; padding: 4px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+  --text: #1C2B33; --muted: #45545C; --dir-primary: #3D7A8A; --possible: #8FBCC7; --rose-border: #9FB1B4; --rose-none: #FFFFFF; color: #1C2B33;
+}
+.hero__rose .rose { display: block; }
+
+/* «Kan jeg fly her nå?»: the colours follow the rating now (data-rating, set by site-wind.js). --r is the rating colour,
+   --rs a light tint of it for backgrounds and --rt a darker (lighter in the dark theme) shade for text. Mixed from the
+   wind colours, so they follow the dark theme and the colour-blind-friendly colours. */
+.block--now, .hour-card { --r: var(--wind-no); }
+.block--now[data-rating="ok"], .hour-card--ok { --r: var(--wind-ok); }
+.block--now[data-rating="maybe"], .hour-card--maybe { --r: var(--wind-maybe); }
+.block--now[data-rating="high"], .hour-card--high { --r: var(--wind-high); }
+.block--now[data-rating="none"] { --r: var(--line); }
+.block--now, .hour-card { --rs: color-mix(in srgb, var(--r) 16%, var(--card)); --rt: color-mix(in srgb, var(--r) 45%, var(--text)); }
+.site-page__body > .block.block--now { border-top: 6px solid var(--r); }
+.site-page__body .block--now .now-eyebrow { margin: 0; font: 700 13px var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
+[data-theme="dark"] .site-page__body .block--now .now-eyebrow { color: var(--link); }
+.block--now .site-wind { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; background: none; }
+.site-wind__verdict { display: flex; align-items: center; gap: 10px; }
+.block--now .site-wind .site-wind__icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--r); color: #FFFFFF; font: 700 20px var(--font-body); }
+.block--now[data-rating="maybe"] .site-wind .site-wind__icon, .hour-card--maybe .hour-card__icon { color: #1C2B33; }
+.block--now .site-wind .site-wind__word { font: 700 36px/1 var(--font-heading); color: var(--rt); }
+.block--now .site-wind strong { font-size: 17px; }
+.hour-cards { display: flex; gap: 6px; margin: 0; padding: 2px 2px 6px; list-style: none; overflow-x: auto; scrollbar-width: thin; }
+.hour-card {
+  flex: 0 0 54px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px 8px;
+  border-radius: 10px; background: var(--rs); border-bottom: 4px solid var(--r);
+}
+.hour-card--now { outline: 2px solid var(--text); outline-offset: 1px; }
+.hour-card__hour { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hour-card__icon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--r); color: #FFFFFF; font-size: 12px; font-weight: 700; }
+.hour-card__bar { position: relative; width: 8px; height: 40px; border-radius: 4px; background: color-mix(in srgb, var(--r) 22%, transparent); }
+.hour-card__bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 4px; background: var(--r); }
+.hour-card__bar b { position: absolute; left: -3px; right: -3px; height: 2px; background: var(--text); }
+.hour-card__arrow { font-size: 15px; line-height: 1; color: var(--rt); }
+.hour-card__wind { font-size: 13px; font-weight: 700; color: var(--rt); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hour-card__wind small { font-size: 12px; font-weight: 500; }
+.hour-cards__key, .now-limit { margin: 0; font-size: 13px; color: var(--muted); }
+.now-48 > summary > h3, .now-details > summary > h3 { font-size: 17px; }
+.now-48[hidden] { display: none; }
+.wind-chart { display: flex; flex-direction: column; gap: 4px; }
+.wind-chart__bars { display: flex; align-items: flex-end; gap: 2px; height: 110px; padding-top: 18px; border-bottom: 1px solid var(--line); }
+.wind-chart__col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.wind-chart__col--now { outline: 2px solid var(--text); outline-offset: 1px; border-radius: 2px; }
+.wind-chart__gust, .wind-chart__bar { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 2px 2px 0 0; }
+.wind-chart__gust { opacity: 0.35; }
+.wind-chart__arrow { position: absolute; top: -18px; left: 50%; width: 14px; margin-left: -7px; font-size: 13px; line-height: 14px; text-align: center; color: var(--muted); }
+.wind-chart--ok { background: var(--wind-ok); }
+.wind-chart--maybe { background: var(--wind-maybe); }
+.wind-chart--high { background: var(--wind-high); }
+.wind-chart--no { background: var(--wind-no); }
+.wind-chart__axis { display: flex; gap: 2px; font-size: 11px; color: var(--muted); }
+.wind-chart__tick { flex: 1; overflow: visible; white-space: nowrap; }
+.wind-chart__key { margin: 0; font-size: 12px; color: var(--muted); }
+.wind-windows { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.wind-windows__item { padding: 5px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; background: var(--surface); border-left: 4px solid var(--wind-no); }
+.wind-windows--ok { border-left-color: var(--wind-ok); }
+.wind-windows--maybe { border-left-color: var(--wind-maybe); }
+.wind-windows__none { font-size: 14px; color: var(--muted); }
+.now-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.now-links .btn { justify-content: center; }
+
+/* Startplasser: the rose with the wind now, and each group of launches with «Passer nå» or «Ikke nå». */
+.launch-head { display: flex; gap: 16px; align-items: center; }
+.launch-head .rose { flex: none; }
+.launch-head__text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.launch-now { margin: 0; font-weight: 700; }
+.launch-list__now { justify-self: start; align-self: start; padding: 2px 8px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--surface); color: var(--muted); white-space: nowrap; }
+/* Light tint with dark text, as the rating chips in the list on the home page, so the text has enough contrast. */
+.launch-list__now--ok { background: color-mix(in srgb, var(--wind-ok) 16%, var(--card)); color: color-mix(in srgb, var(--wind-ok) 45%, var(--text)); }
+.launch-list__now--maybe { background: color-mix(in srgb, var(--wind-maybe) 16%, var(--card)); color: color-mix(in srgb, var(--wind-maybe) 45%, var(--text)); }
+.launch-list__now--high { background: color-mix(in srgb, var(--wind-high) 16%, var(--card)); color: color-mix(in srgb, var(--wind-high) 45%, var(--text)); }
+
+/* Landing og adkomst */
+.glide { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface); }
+.glide__label { color: var(--link); font-weight: 600; }
+.block--landing h3 { margin: 6px 0 0; }
+
+/* Mobile: the action bar at the bottom of the screen. */
+.action-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1500; display: flex; gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 16px rgba(28, 43, 51, 0.08);
+}
+.action-bar a {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px;
+  font-weight: 700; text-decoration: none; color: var(--text); background: var(--card); border: 1px solid var(--rose-border);
+}
+.action-bar .action-bar__primary { flex: 1.4; color: var(--on-color); background: var(--text); border-color: var(--text); }
+@media (min-width: 800px) {
+  .hero { margin: 0; border-radius: 22px; min-height: 380px; }
+  .hero h1 { font-size: 64px; }
+  .hero__rose { top: auto; bottom: 22px; right: 26px; }
+  .hero__text { padding: 28px 28px; }
+  .site-page__body > .block:not(.block--notice) { padding: 24px; }
+  .action-bar { left: 50%; right: auto; bottom: 16px; width: 520px; margin-left: -260px; border: 1px solid var(--line); border-radius: 16px; }
+}
+/* Desktop: directions and GPX are in Landing og adkomst, and the map is on screen, so no action bar. */
+@media (min-width: 1024px) {
+  .action-bar { display: none; }
+  .site-v2 { padding-bottom: 48px; }
+}
 @media (min-width: 1024px) {
   .site-page { max-width: 1200px; padding: 16px 40px 64px; gap: 28px; }
   /* Two columns. Før du starter sits at top right beside the title, and the content on the left
@@ -977,11 +1253,11 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .airspace-profile text.airspace-profile__name { font-weight: 600; font-size: 14px; stroke: none; }
 .airspace-profile text.airspace-profile__floor { fill: var(--muted); stroke: none; }
 .airspace-profile__terrain { fill: var(--area); stroke: var(--rose-border); stroke-width: 1; }
-.airspace-profile__arrow { stroke: var(--text); stroke-width: 1.8; }
+.airspace-profile__arrow { stroke: var(--text); stroke-width: 1.5; }
 .airspace-profile__head { fill: var(--text); }
 .airspace-profile__arrow--warn { stroke: var(--accent); }
 .airspace-profile__head--warn { fill: var(--accent); }
-.airspace-profile text.airspace-profile__gap { font-family: var(--font-heading); font-size: 22px; font-weight: 700; }
+.airspace-profile text.airspace-profile__gap { font-family: var(--font-heading); font-size: 17px; font-weight: 700; }
 .airspace-profile text.airspace-profile__gap--warn { fill: var(--accent); }
 .airspace-profile text.airspace-profile__small { fill: var(--muted); font-size: 12px; }
 .airspace-profile__launch { fill: var(--text); stroke: var(--card); stroke-width: 2; }
@@ -1103,14 +1379,6 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
 body.has-fullscreen-map { overflow: hidden; }
 /* «Vis bare steder som kan passe» below the wind time (home.js). Its own line, so it does not mix with the times. */
-/* Segmented row (wind time, level, category): all options in one row with a shared border. */
-.segmented { display: flex; border: 1px solid var(--rose-border); border-radius: 10px; overflow: hidden; background: var(--card); }
-.segmented button {
-  flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 4px; font: 500 15px/1.1 var(--font-body); color: var(--text);
-  background: transparent; border: 0; border-left: 1px solid var(--line); cursor: pointer; white-space: nowrap;
-}
-.segmented button:first-child { border-left: 0; }
-.segmented button[aria-pressed="true"] { background: var(--fjord); color: var(--on-color); font-weight: 600; }
 /* «Bare steder som kan passe» as a switch (on/off), not a large button. aria-pressed is set by home.js.
    Own class name: .switch is the switch in the menu (macros.njk). */
 .suggest-switch {
@@ -1123,17 +1391,6 @@ body.has-fullscreen-map { overflow: hidden; }
 .suggest-switch[aria-pressed="true"]::after { transform: translateX(16px); }
 .suggest-switch:disabled { opacity: 0.45; cursor: not-allowed; }
 .suggest-switch:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; border-radius: 4px; }
-/* Summary of the wind and ratings below the wind selector (home.js). */
-/* Status card for the home page map: count shown, wind summary and forecast time (home.js).
-   Above the map on mobile, semi-transparent on top of the map on desktop. */
-.map-info {
-  display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
-  background: var(--card); background: color-mix(in srgb, var(--card) 86%, transparent);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 14px; line-height: 1.45;
-}
-.map-info__count { margin: 0; font-weight: 700; }
-.map-info__status { margin: 0; font-size: 13px; color: var(--muted); }
-.map-info__status:empty { display: none; }
 .wind-summary { font-size: 14px; line-height: 1.45; }
 .wind-summary p { margin: 0; }
 .wind-summary p + p { margin-top: 4px; }
@@ -1141,40 +1398,43 @@ body.has-fullscreen-map { overflow: hidden; }
 .wind-summary[hidden] { display: none; }
 /* Rule text for the wind assessment behind «Hvordan vurderes vinden?». */
 .wind-rules summary { font-size: 14px; color: var(--link); cursor: pointer; min-height: 32px; display: flex; align-items: center; }
-/* Level and category: on mobile behind a button with the selected count (home.js), always visible on desktop. The compass is always visible. */
-.filters-more { display: none; flex-direction: column; gap: 16px; }
-.filters-more.is-open { display: flex; }
-.filters-toggle {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 16px;
-  font: inherit; font-weight: 600; color: var(--text); background: var(--card); border: 1px solid var(--rose-border); border-radius: 10px; cursor: pointer;
+/* Direction, level and category: on mobile behind the «Filter» button (home.js), as a panel from the bottom of the
+   screen. Always visible on desktop. */
+.filters-more { display: none; flex-direction: column; gap: 18px; }
+.filters-more.is-open {
+  display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 2001; max-height: 85vh; overflow-y: auto;
+  padding: 22px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--card); border-radius: 18px 18px 0 0;
+  box-shadow: 0 -6px 28px rgba(28, 43, 51, 0.3);
 }
-.filters-toggle::after { content: "▾"; margin-left: auto; color: var(--muted); }
-.filters-toggle[aria-expanded="true"]::after { content: "▴"; }
-.filters-toggle__count { font-size: 13px; font-weight: 600; color: var(--on-color); background: var(--fjord); border-radius: 999px; padding: 2px 8px; }
+.filters-more.is-open::before {
+  content: ""; position: absolute; top: 8px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: var(--line);
+}
+.filters-backdrop { position: fixed; inset: 0; z-index: 2000; background: rgba(17, 25, 29, 0.45); }
+.filters-backdrop[hidden] { display: none; }
+body.sheet-open { overflow: hidden; }
+.filters-done {
+  min-height: 48px; font: inherit; font-weight: 700; color: var(--on-color); background: var(--fjord); border: 0; border-radius: 12px; cursor: pointer;
+}
+.filters-toggle {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 46px; padding: 0 16px;
+  font: inherit; font-weight: 600; color: var(--text); background: var(--card); border: 1px solid var(--rose-border); border-radius: 23px; cursor: pointer;
+}
+.filters-toggle[aria-expanded="true"] { border-color: var(--text); }
+.filters-toggle__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; font-size: 12px; font-weight: 700; color: var(--on-color); background: var(--fjord); border-radius: 10px; }
+.filters-toggle__count[hidden] { display: none; }
 @media (min-width: 1100px) {
-  /* Desktop is used with a mouse: smaller controls and tighter spacing, so the list comes higher up. Mobile
-     keeps 44 px touch targets. */
-  .home__left { gap: 16px; }
-  .home__intro h1 { font-size: 30px; }
-  .filters { gap: 12px; }
-  .filter { gap: 6px; }
-  .filter__title { font-size: 13px; }
-  .search-input { min-height: 38px; }
-  .segmented button { min-height: 32px; font-size: 14px; }
+  /* Desktop: the filters fold out under the search bar, instead of as a panel from the bottom. Smaller controls, since
+     desktop is used with a mouse. Mobile keeps 44 px touch targets. */
+  .search-input { min-height: 40px; }
   .suggest-switch { min-height: 30px; font-size: 14px; }
-  .compass { width: 168px; gap: 6px; }
-  .compass button { height: 40px; font-size: 16px; border-radius: 9px; border-width: 1.5px; }
-  .compass .compass__all { font-size: 13px; }
+  .filters-done, .filters-backdrop { display: none; }
+  .filters-more.is-open {
+    position: static; max-height: none; overflow: visible; padding: 14px; background: var(--card); box-shadow: none;
+    border: 1px solid var(--line); border-radius: 12px;
+  }
+  .filters-more.is-open::before { content: none; }
+  body.sheet-open { overflow: auto; }
   .results__list { gap: 6px; }
-  .results__item { min-height: 0; padding: 7px 10px; gap: 4px; border-width: 1.5px; }
-  .results__name { font-size: 16px; }
-  .results .direction { font-size: 12px; padding: 0 5px; min-width: 22px; }
-  .results h2 { font-size: 20px; }
-  .filters-toggle { display: none; }
-  .filters-more { display: flex; }
-  /* Status card on top of the map, to the right of the zoom buttons. */
-  .home__map { position: relative; }
-  .home__map .map-info { position: absolute; top: 12px; left: 64px; z-index: 1000; max-width: 360px; box-shadow: 0 2px 10px rgba(28, 43, 51, 0.25); }
 }
 
 /* Wind above the launch (windgram.js): hours across, heights upward. Scrolls sideways on mobile. */
@@ -1198,13 +1458,14 @@ body.has-fullscreen-map { overflow: hidden; }
 .windgram--ok { background: color-mix(in srgb, var(--wind-ok) 35%, transparent); }
 .windgram--maybe { background: color-mix(in srgb, var(--wind-maybe) 40%, transparent); }
 .windgram--high { background: color-mix(in srgb, var(--wind-high) 40%, transparent); }
-.windgram--storm { background: color-mix(in srgb, var(--wind-high) 70%, transparent); color: #fff; }
+/* Solid colour behind white text, so the numbers keep enough contrast (a see-through red was too light). */
+.windgram--storm { background: var(--wind-high); color: #fff; }
 .windgram--above { opacity: 0.7; }
 .windgram--cloud { box-shadow: inset 0 0 0 40px color-mix(in srgb, var(--muted) 15%, transparent); }
 .windgram--cloudbase { border-bottom: 2px dashed var(--muted); }
 .windgram__cloud { margin-right: 1px; font-size: 11px; color: var(--muted); }
 .windgram--night { filter: grayscale(0.6) brightness(0.9); }
-.windgram__hour.windgram--night { color: var(--line); }
+.windgram__hour.windgram--night { color: var(--muted); font-weight: 400; }
 .windgram__source { font-size: 12px !important; color: var(--muted); }
 
 /* Day plan («Når kan det passe?», home.js): days stacked, periods as small badges in the rating colours. */

@@ -6,7 +6,6 @@ region: Andøya
 municipality: Andøy
 external:
   flightlog_id: 9180
-  pgearth_id: null
   yr_id: 1-289448
 level: PP2
 training_site: false

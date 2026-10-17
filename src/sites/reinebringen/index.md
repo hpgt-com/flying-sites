@@ -6,7 +6,6 @@ region: Lofoten
 municipality: Moskenes
 external:
   flightlog_id: 7476
-  pgearth_id: null
   yr_id: 1-272770
 level: PP3
 training_site: false

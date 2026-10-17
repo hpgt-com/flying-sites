@@ -125,7 +125,7 @@ flowchart LR
   wind["wind.js<br/>rateWind(): Kan passe / Usikkert /<br/>For mye vind / Passer ikke"]
   home["home.js<br/>home page: search, filters,<br/>card, summary"]
   site["site.js<br/>site map, direction arcs,<br/>elevation profile"]
-  sitewind["site-wind.js<br/>«Vind nå» on the site page"]
+  sitewind["site-wind.js<br/>«Kan jeg fly her nå?» on the site page"]
   lightbox["lightbox.js<br/>image viewer"]
   goat["goatcounter.js<br/>(copy, CSP allows only own scripts)"]
   pwa["pwa.js<br/>registers the service worker,<br/>«Du er offline» notice"]
@@ -242,14 +242,14 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
 - **Foundation:** an Eleventy site on GitHub Pages that replaces the old iframe-based guide. One file per site with
   validation, a fixed page template, a Leaflet map with Kartverket as the base map, dark mode and colour-blind-friendly
   colours.
-- **Home page:** map with wind roses and clusters, search, filters for direction, level and category, a card for the
-  selected site, and tabs for Flysteder ("Sites"), Vær ("Weather") and Info.
-- **Wind assessment from MET:** «Kan passe», «Usikkert», «For mye vind» and «Passer ikke» for now, +3 h, +6 h and
-  tomorrow, with a summary that follows the filters, and «Vind nå» ("Wind now") on the site pages. Turned off when the
-  forecast is too old.
+- **Home page:** map with wind roses and clusters (on mobile it stays at the top and shrinks while the list scrolls),
+  search, filters for direction, level and category, a card for the selected site, and tabs for Flysteder ("Sites")
+  and Vær ("Weather").
+- **Wind assessment from MET:** «Kan passe», «Usikkert», «For mye vind» and «Passer ikke» for any hour in the
+  forecast (a timeline on the map), with a summary that follows the filters, and «Kan jeg fly her nå?» ("Can I fly
+  here now?") with the next 12 hours on the site pages. Turned off when the forecast is too old.
 - **Site pages:** map with launches, direction arcs, landings, parking, walking routes and numbered points from the
-  drawing, elevation profile from Kartverket, hazards, facts, airspace above the launch, Yr meteogram and image
-  viewer.
+  drawing, elevation profile from Kartverket, hazards, airspace above the launch, Yr meteogram and image viewer.
 - **Data and quality:** Kartverket heights for launch, landing and parking, review of all 32 sites, the status page
   with checks for missing content, open data (GeoJSON/KML).
 - **Airspace:** openAIP layer on the map (CTA/TMA, CTR, military areas, danger and restricted areas) with an error

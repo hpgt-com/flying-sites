@@ -15,99 +15,106 @@ scripts:
   - /assets/js/home.js
 ---
 {%- import "macros.njk" as m with context -%}
+{%- set ICON_SITES = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M2 19 9 7l4 6 3-4 6 10z"/></svg>' -%}
+{%- set ICON_WEATHER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>' -%}
+{%- set ICON_FILTER = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>' -%}
 <div class="home">
   <div class="home__left">
     <header class="topbar">
-      <span class="logo">{{ t.common.siteTitle }}</span>
+      <span class="logo"><img src="{{ '/assets/img/icon.svg' | url }}" width="28" height="28" alt="">{{ t.common.siteTitle }}</span>
       <div class="topbar__end">{{ m.siteMenu() }}</div>
     </header>
 
     <div class="home__intro">
+      <p class="home__eyebrow">{{ t.home.eyebrow }}</p>
       <h1>{{ t.home.title }}</h1>
     </div>
 
-    {#- Tabs in the left column (home.js): Flysteder (search, filters, list), Vær and Info. The map is always shown. -#}
+    {#- Tabs (home.js): Flysteder (search, filters, list) and Vær. The map is always shown: on mobile it stays at the top of the
+        screen while the list scrolls under it, on desktop it fills the right side. Info is in the menu. -#}
     <div class="home-tabs" role="tablist" aria-label="{{ t.home.tabsLabel }}">
-      <button type="button" role="tab" id="tab-sites" aria-controls="pane-sites" aria-selected="true">{{ t.home.tabSites }}</button>
-      <button type="button" role="tab" id="tab-weather" aria-controls="pane-weather" aria-selected="false" tabindex="-1">{{ t.home.tabWeather }}</button>
-      <button type="button" role="tab" id="tab-info" aria-controls="pane-info" aria-selected="false" tabindex="-1">{{ t.home.tabInfo }}</button>
+      <button type="button" role="tab" id="tab-sites" aria-controls="pane-sites" aria-selected="true">{{ ICON_SITES | safe }}{{ t.home.tabSites }}</button>
+      <button type="button" role="tab" id="tab-weather" aria-controls="pane-weather" aria-selected="false" tabindex="-1">{{ ICON_WEATHER | safe }}{{ t.home.tabWeather }}</button>
     </div>
 
     <div class="home-pane home-pane--sites" id="pane-sites" role="tabpanel" aria-labelledby="tab-sites">
-
-    <div class="filters" id="filters">
-      {#- Search by name. Filters the list and the map while typing (home.js). -#}
-      <div class="filter filter--search" role="search">
-        <label class="filter__title" for="site-search">{{ t.home.searchLabel }}</label>
+      {#- Search and the «Filter» button in one row, which stays right below the map on mobile while the list scrolls.
+          The search filters the list and the map while typing (home.js). -#}
+      <div class="searchbar" id="filters" role="search">
+        <label class="visually-hidden" for="site-search">{{ t.home.searchLabel }}</label>
         <input type="search" id="site-search" class="search-input" placeholder="{{ t.home.searchPlaceholder }}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-describedby="search-hits">
-        {#- Matches right below the field, so they are visible while typing, also on mobile where the list is far down. -#}
-        <div class="search-hits" id="search-hits" aria-live="polite" hidden></div>
+        <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">{{ ICON_FILTER | safe }}{{ t.home.filters }}<span class="filters-toggle__count" hidden></span></button>
       </div>
-      {% if forecast %}
-      <div class="filter">
-        <span class="filter__title" id="f-wind">{{ t.home.windFromForecast }}</span>
-        {#- Segmented control, so all the times fit on one row. -#}
-        <div class="segmented" role="group" aria-labelledby="f-wind">
-          {% for value, label, full in t.home.slots %}
-          <button type="button" data-wind="{{ value }}" aria-pressed="{{ 'true' if value == '0' else 'false' }}"{% if full != label %} aria-label="{{ full }}" title="{{ full }}"{% endif %}>{{ label }}</button>
-          {% endfor %}
+      {#- Matches right below the field, so they are visible while typing. -#}
+      <div class="search-hits" id="search-hits" aria-live="polite" hidden></div>
+
+      {#- Direction, level, category and «Bare steder som kan passe»: a panel from the bottom on mobile, folded out under the
+          button on desktop (home.js). The button shows how many are chosen. -#}
+      <div class="filters-more" id="filters-more" role="group" aria-label="{{ t.home.filters }}">
+        <div class="filter">
+          <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
+          {#- A small wind rose with eight sectors to tap, like the roses on the map. Several directions can be chosen, and
+              the text beside it says which. Each sector is a button clipped to its wedge (clip-path). -#}
+          <div class="dirpick">
+            <div class="dirrose" role="group" aria-labelledby="f-direction">
+              {% for code in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}
+              <button type="button" class="dirrose__sector dirrose__sector--{{ code | lower }}" data-filter="direction" data-value="{{ code }}" aria-pressed="false" aria-label="{{ code | directionWord }}"><span>{{ code | directionLabel }}</span></button>
+              {% endfor %}
+              <button type="button" class="dirrose__all" data-filter="direction" data-value="" aria-pressed="true">{{ t.home.all }}</button>
+            </div>
+            <div class="dirpick__text">
+              <strong id="direction-chosen">{{ t.home.allDirections }}</strong>
+              <span>{{ t.home.directionHelp }}</span>
+            </div>
+          </div>
         </div>
-        {#- Toggle: dim sites where the forecast says «Passer ikke» or «For mye vind» (home.js). -#}
+        <div class="filter">
+          <span class="filter__title" id="f-level">{{ t.home.level }}</span>
+          <div class="pills" role="group" aria-labelledby="f-level">
+            {% for value in ["", "PP2", "PP3", "PP4", "PP5"] %}
+            <button type="button" class="pill" data-filter="level" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or t.home.all }}</button>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="filter">
+          <span class="filter__title" id="f-category">{{ t.home.category }}</span>
+          <div class="pills" role="group" aria-labelledby="f-category">
+            {% for value in ["", "PG", "SPG", "PPG"] %}
+            <button type="button" class="pill" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or t.home.all }}</button>
+            {% endfor %}
+          </div>
+        </div>
+        {% if forecast %}
+        {#- Dims sites where the forecast says «Passer ikke» or «For mye vind» at the time chosen in the timeline (home.js). -#}
         <button type="button" class="suggest-switch" data-suggest aria-pressed="false">{{ t.home.suggest }}</button>
-        <details class="wind-rules">
-          <summary>{{ t.home.rulesSummary }}</summary>
-          <p class="filter__note">{{ t.home.rules | fmt({ maxWind: windRules.maxWind, maxGust: windRules.maxGust, maxGustSpread: windRules.maxGustSpread, rainMaybe: windRules.rainMaybe | formatNumber(1), rainNo: windRules.rainNo | formatNumber(1) }) }}</p>
-        </details>
+        {% endif %}
+        <button type="button" class="filters-done" id="filters-done">{{ t.home.filtersDone }}</button>
       </div>
-      {% endif %}
-      {#- The compass is always visible, also on mobile: big buttons, and it is the filter changed most often. -#}
-      <div class="filter">
-        <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
-        <div class="compass" role="group" aria-labelledby="f-direction">
-          {% for code in ["NW", "N", "NE", "W", null, "E", "SW", "S", "SE"] %}
-          <button type="button" data-filter="direction" data-value="{{ code or '' }}" aria-pressed="{{ 'false' if code else 'true' }}"{% if not code %} class="compass__all"{% endif %}{% if code %} aria-label="{{ code | directionLabel }}, {{ code | directionWord }}"{% endif %}>{{ (code | directionLabel) if code else t.home.all }}</button>
-          {% endfor %}
-        </div>
-      </div>
-      {#- Mobile: level and category behind a button showing the number selected (home.js). On desktop everything is shown and the button is hidden. -#}
-      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">{{ t.home.levelAndCategory }}</button>
-      <div class="filters-more" id="filters-more">
-      <div class="filter">
-        <span class="filter__title" id="f-level">{{ t.home.level }}</span>
-        <div class="segmented" role="group" aria-labelledby="f-level">
-          {% for value in ["", "PP2", "PP3", "PP4", "PP5"] %}
-          <button type="button" data-filter="level" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or t.home.all }}</button>
-          {% endfor %}
-        </div>
-      </div>
-      <div class="filter">
-        <span class="filter__title" id="f-category">{{ t.home.category }}</span>
-        <div class="segmented" role="group" aria-labelledby="f-category">
-          {% for value in ["", "PG", "SPG", "PPG"] %}
-          <button type="button" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or t.home.all }}</button>
-          {% endfor %}
-        </div>
-      </div>
-      </div>
-    </div>
+      <div class="filters-backdrop" id="filters-backdrop" hidden></div>
 
-
-    <section class="results" aria-labelledby="results-title">
-      <h2 id="results-title">{{ t.home.sitesCount | fmt({ n: collections.sites.length }) }}</h2>
-      <p class="muted" id="no-results" hidden>{{ t.home.noResults }}</p>
-      <ul class="results__list" id="results-list">
-        {% for s in collections.sites %}
-        <li data-id="{{ s.data.id }}">
-          <button type="button" class="results__item" data-select="{{ s.data.id }}">
-            {#- Launch altitude to the right of the name, when recorded. -#}
-            <span class="results__head"><span class="results__name">{{ s.data.name }}</span>{% if s.data.elevation and s.data.elevation.launch_masl %}<span class="results__elev">{{ s.data.elevation.launch_masl }} {{ t.units.masl }}</span>{% endif %}</span>
-            <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
-          </button>
-        </li>
-        {% endfor %}
-      </ul>
-      <p class="results__note muted">{{ t.home.resultsNote }}</p>
-    </section>
+      <section class="results" aria-labelledby="results-title">
+        <h2 id="results-title">{{ t.home.sitesCount | fmt({ n: collections.sites.length }) }}</h2>
+        <p class="muted" id="no-results" hidden>{{ t.home.noResults }}</p>
+        <ul class="results__list" id="results-list">
+          {% for s in collections.sites %}
+          <li data-id="{{ s.data.id }}">
+            <button type="button" class="results__item" data-select="{{ s.data.id }}">
+              {#- The rose is drawn by home.js, with the wind sector and rating ring. Without JavaScript the list is text only. -#}
+              <span class="results__rose" aria-hidden="true"></span>
+              <span class="results__body">
+                {#- Launch altitude to the right of the name, when recorded. -#}
+                <span class="results__head"><span class="results__name">{{ s.data.name }}</span>{% if s.data.elevation and s.data.elevation.launch_masl %}<span class="results__elev">{{ s.data.elevation.launch_masl }} {{ t.units.masl }}</span>{% endif %}</span>
+                <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
+              </span>
+            </button>
+            {#- Shown on the selected site on mobile. A second tap on the site opens it (home.js clicks this link). -#}
+            <a class="results__open" href="{{ s.url | localeUrl(lang) | url }}" tabindex="-1">{{ t.home.tapAgain }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+        <button type="button" class="results__more" id="results-more" hidden></button>
+        <p class="results__note muted">{{ t.home.resultsNote }}</p>
+      </section>
     </div>
 
     <div class="home-pane" id="pane-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
@@ -128,49 +135,62 @@ scripts:
       </nav>
     </div>
 
-    <div class="home-pane" id="pane-info" role="tabpanel" aria-labelledby="tab-info" hidden>
-      <section class="before-you-go" aria-labelledby="h-before-you-go">
-        <h2 id="h-before-you-go">{{ t.home.beforeYouGo }}</h2>
-        <nav class="link-list" aria-label="{{ t.home.beforeYouGo }}">
-          {{ m.linkRow("https://ippc.no", t.home.notamTitle, "IPPC") }}
-          {{ m.linkRow("/tarn/" | localeUrl, t.home.towersTitle, t.home.towersSubtitle, false) }}
-        </nav>
-      </section>
-      <footer class="disclaimer">
-        <p>{{ t.home.disclaimer }}</p>
-        <p>{{ t.home.credit }}</p>
-        <p>{{ t.home.openData | fmt({ geojson: '<a href="' ~ ('/flysteder.geojson' | url) ~ '" download>GeoJSON</a>', kml: '<a href="' ~ ('/flysteder.kml' | url) ~ '" download>KML</a>', license: '<a href="' ~ t.home.licenseUrl ~ '">CC BY 4.0</a>', docs: '<a href="https://github.com/hpgt-com/flying-sites/blob/main/docs/open-data.md">' ~ t.home.openDataDocs ~ '</a>' }) | safe }}</p>
-        <p>{{ t.home.analytics | fmt({ goatcounter: '<a href="https://www.goatcounter.com/">GoatCounter</a>' }) | safe }}</p>
-      </footer>
-    </div>
+    {#- About the site, below the tabs: the disclaimer, credit, open data and statistics. The links for planning a trip
+        (NOTAM, towers) are in the menu. -#}
+    <footer class="disclaimer">
+      <p>{{ t.home.disclaimer }}</p>
+      <p>{{ t.home.credit }}</p>
+      <p>{{ t.home.openData | fmt({ geojson: '<a href="' ~ ('/flysteder.geojson' | url) ~ '" download>GeoJSON</a>', kml: '<a href="' ~ ('/flysteder.kml' | url) ~ '" download>KML</a>', license: '<a href="' ~ t.home.licenseUrl ~ '">CC BY 4.0</a>', docs: '<a href="https://github.com/hpgt-com/flying-sites/blob/main/docs/open-data.md">' ~ t.home.openDataDocs ~ '</a>' }) | safe }}</p>
+      <p>{{ t.home.analytics | fmt({ goatcounter: '<a href="https://www.goatcounter.com/">GoatCounter</a>' }) | safe }}</p>
+    </footer>
   </div>
 
-  <main class="home__map">
-    {#- Map status (home.js): how many sites are shown, a wind summary for the selected time and when
-        the forecast was fetched. Above the map on mobile, a semi-transparent card on top of the map on desktop. -#}
-    <div class="map-info" id="map-info">
-      <p class="map-info__count" id="map-count" aria-live="polite">{{ t.home.showingAll | fmt({ n: collections.sites.length }) }}</p>
-      <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
-      <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
-    </div>
+  <main class="home__map" id="home-map-wrap">
     <div id="home-map" class="map map--home" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" role="region" aria-label="{{ t.home.mapLabel }}"></div>
-    {#- Selected site: below the map on mobile, a card on top of the map at the bottom right on desktop (hidden until something is selected). -#}
+    {#- Status on the map (home.js): a small pill with how many sites may work at the chosen time and the most common
+        direction. It opens the details: the wind in the area, the count per rating, when the forecast was fetched,
+        the legend and how the assessment works. -#}
+    <div class="map-status">
+      <button type="button" class="map-status__pill" id="map-status" aria-expanded="false" aria-controls="map-info">
+        <span class="map-status__icon" aria-hidden="true"></span><span class="map-status__text" id="map-count" aria-live="polite">{{ t.home.showingAll | fmt({ n: collections.sites.length }) }}</span><span class="map-status__sub" id="map-status-sub"></span>
+      </button>
+      <div class="map-info" id="map-info" hidden>
+        <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
+        <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
+        {{ m.legend() }}
+        {% if forecast %}
+        <ul class="legend wind-legend" id="wind-legend" aria-label="{{ t.home.windLegendLabel }}">
+          <li><span class="wind-dot wind-dot--ok"></span>{{ t.home.ratingOk }}</li>
+          <li><span class="wind-dot wind-dot--maybe"></span>{{ t.home.ratingMaybe }}</li>
+          <li><span class="wind-dot wind-dot--high"></span>{{ t.home.ratingHigh }}</li>
+          <li><span class="wind-dot wind-dot--no"></span>{{ t.home.ratingNo }}</li>
+          <li class="wind-legend__arrow">{{ t.home.windLegendArrow }}</li>
+        </ul>
+        <details class="wind-rules">
+          <summary>{{ t.home.rulesSummary }}</summary>
+          <p class="filter__note">{{ t.home.rules | fmt({ maxWind: windRules.maxWind, maxGust: windRules.maxGust, maxGustSpread: windRules.maxGustSpread, rainMaybe: windRules.rainMaybe | formatNumber(1), rainNo: windRules.rainNo | formatNumber(1) }) }}</p>
+        </details>
+        {% endif %}
+      </div>
+    </div>
+    {% if forecast %}
+    {#- The time for the wind assessment: «Nå» and a slider over the hours in the forecast. The track is coloured by the best
+        rating among the sites matching the filters, hour by hour, so you can see when it may work (home.js). -#}
+    <div class="timeline" id="timeline" hidden>
+      <button type="button" class="timeline__now" id="timeline-now" aria-pressed="true">{{ t.home.now }}</button>
+      <label class="timeline__time" for="timeline-range" id="timeline-time"></label>
+      <div class="timeline__track">
+        <div class="timeline__bar" id="timeline-bar" aria-hidden="true"></div>
+        <input type="range" id="timeline-range" min="0" max="47" step="1" value="0">
+        <div class="timeline__days" id="timeline-days" aria-hidden="true"></div>
+      </div>
+    </div>
+    {% endif %}
+    {#- Mobile: a short line on the map about the selected site, with a link to the site page. Desktop: the card. -#}
+    <div class="map-note" id="map-note" hidden></div>
     <section class="selected" id="selected" aria-live="polite">
       <p class="muted selected__empty">{{ t.home.selectHint }}</p>
     </section>
-    {#- Legend: below the map on mobile, a small line at the bottom left of the map on desktop. -#}
-    <div class="home__legend">
-      {{ m.legend() }}
-      {% if forecast %}
-      <ul class="legend wind-legend" id="wind-legend" aria-label="{{ t.home.windLegendLabel }}">
-        <li><span class="wind-dot wind-dot--ok"></span>{{ t.home.ratingOk }}</li>
-        <li><span class="wind-dot wind-dot--maybe"></span>{{ t.home.ratingMaybe }}</li>
-        <li><span class="wind-dot wind-dot--high"></span>{{ t.home.ratingHigh }}</li>
-        <li><span class="wind-dot wind-dot--no"></span>{{ t.home.ratingNo }}</li>
-        <li class="wind-legend__arrow">{{ t.home.windLegendArrow }}</li>
-      </ul>
-      {% endif %}
-    </div>
   </main>
 
 </div>

@@ -26,7 +26,7 @@ Keys are in English; values and text are in Norwegian. Empty fields are written 
 | `status`, `reviewed` | `draft` or `reviewed`. `reviewed` requires `reviewed.by` (name) and `reviewed.date` (`'2026-10-06'`). |
 | `region` | For example «Harstad og Kvæfjord» or «Lofoten». The home page map opens over the region in `src/_data/site.js`. |
 | `municipality` | The municipality the launch is in, from Kartverket (for example «Kvæfjord»). Required. The home page search finds the site by municipality and region. |
-| `external` | `flightlog_id`, `yr_id` (the Yr location nearest the launch), `pgearth_id` (only when the site exists on Paraglidingearth). |
+| `external` | `flightlog_id`, `yr_id` (the Yr location nearest the launch). |
 | `level` | `PP2`–`PP5`. See [Level](#level). |
 | `training_site` | `true` for a training site. |
 | `categories` | `PG`, `SPG`, `PPG`. |

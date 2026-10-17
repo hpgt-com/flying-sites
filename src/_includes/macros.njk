@@ -75,8 +75,13 @@
       <span class="switch__text">{{ t.common.cvd }}<span class="switch__hint">{{ t.common.cvdHint }}</span></span>
       <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
     </button>
+    {#- What was under Info on the home page: planning a trip (NOTAM, towers), open data and suggesting changes. -#}
     <nav class="site-menu__links" aria-label="{{ t.common.links }}">
       <a href="{{ '/' | localeUrl }}">{{ t.common.allSites }}</a>
+      <a href="https://ippc.no" target="_blank" rel="noopener">{{ t.home.notamTitle }} <span class="site-menu__sub">IPPC</span>{{ external() }}</a>
+      <a href="{{ '/tarn/' | localeUrl }}">{{ t.home.towersTitle }} <span class="site-menu__sub">{{ t.home.towersSubtitle }}</span></a>
+      <a href="https://github.com/hpgt-com/flying-sites/blob/main/docs/open-data.md">{{ t.common.openData }} <span class="site-menu__sub">GeoJSON, KML</span></a>
+      <a href="{{ site.suggestChangeUrl }}?template=endring.yml" target="_blank" rel="noopener">{{ t.common.suggestChange }}{{ external() }}</a>
       <a href="{{ site.hpgtUrl }}">{{ t.common.toHpgt }}</a>
     </nav>
   </div>

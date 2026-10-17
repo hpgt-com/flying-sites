@@ -1,11 +1,14 @@
-// Home page: filters, map with wind roses, wind assessment from the forecast, card for the selected site and list.
+// Home page: filters, map with wind roses, wind assessment from the forecast at the time chosen in the timeline, the
+// selected site and list. On mobile the map stays at the top of the screen and shrinks while the list scrolls.
 (function () {
   "use strict";
 
   var FS = window.FlyingSites;
   var sites = FS.readJson("sites-data") || [];
   var LEVELS = ["PP2", "PP3", "PP4", "PP5"];
-  var filter = { direction: "", level: "", category: "", q: "" };
+  // directions: the wind directions chosen in the filter rose. A site matches when it suits one of them.
+  var filter = { directions: [], level: "", category: "", q: "" };
+  var MOBILE = window.matchMedia("(max-width: 1099px)");
 
   // --- Search by name and place ---
   // Lowercase and without accents. Æ, ø and å can be typed in all common ways without a Norwegian keyboard:
@@ -54,7 +57,7 @@
   function matches(site, assessment, windAssessed, ignoreSuggest) {
     if (!nameMatches(site)) return "no";
     if (suggest && !ignoreSuggest && assessment && (assessment.rating === "no" || assessment.rating === "high")) return "no";
-    if (filter.direction && site.primary.indexOf(filter.direction) === -1 && site.possible.indexOf(filter.direction) === -1) return "no";
+    if (filter.directions.length && !filter.directions.some(function (d) { return site.primary.indexOf(d) !== -1 || site.possible.indexOf(d) !== -1; })) return "no";
     if (filter.category && site.categories.indexOf(filter.category) === -1) return "no";
     if (filter.level && site.level && LEVELS.indexOf(site.level) > LEVELS.indexOf(filter.level)) return "no";
     if (suggest && !ignoreSuggest && windAssessed && !assessment) return "nowind";
@@ -67,7 +70,7 @@
   function directionBadges(site) {
     return FS.DIRECTIONS.filter(function (code) { return FS.directionType(site, code) !== "none"; })
       .map(function (code) {
-        var active = code === filter.direction ? " direction--active" : "";
+        var active = filter.directions.indexOf(code) !== -1 ? " direction--active" : "";
         return '<span class="direction direction--' + FS.directionType(site, code) + active + '">' + FS.DIRECTION_LABELS[code] + "</span>";
       }).join("");
   }
@@ -93,9 +96,20 @@
   // the wind assessment is turned off with an explanation. The age is rechecked before each assessment, when
   // returning to the tab and every minute, so a tab left open for hours does not show stale assessments.
   var stale = false;
+  // The chosen time as hours from now ("0", "1" … as far as the forecast goes), from the timeline. "off" without a
+  // forecast, or when it is too old.
   var windSlot = forecast ? "0" : "off";
   var windIndex = -1; // forecast index for the chosen time, set by assessAll()
-  function slotLabel(slot) { return FS.t("wind.slots." + slot); }
+  var dayShort = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "short", timeZone: "Europe/Oslo" });
+  // «nå», «kl. 17.00», «i morgen kl. 09.00» or «søn. kl. 13.00», for the forecast hour at index.
+  function whenLabel(index) {
+    if (windSlot === "0") return FS.t("home.whenNow");
+    var ms = Date.parse(forecast.times[index]);
+    var day = W.osloParts(ms).date, today = W.osloParts(Date.now()).date, time = W.formatClock(ms);
+    if (day === today) return FS.t("home.whenToday", { time: time });
+    if (day === W.osloParts(Date.now() + 86400000).date) return FS.t("home.whenTomorrow", { time: time });
+    return FS.t("home.whenDay", { day: dayShort.format(ms).replace(/\.$/, "") + ".", time: time });
+  }
 
   // «i dag kl. 08:47», or «16.10 kl. 23:47» for another day.
   function whenText(iso) {
@@ -111,8 +125,7 @@
     stale = true;
     windSlot = "off";
     suggest = false;
-    var pills = document.querySelector("#filters [data-wind]");
-    if (pills) pills.parentNode.hidden = true;
+    if (timelineEl) timelineEl.hidden = true;
     if (suggestButton) suggestButton.hidden = true;
     forecastStatusEl.innerHTML = "<strong>" + FS.escapeHtml(FS.t("wind.staleTitle")) + "</strong> " + FS.escapeHtml(FS.t("wind.staleHome", { when: fetchedText() }));
     return true;
@@ -128,7 +141,7 @@
     if (windSlot !== "off") {
       text = index < 0
         ? "<strong>" + FS.escapeHtml(FS.t("wind.notCovered")) + "</strong> " + text
-        : FS.escapeHtml(FS.t("wind.showing", { time: W.formatClock(Date.parse(forecast.times[index])), tomorrow: windSlot === "tomorrow" ? FS.t("wind.tomorrowSuffix") : "" })) + " " + text;
+        : FS.escapeHtml(FS.t("wind.showingWhen", { when: whenLabel(index) })) + " " + text;
     }
     forecastStatusEl.innerHTML = text + sunLine(index);
   }
@@ -212,6 +225,51 @@
       (sum.missing ? '<p class="wind-summary__missing">' + FS.escapeHtml(FS.t("summary.missing", { places: places(sum.missing) })) + "</p>" : "") +
       (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">' + FS.escapeHtml(FS.t("summary.noneCanWork") + " " + noneReason(sum)) + "</p>" : "");
   }
+  // The pill on the map: how many sites may work at the chosen time, with the best rating found, and the most common
+  // direction («✓ 3 kan passe · mest NV»). The details open below it. Without wind, how many sites are shown.
+  var statusEl = document.getElementById("map-status");
+  var statusTextEl = document.getElementById("map-count");
+  var statusSubEl = document.getElementById("map-status-sub");
+  var statusIconEl = statusEl && statusEl.querySelector(".map-status__icon");
+  var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
+  var RATING_KEYS = { ok: "ok", maybe: "maybe", high: "high", no: "no" };
+  var DIRECTION_KEYS = { N: "N", NE: "NE", E: "E", SE: "SE", S: "S", SW: "SW", W: "W", NW: "NW" };
+  function renderStatus(sum, shownText) {
+    if (!statusEl) return;
+    var rating = null, text = shownText;
+    if (sum) {
+      var c = sum.counts;
+      rating = c.ok ? "ok" : c.maybe ? "maybe" : c.high ? "high" : "no";
+      text = c.ok ? c.ok + " " + FS.t("summary.ok") : c.maybe ? c.maybe + " " + maybeLabel(c.maybe) : FS.t("home.statusNone");
+    }
+    statusEl.className = "map-status__pill" + (rating ? " map-status__pill--" + rating : "");
+    statusIconEl.textContent = rating ? ICONS[rating] : "";
+    statusIconEl.hidden = !rating;
+    statusTextEl.textContent = text;
+    // Short on mobile («mest NV»), the wind as well on desktop («Mest V 2–8 m/s, kast 14»).
+    statusSubEl.textContent = !sum ? "" : MOBILE.matches ? " · " + FS.t("home.statusMostly", { dir: FS.DIRECTION_LABELS[sum.dir] })
+      : FS.t("home.statusWind", {
+        dir: FS.DIRECTION_LABELS[sum.dir],
+        speed: Math.round(sum.minSpeed) === Math.round(sum.maxSpeed) ? Math.round(sum.speed) : Math.round(sum.minSpeed) + "–" + Math.round(sum.maxSpeed),
+        gust: sum.gust != null ? FS.t("home.statusGust", { g: Math.round(sum.gust) }) : "",
+      });
+  }
+  var infoEl = document.getElementById("map-info");
+  function setInfoOpen(open) {
+    if (!statusEl || !infoEl) return;
+    statusEl.setAttribute("aria-expanded", String(open));
+    infoEl.hidden = !open;
+  }
+  if (statusEl) {
+    statusEl.addEventListener("click", function () {
+      var open = statusEl.getAttribute("aria-expanded") !== "true";
+      if (open) FS.track("map/status");
+      setInfoOpen(open);
+    });
+    document.addEventListener("click", function (ev) { if (!ev.target.closest(".map-status")) setInfoOpen(false); });
+    document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !infoEl.hidden) { setInfoOpen(false); statusEl.focus(); } });
+  }
+
   // The main reason no sites suit, in one sentence.
   function noneReason(sum) {
     var c = sum.counts;
@@ -255,6 +313,13 @@
   var map = FS.createMap(mapEl);
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
   FS.addRadarLayer(map);
+  // On desktop the map fills its column and nothing scrolls, so the wheel zooms. Elsewhere the wheel scrolls the page,
+  // and Ctrl/Cmd + wheel zooms (common.js).
+  FS.wheelNeedsCtrl(map, function () { return MOBILE.matches; });
+  // The attribution goes below the map, on one line, so it does not cover the small map on mobile or the timeline.
+  var attributionEl = map.attributionControl.getContainer();
+  attributionEl.classList.add("map-attribution");
+  document.getElementById("home-map-wrap").appendChild(attributionEl);
   // The map opens over the launches in the home region (site.homeRegion), not over all sites, so a distant
   // site does not zoom the map out. Sites outside are in the list and search.
   var homeRegion = mapEl.getAttribute("data-home-region");
@@ -351,6 +416,7 @@
     p.textContent = EMPTY_CARD_TEXT;
     cardEl.replaceChildren(p);
     cardEl.classList.remove("selected--active");
+    if (noteEl) { noteEl.hidden = true; noteEl.replaceChildren(); }
   }
   function showCard(site, assessment, windOn) {
     var e = FS.escapeHtml;
@@ -362,7 +428,7 @@
       '<div class="tags">' + tags(site) + "</div></div></div>";
     if (assessment) {
       html += '<p class="selected__wind"><span class="wind-dot wind-dot--' + assessment.rating + '"></span>' +
-        e(FS.t("home.windAt", { slot: slotLabel(windSlot), time: W.formatClock(Date.parse(forecast.times[windIndex])) })) +
+        e(FS.t("home.windAt", { when: whenLabel(windIndex) })) +
         e(windText(assessment.wind)) + ". <strong>" + e(RATINGS[assessment.rating].label) + "</strong></p>";
       if (assessment.reasons.length) html += '<p class="selected__reasons">' + e(assessment.reasons.join(". ")) + ".</p>";
       if (site.maxWind != null && assessment.codes.indexOf("overSiteLimit") === -1) html += '<p class="selected__reasons">' + e(FS.t("home.siteLimit", { limit: site.maxWind })) + "</p>";
@@ -377,27 +443,75 @@
     }
     cardEl.innerHTML = html;
     cardEl.classList.add("selected--active");
+    showNote(site, assessment);
+  }
+  // Mobile: one line on the map about the selected site, with a link to the site page. The card is for desktop (CSS).
+  var noteEl = document.getElementById("map-note");
+  function showNote(site, assessment) {
+    if (!noteEl) return;
+    var e = FS.escapeHtml;
+    noteEl.innerHTML = "<span><strong>" + e(site.name) + "</strong>" +
+      (assessment ? " · " + e(windText(assessment.wind)) + " · " + e(RATINGS[assessment.rating].label) : "") + "</span>" +
+      '<a href="' + e(site.url) + '" aria-label="' + e(FS.t("home.seeName", { name: site.name })) + '">' + e(FS.t("home.see")) + "</a>";
+    noteEl.hidden = false;
   }
 
+  // origin: "map" (a rose in the map), "list" (the list) or "pick" (search hits, the day plan).
   function select(id, origin) {
     var site = sites.find(function (s) { return s.id === id; });
     if (!site) return;
+    var mobile = MOBILE.matches;
+    // Mobile: a second tap on the selected site in the list opens the site page. The first tap shows it in the map.
+    if (origin === "list" && mobile && id === selectedId) {
+      FS.track("list/open/" + id);
+      // The link is in the page from the build (index.njk), so the address never comes from the script.
+      var link = listEl.querySelector('[data-id="' + id + '"] .results__open');
+      if (link) link.click();
+      return;
+    }
     selectedId = id;
+    // A rose tapped in the map shows the site in the list, also when it is further down than the first few.
+    if (origin === "map" && mobile) listExpanded = true;
     update();
     writeHash();
-    if (origin === "list") {
+    if (origin !== "map") {
       // If the site is in a cluster, zoom in until the marker shows.
       cluster.zoomToShowLayer(markers[id], function () { map.panTo([site.lat, site.lon]); });
-      if (window.matchMedia("(max-width: 1099px)").matches) cardEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    if (origin === "map" && mobile) scrollToItem(id);
   }
+  // Mobile: scrolls the list so the site sits right below the map and the search bar, which stay at the top. The position
+  // is measured before the map is made small: the small map keeps its old height as margin below, so the list does not
+  // move, but the height is animated and would be measured halfway. --map-h follows the class at once.
+  function scrollToItem(id) {
+    var li = listEl.querySelector('[data-id="' + id + '"]');
+    if (!li || li.hidden || !homeEl) return;
+    var y = li.getBoundingClientRect().top + window.scrollY;
+    homeEl.classList.add("home--small");
+    var mapH = parseFloat(getComputedStyle(homeEl).getPropertyValue("--map-h")) || 0;
+    var bar = document.getElementById("filters");
+    var top = y - mapH - (bar ? bar.offsetHeight : 0) - 12;
+    window.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION.matches ? "auto" : "smooth" });
+  }
+  var REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   // --- Filters and list ---
   var listEl = document.getElementById("results-list");
   var titleEl = document.getElementById("results-title");
   var noResultsEl = document.getElementById("no-results");
-  var mapCountEl = document.getElementById("map-count");
   var windLegendEl = document.getElementById("wind-legend");
+  var moreEl = document.getElementById("results-more");
+  var homeEl = document.querySelector(".home");
+  var LIST_LIMIT = 5;
+  var listExpanded = false;
+  if (moreEl) moreEl.addEventListener("click", function () {
+    listExpanded = true;
+    FS.track("list/show-all");
+    update();
+    // Focus on the first site that was hidden, so keyboard and screen reader users continue there.
+    var next = listEl.querySelectorAll("li[data-id]:not([hidden]) button")[LIST_LIMIT];
+    if (next) next.focus();
+  });
   var originalOrder = Array.prototype.slice.call(listEl.children);
 
   // List headings for sites without a forecast (suggestions on) and without a level (level filter on).
@@ -442,15 +556,23 @@
         var button = li.querySelector("button");
         button.classList.toggle("results__item--selected", site.id === selectedId);
         li.querySelector(".directions").innerHTML = directionBadges(site);
+        // The same rose as in the map: the wind sector in the rating colour, and the ring. The rating is looked up in a
+        // fixed list, so only known class names reach the markup.
+        var ringRating = assessment ? RATING_KEYS[assessment.rating] : null;
+        var windCode = assessment ? DIRECTION_KEYS[W.directionCode(assessment.wind.dir)] : null;
+        li.querySelector(".results__rose").innerHTML = '<span class="results__ring' + (ringRating ? " results__ring--" + ringRating : "") + '">' +
+          FS.roseSvg(site, 34, false, ringRating && windCode ? { code: windCode, rating: ringRating, edge: true } : null) + "</span>";
         var windEl = button.querySelector(".results__wind");
         if (!windEl) {
           windEl = document.createElement("span");
           windEl.className = "results__wind";
-          button.appendChild(windEl);
+          button.querySelector(".results__body").insertBefore(windEl, button.querySelector(".results__open"));
         }
         windEl.hidden = !assessment && !(assessments && windOn);
+        // The rating as a chip with a symbol, so it does not rest on colour alone, then the wind.
         windEl.innerHTML = assessment
-          ? '<span class="wind-dot wind-dot--' + assessment.rating + '"></span>' + FS.escapeHtml(windText(assessment.wind) + " · " + RATINGS[assessment.rating].label)
+          ? '<span class="rating-chip rating-chip--' + assessment.rating + '"><span aria-hidden="true">' + ICONS[assessment.rating] + "</span>" +
+            FS.escapeHtml(RATINGS[assessment.rating].label) + "</span>" + FS.escapeHtml(windText(assessment.wind))
           : FS.escapeHtml(FS.t("home.noForecast"));
       }
       if (site.id === selectedId) showCard(site, assessment, windOn);
@@ -480,9 +602,18 @@
       if (headingEls[g] && !placed[g]) { listEl.appendChild(headingEls[g]); placed[g] = true; }
       listEl.appendChild(li);
     });
+    // Without filters or search, the first LIST_LIMIT sites are shown (the best rated first) and «Vis alle 32» shows the
+    // rest, so the list does not push everything else far down. The rest are always in the map.
+    var filtered = filter.directions.length || filter.level || filter.category || filter.q || (suggest && assessments);
+    var limited = !filtered && !listExpanded;
+    var visible = items.filter(function (li) { return !li.hidden; });
+    visible.forEach(function (li, i) { li.classList.toggle("results__li--more", limited && i >= LIST_LIMIT); });
+    if (moreEl) {
+      moreEl.hidden = !limited || visible.length <= LIST_LIMIT;
+      moreEl.textContent = FS.t("home.showAll", { n: visible.length });
+    }
     if (windLegendEl) windLegendEl.hidden = !assessments;
 
-    var filtered = filter.direction || filter.level || filter.category || filter.q || (suggest && assessments);
     var title = filtered
       ? FS.tn("home.matchFilters", counts.match)
       : FS.t("home.sites", { n: counts.match });
@@ -490,11 +621,9 @@
     if (counts.unknown) title += FS.t("home.withoutLevel", { n: counts.unknown });
     titleEl.textContent = title;
     var shown = counts.match + counts.unknown + counts.nowind;
-    if (mapCountEl) {
-      mapCountEl.textContent = shown === sites.length
-        ? FS.t("home.showingAll", { n: sites.length })
-        : FS.t("home.showingSome", { shown: shown, n: sites.length });
-    }
+    var shownText = shown === sites.length
+      ? FS.t("home.showingAll", { n: sites.length })
+      : FS.t("home.showingSome", { shown: shown, n: sites.length });
     noResultsEl.hidden = counts.match + counts.unknown + counts.nowind !== 0;
     // The summary follows direction, level, category and search, but not «Bare steder som kan passe», which would
     // otherwise hide what the summary explains.
@@ -502,6 +631,8 @@
       .map(function (s) { return s.id; }) : [];
     var sum = assessments ? summarize(assessments, scope) : null;
     renderSummary(sum);
+    renderStatus(sum, shownText);
+    renderTimeline(scope.length ? scope : sites.filter(function (s) { return matches(s, null, false, true) !== "no"; }).map(function (s) { return s.id; }));
     // Empty result with suggestions on: say why, not just that none suit.
     noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0
       ? FS.t("home.noneSuggest", { reason: noneReason(sum) })
@@ -510,23 +641,44 @@
         : FS.t("home.noResults");
     renderSearchHits();
     renderDayPlan();
-    updateFiltersToggle();
+    updateFiltersToggle(shown);
   }
 
-  // The level and category button on mobile: shows how many are selected, and opens/closes them.
-  // The direction compass is always visible.
+  // The «Filter» button: how many filters are chosen, as a count. It opens direction, level, category and «Bare steder
+  // som kan passe» as a panel from the bottom of the screen (mobile) or folded out below (desktop). «Vis 12 flysteder»,
+  // the backdrop and Esc close it again.
   var filtersToggle = document.getElementById("filters-toggle");
   var filtersMore = document.getElementById("filters-more");
-  function updateFiltersToggle() {
+  var filtersDone = document.getElementById("filters-done");
+  var filtersBackdrop = document.getElementById("filters-backdrop");
+  var directionChosenEl = document.getElementById("direction-chosen");
+  function updateFiltersToggle(shown) {
     if (!filtersToggle) return;
-    var n = ["level", "category"].filter(function (t) { return filter[t]; }).length;
-    filtersToggle.innerHTML = FS.escapeHtml(FS.t("home.levelAndCategory")) + (n ? ' <span class="filters-toggle__count">' + FS.escapeHtml(FS.t("home.selected", { n: n })) + "</span>" : "");
+    var n = (filter.directions.length ? 1 : 0) + (filter.level ? 1 : 0) + (filter.category ? 1 : 0) + (suggest ? 1 : 0);
+    var count = filtersToggle.querySelector(".filters-toggle__count");
+    count.textContent = n ? String(n) : "";
+    count.hidden = !n;
+    if (filtersDone) filtersDone.textContent = FS.tn("home.showSites", shown);
+    if (directionChosenEl) {
+      directionChosenEl.textContent = filter.directions.length
+        ? filter.directions.map(function (d) { return FS.DIRECTION_LABELS[d]; }).join(", ")
+        : FS.t("home.allDirections");
+    }
+  }
+  function setFiltersOpen(open) {
+    filtersToggle.setAttribute("aria-expanded", String(open));
+    filtersMore.classList.toggle("is-open", open);
+    if (filtersBackdrop) filtersBackdrop.hidden = !open;
+    document.body.classList.toggle("sheet-open", open);
+    if (open && filtersDone) filtersDone.focus();
+    else if (!open) filtersToggle.focus();
   }
   if (filtersToggle) {
-    filtersToggle.addEventListener("click", function () {
-      var open = filtersToggle.getAttribute("aria-expanded") !== "true";
-      filtersToggle.setAttribute("aria-expanded", String(open));
-      filtersMore.classList.toggle("is-open", open);
+    filtersToggle.addEventListener("click", function () { setFiltersOpen(filtersToggle.getAttribute("aria-expanded") !== "true"); });
+    if (filtersDone) filtersDone.addEventListener("click", function () { setFiltersOpen(false); });
+    if (filtersBackdrop) filtersBackdrop.addEventListener("click", function () { setFiltersOpen(false); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && filtersToggle.getAttribute("aria-expanded") === "true") setFiltersOpen(false);
     });
   }
 
@@ -586,14 +738,14 @@
       } else if (ev.key === "Enter") {
         ev.preventDefault();
         var hits = visibleMatches();
-        if (hits.length === 1) { clearTimeout(searchTimer); select(hits[0].id, "list"); }
+        if (hits.length === 1) { clearTimeout(searchTimer); select(hits[0].id, "pick"); }
       }
     });
   }
   if (searchHitsEl) {
     searchHitsEl.addEventListener("click", function (ev) {
       var button = ev.target.closest("button[data-select]");
-      if (button) { clearTimeout(searchTimer); select(button.getAttribute("data-select"), "list"); }
+      if (button) { clearTimeout(searchTimer); select(button.getAttribute("data-select"), "pick"); }
     });
   }
 
@@ -683,57 +835,128 @@
       var button = ev.target.closest("button[data-select]");
       if (!button) return;
       FS.track("day-plan/select/" + button.getAttribute("data-select"));
-      select(button.getAttribute("data-select"), "list");
+      select(button.getAttribute("data-select"), "pick");
     });
   }
 
-  // Sets a filter and highlights the right button. Unknown values (e.g. from an old link) give «Alle».
+  // Sets a filter and highlights the right button. Unknown values (e.g. from an old link) give «Alle». Direction toggles:
+  // a sector turns that direction on or off, and «Alle» clears them. Several directions can be on at once.
   function setFilter(type, value) {
     var buttons = document.querySelectorAll('button[data-filter="' + type + '"]');
-    var find = function (v) { return Array.prototype.find.call(buttons, function (b) { return b.getAttribute("data-value") === v; }); };
-    var match = find(value) || find("");
-    value = match.getAttribute("data-value");
+    var known = function (v) { return Array.prototype.some.call(buttons, function (b) { return b.getAttribute("data-value") === v; }); };
+    if (type === "direction") {
+      var list = filter.directions.filter(function (d) { return d !== value; });
+      if (value && known(value) && list.length === filter.directions.length) list.push(value);
+      setDirections(value ? list : []);
+      return;
+    }
+    value = known(value) ? value : "";
     filter[type] = value;
-    // All buttons with the same value are highlighted, in case the same filter appears in several places on the page.
     buttons.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-value") === value ? "true" : "false"); });
   }
-
-  function setWind(value) {
-    var buttons = document.querySelectorAll("button[data-wind]");
-    if (!buttons.length || stale) return;
-    var match = Array.prototype.find.call(buttons, function (b) { return b.getAttribute("data-wind") === value; }) ||
-      Array.prototype.find.call(buttons, function (b) { return b.getAttribute("data-wind") === "0"; });
-    windSlot = match.getAttribute("data-wind");
-    buttons.forEach(function (b) { b.setAttribute("aria-pressed", b === match ? "true" : "false"); });
+  function setDirections(list) {
+    filter.directions = FS.DIRECTIONS.filter(function (d) { return list.indexOf(d) !== -1; });
+    document.querySelectorAll('button[data-filter="direction"]').forEach(function (b) {
+      var v = b.getAttribute("data-value");
+      b.setAttribute("aria-pressed", String(v ? filter.directions.indexOf(v) !== -1 : !filter.directions.length));
+    });
   }
 
-  // The suggestion button only works when wind is on. The text follows the chosen time («nå», «om 3 t» …).
+  // The time as hours from now. Old links can have «tomorrow» (12:00 tomorrow) or «off», which give the nearest valid time.
+  function setWind(value) {
+    if (!forecast || stale) return;
+    var now = Date.now(), current = W.slotIndex(forecast.times, "0", now);
+    var max = current < 0 ? 0 : forecast.times.length - 1 - current;
+    var hours = value === "tomorrow" ? W.slotIndex(forecast.times, "tomorrow", now) - current : parseInt(value, 10);
+    windSlot = String(Number.isFinite(hours) && hours > 0 ? Math.min(hours, max) : 0);
+  }
+
+  // The suggestion switch only works with a forecast. The text follows the chosen time («nå», «kl. 17.00» …).
   var suggestButton = document.querySelector("button[data-suggest]");
   function setSuggest(on) {
     suggest = !!(on && suggestButton && forecast && !stale);
     if (!suggestButton) return;
     var windOn = windSlot !== "off";
     suggestButton.hidden = !forecast || stale;
-    suggestButton.disabled = !windOn;
     suggestButton.setAttribute("aria-pressed", String(suggest && windOn));
-    suggestButton.textContent = FS.t("home.suggest") + (windSlot === "tomorrow" ? FS.t("home.suggestTomorrow") : windOn ? " " + slotLabel(windSlot) : "");
-    suggestButton.title = windOn ? "" : FS.t("home.suggestNeedsTime");
+    var index = windOn ? W.slotIndex(forecast.times, windSlot, Date.now()) : -1;
+    suggestButton.textContent = FS.t("home.suggest") + (index >= 0 ? " " + whenLabel(index) : "");
   }
 
   var FILTER_NAMES = { direction: "direction", level: "level", category: "category" };
-  document.getElementById("filters").addEventListener("click", function (ev) {
-    var button = ev.target.closest("button[data-filter], button[data-wind], button[data-suggest]");
+  filtersMore.addEventListener("click", function (ev) {
+    var button = ev.target.closest("button[data-filter], button[data-suggest]");
     if (!button) return;
-    if (button.hasAttribute("data-suggest")) FS.track("filter/suggest/" + (suggest ? "off" : "on"));
     // Event names are the same in all languages, so the GoatCounter numbers can be summed.
-    else if (button.hasAttribute("data-wind")) FS.track("filter/wind/" + button.getAttribute("data-wind"));
+    if (button.hasAttribute("data-suggest")) FS.track("filter/suggest/" + (suggest ? "off" : "on"));
     else FS.track("filter/" + FILTER_NAMES[button.getAttribute("data-filter")] + "/" + (button.getAttribute("data-value") || "all"));
     if (button.hasAttribute("data-suggest")) setSuggest(!suggest);
-    else if (button.hasAttribute("data-wind")) { setWind(button.getAttribute("data-wind")); setSuggest(suggest); }
     else setFilter(button.getAttribute("data-filter"), button.getAttribute("data-value"));
     update();
     writeHash();
   });
+
+  // --- Timeline: the time for the wind assessment ---
+  // «Nå» and a slider over the hours in the forecast. The track is coloured hour by hour with the best rating among the
+  // sites matching the filters, so you can see when it may work, with the weekday at each midnight.
+  var timelineEl = document.getElementById("timeline");
+  var rangeEl = document.getElementById("timeline-range");
+  var timeEl = document.getElementById("timeline-time");
+  var nowButton = document.getElementById("timeline-now");
+  var barEl = document.getElementById("timeline-bar");
+  var daysEl = document.getElementById("timeline-days");
+  var BAR_COLORS = { ok: "var(--wind-ok)", maybe: "var(--wind-maybe)", high: "var(--wind-high)", no: "var(--wind-no)" };
+  function renderTimeline(ids) {
+    if (!timelineEl) return;
+    var now = Date.now(), current = forecast && !stale ? W.slotIndex(forecast.times, "0", now) : -1;
+    timelineEl.hidden = current < 0;
+    if (current < 0) return;
+    var max = forecast.times.length - 1 - current;
+    rangeEl.max = String(max);
+    rangeEl.value = windSlot;
+    var index = current + Number(windSlot);
+    // «kl. 13.00» also for now (the button says «Nå»), with the day when it is not today.
+    var label = windSlot === "0" ? FS.t("home.whenToday", { time: W.formatClock(Date.parse(forecast.times[index])) }) : whenLabel(index);
+    timeEl.textContent = label;
+    rangeEl.setAttribute("aria-valuetext", label);
+    nowButton.setAttribute("aria-pressed", String(windSlot === "0"));
+    var stops = [], days = [];
+    var byId = {};
+    sites.forEach(function (s) { byId[s.id] = s; });
+    for (var h = 0; h <= max; h++) {
+      var best = null;
+      ids.forEach(function (id) {
+        var wind = W.windAt(forecast, id, current + h);
+        if (!wind) return;
+        var r = W.rateWind(byId[id], wind, rules).rating;
+        if (!best || RATINGS[r].order < RATINGS[best].order) best = r;
+      });
+      var from = (h / (max + 1) * 100).toFixed(2) + "%", to = ((h + 1) / (max + 1) * 100).toFixed(2) + "%";
+      var color = best ? BAR_COLORS[best] : "var(--line)";
+      stops.push(color + " " + from, color + " " + to);
+      var ms = Date.parse(forecast.times[current + h]);
+      if (h > 0 && W.osloParts(ms).hour === 0) {
+        var day = document.createElement("span");
+        day.style.left = from;
+        day.textContent = dayShort.format(ms).replace(/\.$/, "");
+        days.push(day);
+      }
+    }
+    barEl.style.background = "linear-gradient(90deg, " + stops.join(", ") + ")";
+    daysEl.replaceChildren.apply(daysEl, days);
+  }
+  function setTime(value, track) {
+    setWind(String(value));
+    setSuggest(suggest);
+    update();
+    writeHash();
+    if (track) FS.track("filter/wind/" + windSlot);
+  }
+  if (rangeEl) {
+    rangeEl.addEventListener("input", function () { setTime(rangeEl.value); });
+    rangeEl.addEventListener("change", function () { FS.track("filter/wind/" + windSlot); });
+    nowButton.addEventListener("click", function () { setTime(0, true); });
+  }
 
   // Close the card for the selected site (on desktop it sits on top of the map).
   cardEl.addEventListener("click", function (ev) {
@@ -744,9 +967,9 @@
     writeHash();
   });
 
-  // --- Tabs: Flysteder, Vær, Info ---
-  // Switches the content of the left column (above the map on mobile). The map always stays. Arrow keys move between tabs.
-  var TAB_NAMES = { "tab-sites": "sites", "tab-weather": "weather", "tab-info": "info" };
+  // --- Tabs: Flysteder and Vær ---
+  // Switches the content of the left column (below the map on mobile). The map always stays. Arrow keys move between tabs.
+  var TAB_NAMES = { "tab-sites": "sites", "tab-weather": "weather" };
   var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.home-tabs [role="tab"]'));
   function showTab(button, focus) {
     tabButtons.forEach(function (b) {
@@ -766,11 +989,12 @@
   });
 
   // --- State in the URL ---
-  // Filters, search, wind time and selected site are stored in the URL (#direction=NW&level=PP3&wind=3&q=solli&site=sollifjellet),
+  // Filters, search, wind time and selected site are stored in the URL (#direction=W,NW&level=PP3&wind=3&q=solli&site=sollifjellet),
   // so the back button and shared links give the same view. replaceState, so each click does not become a history step.
   function writeHash() {
     var params = new URLSearchParams();
-    ["direction", "level", "category"].forEach(function (type) { if (filter[type]) params.set(type, filter[type]); });
+    if (filter.directions.length) params.set("direction", filter.directions.join(","));
+    ["level", "category"].forEach(function (type) { if (filter[type]) params.set(type, filter[type]); });
     if (forecast && !stale && windSlot !== "0") params.set("wind", windSlot);
     if (suggest && windSlot !== "off") params.set("forslag", "1");
     if (filter.q.trim()) params.set("q", filter.q.trim());
@@ -781,7 +1005,8 @@
 
   function readHash() {
     var params = new URLSearchParams(location.hash.slice(1));
-    ["direction", "level", "category"].forEach(function (type) { setFilter(type, params.get(type) || ""); });
+    setDirections((params.get("direction") || "").split(","));
+    ["level", "category"].forEach(function (type) { setFilter(type, params.get(type) || ""); });
     setWind(params.get("wind") || "0");
     setSuggest(params.get("forslag") === "1");
     setSearch(params.get("q") || "");
@@ -795,6 +1020,23 @@
   }
 
   window.addEventListener("hashchange", readHash);
+
+  // --- Mobile: the map at the top ---
+  // The map stays at the top of the screen (CSS, position: sticky). It shrinks once the list has been scrolled a bit, and
+  // grows again near the top. Two thresholds, so it does not flicker in between. While searching it is smaller still, so
+  // the hits have room above the keyboard.
+  function onScroll() {
+    if (!MOBILE.matches) return;
+    var y = window.scrollY;
+    if (y > 200) homeEl.classList.add("home--small");
+    else if (y < 20) homeEl.classList.remove("home--small");
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  if (searchEl) {
+    searchEl.addEventListener("focus", function () { if (MOBILE.matches) homeEl.classList.add("home--search"); });
+    // Delayed, so a tap on a search hit is not lost when the layout changes.
+    searchEl.addEventListener("blur", function () { setTimeout(function () { homeEl.classList.remove("home--search"); }, 150); });
+  }
 
   listEl.addEventListener("click", function (ev) {
     var button = ev.target.closest("button[data-select]");

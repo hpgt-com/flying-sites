@@ -74,8 +74,10 @@
     svg += lifted;
     svg += '<circle cx="80" cy="80" r="9" class="rose__center"></circle>';
     if (labels) {
-      svg += '<text x="80" y="2" text-anchor="middle">' + DIRECTION_LABELS.N + '</text><text x="80" y="168" text-anchor="middle">' + DIRECTION_LABELS.S + "</text>" +
-        '<text x="-4" y="85" text-anchor="middle">' + DIRECTION_LABELS.W + '</text><text x="164" y="85" text-anchor="middle">' + DIRECTION_LABELS.E + "</text>";
+      // The letters come from the dictionary, so they are escaped like other text.
+      var lab = function (code) { return escapeHtml(DIRECTION_LABELS[code]); };
+      svg += '<text x="80" y="2" text-anchor="middle">' + lab("N") + '</text><text x="80" y="168" text-anchor="middle">' + lab("S") + "</text>" +
+        '<text x="-4" y="85" text-anchor="middle">' + lab("W") + '</text><text x="164" y="85" text-anchor="middle">' + lab("E") + "</text>";
     }
     return svg + "</svg>";
   }
@@ -153,6 +155,29 @@
       else map.dragging.disable();
       hint.classList.remove("map-touch-hint--on");
     });
+  }
+
+  // Zoom with the mouse wheel: the wheel scrolls the page as normal, and zooms the map with Ctrl (or Cmd on Mac), as in
+  // Google Maps, so you do not get stuck in the map when scrolling down the page. Without Ctrl a short hint is shown.
+  // In full screen there is no page to scroll, and the wheel zooms. active() can turn it off, for example on the
+  // desktop home page where the map fills its column and nothing scrolls. Zoom buttons and +/- work as before.
+  function wheelNeedsCtrl(map, active) {
+    var el = map.getContainer();
+    var hint = document.createElement("div");
+    hint.className = "map-hint";
+    hint.setAttribute("aria-hidden", "true");
+    hint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? t("site.zoomHintMac") : t("site.zoomHint");
+    el.appendChild(hint);
+    var timer = null;
+    // Caught before Leaflet sees the event (capture), so Leaflet's own zoom only gets scrolling with Ctrl/Cmd.
+    // Leaflet then also stops the browser from zooming the whole page.
+    el.addEventListener("wheel", function (ev) {
+      if (ev.ctrlKey || ev.metaKey || el.classList.contains("map--fullscreen") || (active && !active())) { hint.classList.remove("is-visible"); return; }
+      ev.stopPropagation();
+      hint.classList.add("is-visible");
+      clearTimeout(timer);
+      timer = setTimeout(function () { hint.classList.remove("is-visible"); }, 1200);
+    }, true);
   }
 
   function createMap(element, options) {
@@ -748,6 +773,7 @@
     arrowHead: arrowHead,
     offset: offset,
     createMap: createMap,
+    wheelNeedsCtrl: wheelNeedsCtrl,
     addAirspaceLayers: addAirspaceLayers,
     addRadarLayer: addRadarLayer,
     fitWhenVisible: fitWhenVisible,

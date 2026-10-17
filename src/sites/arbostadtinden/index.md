@@ -6,7 +6,6 @@ region: Andørja
 municipality: Ibestad
 external:
   flightlog_id: 9348
-  pgearth_id: null
   yr_id: 1-290690
 level: PP3
 training_site: false
