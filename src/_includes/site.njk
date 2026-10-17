@@ -273,7 +273,7 @@ scripts:
               {% for n in derived.airspace.airspaces %}{% if n.note and not (ceiling and n.name == ceiling.airspace.name) %}
               <span class="muted airspace__nearby"><strong>{{ n.name }}</strong>{% if not n.overLaunch %} ({{ t.site.kmAway | fmt({ km: n.distanceKm | replace(".", t.meta.decimal) }) }}){% endif %}: {{ n.note }}</span>
               {% endif %}{% endfor %}
-              <span class="airspace__source">{{ t.site.airspaceSource | fmt({ date: derived.airspace.fetched | formatDate }) }}<br>{{ t.site.checkIppc | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }} <a href="{{ '/luftrom/' | localeUrl }}">{{ t.site.towerPhones }}</a></span>
+              <span class="airspace__source">{{ t.site.airspaceSource | fmt({ date: derived.airspace.fetched | formatDate }) }}<br>{{ t.site.checkIppc | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }} <a href="{{ '/tarn/' | localeUrl }}">{{ t.site.towerPhones }}</a></span>
               {% else %}
               {% set mainAirspace = local.airspace | rejectattr("nearby") | list %}
               {% for a in mainAirspace %}
