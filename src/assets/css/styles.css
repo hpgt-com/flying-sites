@@ -474,9 +474,8 @@ p { margin: 0; }
 .home__eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
 [data-theme="dark"] .home__eyebrow { color: var(--link); }
 .home__intro h1 { font-size: 30px; }
-.home__map { order: 3; position: sticky; top: 0; z-index: 1200; display: flex; flex-direction: column; height: var(--map-h); margin: 0 -16px; background: var(--bg); }
-/* The size changes at once, not animated: an animated height made Leaflet redraw the map for every frame while scrolling,
-   which lagged on older phones. The map gets smaller after scrolling without moving the list: the space it gives up is kept as margin below, which
+.home__map { order: 3; position: sticky; top: 0; z-index: 1200; display: flex; flex-direction: column; height: var(--map-h); margin: 0 -16px; overflow: hidden; background: var(--bg); }
+/* The size changes at once, not animated. The map gets smaller after scrolling without moving the list: the space it gives up is kept as margin below, which
    is scrolled past already. While searching the list moves up, so the hits are close to the field. */
 .home--small:not(.home--search) .home__map { margin-bottom: calc(300px - var(--map-h)); }
 .home-tabs { order: 4; }
@@ -484,7 +483,13 @@ p { margin: 0; }
 .home-pane--sites { display: contents; }
 .home-pane[hidden] { display: none; }
 .home .disclaimer { order: 7; }
-.map--home { flex: 1; min-height: 0; height: auto; border-radius: 0; border: 0; }
+/* Mobile: the map itself always has the full height, and only the frame around it (.home__map) gets lower, with the map
+   moved up by half the difference so the middle stays in view. The map's size never changes while scrolling, so Leaflet
+   does not have to redraw it, which lagged on older phones. The buttons at the top are moved back down by the same amount.
+   281 px = 300 px minus the attribution line below the map. */
+.map--home { flex: none; height: 281px; border-radius: 0; border: 0; transform: translateY(calc((var(--map-h) - 300px) / 2)); }
+.map--home .leaflet-top { transform: translateY(calc((300px - var(--map-h)) / 2)); }
+.map--home.map--fullscreen, .map--home.map--fullscreen .leaflet-top { transform: none; }
 
 /* Tabs: Flysteder and Vær, with an icon. */
 .home-tabs { display: flex; border-bottom: 1px solid var(--line); }
@@ -700,7 +705,7 @@ p { margin: 0; }
 .home--search .timeline { display: none; }
 /* The attribution below the map on one line (moved there by home.js), and no scale on mobile, where the map is small. */
 .home__map .map-attribution {
-  flex: none; margin: 0; padding: 1px 8px; font-size: 11px; line-height: 16px; white-space: nowrap; overflow-x: auto; scrollbar-width: none;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1001; margin: 0; padding: 1px 8px; font-size: 11px; line-height: 16px; white-space: nowrap; overflow-x: auto; scrollbar-width: none;
   background: var(--card); color: var(--muted); border-bottom: 1px solid var(--line);
 }
 .home__map .map-attribution::-webkit-scrollbar { display: none; }
@@ -733,7 +738,8 @@ p { margin: 0; }
   .home-pane, .home-pane--sites { display: flex; flex-direction: column; gap: 14px; }
   .home-pane[hidden] { display: none; }
   .home__map { position: relative; height: 100vh; margin: 0; order: 0; }
-  .map--home { border: none; }
+  .map--home { flex: 1; height: auto; min-height: 0; border: none; transform: none; }
+  .map--home .leaflet-top { transform: none; }
   /* Search and «Filter» stay at the top of the left column while the list scrolls, as on mobile. */
   .searchbar { top: 0; margin: -8px -24px 0; padding: 8px 24px; }
   .home__intro h1 { font-size: 34px; }
@@ -745,7 +751,7 @@ p { margin: 0; }
   .map-status__sub { margin-left: 4px; }
   .timeline { left: 50%; right: auto; bottom: 22px; width: min(560px, calc(100% - 120px)); transform: translateX(-50%); }
   .home__map .leaflet-control-scale { display: block; }
-  .home__map .map-attribution { position: absolute; right: 0; bottom: 0; z-index: 1000; border: 0; border-top-left-radius: 6px; background: color-mix(in srgb, var(--card) 85%, transparent); }
+  .home__map .map-attribution { left: auto; right: 0; bottom: 0; z-index: 1000; border: 0; border-top-left-radius: 6px; background: color-mix(in srgb, var(--card) 85%, transparent); }
   .results__item { padding: 8px 10px; gap: 10px; }
   .results__name { font-size: 17px; }
   /* Desktop: one click shows the site in the map and the card, which links to the site page. */
