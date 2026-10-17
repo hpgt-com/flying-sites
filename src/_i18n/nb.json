@@ -331,7 +331,8 @@
       "someRain": "Litt nedbør meldt ({rain})",
       "weak": "Svak vind, retningen er usikker",
       "noGust": "Varselet mangler kast",
-      "gustSpread": "Kast mer enn {spread} m/s over middelvinden"
+      "gustSpread": "Kast mer enn {spread} m/s over middelvinden",
+      "noData": "Mangler gyldige vinddata"
     },
     "wind": {
       "gust": "kast {g}",

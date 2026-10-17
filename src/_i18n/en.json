@@ -331,7 +331,8 @@
       "someRain": "Light rain forecast ({rain})",
       "weak": "Light wind, the direction is uncertain",
       "noGust": "The forecast has no gusts",
-      "gustSpread": "Gusts more than {spread} m/s above the mean wind"
+      "gustSpread": "Gusts more than {spread} m/s above the mean wind",
+      "noData": "No valid wind data"
     },
     "wind": {
       "gust": "gusts {g}",
