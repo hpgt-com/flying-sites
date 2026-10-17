@@ -128,7 +128,7 @@ set in `src/_data/photoCredit.json`.
 - Events (clicks) have fixed English names, the same in all languages: `link/<domain><page>`, `download/<file>`,
   `tab/sites|weather|info`, `filter/direction|level|category/…`, `filter/wind/…`, `filter/suggest/on|off`,
   `map/select/<id>`, `day-plan/select/<id>`, `map-layer/<key>` (topo, greyscale, opentopomap, satellite, skyways,
-  thermals, hillshade, radar, airspace-tma, airspace-ctr, airspace-military, airspace-danger), `search/no-hits/…`,
+  thermals, hillshade, radar, airspace-tma, airspace-ctr, airspace-military, airspace-danger), `search/no-hits` (only counted, the search text is not sent),
   `images<page>`, `fullscreen<page>`, `setting/theme/…`, `setting/colorblind/on|off`. Up to and including
   11.10.2026 they had Norwegian names (`lenke/…`, `fane/…`, `kart/valgt/…` etc.).
 - Your own visits are not counted once you have opened `https://flysteder.hpgt.com/#toggle-goatcounter` in the

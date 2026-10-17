@@ -564,11 +564,12 @@
       writeHash();
       clearTimeout(searchTimer);
       searchTimer = setTimeout(fitToMatches, 350);
-      // Searches without hits are counted once typing stops. Shows which sites people look for.
+      // Searches without hits are counted once typing stops, but only as a number: the search text is never sent.
+      // People type all sorts of things into a search box (names, addresses), and a cookie-free counter is still
+      // a third party.
       clearTimeout(missTimer);
       missTimer = setTimeout(function () {
-        var q = filter.q.trim().toLowerCase();
-        if (q.length >= 3 && !visibleMatches().length) FS.track("search/no-hits/" + q);
+        if (filter.q.trim().length >= 3 && !visibleMatches().length) FS.track("search/no-hits");
       }, 2000);
     });
     searchEl.addEventListener("keydown", function (ev) {
