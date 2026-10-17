@@ -35,6 +35,22 @@ function describeSources(data, routes, airspace, lang) {
   return lines.join(" | ");
 }
 
+// The same sources as a short list of names, for one line at the bottom of the site page: «Flightlog, Kartverket,
+// openAIP, GPS-spor og lokalkunnskap». The details per field are in describeSources, folded below it.
+function shortSources(data, routes, airspace, lang) {
+  const t = dict(lang).sources;
+  const keys = [data.launch?.source, data.elevation?.source, data.wind_directions?.source,
+    ...(data.landings ?? []).map((x) => x.source), ...(data.parking ?? []).map((x) => x.source),
+    ...(airspace ? [] : (data.airspace ?? []).map((x) => x.source))]
+    .filter(Boolean).flatMap((k) => String(k).split("/"));
+  if (airspace) keys.push("openaip");
+  if (routes.length) keys.push("gpx", ...routes.map((r) => r.elevationSource).filter(Boolean).map((x) => String(x).toLowerCase()));
+  // Fixed order, so the line reads the same on every page. Values without a short name (manual) are left out.
+  const names = [...new Set(keys)].filter((k) => t.short[k]).sort((a, b) => Object.keys(t.short).indexOf(a) - Object.keys(t.short).indexOf(b)).map((k) => t.short[k]);
+  if (names.length < 2) return names.join("");
+  return names.slice(0, -1).join(", ") + " " + t.and + " " + names.at(-1);
+}
+
 export default {
   layout: "site.njk",
   pagination: { data: "languages", size: 1, alias: "language" },
@@ -105,6 +121,7 @@ export default {
         airspaceCeiling: airspace ? ceilingOverLaunch(airspace.airspaces, data.elevation?.launch_masl) : null,
         lastModified: lastModified(inputPath),
         sources: describeSources(data, routes, airspace, lang),
+        sourcesShort: shortSources(data, routes, airspace, lang),
         intro: tr?.intro || readIntro(inputPath),
         launchGroups: groupLaunches(local.launches),
         local,

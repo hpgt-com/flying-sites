@@ -1,0 +1,71 @@
+---
+layout: base.njk
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/om/' | localeUrl(language.code) }}"
+bodyClass: page-about
+eleventyComputed:
+  name: "{{ t.about.title }}"
+  description: "{{ t.about.description }}"
+---
+{#- About the site: responsibility, sources and licences, privacy, open data and how to report changes. The home page and the
+    site pages link here, so they only need a short line each. -#}
+{%- import "macros.njk" as m with context -%}
+{%- set ext = m.external() -%}
+<div class="simple-page about-page">
+  <header class="topbar">
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
+    {{ m.siteMenu() }}
+  </header>
+
+  <div class="simple-page__intro">
+    <h1>{{ t.about.title }}</h1>
+    <p class="muted">{{ t.about.intro }}</p>
+  </div>
+
+  <section class="about-part" aria-labelledby="about-responsibility">
+    <h2 id="about-responsibility">{{ t.about.responsibilityTitle }}</h2>
+    <p>{{ t.about.responsibility }}</p>
+    <p>{{ t.about.wind }}</p>
+    <p>{{ t.about.credit }}</p>
+  </section>
+
+  <section class="about-part" aria-labelledby="about-sources">
+    <h2 id="about-sources">{{ t.about.sourcesTitle }}</h2>
+    <p>{{ t.about.sourcesIntro }}</p>
+    <ul class="about-list">
+      <li><a href="https://www.kartverket.no/" target="_blank" rel="noopener">Kartverket{{ ext }}</a>: {{ t.about.sourceKartverket }}</li>
+      <li><a href="https://www.openaip.net/" target="_blank" rel="noopener">openAIP{{ ext }}</a>: {{ t.about.sourceOpenaip }}</li>
+      <li><a href="https://api.met.no/" target="_blank" rel="noopener">{{ t.about.metName }}{{ ext }}</a>: {{ t.about.sourceMet }}</li>
+      <li><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo{{ ext }}</a>: {{ t.about.sourceOpenMeteo }}</li>
+      <li><a href="https://flightlog.org/" target="_blank" rel="noopener">Flightlog{{ ext }}</a>: {{ t.about.sourceFlightlog }}</li>
+      <li>{{ t.about.sourceMaps }}</li>
+      <li>{{ t.about.sourceLocal }}</li>
+      <li>{{ t.about.sourcePhotos }}</li>
+    </ul>
+    <p class="muted">{{ t.about.sourcesNote }}</p>
+  </section>
+
+  <section class="about-part" aria-labelledby="about-privacy">
+    <h2 id="about-privacy">{{ t.about.privacyTitle }}</h2>
+    <ul class="about-list">
+      <li>{{ t.about.privacyStats | fmt({ goatcounter: '<a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter' ~ ext ~ '</a>' }) | safe }}</li>
+      <li>{{ t.about.privacySearch }}</li>
+      <li>{{ t.about.privacyStorage }}</li>
+      <li>{{ t.about.privacyThirdParty }}</li>
+      <li>{{ t.about.privacyNoAccount }}</li>
+    </ul>
+  </section>
+
+  <section class="about-part" aria-labelledby="about-data">
+    <h2 id="about-data">{{ t.about.dataTitle }}</h2>
+    <p>{{ t.home.openData | fmt({ geojson: '<a href="' ~ ('/flysteder.geojson' | url) ~ '" download>GeoJSON</a>', kml: '<a href="' ~ ('/flysteder.kml' | url) ~ '" download>KML</a>', license: '<a href="' ~ t.home.licenseUrl ~ '">CC BY 4.0</a>', docs: '<a href="https://github.com/hpgt-com/flying-sites/blob/main/docs/open-data.md">' ~ t.home.openDataDocs ~ '</a>' }) | safe }}</p>
+  </section>
+
+  <section class="about-part" aria-labelledby="about-changes">
+    <h2 id="about-changes">{{ t.about.changesTitle }}</h2>
+    <p>{{ t.about.changes | fmt({ github: '<a href="https://github.com/hpgt-com/flying-sites" target="_blank" rel="noopener">GitHub' ~ ext ~ '</a>' }) | safe }}</p>
+  </section>
+</div>
