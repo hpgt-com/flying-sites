@@ -313,15 +313,24 @@
   }
 
   function fitWhenVisible(map, element, fit) {
-    var done = false;
+    var done = false, queued = false;
     map.setView([68.8, 16.4], 9);
     function check() {
+      queued = false;
       if (!element.clientWidth || !element.clientHeight) return;
-      map.invalidateSize();
+      // moveend (which recalculates the clusters on the home page) waits until the size has settled.
+      map.invalidateSize({ debounceMoveend: true });
       if (!done) { done = true; fit(); }
     }
-    if ("ResizeObserver" in window) new ResizeObserver(check).observe(element);
-    else window.addEventListener("resize", check);
+    // At most once per frame: the home page map changes size while the page scrolls on mobile, and older phones lag if
+    // Leaflet redraws for every change.
+    function queue() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(check);
+    }
+    if ("ResizeObserver" in window) new ResizeObserver(queue).observe(element);
+    else window.addEventListener("resize", queue);
     check();
   }
 
