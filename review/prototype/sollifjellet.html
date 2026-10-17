@@ -56,7 +56,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .pill { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.2); backdrop-filter: blur(4px); }
 
 /* Layout */
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: grid; gap: 14px; grid-template-columns: 1fr; grid-template-areas: "status" "warn" "nav" "launch" "map" "land" "air" "photos" "foot"; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "status" "warn" "nav" "launch" "map" "land" "air" "photos" "foot"; }
 .card { background: var(--panel); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 .a-status { grid-area: status; margin-top: -26px; position: relative; z-index: 2; }
 .a-warn { grid-area: warn; } .a-nav { grid-area: nav; } .a-launch { grid-area: launch; } .a-map { grid-area: map; }
@@ -93,6 +93,38 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .demo { display: none; margin-top: 10px; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--maybe) 18%, transparent); font-size: 12.5px; }
 .demo.on { display: block; }
 .ok { background: var(--ok); } .maybe { background: var(--maybe); } .high { background: var(--high); } .no { background: var(--no); } .none { background: var(--line); }
+
+/* Ingen kort skal kunne gjøre siden bredere enn skjermen (timeskortene ruller inne i sitt eget felt). */
+.wrap > * { min-width: 0; }
+
+/* Regler ved tallene */
+.rules { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.rules li { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 3px 9px 3px 7px; border-radius: 999px; background: var(--bg); }
+.rules li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.rules li.maybe::before { background: var(--maybe); } .rules li.no::before { background: var(--high); }
+.rules li b { font-weight: 650; }
+.thermal { margin: 8px 0 0; font-size: 13.5px; }
+.thermal span { color: var(--muted); }
+
+/* Timeskort */
+.hours { display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x proximity; margin: 10px -16px 0; padding: 2px 16px 6px; scrollbar-width: thin; }
+.hcard { flex: none; width: 58px; scroll-snap-align: start; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 6px 4px 7px; text-align: center; cursor: pointer; display: grid; gap: 2px; justify-items: center; font-variant-numeric: tabular-nums; }
+.hcard.night { background: var(--bg); }
+.hcard.sel { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.hcard .t { font-size: 12px; color: var(--muted); }
+.hcard .d { width: 8px; height: 8px; border-radius: 50%; }
+.hcard .dir { font-size: 12.5px; font-weight: 650; display: flex; align-items: center; gap: 2px; }
+.hcard .dir svg { width: 12px; height: 12px; }
+.hcard .v { font-size: 16px; font-weight: 700; line-height: 1.1; }
+.hcard .g { font-size: 12px; color: var(--muted); }
+.hday { flex: none; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 2px; align-self: center; }
+
+/* Tårn */
+.towerline { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.towerline b { display: block; color: var(--ink); }
+.towerline span { font-size: 13px; color: var(--muted); }
+.towerline i { font-style: normal; font-weight: 700; white-space: nowrap; }
+.actionbar a.tower { border-color: var(--ink); }
 
 /* Hazards */
 .warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); box-shadow: none; }
@@ -215,7 +247,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 <body>
 <header class="topbar" id="topbar">
   <a href="index.html">‹ Alle steder</a><span class="title">Sollifjellet</span><span class="sp"></span>
-  <div class="desk-actions"><a class="btn primary" id="dirDesk" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a></div>
+  <div class="desk-actions"><a class="btn primary" id="dirDesk" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" id="towerDesk">Ring tårnet</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a></div>
   <button class="iconbtn" id="share" aria-label="Del"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 10V2M5 5l3-3 3 3M3 9v4h10V9"/></svg></button>
   <button class="iconbtn" id="theme" aria-label="Bytt fargetema"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
 </header>
@@ -235,8 +267,11 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
       <div class="badge none" id="badge"></div>
       <div class="now-text" aria-live="polite"><span class="when" id="when">Henter varsel …</span><b id="verdict">–</b><div class="why" id="why"></div></div>
     </div>
+    <ul class="rules" id="rules" aria-label="Reglene for valgt time"></ul>
+    <p class="thermal" id="thermal" hidden></p>
     <div class="uselaunch" id="uselaunch" hidden></div>
     <div class="chart" id="chart" role="slider" tabindex="0" aria-label="Velg time i varselet" aria-valuemin="0" aria-valuemax="47"></div>
+    <div class="hours" id="hours" aria-label="Time for time"></div>
     <div class="windows" id="windows"></div>
     <div class="demo" id="demo">Viser demodata, fordi varselet ikke kunne hentes. Tallene er ikke ekte.</div>
     <div class="ext">
@@ -301,6 +336,7 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
       <li><span><b>Evenes TMA2</b> · klasse D</span><span>3,5 km unna, fra 2500 ft (762 m)</span></li>
       <li><span><b>Evenes CTR</b> · klasse D</span><span>9,5 km unna, fra bakken</span></li>
     </ul>
+    <a class="towerline" id="towerLine"></a>
     <p class="small muted" style="margin:8px 0 0">Hentet fra openAIP 24.09.2026. Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC ↗</a> og NOTAM før du flyr. <a href="https://flysteder.hpgt.com/tarn/">Telefon til tårnet</a></p>
   </section>
 
@@ -320,8 +356,8 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 
 <nav class="actionbar" aria-label="Snarveier">
   <a class="primary" id="dirBar" target="_blank" rel="noopener">Veibeskrivelse</a>
+  <a id="towerBar" class="tower">Ring tårnet</a>
   <a href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a>
-  <a href="#kart">Kart</a>
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -346,6 +382,9 @@ const SITE = {
   hazard: { name: "Masta og heisen: trakteffekt", lat: 68.80604, lon: 16.37694 },
   route: [[68.802129,16.404942],[68.802075,16.404765],[68.802128,16.403201],[68.802037,16.401148],[68.803574,16.390139],[68.804174,16.385021],[68.804439,16.383698],[68.805557,16.375285],[68.805531,16.374876],[68.80527,16.374115],[68.805127,16.373354],[68.80483,16.372822],[68.804386,16.371466],[68.80435,16.370944]],
   airspace: { tmaFloorM: 1372, nearbyTmaM: 762 },
+  // Tårnet som styrer luftrommet over start (nummer fra src/_data/towers.json). Knappen vises bare når stedet har
+  // kontrollert luftrom (TMA/CTR) over eller nær start; på den ekte siden kan det avledes av luftromsdataene.
+  tower: { name: "Evenes tårn", phone: "+47 67 03 41 23", reason: "Evenes TMA1 (klasse D) over start fra 1372 moh. Inn i den trengs klarering." },
   images: [
     ["sollifjellet-overview-1", "9DxP-po_MD", "Oversikt"], ["sollifjellet-takeoff-se-1", "jS4NJDhj5A", "Start mot SØ"],
     ["sollifjellet-takeoff-se-2", "7mc9WxaOE3", "Start mot SØ"], ["sollifjellet-takeoff-nw-1", "sTVlFnCFQr", "Start mot NV"], ["sollifjellet-landing-1", "zmqGndZIbz", "Landing"],
@@ -451,6 +490,85 @@ function rose(dirs, size, highlight, labels) {
 
 // ---------- Visning ----------
 const cur = () => state.rows[state.idx] ?? null;
+
+// ---------- Regler ved tallene ----------
+// Samme regler som vurderingen (RULES), vist som verdi mot grense, så man ser hvorfor det ble som det ble.
+const n1 = (v) => (Math.round(v * 10) / 10).toFixed(1).replace(".", ",");
+function renderRules() {
+  const w = cur(), el = $("#rules");
+  if (!w) { el.innerHTML = ""; return; }
+  const c = code(w.dir), inP = SITE.primary.includes(c), limit = SITE.maxWind ?? RULES.maxWind;
+  const edge = inP && (!SITE.primary.includes(code(w.dir - RULES.sectorMargin)) || !SITE.primary.includes(code(w.dir + RULES.sectorMargin)));
+  const items = [
+    [inP ? (edge ? "maybe" : "ok") : "no", `Retning <b>${DIR_NB[c]}</b> ${inP ? (edge ? "nær kanten av sektoren" : "i sektoren") : "utenfor sektoren"}`],
+    [w.speed > limit ? "no" : w.speed < RULES.minWind ? "maybe" : "ok", `Vind <b>${n1(w.speed)}</b> / maks ${limit} m/s`],
+    w.gust == null ? ["maybe", "Kast mangler i varselet"] : [w.gust > RULES.maxGust ? "no" : "ok", `Kast <b>${n1(w.gust)}</b> / maks ${RULES.maxGust}`],
+    w.gust == null ? null : [w.gust - w.speed > RULES.maxGustSpread ? "maybe" : "ok", `Kastforskjell <b>${n1(w.gust - w.speed)}</b> / maks ${RULES.maxGustSpread}`],
+    w.rain == null ? null : [w.rain >= RULES.rainNo ? "no" : w.rain >= RULES.rainMaybe ? "maybe" : "ok", `Regn <b>${n1(w.rain)}</b> mm / under ${n1(RULES.rainMaybe)}`],
+  ].filter(Boolean);
+  el.innerHTML = items.map(([k, t]) => `<li class="${k}">${t}</li>`).join("");
+}
+
+// ---------- Termikk og skybase (Open-Meteo, samme beregning som lib/windgram.js) ----------
+// Grenselaget (boundary_layer_height) er grovt hvor høyt termikken går; skybasen anslås med 125 m per grad
+// mellom temperatur og duggpunkt. Begge regnes om til moh fra Open-Meteos terrenghøyde.
+const thermal = new Map();
+async function loadThermal() {
+  const u = `https://api.open-meteo.com/v1/forecast?latitude=${SITE.lat}&longitude=${SITE.lon}&hourly=boundary_layer_height,temperature_2m,dew_point_2m&forecast_days=3&timezone=UTC`;
+  const r = await fetch(u, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error("Open-Meteo " + r.status);
+  const j = await r.json(), elev = j.elevation ?? 0, h = j.hourly;
+  h.time.forEach((t, i) => {
+    const b = h.boundary_layer_height[i], T = h.temperature_2m[i], Td = h.dew_point_2m[i];
+    thermal.set(Date.parse(t + "Z"), { top: b == null ? null : Math.round((elev + b) / 50) * 50, base: T == null || Td == null ? null : Math.round((elev + Math.max(0, T - Td) * 125) / 50) * 50 });
+  });
+}
+function renderThermal() {
+  const w = cur(), el = $("#thermal"), th = w && thermal.get(w.time);
+  if (!th || th.top == null) { el.hidden = true; return; }
+  el.hidden = false;
+  const over = th.top - SITE.launchMasl;
+  const top = over < 100 ? `<b>Lite termikk</b> <span>(grenselaget når ca. ${th.top} moh, start er ${SITE.launchMasl})</span>` : `<b>Termikk til ca. ${th.top} moh</b> <span>(${over} m over start)</span>`;
+  // Lav skybase er det viktigste: ligger den ved eller under start, kan starten være i skyen.
+  const low = th.base != null && th.base <= SITE.launchMasl + 100;
+  const base = th.base == null || th.base >= 3000 ? "" : low ? ` · <b>skybase ca. ${th.base} moh</b>, starten kan ligge i skyen` : ` · skybase ca. ${th.base} moh`;
+  el.innerHTML = `${top}<span>${base}. Grovt anslag fra Open-Meteo.</span>`;
+}
+
+// ---------- Timeskort ----------
+function renderHours() {
+  let html = "", lastDay = null;
+  state.rows.forEach((r, i) => {
+    if (!r) return;
+    const day = dayName(r.time);
+    if (day !== lastDay && i > 0) html += `<span class="hday" aria-hidden="true">${esc(day)}</span>`;
+    lastDay = day;
+    const x = rate(r).r;
+    html += `<button class="hcard${isLight(r.time) ? "" : " night"}" data-i="${i}" aria-label="${esc(dayHour.format(r.time))}: ${esc(LABEL[x])}, ${DIR_NB[code(r.dir)]} ${Math.round(r.speed)} m/s${r.gust != null ? `, kast ${Math.round(r.gust)}` : ""}">` +
+      `<span class="t">${String(hourOf(r.time)).padStart(2, "0")}</span><span class="d ${x}"></span>` +
+      `<span class="dir">${arrow(r.dir, "currentColor")}${DIR_NB[code(r.dir)]}</span><span class="v">${Math.round(r.speed)}</span>` +
+      `<span class="g">${r.gust != null ? `(${Math.round(r.gust)})` : ""}</span></button>`;
+  });
+  $("#hours").innerHTML = html;
+  markHour();
+}
+function markHour() {
+  const box = $("#hours");
+  box.querySelectorAll(".hcard").forEach((b) => b.classList.toggle("sel", +b.dataset.i === state.idx));
+  const sel = box.querySelector(".hcard.sel");
+  // Rull stripa sidelengs til valgt time, uten å flytte siden.
+  if (sel) box.scrollTo({ left: sel.offsetLeft - box.clientWidth / 2 + sel.offsetWidth / 2, behavior: "smooth" });
+}
+
+// ---------- Tårn ----------
+function renderTower() {
+  const t = SITE.tower;
+  ["#towerBar", "#towerDesk"].forEach((q) => { const a = $(q); if (!t) { a.hidden = true; return; } a.href = "tel:" + t.phone.replace(/\s/g, ""); a.title = `${t.name} ${t.phone}`; });
+  const line = $("#towerLine");
+  if (!t) { line.hidden = true; return; }
+  line.href = "tel:" + t.phone.replace(/\s/g, "");
+  line.innerHTML = `<span><b>Ring ${esc(t.name)}</b><span>${esc(t.reason)}</span></span><i>${esc(t.phone.replace("+47 ", ""))}</i>`;
+}
 
 function renderStatus() {
   const w = cur(), x = rate(w);
@@ -650,7 +768,7 @@ function renderGlideWind() {
     : `${esc(when)}: <b>${Math.round(Math.abs(head))} m/s ${head > 0 ? "motvind" : "medvind"}</b> langs linja (${DIR_NB[code(w.dir)]} ${Math.round(w.speed)} m/s ved start, fra MET).`;
 }
 
-function update() { renderStatus(); placeSel(); renderLaunches(); renderMapLaunches(); renderGlideWind(); }
+function update() { renderStatus(); renderRules(); renderThermal(); placeSel(); markHour(); renderLaunches(); renderMapLaunches(); renderGlideWind(); }
 function setIdx(i) { const n = Math.max(0, Math.min(state.rows.length - 1, i)); if (n !== state.idx) { state.idx = n; update(); } }
 
 function bind() {
@@ -679,7 +797,9 @@ function bind() {
 }
 
 (async function main() {
-  renderGallery(); renderAir(); initMap(); bind(); renderGlideSeg(); renderGlide();
+  renderGallery(); renderAir(); initMap(); bind(); renderGlideSeg(); renderGlide(); renderTower();
+  $("#hours").addEventListener("click", (e) => { const b = e.target.closest(".hcard"); if (b) setIdx(+b.dataset.i); });
+  const thermalLoad = loadThermal().catch((err) => console.warn("Termikk:", err));
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(renderGlide, 150); });
   $("#glideSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { glideIdx = +b.dataset.i; renderGlideSeg(); renderGlide(); } });
   try { const f = await loadForecast(); state.rows = f.rows; state.updated = f.updated; }
@@ -687,7 +807,8 @@ function bind() {
   state.idx = Math.max(0, state.rows.findIndex((r) => r.time + HOUR > Date.now()));
   $("#demo").classList.toggle("on", state.demo);
   $("#fresh").textContent = `Varsel fra MET Norge for ${SITE.launchMasl} moh, oppdatert kl. ${clock(state.updated)}.`;
-  renderChart(); renderWindows(); update();
+  renderChart(); renderWindows(); renderHours(); update();
+  thermalLoad.then(renderThermal);
 })();
 </script>
 </body>
