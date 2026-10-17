@@ -513,20 +513,36 @@
     updateFiltersToggle();
   }
 
-  // The level and category button on mobile: shows how many are selected, and opens/closes them.
-  // The direction compass is always visible.
+  // The «Filter» button on mobile: shows the direction, level and category selected, and opens them as a panel from
+  // the bottom of the screen. «Vis flystedene», the backdrop and Esc close it again.
   var filtersToggle = document.getElementById("filters-toggle");
   var filtersMore = document.getElementById("filters-more");
+  var filtersDone = document.getElementById("filters-done");
+  var filtersBackdrop = document.getElementById("filters-backdrop");
   function updateFiltersToggle() {
     if (!filtersToggle) return;
-    var n = ["level", "category"].filter(function (t) { return filter[t]; }).length;
-    filtersToggle.innerHTML = FS.escapeHtml(FS.t("home.levelAndCategory")) + (n ? ' <span class="filters-toggle__count">' + FS.escapeHtml(FS.t("home.selected", { n: n })) + "</span>" : "");
+    var chosen = [];
+    if (filter.direction) chosen.push(FS.DIRECTION_LABELS[filter.direction]);
+    if (filter.level) chosen.push(filter.level);
+    if (filter.category) chosen.push(filter.category);
+    filtersToggle.innerHTML = FS.escapeHtml(FS.t("home.filters")) + chosen.map(function (c) {
+      return ' <span class="filters-toggle__count">' + FS.escapeHtml(c) + "</span>";
+    }).join("");
+  }
+  function setFiltersOpen(open) {
+    filtersToggle.setAttribute("aria-expanded", String(open));
+    filtersMore.classList.toggle("is-open", open);
+    if (filtersBackdrop) filtersBackdrop.hidden = !open;
+    document.body.classList.toggle("sheet-open", open);
+    if (open && filtersDone) filtersDone.focus();
+    else if (!open) filtersToggle.focus();
   }
   if (filtersToggle) {
-    filtersToggle.addEventListener("click", function () {
-      var open = filtersToggle.getAttribute("aria-expanded") !== "true";
-      filtersToggle.setAttribute("aria-expanded", String(open));
-      filtersMore.classList.toggle("is-open", open);
+    filtersToggle.addEventListener("click", function () { setFiltersOpen(filtersToggle.getAttribute("aria-expanded") !== "true"); });
+    if (filtersDone) filtersDone.addEventListener("click", function () { setFiltersOpen(false); });
+    if (filtersBackdrop) filtersBackdrop.addEventListener("click", function () { setFiltersOpen(false); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && filtersToggle.getAttribute("aria-expanded") === "true") setFiltersOpen(false);
     });
   }
 

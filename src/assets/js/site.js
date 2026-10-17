@@ -3,6 +3,13 @@
   "use strict";
 
   var FS = window.FlyingSites;
+
+  // On mobile, Fakta, Bilder, «Logg og mer» and the winds aloft start folded, so the page is shorter. They are open
+  // in the HTML, so desktop and pages without JavaScript show everything.
+  if (window.matchMedia("(max-width: 1023px)").matches) {
+    document.querySelectorAll("details[data-fold-mobile]").forEach(function (d) { d.open = false; });
+  }
+
   var data = FS.readJson("site-data");
   var mapEl = document.getElementById("site-map");
   if (!data || !mapEl) return;

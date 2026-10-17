@@ -53,6 +53,16 @@ scripts:
       {% endfor %}
     </section>
 
+    {#- Mobile: a row of links to the parts of the page that stays at the top while scrolling (hidden on desktop). -#}
+    <nav class="section-nav" aria-label="{{ t.site.sectionNav }}">
+      <a href="#h-map">{{ t.site.map }}</a>
+      <a href="#h-access">{{ t.site.access }}</a>
+      <a href="#h-launch">{{ t.site.launch }}</a>
+      <a href="#h-landing">{{ t.site.landing }}</a>
+      <a href="#h-weather">{{ t.site.weather }}</a>
+      <a href="#h-facts">{{ t.site.facts }}</a>
+    </nav>
+
     <div class="site-page__main">
 
       {# 2. Map: launch, direction arcs, points, landing, parking and walking route #}
@@ -206,7 +216,9 @@ scripts:
     <div class="site-page__aside">
       {# 6. Facts #}
       <section class="block block--facts" aria-labelledby="h-facts">
-        <h2 id="h-facts">{{ t.site.facts }}</h2>
+        {#- Folded on mobile (site.js), open on desktop and without JavaScript. -#}
+        <details class="fold" open data-fold-mobile>
+        <summary><h2 id="h-facts">{{ t.site.facts }}</h2></summary>
         <div class="rose-facts">
           {{ m.rose(wind_directions, 120) }}
           {{ m.legend(wind_directions) }}
@@ -290,6 +302,7 @@ scripts:
             </dd>
           </dl>
         </div>
+        </details>
       </section>
 
       {# 7. Weather #}
@@ -308,12 +321,12 @@ scripts:
         {% endif %}
         {#- Winds aloft from Open-Meteo (windgram.js), a draft for a few launches (src/_data/windgram.js). -#}
         {% if windgram and windgram.sites and windgram.sites[id] %}
-        <div class="windgram">
-          <h3>{{ t.site.windgramTitle }}</h3>
+        <details class="windgram fold" open data-fold-mobile>
+          <summary><h3>{{ t.site.windgramTitle }}</h3></summary>
           <p class="muted">{{ t.site.windgramIntro }}</p>
           <div class="windgram__scroll" id="windgram-grid" tabindex="0" role="region" aria-label="{{ t.site.windgramTitle }}" hidden></div>
           <p class="windgram__source">{{ t.site.windgramSource | safe }}</p>
-        </div>
+        </details>
         {% endif %}
         <nav class="link-list" aria-label="{{ t.site.weatherServices }}">
           {{ m.linkRow("https://www.windy.com/" ~ launch.lat ~ "/" ~ launch.lon ~ "?" ~ launch.lat ~ "," ~ launch.lon ~ ",12", "Windy", t.site.windySite) }}
@@ -329,7 +342,9 @@ scripts:
       {%- set shown = derived.images | selectattr("featured") | list -%}
       {%- set extra = derived.images | rejectattr("featured") | list -%}
       <section class="block block--images" aria-labelledby="h-images">
-        <h2 id="h-images">{{ t.site.images }}</h2>
+        {#- Folded on mobile (site.js), open on desktop and without JavaScript. -#}
+        <details class="fold" open data-fold-mobile>
+        <summary><h2 id="h-images">{{ t.site.images }}</h2></summary>
         {% if shown.length %}
         <div class="image-grid">
           {% for image in shown %}
@@ -354,10 +369,13 @@ scripts:
         {% if shown.length < 3 %}
         <p class="images-missing">{% if shown.length %}{{ t.site.moreImagesNeeded }} {% else %}{{ t.site.noImages }} {% endif %}{{ t.site.haveImages }} <a href="{{ site.suggestChangeUrl }}?template=endring.yml&title={{ (t.site.issueImages | fmt({ name: name })) | urlencode }}&site={{ id | urlencode }}" target="_blank" rel="noopener">{{ t.site.sendImages }}{{ m.external() }}</a></p>
         {% endif %}
+        </details>
       </section>
       {# 9. Log and more #}
       <section class="block block--log" aria-labelledby="h-log">
-        <h2 id="h-log">{{ t.site.log }}</h2>
+        {#- Folded on mobile (site.js), open on desktop and without JavaScript. -#}
+        <details class="fold" open data-fold-mobile>
+        <summary><h2 id="h-log">{{ t.site.log }}</h2></summary>
         {% if external.flightlog_id %}
         <a class="big-btn big-btn--dark" href="https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id={{ external.flightlog_id }}" target="_blank" rel="noopener">{{ t.site.onFlightlog | fmt({ name: name }) }}{{ m.external() }}</a>
         {% else %}
@@ -371,6 +389,7 @@ scripts:
         {% for l in local.links %}
         <a class="big-btn big-btn--two-line" href="{{ l.url }}" target="_blank" rel="noopener"><span>{{ l.title }}{% if l.text %}<small>{{ l.text }}</small>{% endif %}</span>{{ m.external() }}</a>
         {% endfor %}
+        </details>
       </section>
     </div>
 

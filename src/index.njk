@@ -60,7 +60,10 @@ scripts:
         </details>
       </div>
       {% endif %}
-      {#- The compass is always visible, also on mobile: big buttons, and it is the filter changed most often. -#}
+      {#- Mobile: direction, level and category behind the «Filter» button, which opens them as a panel from the bottom and
+          shows how many are selected (home.js). On desktop everything is shown and the button is hidden. -#}
+      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">{{ t.home.filters }}</button>
+      <div class="filters-more" id="filters-more" role="group" aria-label="{{ t.home.filters }}">
       <div class="filter">
         <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
         <div class="compass" role="group" aria-labelledby="f-direction">
@@ -69,9 +72,6 @@ scripts:
           {% endfor %}
         </div>
       </div>
-      {#- Mobile: level and category behind a button showing the number selected (home.js). On desktop everything is shown and the button is hidden. -#}
-      <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">{{ t.home.levelAndCategory }}</button>
-      <div class="filters-more" id="filters-more">
       <div class="filter">
         <span class="filter__title" id="f-level">{{ t.home.level }}</span>
         <div class="segmented" role="group" aria-labelledby="f-level">
@@ -88,7 +88,9 @@ scripts:
           {% endfor %}
         </div>
       </div>
+      <button type="button" class="filters-done" id="filters-done">{{ t.home.filtersDone }}</button>
       </div>
+      <div class="filters-backdrop" id="filters-backdrop" hidden></div>
     </div>
 
 
