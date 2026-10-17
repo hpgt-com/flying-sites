@@ -40,7 +40,7 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 13 | ~~Ugyldige vinddata gir «Kan passe»: valider tall i `rateWind` og innfør en «ukjent»-tilstand~~ Rettet: ugyldige timer gir «Ingen varsel» | Korrekthet | S | Høy |
 | 14 | Lagre METs `updated_at` i tillegg til egen hentetid, og vis begge | Datatillit | XS | Middels |
 | 15 | Ikke send rå søketekst til GoatCounter (`search/no-hits/` + tekst) | Personvern | XS | Middels |
-| 16 | Triager `npm audit`: 9 funn i byggeavhengighetene (5 high, 4 moderate) | Forsyningskjede | S | Middels |
+| 16 | ~~Triager `npm audit`: 9 funn i byggeavhengighetene (5 high, 4 moderate)~~ Rettet med Eleventy 3.1.7: 0 funn | Forsyningskjede | S | Middels |
 
 XS: under 1 time · S: noen timer · M: 1–3 kvelder
 
