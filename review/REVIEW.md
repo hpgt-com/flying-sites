@@ -29,9 +29,9 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 2 | Cache bildene i CI (`actions/cache` på `.cache`/`_site/img`) eller generer dem bare når de endres | CI/CD | S | Høy |
 | 3 | ~~Del opp airspace-workflowen i en hentejobb med lesetilgang og en PR-jobb med skrivetilgang~~ Gjort, med støtte for GitHub App-token (appen må opprettes, se docs/operations.md) | DevSecOps | S | Høy |
 | 4 | ~~`npm ci --ignore-scripts` i alle workflows (ingen avhengigheter har install-script i dag)~~ Gjort | Forsyningskjede | XS | Middels |
-| 5 | Legg til `/.well-known/security.txt` (RFC 9116) som peker på Report a vulnerability | Sikkerhet | XS | Lav |
+| 5 | ~~Legg til `/.well-known/security.txt` (RFC 9116) som peker på Report a vulnerability~~ Gjort | Sikkerhet | XS | Lav |
 | 6 | Verifiser domenet `flysteder.hpgt.com` i organisasjonsinnstillingene (Pages, Verified domains), og vurder DNSSEC. CAA finnes allerede (se [Sammenligning](#sammenligning-med-andre-reviews)) | Sikkerhet | XS | Middels |
-| 7 | Rett lenken til `/luftrom/` i `src/_includes/site.njk:273` til `/tarn/` | Feil | XS | Lav |
+| 7 | ~~Rett lenken til `/luftrom/` i `src/_includes/site.njk:273` til `/tarn/`~~ Rettet (på engelsk ga den 404) | Feil | XS | Lav |
 | 8 | Legg til lenkesjekk, HTML-validering og axe/pa11y i PR-sjekken (punkt 7 hadde blitt fanget) | Kvalitet | S | Middels |
 | 9 | Byggeprovenance og SBOM (`actions/attest-build-provenance`, `anchore/sbom-action`), OpenSSF Scorecard og harden-runner | DevSecOps | S | Middels |
 | 10 | PWA/offline: service worker som cacher sidene, GPX og kartfliser for området | Brukeropplevelse | M | Høy |
@@ -39,7 +39,7 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 12 | Én vedlikeholder til i CODEOWNERS og med admin. Slå på «Automatically delete head branches» | Styring | XS | Middels |
 | 13 | ~~Ugyldige vinddata gir «Kan passe»: valider tall i `rateWind` og innfør en «ukjent»-tilstand~~ Rettet: ugyldige timer gir «Ingen varsel» | Korrekthet | S | Høy |
 | 14 | Lagre METs `updated_at` i tillegg til egen hentetid, og vis begge | Datatillit | XS | Middels |
-| 15 | Ikke send rå søketekst til GoatCounter (`search/no-hits/` + tekst) | Personvern | XS | Middels |
+| 15 | ~~Ikke send rå søketekst til GoatCounter (`search/no-hits/` + tekst)~~ Rettet: bare antallet telles | Personvern | XS | Middels |
 | 16 | ~~Triager `npm audit`: 9 funn i byggeavhengighetene (5 high, 4 moderate)~~ Rettet med Eleventy 3.1.7: 0 funn | Forsyningskjede | S | Middels |
 
 XS: under 1 time · S: noen timer · M: 1–3 kvelder

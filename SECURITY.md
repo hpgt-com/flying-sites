@@ -21,6 +21,8 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
 - `Referrer-Policy: strict-origin-when-cross-origin`.
 - Leaflet, markercluster and the fonts are served from the site itself. No scripts or fonts from a CDN.
 - Images are published without EXIF metadata (`lib/images.js`).
+- `/.well-known/security.txt` (RFC 9116) points to «Report a vulnerability» and this file. It is generated on every
+  build (`lib/security-txt.js`), so `Expires` is always about a year ahead.
 
 **The repository and publishing**
 - All changes go through a PR. «PR check» runs tests and the build (`build`), dependency review
