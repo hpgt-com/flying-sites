@@ -14,8 +14,9 @@ npm test        # the tests in test/
 npm run build   # builds into _site/
 ```
 
-`FORECAST_OFFLINE=1 npm run build` builds without fetching the wind forecast from MET (faster, and works offline).
-Locally, the forecast is cached in `.cache/` for 30 minutes.
+`FORECAST_OFFLINE=1 npm run build` builds without the weather (MET and Open-Meteo), which is faster and works
+offline. Otherwise the build fetches the weather when `.cache/weather/` is missing or older than 30 minutes.
+`npm run weather` fetches it right away, the same way the `weather` job in «Build and deploy» does.
 
 The quality checks in the PR check can be run locally after the build:
 
@@ -168,7 +169,7 @@ set in `src/_data/photoCredit.json`.
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
 MET and Kartverket require no key. MET requires the client to provide contact details (`USER_AGENT` in
-`src/_data/forecast.js`).
+`lib/weather/met.js`).
 
 ## Troubleshooting
 
