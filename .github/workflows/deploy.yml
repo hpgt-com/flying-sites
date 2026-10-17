@@ -43,7 +43,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      - run: npm ci --ignore-scripts
 
       # Provides the path the site is published under: "/flying-sites" on hpgt-com.github.io, empty with a custom domain.
       - id: pages
