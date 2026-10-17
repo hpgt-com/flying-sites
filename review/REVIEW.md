@@ -30,13 +30,17 @@ Anbefalt retning: **behold Git som eneste sannhetskilde og Eleventy som byggverk
 | 3 | Del opp airspace-workflowen i en hentejobb med lesetilgang og en PR-jobb med skrivetilgang. Bruk et GitHub App-token så PR-sjekkene kjører | DevSecOps | S | Høy |
 | 4 | `npm ci --ignore-scripts` i alle workflows (ingen avhengigheter har install-script i dag) | Forsyningskjede | XS | Middels |
 | 5 | Legg til `/.well-known/security.txt` (RFC 9116) som peker på Report a vulnerability | Sikkerhet | XS | Lav |
-| 6 | Verifiser domenet `flysteder.hpgt.com` i organisasjonsinnstillingene (Pages, Verified domains), legg inn CAA-post, og vurder DNSSEC | Sikkerhet | XS | Middels |
+| 6 | Verifiser domenet `flysteder.hpgt.com` i organisasjonsinnstillingene (Pages, Verified domains), og vurder DNSSEC. CAA finnes allerede (se [Sammenligning](#sammenligning-med-andre-reviews)) | Sikkerhet | XS | Middels |
 | 7 | Rett lenken til `/luftrom/` i `src/_includes/site.njk:273` til `/tarn/` | Feil | XS | Lav |
 | 8 | Legg til lenkesjekk, HTML-validering og axe/pa11y i PR-sjekken (punkt 7 hadde blitt fanget) | Kvalitet | S | Middels |
 | 9 | Byggeprovenance og SBOM (`actions/attest-build-provenance`, `anchore/sbom-action`), OpenSSF Scorecard og harden-runner | DevSecOps | S | Middels |
 | 10 | PWA/offline: service worker som cacher sidene, GPX og kartfliser for området | Brukeropplevelse | M | Høy |
 | 11 | Mobil: kartet først, tidslinje i stedet for knapper, og en «flyvindu»-stripe per sted (se prototypen) | Design | M | Høy |
 | 12 | Én vedlikeholder til i CODEOWNERS og med admin. Slå på «Automatically delete head branches» | Styring | XS | Middels |
+| 13 | Ugyldige vinddata gir «Kan passe»: valider tall i `rateWind` og innfør en «ukjent»-tilstand | Korrekthet | S | Høy |
+| 14 | Lagre METs `updated_at` i tillegg til egen hentetid, og vis begge | Datatillit | XS | Middels |
+| 15 | Ikke send rå søketekst til GoatCounter (`search/no-hits/` + tekst) | Personvern | XS | Middels |
+| 16 | Triager `npm audit`: 9 funn i byggeavhengighetene (5 high, 4 moderate) | Forsyningskjede | S | Middels |
 
 XS: under 1 time · S: noen timer · M: 1–3 kvelder
 
@@ -118,7 +122,7 @@ Forbedringer:
 | Tredjeparter | ✅ | Ingen tredjepartsscript. Bilder fra fliser og Yr, statistikk via GoatCounter uten cookies. |
 | EXIF/GPS | ✅ | Originalene publiseres ikke. |
 | security.txt | ❌ | `/.well-known/security.txt` gir 404. Legg den i `src/.well-known/` med `Contact:` som peker på advisory-lenken, og `Expires:`. |
-| Domene | ⚠️ | Verifiser domenet i GitHub-organisasjonen. Det hindrer at andre tar over `flysteder.hpgt.com` hvis Pages en dag slås av. Legg også inn CAA-post (`0 issue "letsencrypt.org"`). |
+| Domene | ⚠️ | Verifiser domenet i GitHub-organisasjonen. Det hindrer at andre tar over `flysteder.hpgt.com` hvis Pages en dag slås av. CAA-post finnes allerede, ifølge ChatGPT-reviewen (DigiCert, Let's Encrypt, Sectigo); vurder å stramme den inn til bare Let's Encrypt. |
 
 ### Repo og forsyningskjede
 
@@ -195,7 +199,53 @@ Siden er tydelig, rolig og faglig solid. «Før du starter»-boksen, retningsros
 - **Validering:** `lib/validation.js` er god. Generer i tillegg et **JSON Schema** for front matter. Med `# yaml-language-server: $schema=...` øverst i stedsfilene får redaktører autofullføring og feilmarkering i VS Code, før byggingen feiler.
 - **Innholdsredigering:** i dag kreves en GitHub-konto og et skjema. For klubbmedlemmer uten Git kan et Git-basert CMS (Sveltia CMS eller Decap) gi et skjema som lager PR-er. Det bevarer GitOps-flyten med PR, review og merge som publisering.
 - **Språk i koden:** loggmeldinger og commit-meldinger er en blanding av norsk og engelsk, mens kommentarer og docs nå er engelske. Velg én regel og legg den i README eller CLAUDE.md, særlig siden mye av arbeidet gjøres med AI-assistent.
-- **Mindre ting:** lenken til `/luftrom/` (`site.njk:273`), oppdateringer (`@11ty/eleventy` 3.1.7, `js-yaml` 5.5.0, `markdown-it` 15.0.3) som Dependabot tar neste måned, og `npm audit` som viser 0 sårbarheter.
+- **Mindre ting:** lenken til `/luftrom/` (`site.njk:273`), oppdateringer (`@11ty/eleventy` 3.1.7, `js-yaml` 5.5.0, `markdown-it` 15.0.3) som Dependabot tar neste måned, og `npm audit`. **Rettelse:** jeg kjørte først `npm audit --omit=dev`, som ga 0 funn. Men alle byggeavhengighetene er `devDependencies`, så det var feil kommando. Full `npm audit` gir 9 funn (5 high, 4 moderate), se [Sammenligning](#sammenligning-med-andre-reviews).
+
+---
+
+## Sammenligning med andre reviews
+
+Det er også laget tilsvarende reviewer med Gemini, ChatGPT og Grok. Påstandene under er sjekket mot koden på `2837c6f`. «Bekreftet» betyr at jeg har reprodusert eller lest det selv.
+
+### Funn jeg manglet, og som stemmer
+
+| Funn | Kilde | Sjekket | Kommentar |
+|---|---|---|---|
+| `rateWind` gir «Kan passe» når `speed` er `undefined`, `NaN` eller en streng | ChatGPT F01 | Bekreftet: `undefined`, `NaN` og `"bad"` gir `ok`, mens `null` gir `maybe` | Det viktigste funnet jeg ikke hadde. Sammenligninger med `NaN` er alltid usanne, så alle sperrene slippes forbi. MET leverer i praksis alltid tall, men en robust ukjent-tilstand er billig, og den farlige retningen er gal grønn. |
+| `npm audit` gir 9 funn (5 high, 4 moderate) | ChatGPT F05, Grok H1 | Bekreftet | Min «0 sårbarheter» var feil, fordi jeg brukte `--omit=dev`. Alle funnene er DoS i byggeverktøy (`braces` via chokidar, og `sprintf-js` via gray-matter → js-yaml 3). De når ikke besøkende, men kjører i CI. Triager, og bruk `overrides` der en fiks finnes. |
+| Hentetid brukes som alder på varselet, og METs `updated_at` lagres ikke | ChatGPT F03 | Bekreftet i `forecast.js` | Lett å rette: lagre `meta.updated_at` og vis «modell oppdatert». |
+| Søk uten treff sendes som rå tekst til GoatCounter | ChatGPT F08 | Bekreftet (`home.js:571`) | Tell hendelsen uten selve teksten. |
+| Høydevinden (windgram) har ingen alderskontroll | ChatGPT F06 | Bekreftet: `windgram.js` bruker ikke `fetched` | Samme regel som vindvurderingen bør gjelde. |
+| Oversettelser kobles til farer og luftrom etter rekkefølge | ChatGPT F11 | Bekreftet (`lib/translations.js`) | Stabile ID-er per fare, start og landing hjelper både her og for navn på startplasser i prototypen. |
+| Hovedkoordinatene valideres bare som tall, uten område | ChatGPT F11 | Bekreftet. Ekstra starter sjekkes mot 5 km fra hovedstarten | Legg til en grov boks for Nord-Norge. |
+| CAA-post finnes allerede | ChatGPT | Kunne ikke sjekke (DNS blokkert i mitt miljø) | Jeg anbefalte å legge den inn. Den finnes visst, så tiltaket er å stramme inn. |
+| Mangler `rel="canonical"` og «hopp til innhold» | Grok L3/L4 | Bekreftet | Små ting. |
+| Lenke til XCC går over `http://` | Gemini 3.2 | Bekreftet (`index.njk:125`, `site.njk:318`) | Bruk `https://` hvis xcc.no støtter det. |
+| Usignerte commits | Grok M6 | Ikke sjekket | Samme anbefaling som min. |
+
+### Der vi var enige
+
+Alle fire peker på det samme:
+- **Varselet bør ut av byggingen.** ChatGPT og jeg målte begge at cron-kjøringene kommer med 4–5 timers mellomrom.
+- **Ingen HTTP-headere på GitHub Pages:** HSTS og `frame-ancestors` mangler.
+- **Airspace-workflowen:** del den i en lesejobb og en skrivejobb, bruk App-token, og slutt å merge med bypass.
+- **security.txt mangler.**
+- **PWA og offline.**
+- **Én eier i CODEOWNERS.**
+- **Tidslinje på forsiden og en matrise for flyvinduer.** Gemini foreslår nesten det samme som prototypen.
+
+### Påstander som ikke stemmer
+
+| Påstand | Kilde | Riktig |
+|---|---|---|
+| Klienten henter MET direkte for 32 steder | Gemini 2.1 | Varselet hentes ved bygging (`src/_data/forecast.js`), ikke i nettleseren. Bare prototypen henter direkte. |
+| Bør pinne Actions til SHA og sette `permissions: contents: read` (P1) | Gemini 4.2 | Er allerede gjort i alle workflows. |
+| Aktiver Dependabot og CodeQL | Gemini 4.2 | Er allerede på. |
+| CSP med `script-src https://gc.zgo.at` og `connect-src api.met.no` | Gemini 3.1 | GoatCounter-scriptet ligger på siden selv, og MET kalles ikke fra nettleseren. Forslaget ville åpnet CSP-en unødig. |
+| JSON Schema/Zod-validering av `flysteder.geojson` | Gemini 4.1 | GeoJSON og KML genereres fra stedsfilene og redigeres ikke for hånd. Validering skjer allerede på kilden (`lib/validation.js`). Riktig sted å stramme inn er der, slik ChatGPT F11 sier. |
+| Fem synkrone script bør få `defer` | Grok L2 | De ligger nederst i `<body>`, så `defer` gir lite. Lav verdi. |
+
+**Samlet vurdering:** ChatGPT-reviewen er den grundigste. Den fant korrekthetsfeilen i `rateWind` og datakontrakt-problemene, som jeg overså. Grok er nøktern og stort sett korrekt. Gemini er generisk og har flere anbefalinger som allerede er gjort, eller som bygger på feil forståelse av arkitekturen.
 
 ---
 
