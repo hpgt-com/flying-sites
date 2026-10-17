@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sollifjellet – prototype</title>
+<meta name="description" content="Prototype av en stedsside: status og flyvinduer først, startplass anbefalt etter vinden, farer, kart, luftrom og adkomst.">
+<!-- Prototype av en stedsside, mobil først. Stedsdata er kopiert fra src/sites/sollifjellet/index.md og
+     src/_data/cache/airspace/sollifjellet.json. Varselet hentes live fra api.met.no (i produksjon via edge-proxy).
+     Bildene lastes fra flysteder.hpgt.com. Feiler hentingen av varselet, vises merkede demodata. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root {
+  --bg: #f4f6f5; --panel: #fff; --ink: #14201b; --muted: #5d6b65; --line: #dde3e0; --accent: #1d5c63; --accent-soft: #d6e7e8;
+  --ok: #1e8a4c; --maybe: #d39200; --high: #c8402f; --no: #a7b1ac; --night: rgba(20,32,27,.07);
+  --warn-bg: #fff4d6; --warn-line: #e8b93a; --warn-ink: #4d3a00;
+  --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06); --radius: 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1513; --panel: #17201d; --ink: #e6ece9; --muted: #95a39d; --line: #2a3632; --accent: #6cc3c9; --accent-soft: #1d3436;
+    --ok: #3fbf74; --maybe: #e9b130; --high: #ef6a57; --no: #4b5753; --night: rgba(255,255,255,.05);
+    --warn-bg: #2e2610; --warn-line: #8a6b17; --warn-ink: #f3dfa6; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1513; --panel: #17201d; --ink: #e6ece9; --muted: #95a39d; --line: #2a3632; --accent: #6cc3c9; --accent-soft: #1d3436;
+  --ok: #3fbf74; --maybe: #e9b130; --high: #ef6a57; --no: #4b5753; --night: rgba(255,255,255,.05);
+  --warn-bg: #2e2610; --warn-line: #8a6b17; --warn-ink: #f3dfa6; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15.5px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding-bottom: 76px; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+h2 { font-size: 20px; margin: 0 0 10px; letter-spacing: -.01em; }
+h3 { font-size: 15px; margin: 14px 0 4px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+/* Top bar */
+.topbar { position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topbar a { text-decoration: none; font-weight: 600; }
+.topbar .title { font-weight: 700; opacity: 0; transition: opacity .2s; }
+.topbar.scrolled .title { opacity: 1; }
+.topbar .sp { flex: 1; }
+.iconbtn { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; }
+
+/* Hero */
+.hero { position: relative; height: 240px; background: #2b3a34 center/cover; color: #fff; display: flex; align-items: flex-end; }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,0) 60%); }
+.hero-inner { position: relative; z-index: 1; padding: 16px 16px 40px; width: 100%; max-width: 1180px; margin: 0 auto; }
+.hero h1 { font-size: 34px; line-height: 1.05; margin: 0 0 6px; letter-spacing: -.02em; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.2); backdrop-filter: blur(4px); }
+
+/* Layout */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: grid; gap: 14px; grid-template-columns: 1fr; grid-template-areas: "status" "warn" "nav" "launch" "map" "land" "air" "photos" "foot"; }
+.card { background: var(--panel); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.a-status { grid-area: status; margin-top: -26px; position: relative; z-index: 2; }
+.a-warn { grid-area: warn; } .a-nav { grid-area: nav; } .a-launch { grid-area: launch; } .a-map { grid-area: map; }
+.a-land { grid-area: land; } .a-air { grid-area: air; } .a-photos { grid-area: photos; } .a-foot { grid-area: foot; }
+@media (min-width: 900px) {
+  .hero { height: 320px; }
+  .hero h1 { font-size: 48px; }
+  .wrap { grid-template-columns: minmax(0, 1fr) 360px; column-gap: 20px; align-items: start;
+    grid-template-areas: "status warn" "nav nav" "launch air" "map air" "land photos" "foot foot"; }
+  .a-warn { margin-top: -26px; position: relative; z-index: 2; }
+  .a-air { position: sticky; top: 70px; }
+  .a-nav { display: none; }
+  body { padding-bottom: 0; }
+  .actionbar { display: none !important; }
+  .desk-actions { display: flex !important; }
+}
+
+/* Status + chart */
+.now { display: flex; gap: 12px; align-items: flex-start; }
+.badge { flex: none; width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
+.badge svg { width: 30px; height: 30px; }
+.now-text b { font-size: 18px; display: block; line-height: 1.25; }
+.now-text .when { font-size: 13px; color: var(--muted); }
+.now-text .why { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+.uselaunch { margin-top: 10px; padding: 8px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 14px; }
+.chart { margin-top: 14px; position: relative; touch-action: pan-y; user-select: none; }
+.chart svg { display: block; width: 100%; height: 150px; overflow: visible; }
+.chart .hint { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; margin-top: 2px; }
+.windows { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.win { border: 0; border-left: 4px solid; background: var(--bg); border-radius: 8px; padding: 5px 10px; font-size: 13px; cursor: pointer; text-align: left; }
+.win--ok { border-color: var(--ok); } .win--maybe { border-color: var(--maybe); }
+.ext { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.ext a { flex: 1 1 0; text-align: center; border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; text-decoration: none; color: var(--ink); font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.demo { display: none; margin-top: 10px; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--maybe) 18%, transparent); font-size: 12.5px; }
+.demo.on { display: block; }
+.ok { background: var(--ok); } .maybe { background: var(--maybe); } .high { background: var(--high); } .no { background: var(--no); } .none { background: var(--line); }
+
+/* Hazards */
+.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); box-shadow: none; }
+.warn h2 { display: flex; gap: 8px; align-items: center; }
+.warn details { border-top: 1px solid color-mix(in srgb, var(--warn-line) 50%, transparent); padding: 8px 0; }
+.warn details:first-of-type { border-top: 0; }
+.warn summary { font-weight: 650; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+.warn summary::after { content: "+"; font-weight: 400; }
+.warn details[open] summary::after { content: "–"; }
+.warn p { margin: 4px 0 0; font-size: 14px; }
+
+/* Section nav (mobile) */
+.a-nav { position: sticky; top: 55px; z-index: 900; margin: 0 -16px; padding: 8px 16px; background: var(--bg); overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+.a-nav a { display: inline-block; padding: 5px 12px; margin-right: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); text-decoration: none; color: var(--ink); font-size: 13.5px; }
+.a-nav a.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+
+/* Launches */
+.launches { display: grid; gap: 8px; }
+.launch { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: none; text-align: left; cursor: pointer; width: 100%; }
+.launch.best { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
+.launch .dirs { font-weight: 650; }
+.launch .txt { font-size: 13.5px; color: var(--muted); }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; color: #fff; white-space: nowrap; }
+.tag.no, .tag.none { color: var(--ink); }
+
+/* Map */
+#map { height: 340px; border-radius: 12px; margin-top: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.pin { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #fff; box-shadow: var(--shadow); display: grid; place-items: center; font: 700 11px/1 system-ui; color: #fff; }
+.pin.landing { background: #fff; color: #14201b; border-color: #14201b; }
+.pin.spg { background: #fff; color: #5d6b65; border-color: #5d6b65; }
+.pin.parking { background: #2a64c5; border-radius: 6px; }
+.pin.hazard { background: #e8b93a; color: #14201b; border-radius: 6px; transform: rotate(45deg); }
+.pin.hazard span { transform: rotate(-45deg); }
+
+/* Facts */
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 12px; }
+.fact { background: var(--bg); border-radius: 10px; padding: 8px 10px; }
+.fact b { display: block; font-size: 18px; }
+.fact span { font-size: 12px; color: var(--muted); }
+.btns { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 12px; }
+.btn { display: block; text-align: center; padding: 10px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); font-weight: 600; font-size: 14px; }
+.btn.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+
+/* Airspace */
+.airsvg { width: 100%; height: auto; display: block; margin: 6px 0 8px; }
+.alist { margin: 0; padding: 0; list-style: none; font-size: 13.5px; }
+.alist li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+.alist li span:last-child { color: var(--muted); text-align: right; }
+
+/* Photos */
+.gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: thin; }
+.gallery figure { margin: 0; scroll-snap-align: start; position: relative; }
+.gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; display: block; background: var(--bg); }
+.gallery figcaption { position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 6px; }
+@media (min-width: 900px) { .gallery { grid-auto-flow: row; grid-template-columns: 1fr 1fr; grid-auto-columns: auto; overflow: visible; margin: 0; padding: 0; } .gallery figure:first-child { grid-column: 1 / 3; } }
+
+.a-foot { font-size: 13px; color: var(--muted); padding: 8px 0 24px; }
+.a-foot dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 8px 0; }
+.a-foot dt { font-weight: 600; color: var(--ink); }
+
+/* Bottom action bar (mobile) */
+.actionbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+.actionbar a { text-align: center; padding: 10px 6px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); font-weight: 600; font-size: 14px; }
+.actionbar a.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.desk-actions { display: none; gap: 8px; }
+</style>
+</head>
+<body>
+<header class="topbar" id="topbar">
+  <a href="index.html">‹ Alle steder</a><span class="title">Sollifjellet</span><span class="sp"></span>
+  <div class="desk-actions"><a class="btn primary" id="dirDesk" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a></div>
+  <button class="iconbtn" id="share" aria-label="Del"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 10V2M5 5l3-3 3 3M3 9v4h10V9"/></svg></button>
+  <button class="iconbtn" id="theme" aria-label="Bytt fargetema"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+</header>
+
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <h1>Sollifjellet</h1>
+    <div class="pills"><span class="pill">563 moh</span><span class="pill">350 m ned</span><span class="pill">PP2</span><span class="pill">PG · SPG</span><span class="pill">Treningssted</span><span class="pill">Hele året</span></div>
+  </div>
+</section>
+
+<main class="wrap">
+  <!-- 1. Svaret først -->
+  <section class="card a-status" id="vaer" aria-labelledby="status-h">
+    <h2 id="status-h" class="visually-hidden" style="position:absolute;left:-9999px">Vær og vurdering</h2>
+    <div class="now">
+      <div class="badge none" id="badge"></div>
+      <div class="now-text" aria-live="polite"><span class="when" id="when">Henter varsel …</span><b id="verdict">–</b><div class="why" id="why"></div></div>
+    </div>
+    <div class="uselaunch" id="uselaunch" hidden></div>
+    <div class="chart" id="chart" role="slider" tabindex="0" aria-label="Velg time i varselet" aria-valuemin="0" aria-valuemax="47"></div>
+    <div class="windows" id="windows"></div>
+    <div class="demo" id="demo">Viser demodata, fordi varselet ikke kunne hentes. Tallene er ikke ekte.</div>
+    <div class="ext">
+      <a href="https://www.yr.no/nb/værvarsel/daglig-tabell/1-294009" target="_blank" rel="noopener">Yr ↗</a>
+      <a href="https://www.windy.com/68.804/16.367?68.804,16.367,12" target="_blank" rel="noopener">Windy ↗</a>
+      <a href="https://flybart.no" target="_blank" rel="noopener">Flybart ↗</a>
+    </div>
+    <p class="small muted" style="margin:10px 0 0">Grov vurdering fra MET-varselet, aldri «OK å fly». <span id="fresh"></span></p>
+  </section>
+
+  <!-- 2. Farer -->
+  <section class="card warn a-warn" id="farer" aria-labelledby="warn-h">
+    <h2 id="warn-h"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 19 18H1Z" fill="currentColor"/><path d="M10 8v4M10 14.5v.5" stroke="var(--warn-bg)" stroke-width="2" stroke-linecap="round"/></svg>Før du starter</h2>
+    <details open><summary>Trakteffekt over toppen av alpinsenteret</summary><p>Ved masta og ved heisen trakter vinden, og den er ofte sterkere der enn ellers på fjellet. Gul rute i kartet.</p></details>
+    <details open><summary>Bølgevind</summary><p>Stedet er utsatt for bølgevind, særlig med vind fra S–SØ og mye høydevind fra samme retning. Viser Yr mye vind og kraftige kast på Sætertinden, er det et tegn på at bølgevind kan slå ned rundt Sollifjellet.</p></details>
+    <p class="small" id="waveflag" hidden style="margin-top:8px;font-weight:600"></p>
+  </section>
+
+  <nav class="a-nav" id="secnav" aria-label="Seksjoner">
+    <a href="#vaer">Vær</a><a href="#farer">Farer</a><a href="#start">Start</a><a href="#kart">Kart</a><a href="#landing">Landing og adkomst</a><a href="#luftrom">Luftrom</a><a href="#bilder">Bilder</a>
+  </nav>
+
+  <!-- 3. Startplasser, vurdert mot vinden -->
+  <section class="card a-launch" id="start" aria-labelledby="start-h">
+    <h2 id="start-h">Startplasser</h2>
+    <p class="small muted" style="margin:-4px 0 10px">Stort startområde på toppen, med fint underlag om vinteren og noe steinete om sommeren. Merket etter vinden på valgt tidspunkt.</p>
+    <div class="launches" id="launches"></div>
+  </section>
+
+  <!-- 4. Kart -->
+  <section class="card a-map" id="kart" aria-labelledby="kart-h">
+    <h2 id="kart-h">Kart</h2>
+    <div id="map" role="region" aria-label="Kart over Sollifjellet"></div>
+    <div class="legend"><span><i class="ok"></i>Start som passer nå</span><span><i class="no"></i>Start som ikke passer</span><span><i style="background:#fff;border:2px solid #14201b"></i>Landing</span><span><i style="background:#2a64c5;border-radius:3px"></i>Parkering</span><span><i style="background:#e8b93a;border-radius:2px"></i>Fare</span><span>┄ Gangrute</span></div>
+  </section>
+
+  <!-- 5. Landing og adkomst -->
+  <section class="card a-land" id="landing" aria-labelledby="land-h">
+    <h2 id="land-h">Landing og adkomst</h2>
+    <div class="facts"><div class="fact"><b>1,5 km</b><span>gangrute</span></div><div class="fact"><b>330 m</b><span>stigning</span></div><div class="fact"><b>35 min</b><span>til fots</span></div></div>
+    <h3>Landing</h3>
+    <p style="margin:0">Stor myr ved parkeringsplassen, så landing og bil ligger samme sted. SPG lander på en egen landingsplass i skogen utenfor alpinanlegget. I selve bakken flyr man bare når alpinsenteret gir lov.</p>
+    <h3>Opp</h3>
+    <p style="margin:0">Parkér ved alpinsenteret, rett ved landingen. Ta heisen når alpinbakken er åpen (<a href="https://sollifjellet.no/" target="_blank" rel="noopener">åpningstider ↗</a>), ellers gangruten.</p>
+    <div class="btns"><a class="btn primary" id="dirBtn" target="_blank" rel="noopener">Veibeskrivelse ↗</a><a class="btn" href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>Last ned GPX</a></div>
+  </section>
+
+  <!-- 6. Luftrom -->
+  <section class="card a-air" id="luftrom" aria-labelledby="air-h">
+    <h2 id="air-h">Luftrom</h2>
+    <div id="airviz"></div>
+    <ul class="alist">
+      <li><span><b>Evenes TMA1</b> · klasse D</span><span>over start, fra 4500 ft (1372 m)</span></li>
+      <li><span><b>ENT736 B36</b> · MTA</span><span>over start, aktiveres ved NOTAM</span></li>
+      <li><span><b>Evenes TMA2</b> · klasse D</span><span>3,5 km unna, fra 2500 ft (762 m)</span></li>
+      <li><span><b>Evenes CTR</b> · klasse D</span><span>9,5 km unna, fra bakken</span></li>
+    </ul>
+    <p class="small muted" style="margin:8px 0 0">Hentet fra openAIP 24.09.2026. Sjekk alltid <a href="https://ippc.no" target="_blank" rel="noopener">IPPC ↗</a> og NOTAM før du flyr. <a href="https://flysteder.hpgt.com/tarn/">Telefon til tårnet</a></p>
+  </section>
+
+  <!-- 7. Bilder -->
+  <section class="card a-photos" id="bilder" aria-labelledby="img-h">
+    <h2 id="img-h">Bilder</h2>
+    <div class="gallery" id="gallery"></div>
+    <p class="small muted" style="margin:8px 0 0">Foto: Kristoffer D. Hofstad · CC BY-NC 4.0</p>
+  </section>
+
+  <footer class="a-foot">
+    <dl><dt>Gjennomgått</dt><dd>24.09.2026 av Kristoffer D. Hofstad</dd><dt>Kilder</dt><dd>Start: Flightlog · Høyder: Kartverket · Luftrom: openAIP · Gangrute: logget tur (GPX)</dd></dl>
+    <a class="btn" style="display:inline-block;padding:8px 14px" href="https://github.com/hpgt-com/flying-sites/issues/new?template=endring.yml&amp;site=sollifjellet" target="_blank" rel="noopener">Foreslå endring ↗</a>
+    <p>Opplysningene er veiledende, og hver pilot vurderer selv om stedet og forholdene er OK. Prototype, se review/REVIEW.md.</p>
+  </footer>
+</main>
+
+<nav class="actionbar" aria-label="Snarveier">
+  <a class="primary" id="dirBar" target="_blank" rel="noopener">Veibeskrivelse</a>
+  <a href="https://flysteder.hpgt.com/flysteder/sollifjellet/sollifjellet-route.gpx" download>GPX</a>
+  <a href="#kart">Kart</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+"use strict";
+// ---------- Stedsdata (fra src/sites/sollifjellet/index.md) ----------
+const SITE = {
+  id: "sollifjellet", name: "Sollifjellet", lat: 68.80389, lon: 16.36667, launchMasl: 563, landingMasl: 213,
+  primary: ["N", "NE", "E", "SE", "S", "NW"], possible: [], maxWind: null,
+  parking: [68.802129, 16.404942],
+  launches: [
+    { name: "Toppen", dirs: ["S", "SE", "E"], cats: ["PG", "SPG"], lat: 68.80389, lon: 16.36667, text: "Som regel fra toppen. SPG starter primært på venstre side av heisen." },
+    { name: "Masta", dirs: ["S", "SE", "E"], cats: ["PG", "SPG"], lat: 68.80604, lon: 16.37694, text: "Eventuelt fra masta på toppen av alpinsenteret. Der trakter vinden.", hazard: true },
+    { name: "Alpinbakken", dirs: ["N", "NE"], cats: ["PG"], lat: 68.80693, lon: 16.37627, text: "Fra høyresiden i alpinbakken. Ikke legg ut vingen i skitraseen." },
+    { name: "Veien i anlegget", dirs: ["NW"], cats: ["PG"], lat: 68.80612, lon: 16.37473, text: "I alpinanlegget, på veien som fører ned mot NØ-starten." },
+    { name: "Ryggen", dirs: ["NW"], cats: ["PG"], lat: 68.80576, lon: 16.36962, text: "Lenger opp på ryggen, på baksiden av fjellet." },
+  ],
+  unsuitable: { dirs: ["W", "SW"], text: "Ikke egnet, men mulig i svak vind med krabbevinkel fra toppen eller i bakvind." },
+  landings: [{ name: "Landing (myra)", lat: 68.80194, lon: 16.40667, cls: "landing" }, { name: "SPG-landing", lat: 68.80195, lon: 16.38677, cls: "spg" }],
+  hazard: { name: "Masta og heisen: trakteffekt", lat: 68.80604, lon: 16.37694 },
+  route: [[68.802129,16.404942],[68.802075,16.404765],[68.802128,16.403201],[68.802037,16.401148],[68.803574,16.390139],[68.804174,16.385021],[68.804439,16.383698],[68.805557,16.375285],[68.805531,16.374876],[68.80527,16.374115],[68.805127,16.373354],[68.80483,16.372822],[68.804386,16.371466],[68.80435,16.370944]],
+  airspace: { tmaFloorM: 1372, nearbyTmaM: 762 },
+  images: [
+    ["sollifjellet-overview-1", "9DxP-po_MD", "Oversikt"], ["sollifjellet-takeoff-se-1", "jS4NJDhj5A", "Start mot SØ"],
+    ["sollifjellet-takeoff-se-2", "7mc9WxaOE3", "Start mot SØ"], ["sollifjellet-takeoff-nw-1", "sTVlFnCFQr", "Start mot NV"], ["sollifjellet-landing-1", "zmqGndZIbz", "Landing"],
+  ],
+};
+const RULES = { maxWind: 7, maxGust: 10, maxGustSpread: 4, minWind: 2, sectorMargin: 10, rainMaybe: 0.1, rainNo: 0.5 };
+const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+const DIR_NB = { N: "N", NE: "NØ", E: "Ø", SE: "SØ", S: "S", SW: "SV", W: "V", NW: "NV" };
+const LABEL = { ok: "Kan passe", maybe: "Usikkert", high: "For mye vind", no: "Passer ikke", none: "Ingen data" };
+const HOUR = 3600e3;
+const IMG = "https://flysteder.hpgt.com/img/";
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const state = { rows: [], idx: 0, demo: false, updated: null };
+
+// ---------- Tid og sol ----------
+const fmt = (o) => new Intl.DateTimeFormat("nb-NO", { timeZone: "Europe/Oslo", ...o });
+const dayHour = fmt({ weekday: "short", hour: "2-digit", minute: "2-digit" });
+const clock = (ms) => fmt({ hour: "2-digit", minute: "2-digit" }).format(ms);
+const hourOf = (ms) => Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Oslo", hour: "2-digit", hourCycle: "h23" }).format(ms));
+const dayName = (ms) => fmt({ weekday: "long" }).format(ms);
+function sun(ms, lat, lon) {
+  const rad = Math.PI / 180, d = new Date(ms);
+  const noon = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12);
+  const n = Math.round(noon / 864e5 + 2440587.5 - 2451545 + 0.0008), j = n - lon / 360;
+  const m = (357.5291 + 0.98560028 * j) % 360;
+  const c = 1.9148 * Math.sin(m * rad) + 0.02 * Math.sin(2 * m * rad) + 0.0003 * Math.sin(3 * m * rad);
+  const l = (m + c + 282.9372) % 360, t = 2451545 + j + 0.0053 * Math.sin(m * rad) - 0.0069 * Math.sin(2 * l * rad);
+  const sd = Math.sin(l * rad) * Math.sin(23.4397 * rad), cd = Math.cos(Math.asin(sd));
+  const ch = (Math.sin(-0.833 * rad) - Math.sin(lat * rad) * sd) / (Math.cos(lat * rad) * cd);
+  if (ch < -1) return { day: true }; if (ch > 1) return { night: true };
+  const h = Math.acos(ch) / rad / 360, toMs = (x) => (x - 2440587.5) * 864e5;
+  return { rise: toMs(t - h), set: toMs(t + h) };
+}
+function isLight(ms) {
+  const s = sun(ms, SITE.lat, SITE.lon);
+  if (s.day) return true; if (s.night) { const h = hourOf(ms); return h >= 10 && h < 14; }
+  return ms + HOUR > s.rise && ms < s.set;
+}
+
+// ---------- Vurdering (forenklet rateWind fra src/assets/js/wind.js) ----------
+const code = (deg) => DIRS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
+function rate(w, primary = SITE.primary, possible = SITE.possible) {
+  if (!w) return { r: "none", why: [] };
+  const limit = SITE.maxWind ?? RULES.maxWind;
+  if (w.speed > limit) return { r: "high", why: [`Over ${limit} m/s`] };
+  if (w.gust != null && w.gust > RULES.maxGust) return { r: "high", why: [`Kast over ${RULES.maxGust} m/s`] };
+  if (w.rain != null && w.rain >= RULES.rainNo) return { r: "no", why: [`Regn, ${w.rain.toFixed(1)} mm`] };
+  const t = (c) => primary.includes(c) ? "p" : possible.includes(c) ? "m" : "-";
+  const c = code(w.dir);
+  if (t(c) === "-") return { r: "no", why: [`Vind fra ${DIR_NB[c]} passer ikke`] };
+  const why = [];
+  if (t(c) === "m") why.push("Mulig retning");
+  else if (t(code(w.dir - RULES.sectorMargin)) !== "p" || t(code(w.dir + RULES.sectorMargin)) !== "p") why.push("Nær kanten av sektoren");
+  if (w.rain != null && w.rain >= RULES.rainMaybe) why.push("Litt regn");
+  if (w.speed < RULES.minWind) why.push("Svak vind");
+  if (w.gust == null) why.push("Kast mangler");
+  else if (w.gust - w.speed > RULES.maxGustSpread) why.push("Stor kastforskjell");
+  return { r: why.length ? "maybe" : "ok", why };
+}
+// Startplass mot vinden: retningen må treffe startens egne retninger (vindstyrken vurderes for stedet).
+function launchFit(l, w) {
+  if (!w) return "none";
+  const site = rate(w).r;
+  if (!l.dirs.includes(code(w.dir))) return "no";
+  return site === "ok" || site === "maybe" ? site : site === "high" ? "high" : "no";
+}
+
+// ---------- Data ----------
+async function loadForecast() {
+  const key = "met:sollifjellet";
+  try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now() < c.expires) return c; } catch {}
+  const u = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${SITE.lat.toFixed(4)}&lon=${SITE.lon.toFixed(4)}&altitude=${SITE.launchMasl}`;
+  const res = await fetch(u, { signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error("MET " + res.status);
+  const data = await res.json();
+  const rows = data.properties.timeseries.slice(0, 48).map((t) => ({ time: Date.parse(t.time), dir: t.data.instant.details.wind_from_direction,
+    speed: t.data.instant.details.wind_speed, gust: t.data.instant.details.wind_speed_of_gust ?? null, rain: t.data.next_1_hours?.details?.precipitation_amount ?? null }));
+  const out = { rows, updated: Date.parse(data.properties.meta.updated_at), expires: Date.parse(res.headers.get("expires")) || Date.now() + 30 * 60e3 };
+  try { sessionStorage.setItem(key, JSON.stringify(out)); } catch {}
+  return out;
+}
+function demoRows() {
+  const start = Math.floor(Date.now() / HOUR) * HOUR;
+  return Array.from({ length: 48 }, (_, i) => {
+    const dir = (150 + i * 4) % 360, speed = Math.max(0.6, 3.5 + 3.5 * Math.sin(i / 6));
+    return { time: start + i * HOUR, dir, speed, gust: speed + 2.5 + (i % 4) * .6, rain: i > 26 && i < 31 ? 0.7 : 0 };
+  });
+}
+
+// ---------- Ikoner ----------
+const arrow = (deg, color = "#fff") => `<svg viewBox="0 0 20 20" style="transform:rotate(${(deg + 180) % 360}deg)" aria-hidden="true"><path d="M10 2 L15 15 L10 12 L5 15 Z" fill="${color}"/></svg>`;
+function rose(dirs, size, highlight) {
+  const c = size / 2, r = c - 2;
+  const wedge = (i) => { const a0 = ((i * 45 - 22.5 - 90) * Math.PI) / 180, a1 = ((i * 45 + 22.5 - 90) * Math.PI) / 180;
+    return `M${c} ${c} L${(c + r * Math.cos(a0)).toFixed(1)} ${(c + r * Math.sin(a0)).toFixed(1)} A${r} ${r} 0 0 1 ${(c + r * Math.cos(a1)).toFixed(1)} ${(c + r * Math.sin(a1)).toFixed(1)} Z`; };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">` +
+    DIRS.map((d, i) => `<path d="${wedge(i)}" fill="${dirs.includes(d) ? "var(--accent)" : "var(--bg)"}" stroke="var(--panel)" stroke-width="1.2"/>`).join("") +
+    (highlight != null ? `<g transform="rotate(${highlight} ${c} ${c})"><line x1="${c}" y1="${c - r}" x2="${c}" y2="${c}" stroke="var(--ink)" stroke-width="2.2"/><circle cx="${c}" cy="${c - r + 3}" r="3.2" fill="var(--ink)"/></g>` : "") +
+    `<circle cx="${c}" cy="${c}" r="2.5" fill="var(--ink)"/></svg>`;
+}
+
+// ---------- Visning ----------
+const cur = () => state.rows[state.idx] ?? null;
+
+function renderStatus() {
+  const w = cur(), x = rate(w);
+  $("#badge").className = "badge " + x.r;
+  $("#badge").innerHTML = w ? arrow(w.dir) : "";
+  $("#when").textContent = w ? (state.idx === 0 ? `Nå, kl. ${clock(w.time)}` : dayHour.format(w.time)) + (isLight(w?.time) ? "" : " · mørkt") : "Ingen varsel";
+  $("#verdict").textContent = w ? `${LABEL[x.r]}: ${DIR_NB[code(w.dir)]} ${Math.round(w.speed)} m/s${w.gust != null ? `, kast ${Math.round(w.gust)}` : ""}` : "Ingen varsel";
+  $("#why").textContent = x.why.join(" · ");
+  // Anbefalt startplass for valgt time.
+  const fits = SITE.launches.map((l) => ({ l, f: launchFit(l, w) }));
+  const best = fits.find((x) => x.f === "ok") || fits.find((x) => x.f === "maybe");
+  const ul = $("#uselaunch");
+  if (best) { ul.hidden = false; ul.innerHTML = `Bruk <b>${esc(best.l.name)}</b> (${best.l.dirs.map((d) => DIR_NB[d]).join(", ")})${best.l.hazard ? " · obs trakteffekt" : ""}`; }
+  else if (w && rate(w).r !== "high" && SITE.unsuitable.dirs.includes(code(w.dir))) { ul.hidden = false; ul.textContent = SITE.unsuitable.text; }
+  else ul.hidden = true;
+  // Bølgevind-flagg: S–SØ og sterk vind (enkel heuristikk, bare som påminnelse).
+  const wf = $("#waveflag");
+  const wave = w && ["S", "SE"].includes(code(w.dir)) && (w.gust ?? w.speed) >= 10;
+  wf.hidden = !wave; if (wave) wf.textContent = "⚑ Valgt time: sterk vind fra S–SØ. Se etter tegn på bølge.";
+}
+
+function renderChart() {
+  const rows = state.rows, n = rows.length, W = 680, H = 150, top = 22, bottom = 18, plotH = H - top - bottom;
+  const max = Math.max(12, ...rows.map((r) => r?.gust ?? r?.speed ?? 0));
+  const y = (v) => top + plotH - (v / max) * plotH, bw = W / n;
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">`;
+  rows.forEach((r, i) => { if (r && !isLight(r.time)) s += `<rect x="${i * bw}" y="${top - 4}" width="${bw + .5}" height="${plotH + 4}" fill="var(--night)"/>`; });
+  // Grenselinje for vindstyrke.
+  s += `<line x1="0" x2="${W}" y1="${y(RULES.maxWind)}" y2="${y(RULES.maxWind)}" stroke="var(--high)" stroke-dasharray="4 4" stroke-width="1" opacity=".7"/>`;
+  s += `<text x="${W - 2}" y="${y(RULES.maxWind) - 3}" text-anchor="end" font-size="10" fill="var(--high)">${RULES.maxWind} m/s</text>`;
+  rows.forEach((r, i) => {
+    if (!r) return;
+    const x = rate(r).r, cx = i * bw;
+    if (r.gust != null) s += `<rect x="${cx + 1.5}" y="${y(r.gust)}" width="${bw - 3}" height="${y(0) - y(r.gust)}" rx="1.5" fill="var(--${x === "none" ? "line" : x})" opacity=".3"/>`;
+    s += `<rect x="${cx + 1.5}" y="${y(r.speed)}" width="${bw - 3}" height="${Math.max(1, y(0) - y(r.speed))}" rx="1.5" fill="var(--${x === "none" ? "line" : x})"/>`;
+    if (i % 3 === 0) s += `<g transform="translate(${cx + bw / 2} 9) rotate(${(r.dir + 180) % 360})"><path d="M0 -6 L4 5 L0 2.5 L-4 5 Z" fill="var(--muted)"/></g>`;
+    const h = hourOf(r.time);
+    if (h % 6 === 0) s += `<text x="${cx + 1}" y="${H - 4}" font-size="10" fill="var(--muted)">${String(h).padStart(2, "0")}</text>`;
+    if (h === 0 && i > 0) s += `<line x1="${cx}" x2="${cx}" y1="${top - 4}" y2="${H - bottom}" stroke="var(--line)"/>`;
+  });
+  s += `<rect id="sel" y="${top - 6}" width="${bw}" height="${plotH + 8}" fill="none" stroke="var(--ink)" stroke-width="2" rx="3"/></svg>`;
+  const first = rows[0]?.time, mid = rows.find((r) => r && hourOf(r.time) === 0)?.time;
+  $("#chart").innerHTML = s + `<div class="hint"><span>${first ? esc(dayName(first)) : ""}</span><span>Søyle: vind · lys: kast · pil: retning</span><span>${mid ? esc(dayName(mid + 24 * HOUR)) : ""}</span></div>`;
+  placeSel();
+}
+function placeSel() {
+  const sel = document.getElementById("sel"); if (!sel) return;
+  sel.setAttribute("x", (680 / state.rows.length) * state.idx);
+  const c = $("#chart"); c.setAttribute("aria-valuenow", state.idx); if (cur()) c.setAttribute("aria-valuetext", dayHour.format(cur().time));
+}
+
+function renderWindows() {
+  const out = []; let w = null;
+  state.rows.forEach((r, i) => {
+    const x = rate(r).r, good = r && (x === "ok" || x === "maybe") && isLight(r.time);
+    if (good && w && w.r === x && w.j === i - 1) w.j = i; else if (good) out.push(w = { i, j: i, r: x }); else w = null;
+  });
+  $("#windows").innerHTML = out.length
+    ? out.slice(0, 6).map((w) => `<button class="win win--${w.r}" data-i="${w.i}"><b>${esc(dayHour.format(state.rows[w.i].time))}–${esc(clock(state.rows[w.j].time + HOUR))}</b> ${esc(LABEL[w.r].toLowerCase())}</button>`).join("")
+    : `<span class="small muted">Ingen flyvinduer i dagslys de neste 48 timene.</span>`;
+}
+
+function renderLaunches() {
+  const w = cur();
+  const fits = SITE.launches.map((l) => ({ l, f: launchFit(l, w) }));
+  const bestName = (fits.find((x) => x.f === "ok") || fits.find((x) => x.f === "maybe"))?.l.name;
+  const item = (l, f) => `<button class="launch${l.name === bestName ? " best" : ""}" data-lat="${l.lat}" data-lon="${l.lon}">${rose(l.dirs, 56, w?.dir)}` +
+    `<span><span class="dirs">${esc(l.name)} · ${l.dirs.map((d) => DIR_NB[d]).join(", ")}</span><br><span class="txt">${esc(l.text)}${l.cats.length === 1 ? " Bare " + l.cats[0] + "." : ""}</span></span>` +
+    `<span class="tag ${f}">${f === "ok" ? "Passer" : f === "maybe" ? "Usikkert" : f === "high" ? "For mye" : f === "none" ? "–" : "Ikke nå"}</span></button>`;
+  $("#launches").innerHTML = fits.map((x) => item(x.l, x.f)).join("") +
+    `<div class="launch" style="cursor:default">${rose(SITE.unsuitable.dirs, 56)}<span><span class="dirs">V, SV · ikke egnet</span><br><span class="txt">${esc(SITE.unsuitable.text)}</span></span><span></span></div>`;
+}
+
+let map, launchMarkers = [];
+function initMap() {
+  if (!window.L) { $("#map").innerHTML = '<p class="muted small" style="padding:16px">Kartet kunne ikke lastes.</p>'; return; }
+  map = L.map("map", { scrollWheelZoom: false, dragging: !L.Browser.mobile, tap: false }).setView([68.8043, 16.388], 14);
+  L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", { maxZoom: 18, attribution: "&copy; Kartverket" }).addTo(map);
+  L.polyline(SITE.route, { color: "#14201b", weight: 3, dashArray: "2 6", lineCap: "round" }).addTo(map).bindTooltip("Gangrute 1,5 km, 330 m opp");
+  const icon = (cls, html = "") => L.divIcon({ className: "", html: `<div class="pin ${cls}">${html}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] });
+  SITE.landings.forEach((l) => L.marker([l.lat, l.lon], { icon: icon(l.cls, "L"), title: l.name }).addTo(map).bindTooltip(l.name));
+  L.marker(SITE.parking, { icon: icon("parking", "P"), title: "Parkering" }).addTo(map).bindTooltip("Parkering ved alpinsenteret");
+  L.marker([SITE.hazard.lat + 0.0004, SITE.hazard.lon + 0.0012], { icon: icon("hazard", "<span>!</span>"), title: SITE.hazard.name }).addTo(map).bindTooltip(SITE.hazard.name);
+  launchMarkers = SITE.launches.map((l) => L.marker([l.lat, l.lon], { title: l.name }).addTo(map).bindTooltip(`${l.name} (${l.dirs.map((d) => DIR_NB[d]).join(", ")})`));
+  map.fitBounds(L.latLngBounds([...SITE.route, ...SITE.launches.map((l) => [l.lat, l.lon]), ...SITE.landings.map((l) => [l.lat, l.lon])]), { padding: [24, 24] });
+  // På mobil: én finger ruller siden, trykk på kartet for å flytte det (samme idé som dagens side).
+  if (L.Browser.mobile) map.on("click", () => map.dragging.enable());
+}
+function renderMapLaunches() {
+  if (!map) return;
+  const w = cur();
+  launchMarkers.forEach((m, i) => {
+    const l = SITE.launches[i], f = launchFit(l, w);
+    m.setIcon(L.divIcon({ className: "", html: `<div class="pin ${f === "ok" ? "ok" : f === "maybe" ? "maybe" : "no"}">${w ? arrow(w.dir) : ""}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] }));
+  });
+}
+
+// Luftrom som vertikalt snitt: landing, start og TMA-gulv, så man ser hvor mye høyde man har.
+function renderAir() {
+  const W = 320, H = 150, max = 1600, y = (m) => H - 14 - (m / max) * (H - 24);
+  const { tmaFloorM, nearbyTmaM } = SITE.airspace, clear = tmaFloorM - SITE.launchMasl;
+  $("#airviz").innerHTML = `<svg class="airsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evenes TMA1 starter ${clear} meter over start">
+    <rect x="0" y="0" width="${W}" height="${y(tmaFloorM)}" fill="color-mix(in srgb, var(--high) 14%, transparent)"/>
+    <line x1="0" x2="${W}" y1="${y(tmaFloorM)}" y2="${y(tmaFloorM)}" stroke="var(--high)" stroke-width="1.5"/>
+    <text x="6" y="${y(tmaFloorM) - 6}" font-size="11" fill="var(--high)" font-weight="600">Evenes TMA1 · 1372 m (4500 ft)</text>
+    <line x1="210" x2="${W}" y1="${y(nearbyTmaM)}" y2="${y(nearbyTmaM)}" stroke="var(--high)" stroke-dasharray="3 3" opacity=".7"/>
+    <text x="${W - 4}" y="${y(nearbyTmaM) - 4}" font-size="10" fill="var(--muted)" text-anchor="end">TMA2 762 m (3,5 km Ø)</text>
+    <path d="M0 ${y(0)} L40 ${y(120)} L90 ${y(SITE.launchMasl)} L130 ${y(480)} L200 ${y(SITE.landingMasl)} L${W} ${y(40)} L${W} ${H} L0 ${H} Z" fill="color-mix(in srgb, var(--accent) 22%, var(--panel))"/>
+    <circle cx="90" cy="${y(SITE.launchMasl)}" r="4" fill="var(--ink)"/><text x="98" y="${y(SITE.launchMasl) + 4}" font-size="11" fill="var(--ink)">Start 563</text>
+    <circle cx="200" cy="${y(SITE.landingMasl)}" r="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><text x="208" y="${y(SITE.landingMasl) + 4}" font-size="11" fill="var(--ink)">Landing 213</text>
+    <line x1="60" x2="60" y1="${y(SITE.launchMasl) - 2}" y2="${y(tmaFloorM) + 2}" stroke="var(--ink)" stroke-width="1.2" marker-start="url(#a)" marker-end="url(#a)"/>
+    <defs><marker id="a" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="var(--ink)"/></marker></defs>
+    <text x="54" y="${(y(SITE.launchMasl) + y(tmaFloorM)) / 2 + 4}" font-size="12" font-weight="700" fill="var(--ink)" text-anchor="end">${clear} m</text>
+  </svg>`;
+}
+
+function renderGallery() {
+  $("#gallery").innerHTML = SITE.images.map(([name, hash, cap], i) =>
+    `<figure><picture><source type="image/webp" srcset="${IMG}${name}-800-${hash}.webp 800w, ${IMG}${name}-1600-${hash}.webp 1600w" sizes="(min-width: 900px) 360px, 80vw">` +
+    `<img src="${IMG}${name}-800-${hash}.jpeg" alt="${esc(cap)}, Sollifjellet" loading="${i ? "lazy" : "eager"}" decoding="async"></picture><figcaption>${esc(cap)}</figcaption></figure>`).join("");
+  $("#hero").style.backgroundImage = `url("${IMG}${SITE.images[0][0]}-1600-${SITE.images[0][1]}.webp")`;
+}
+
+function update() { renderStatus(); placeSel(); renderLaunches(); renderMapLaunches(); }
+function setIdx(i) { const n = Math.max(0, Math.min(state.rows.length - 1, i)); if (n !== state.idx) { state.idx = n; update(); } }
+
+function bind() {
+  const ch = $("#chart");
+  const idxAt = (e) => { const r = ch.getBoundingClientRect(); return Math.floor(((e.clientX - r.left) / r.width) * state.rows.length); };
+  let down = null;
+  ch.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, drag: e.pointerType === "mouse" }; if (down.drag) setIdx(idxAt(e)); });
+  // På touch: dra sidelengs for å velge time, loddrett ruller siden som vanlig.
+  ch.addEventListener("pointermove", (e) => { if (!down) return; if (!down.drag && Math.abs(e.clientX - down.x) > 8 && Math.abs(e.clientX - down.x) > Math.abs(e.clientY - down.y)) { down.drag = true; ch.setPointerCapture(e.pointerId); } if (down.drag) setIdx(idxAt(e)); });
+  ch.addEventListener("pointerup", (e) => { if (down && !down.drag) setIdx(idxAt(e)); down = null; });
+  ch.addEventListener("pointercancel", () => (down = null));
+  ch.addEventListener("keydown", (e) => { const d = { ArrowRight: 1, ArrowLeft: -1, PageUp: 6, PageDown: -6 }[e.key]; if (d) { e.preventDefault(); setIdx(state.idx + d); } });
+  $("#windows").addEventListener("click", (e) => { const b = e.target.closest(".win"); if (b) setIdx(+b.dataset.i); });
+  $("#launches").addEventListener("click", (e) => { const b = e.target.closest("button.launch"); if (b && map) { map.setView([+b.dataset.lat, +b.dataset.lon], 16); $("#kart").scrollIntoView(); } });
+  const dir = `https://www.google.com/maps/dir/?api=1&destination=${SITE.parking[0]},${SITE.parking[1]}`;
+  ["#dirBtn", "#dirBar", "#dirDesk"].forEach((s) => ($(s).href = dir));
+  $("#share").onclick = async () => { try { await navigator.share({ title: "Sollifjellet", url: location.href }); } catch { try { await navigator.clipboard.writeText(location.href); } catch {} } };
+  $("#theme").onclick = () => { const dark = matchMedia("(prefers-color-scheme: dark)").matches, c = document.documentElement.dataset.theme; document.documentElement.dataset.theme = (c ? c === "dark" : dark) ? "light" : "dark"; renderChart(); };
+  // Toppfeltet viser navnet når heroen er rullet forbi, og seksjonsmenyen markerer hvor man er.
+  new IntersectionObserver(([e]) => $("#topbar").classList.toggle("scrolled", !e.isIntersecting), { rootMargin: "-56px 0px 0px 0px" }).observe($("#hero"));
+  const links = [...document.querySelectorAll("#secnav a")];
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+  }), { rootMargin: "-45% 0px -50% 0px" });
+  links.forEach((a) => { const t = document.querySelector(a.getAttribute("href")); if (t) io.observe(t); });
+}
+
+(async function main() {
+  renderGallery(); renderAir(); initMap(); bind();
+  try { const f = await loadForecast(); state.rows = f.rows; state.updated = f.updated; }
+  catch (err) { console.warn("Demodata:", err); state.rows = demoRows(); state.demo = true; state.updated = Date.now(); }
+  state.idx = Math.max(0, state.rows.findIndex((r) => r.time + HOUR > Date.now()));
+  $("#demo").classList.toggle("on", state.demo);
+  $("#fresh").textContent = `Varsel fra MET Norge for ${SITE.launchMasl} moh, oppdatert kl. ${clock(state.updated)}.`;
+  renderChart(); renderWindows(); update();
+})();
+</script>
+</body>
+</html>

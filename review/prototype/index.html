@@ -413,6 +413,7 @@ function renderDetail() {
     <div class="windows">${ws.length ? ws.map((w) => `<div class="window ${w.r}"><b>${esc(oslo.format(state.times[w.i]))}–${esc(clock(state.times[w.j] + HOUR))}</b> · ${esc(LABEL[w.r])}</div>`).join("") : '<p class="disclaimer">Ingen vinduer de neste 48 timene.</p>'}</div>
     <h3>Time for time</h3>
     <table class="hours"><thead><tr><th>Tid</th><th>Fra</th><th>m/s (kast)</th><th>mm</th><th>Vurdering</th></tr></thead><tbody>${rows}</tbody></table>
+    ${s.id === "sollifjellet" ? `<a class="cta" href="sollifjellet.html">Åpne prototypen av stedssiden</a>` : ""}
     <a class="cta" href="${esc(s.url)}" target="_blank" rel="noopener">Farer, landing og adkomst på flysteder.hpgt.com ↗</a>
     <p class="disclaimer">Grov vurdering fra MET-varselet, aldri «OK å fly». Sjekk alltid fare, luftrom (IPPC) og forholdene selv.</p>`;
   $("#back").onclick = () => select(null);

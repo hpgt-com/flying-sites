@@ -253,4 +253,19 @@ Kostnad: gratis-nivået på begge plattformene dekker en klubbside med god margi
 
 Vurderingen er en forenklet kopi av `rateWind` i `src/assets/js/wind.js`, med standardgrensene fra `windRules.json`. Stedsspesifikke `max_wind` er ikke med i GeoJSON-filen, så de brukes ikke i prototypen. Prototypen er ment som en idéskisse, ikke som erstatning for siden.
 
-Åpne den direkte i en nettleser (`review/prototype/index.html`), eller kjør `npx serve review/prototype`.
+### Stedsside: Sollifjellet
+
+`review/prototype/sollifjellet.html` viser hvordan en stedsside kan se ut med samme tankegang. Den er laget mobil-først.
+
+- **Status først:** et kort rett under bildet med vurdering, vind og kast for valgt time, og hvorfor.
+- **Anbefalt startplass:** hver startplass vurderes mot vindretningen, og siden sier «Bruk Toppen (S, SØ, Ø)». Startplassene får «Passer», «Usikkert» eller «Ikke nå», og markørene i kartet farges likt.
+- **48-timers graf:** søyler for vind og kast, farget etter vurdering, med retningspiler, grenselinje og skyggelagt natt. Dra eller trykk for å velge time, og hele siden oppdateres. På mobil velger man time ved å dra sidelengs, mens loddrett bevegelse ruller siden.
+- **Flyvinduer** i dagslys som knapper som hopper til tidspunktet.
+- **«Før du starter»** ligger rett etter statusen og kan foldes sammen. Et enkelt flagg minner om bølge ved sterk vind fra S–SØ.
+- **Luftrom som snitt:** start, landing og TMA-gulv tegnet i høyden, slik at «809 m til Evenes TMA1» er det første man ser.
+- **Mobil:** toppfeltet viser navnet når man har rullet forbi bildet, seksjonsmenyen er klebrig og markerer hvor man er, og en bunnlinje har Veibeskrivelse, GPX og Kart. Kartet flyttes ikke av én finger før man har trykket på det.
+- **Desktop:** to kolonner, med farer og luftrom til høyre.
+
+Stedsdataene er kopiert inn fra `src/sites/sollifjellet/index.md` og luftrom-cachen, bildene lastes fra flysteder.hpgt.com, og varselet hentes live fra MET for 563 moh. Startplassene har fått korte navn (Toppen, Masta, Alpinbakken, Veien i anlegget, Ryggen). Det finnes ikke i stedsfilen i dag, men et `name`-felt per start ville gjort både denne visningen og kartet tydeligere.
+
+Åpne filene direkte i en nettleser (`review/prototype/index.html` og `review/prototype/sollifjellet.html`), eller kjør `npx serve review/prototype`.
