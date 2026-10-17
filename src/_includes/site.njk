@@ -22,7 +22,7 @@ scripts:
 <div class="site-page site-v2">
   <header class="topbar">
     <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
-    <div class="topbar__end">{% if region %}<span class="topbar__region">{{ region }}</span>{% endif %}{{ m.siteMenu() }}</div>
+    <div class="topbar__end">{{ m.siteMenu() }}</div>
   </header>
 
   {#- Hero: the site's first overview image with the name and key facts on top. Without an image, a calm gradient. -#}
@@ -30,12 +30,16 @@ scripts:
   {%- for img in derived.images %}{% if not heroImage and img.field == "overview" %}{% set heroImage = img %}{% endif %}{% endfor %}
   <section class="hero{% if not heroImage %} hero--plain{% endif %}" aria-labelledby="site-name">
     {% if heroImage %}<img class="hero__img" src="{{ heroImage.fullUrl }}" srcset="{{ heroImage.srcsetWebp }}" sizes="(min-width: 800px) 760px, 100vw" alt="" fetchpriority="high">{% endif %}
+    {#- The directions the site suits, on the image, so they are seen first. Only the site's own directions: the wind now
+        is in «Kan jeg fly her nå?» right below. -#}
+    {% if wind_directions.primary.length %}<div class="hero__rose">{{ m.rose(wind_directions, 104) }}</div>{% endif %}
     <div class="hero__text">
+      {% if region %}<span class="hero__eyebrow">{{ region }}</span>{% endif %}
       <h1 id="site-name">{{ name }}</h1>
       <ul class="hero__chips" aria-label="{{ t.site.keyFacts }}">
         {% if elevation and elevation.launch_masl %}<li>{{ elevation.launch_masl }} {{ t.units.masl }}</li>{% endif %}
         {% if elevation and elevation.difference_m %}<li>{{ t.site.heightDown | fmt({ m: elevation.difference_m }) }}</li>{% endif %}
-        {% if level %}<li>{{ level }}</li>{% endif %}
+        {% if level %}<li>{{ level }}</li>{% else %}<li class="hero__chip--muted">{{ t.site.levelNotSet }}</li>{% endif %}
         {% if categories.length %}<li>{{ categories | join(" · ") }}</li>{% endif %}
         {% if training_site %}<li>{{ t.common.trainingSite }}</li>{% endif %}
         {% if season %}<li>{{ local.season }}</li>{% endif %}
@@ -46,13 +50,19 @@ scripts:
   <div class="site-page__body">
     {% if untranslated %}<p class="translation-note" lang="{{ lang }}">{{ t.site.notTranslated }}</p>{% endif %}
     {% if intro %}<div class="lead"{% if untranslated %} lang="nb"{% endif %}>{{ intro | safe }}</div>{% endif %}
-    {#- «Kan jeg fly her nå?»: the assessment now, the next 48 hours as bars and the periods that may work (site-wind.js).
-        The details (Yr meteogram and winds aloft) are folded. -#}
+    {#- «Kan jeg fly her nå?»: the assessment now in large type, the next 12 hours as cards, and folded below the periods that
+        may work and the next 48 hours as bars (site-wind.js). The details (Yr meteogram and winds aloft) are folded too. -#}
     <section class="block block--now" id="vaer" aria-labelledby="h-weather">
-      <h2 id="h-weather" class="visually-hidden">{{ t.site.weather }}</h2>
+      <h2 id="h-weather" class="now-eyebrow">{{ t.site.canIFly }}</h2>
       <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
-      <div class="wind-chart" id="wind-chart" hidden></div>
-      <ul class="wind-windows" id="wind-windows" hidden></ul>
+      <ol class="hour-cards" id="hour-cards" aria-label="{{ t.site.next12 }}" hidden></ol>
+      <p class="hour-cards__key" id="hour-cards-key" hidden>{{ t.site.hourCardsKey }}</p>
+      {% if wind_limits and wind_limits.max_wind %}<p class="now-limit">{{ t.site.siteMaxWind | fmt({ m: wind_limits.max_wind }) }}</p>{% endif %}
+      <details class="fold now-48" id="now-48" hidden>
+        <summary><h3>{{ t.site.next48 }}</h3></summary>
+        <ul class="wind-windows" id="wind-windows"></ul>
+        <div class="wind-chart" id="wind-chart"></div>
+      </details>
       <details class="fold now-details">
         <summary><h3>{{ t.site.weatherDetails }}</h3></summary>
         {% if external.yr_id %}
@@ -78,7 +88,6 @@ scripts:
         <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">Windy{{ m.external() }}</a>
         <a class="btn" href="https://flybart.net/" target="_blank" rel="noopener">Flybart{{ m.external() }}</a>
       </div>
-      <p class="now-note">{{ t.site.nowNote }}</p>
     </section>
     <section class="block block--notice{% if not local.hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
       <h2 id="h-hazards"><span class="notice-icon" aria-hidden="true">!</span>{{ t.site.hazardsTitle }}</h2>
@@ -98,14 +107,14 @@ scripts:
     </section>
 
     {#- Links to the parts of the page in a row that stays at the top while scrolling. -#}
+    {#- Links to the parts of the page in a row that stays at the top while scrolling. The part in view is marked (site.js). -#}
     <nav class="section-nav" aria-label="{{ t.site.sectionNav }}">
-      <a href="#h-weather">{{ t.site.weather }}</a>
-      <a href="#h-hazards">{{ t.site.hazardsShort }}</a>
       <a href="#h-launch">{{ t.site.launch }}</a>
       <a href="#h-map">{{ t.site.map }}</a>
-      <a href="#h-landing">{{ t.site.landingAccess }}</a>
+      <a href="#h-landing">{{ t.site.landingShort }}</a>
       <a href="#h-airspace">{{ t.site.airspace }}</a>
       <a href="#h-images">{{ t.site.images }}</a>
+      <a href="#h-log">{{ t.site.logShort }}</a>
     </nav>
       {# 4. Launch #}
       <section class="block block--launch" aria-labelledby="h-launch">
@@ -273,13 +282,8 @@ scripts:
               {% set ceiling = derived.airspaceCeiling %}
               {% if ceiling %}
               {% set a = ceiling.airspace %}
-              <span class="tags">
-                {{ m.tag(a.name) }}
-                {% if a["class"] %}{{ m.tag(t.site.class | fmt({ c: a["class"] })) }}{% endif %}
-                {{ m.tag(t.site.fromGround if ceiling.fromGround else (t.site.lower | fmt({ limit: a.lower | formatLimit }))) }}
-                {% if a.lower | limitMasl %}{{ m.tag(a.lower | limitMasl) }}{% endif %}
-                {% if ceiling.aboveLaunch != null and ceiling.aboveLaunch < 0 %}{{ m.tag(t.site.launchAboveLimit, "warning") }}{% endif %}
-              </span>
+              {#- The figure shows the name, class and floor. Airspace from the ground has no figure, so it is said in text. -#}
+              {% if ceiling.fromGround %}<p class="airspace__ground"><strong>{{ a.name }}</strong>{% if a["class"] %} · {{ t.site.class | fmt({ c: a["class"] }) }}{% endif %}: {{ t.site.fromGround }}</p>{% endif %}
               {#- Terrain, launch, landing and the airspace floor, with the height over the launch (lib/airspace-profile.js).
                   Only fixed airspace: areas activated by NOTAM are not part of the ceiling. -#}
               {{ ceiling | airspaceProfile(elevation.launch_masl, elevation.landing_masl) | safe }}
@@ -292,7 +296,7 @@ scripts:
               {% for n in derived.airspace.airspaces %}{% if n.note and not (ceiling and n.name == ceiling.airspace.name) %}
               <span class="muted airspace__nearby"><strong>{{ n.name }}</strong>{% if not n.overLaunch %} ({{ t.site.kmAway | fmt({ km: n.distanceKm | replace(".", t.meta.decimal) }) }}){% endif %}: {{ n.note }}</span>
               {% endif %}{% endfor %}
-              <span class="airspace__source">{{ t.site.airspaceSource | fmt({ date: derived.airspace.fetched | formatDate }) }}<br>{{ t.site.checkIppc | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }} <a href="{{ '/tarn/' | localeUrl }}">{{ t.site.towerPhones }}</a></span>
+              <span class="airspace__source">{{ t.site.airspaceSource | fmt({ date: derived.airspace.fetched | formatDate }) }} {{ t.site.checkIppc | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }} <a href="{{ '/tarn/' | localeUrl }}">{{ t.site.towerPhones }}</a></span>
               {% else %}
               {% set mainAirspace = local.airspace | rejectattr("nearby") | list %}
               {% for a in mainAirspace %}
@@ -308,48 +312,6 @@ scripts:
               {% endif %}
             </div>
       </section>
-      {# 6. Facts #}
-      <section class="block block--facts" aria-labelledby="h-facts">
-        {#- Folded on mobile (site.js), open on desktop and without JavaScript. -#}
-        <details class="fold" open data-fold-mobile>
-        <summary><h2 id="h-facts">{{ t.site.facts }}</h2></summary>
-        <div class="facts">
-          <dl class="facts__trio">
-            <div>
-              <dt>{{ t.site.level }}</dt>
-              <dd class="tags">
-                {% if level %}{{ m.tag(level) }}{% else %}{{ m.tag(t.common.notSet, "missing") }}{% endif %}
-                {% if training_site %}{{ m.tag(t.common.trainingSite) }}{% endif %}
-              </dd>
-            </div>
-            <div>
-              <dt>{{ t.site.category }}</dt>
-              <dd class="tags">{% for c in categories %}{{ m.tag(c) }}{% else %}{{ m.tag(t.common.notSet, "missing") }}{% endfor %}</dd>
-            </div>
-            {% if season %}
-            <div>
-              <dt>{{ t.site.season }}</dt>
-              <dd class="tags">{{ m.tag(local.season) }}</dd>
-            </div>
-            {% endif %}
-          </dl>
-          {% if wind_limits and wind_limits.max_wind %}
-          <dl>
-            <dt>{{ t.site.maxWind }}</dt>
-            <dd>{{ wind_limits.max_wind }} m/s <span class="muted">{{ t.site.maxWindNote }}</span></dd>
-          </dl>
-          {% endif %}
-          <dl>
-            <dt>{{ t.site.heights }}</dt>
-            <dd class="elevations">
-              {% for label, value, unit in [[t.site.heightLaunch, elevation.launch_masl, t.units.masl], [t.site.heightLanding, elevation.landing_masl, t.units.masl], [t.site.heightDiff, elevation.difference_m, "m"]] %}
-              <span><span class="muted">{{ label }}</span>{% if value or value === 0 %}<strong>{{ value }} {{ unit }}</strong>{% else %}<span class="missing">{{ t.site.notRegistered }}</span>{% endif %}</span>
-              {% endfor %}
-            </dd>
-          </dl>
-        </div>
-        </details>
-      </section>
 
       {#- 8. Images: the first overview image (aerial, from the landing towards launch, or the view from launch) large at the top
           (same as the preview image when the page is shared), the first launch and first landing image below. If the site
@@ -358,8 +320,7 @@ scripts:
       {%- set shown = derived.images | selectattr("featured") | list -%}
       {%- set extra = derived.images | rejectattr("featured") | list -%}
       <section class="block block--images" aria-labelledby="h-images">
-        {#- Folded on mobile (site.js), open on desktop and without JavaScript. -#}
-        <details class="fold" open data-fold-mobile>
+        <details class="fold" open>
         <summary><h2 id="h-images">{{ t.site.images }}</h2></summary>
         {% if shown.length %}
         <div class="image-grid">
@@ -389,17 +350,12 @@ scripts:
       </section>
       {# 9. Log and more #}
       <section class="block block--log" aria-labelledby="h-log">
-        {#- Folded on mobile (site.js), open on desktop and without JavaScript. -#}
-        <details class="fold" open data-fold-mobile>
+        <details class="fold" open>
         <summary><h2 id="h-log">{{ t.site.log }}</h2></summary>
         {% if external.flightlog_id %}
         <a class="big-btn big-btn--dark" href="https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id={{ external.flightlog_id }}" target="_blank" rel="noopener">{{ t.site.onFlightlog | fmt({ name: name }) }}{{ m.external() }}</a>
         {% else %}
         <span class="big-btn big-btn--empty">{{ t.site.noFlightlog }}</span>
-        {% endif %}
-        {# Most sites are not on Paraglidingearth, so nothing is shown without a link. #}
-        {% if external.pgearth_id %}
-        <a class="big-btn" href="https://www.paraglidingearth.com/?site={{ external.pgearth_id }}" target="_blank" rel="noopener">{{ t.site.onPgearth | fmt({ name: name }) }}{{ m.external() }}</a>
         {% endif %}
         {#- Other links for the site (links in the site file), for example the ski resort with lift opening hours. -#}
         {% for l in local.links %}

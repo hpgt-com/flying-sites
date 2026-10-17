@@ -639,6 +639,12 @@ p { margin: 0; }
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line-soft);
 }
 .section-nav::-webkit-scrollbar { display: none; }
+/* Faded at the edges, so it is clear the row scrolls sideways when the links do not fit. */
+.section-nav {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent);
+}
+.section-nav a[aria-current="true"] { background: var(--inverse-bg); color: var(--inverse-text); border-color: var(--inverse-bg); }
 .section-nav a {
   flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px;
   font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);
@@ -885,10 +891,51 @@ p { margin: 0; }
   background: rgba(17, 25, 29, 0.45); border: 1px solid rgba(255, 255, 255, 0.55);
 }
 .hero__chips .hero__chip--warn { background: #8A2C0D; border-color: #8A2C0D; }
+.hero__chips .hero__chip--muted { border-style: dashed; font-weight: 500; }
+.hero__eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); }
+/* The site's directions on the image: a white disc so the rose reads on any photo. Light colours also in the dark theme. */
+.hero__rose {
+  position: absolute; right: 14px; top: 14px; z-index: 2; display: grid; place-items: center; padding: 4px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+  --text: #1C2B33; --muted: #45545C; --dir-primary: #3D7A8A; --possible: #8FBCC7; --rose-border: #9FB1B4; --rose-none: #FFFFFF; color: #1C2B33;
+}
+.hero__rose .rose { display: block; }
 
-/* «Kan jeg fly her nå?» */
-.block--now .site-wind { border-left-width: 8px; }
-.block--now .site-wind strong { font-size: 19px; }
+/* «Kan jeg fly her nå?»: the colours follow the rating now (data-rating, set by site-wind.js). --r is the rating colour,
+   --rs a light tint of it for backgrounds and --rt a darker (lighter in the dark theme) shade for text. Mixed from the
+   wind colours, so they follow the dark theme and the colour-blind-friendly colours. */
+.block--now, .hour-card { --r: var(--wind-no); }
+.block--now[data-rating="ok"], .hour-card--ok { --r: var(--wind-ok); }
+.block--now[data-rating="maybe"], .hour-card--maybe { --r: var(--wind-maybe); }
+.block--now[data-rating="high"], .hour-card--high { --r: var(--wind-high); }
+.block--now[data-rating="none"] { --r: var(--line); }
+.block--now, .hour-card { --rs: color-mix(in srgb, var(--r) 16%, var(--card)); --rt: color-mix(in srgb, var(--r) 45%, var(--text)); }
+.site-page__body > .block.block--now { border-top: 6px solid var(--r); }
+.site-page__body .block--now .now-eyebrow { margin: 0; font: 700 13px var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
+[data-theme="dark"] .site-page__body .block--now .now-eyebrow { color: var(--link); }
+.block--now .site-wind { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; background: none; }
+.site-wind__verdict { display: flex; align-items: center; gap: 10px; }
+.block--now .site-wind .site-wind__icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--r); color: #FFFFFF; font: 700 20px var(--font-body); }
+.block--now[data-rating="maybe"] .site-wind .site-wind__icon, .hour-card--maybe .hour-card__icon { color: #1C2B33; }
+.block--now .site-wind .site-wind__word { font: 700 36px/1 var(--font-heading); color: var(--rt); }
+.block--now .site-wind strong { font-size: 17px; }
+.hour-cards { display: flex; gap: 6px; margin: 0; padding: 2px 2px 6px; list-style: none; overflow-x: auto; scrollbar-width: thin; }
+.hour-card {
+  flex: 0 0 54px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px 8px;
+  border-radius: 10px; background: var(--rs); border-bottom: 4px solid var(--r);
+}
+.hour-card--now { outline: 2px solid var(--text); outline-offset: 1px; }
+.hour-card__hour { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hour-card__icon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--r); color: #FFFFFF; font-size: 12px; font-weight: 700; }
+.hour-card__bar { position: relative; width: 8px; height: 40px; border-radius: 4px; background: color-mix(in srgb, var(--r) 22%, transparent); }
+.hour-card__bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 4px; background: var(--r); }
+.hour-card__bar b { position: absolute; left: -3px; right: -3px; height: 2px; background: var(--text); }
+.hour-card__arrow { font-size: 15px; line-height: 1; color: var(--rt); }
+.hour-card__wind { font-size: 13px; font-weight: 700; color: var(--rt); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hour-card__wind small { font-size: 12px; font-weight: 500; }
+.hour-cards__key, .now-limit { margin: 0; font-size: 13px; color: var(--muted); }
+.now-48 > summary > h3, .now-details > summary > h3 { font-size: 17px; }
+.now-48[hidden] { display: none; }
 .wind-chart { display: flex; flex-direction: column; gap: 4px; }
 .wind-chart__bars { display: flex; align-items: flex-end; gap: 2px; height: 110px; padding-top: 18px; border-bottom: 1px solid var(--line); }
 .wind-chart__col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; }
@@ -910,7 +957,6 @@ p { margin: 0; }
 .wind-windows__none { font-size: 14px; color: var(--muted); }
 .now-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .now-links .btn { justify-content: center; }
-.now-note { margin: 0; font-size: 13px; color: var(--muted); }
 
 /* Startplasser: the rose with the wind now, and each group of launches with «Passer nå» or «Ikke nå». */
 .launch-head { display: flex; gap: 16px; align-items: center; }
@@ -941,6 +987,7 @@ p { margin: 0; }
 @media (min-width: 800px) {
   .hero { margin: 0; border-radius: 22px; min-height: 380px; }
   .hero h1 { font-size: 64px; }
+  .hero__rose { top: auto; bottom: 22px; right: 26px; }
   .hero__text { padding: 28px 28px; }
   .site-page__body > .block:not(.block--notice) { padding: 24px; }
   .action-bar { left: 50%; right: auto; bottom: 16px; width: 520px; margin-left: -260px; border: 1px solid var(--line); border-radius: 16px; }
@@ -1096,11 +1143,11 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .airspace-profile text.airspace-profile__name { font-weight: 600; font-size: 14px; stroke: none; }
 .airspace-profile text.airspace-profile__floor { fill: var(--muted); stroke: none; }
 .airspace-profile__terrain { fill: var(--area); stroke: var(--rose-border); stroke-width: 1; }
-.airspace-profile__arrow { stroke: var(--text); stroke-width: 1.8; }
+.airspace-profile__arrow { stroke: var(--text); stroke-width: 1.5; }
 .airspace-profile__head { fill: var(--text); }
 .airspace-profile__arrow--warn { stroke: var(--accent); }
 .airspace-profile__head--warn { fill: var(--accent); }
-.airspace-profile text.airspace-profile__gap { font-family: var(--font-heading); font-size: 22px; font-weight: 700; }
+.airspace-profile text.airspace-profile__gap { font-family: var(--font-heading); font-size: 17px; font-weight: 700; }
 .airspace-profile text.airspace-profile__gap--warn { fill: var(--accent); }
 .airspace-profile text.airspace-profile__small { fill: var(--muted); font-size: 12px; }
 .airspace-profile__launch { fill: var(--text); stroke: var(--card); stroke-width: 2; }

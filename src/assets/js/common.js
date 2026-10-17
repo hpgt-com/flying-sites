@@ -155,6 +155,29 @@
     });
   }
 
+  // Zoom with the mouse wheel: the wheel scrolls the page as normal, and zooms the map with Ctrl (or Cmd on Mac), as in
+  // Google Maps, so you do not get stuck in the map when scrolling down the page. Without Ctrl a short hint is shown.
+  // In full screen there is no page to scroll, and the wheel zooms. active() can turn it off, for example on the
+  // desktop home page where the map fills its column and nothing scrolls. Zoom buttons and +/- work as before.
+  function wheelNeedsCtrl(map, active) {
+    var el = map.getContainer();
+    var hint = document.createElement("div");
+    hint.className = "map-hint";
+    hint.setAttribute("aria-hidden", "true");
+    hint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? t("site.zoomHintMac") : t("site.zoomHint");
+    el.appendChild(hint);
+    var timer = null;
+    // Caught before Leaflet sees the event (capture), so Leaflet's own zoom only gets scrolling with Ctrl/Cmd.
+    // Leaflet then also stops the browser from zooming the whole page.
+    el.addEventListener("wheel", function (ev) {
+      if (ev.ctrlKey || ev.metaKey || el.classList.contains("map--fullscreen") || (active && !active())) { hint.classList.remove("is-visible"); return; }
+      ev.stopPropagation();
+      hint.classList.add("is-visible");
+      clearTimeout(timer);
+      timer = setTimeout(function () { hint.classList.remove("is-visible"); }, 1200);
+    }, true);
+  }
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
     useTwoFingers(map);
@@ -748,6 +771,7 @@
     arrowHead: arrowHead,
     offset: offset,
     createMap: createMap,
+    wheelNeedsCtrl: wheelNeedsCtrl,
     addAirspaceLayers: addAirspaceLayers,
     addRadarLayer: addRadarLayer,
     fitWhenVisible: fitWhenVisible,

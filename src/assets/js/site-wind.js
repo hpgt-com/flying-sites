@@ -1,6 +1,7 @@
-// «Vind nå» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as the home
-// page (wind.js). The data is in #site-wind-data (site.njk). Without a forecast, or when it is too old or does not
-// cover the current hour, the box says so instead of assessing.
+// «Kan jeg fly her nå?» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as
+// the home page (wind.js). The verdict in large type, the next 12 hours as cards, and folded below the periods that may
+// work and 48 hours as bars. The data is in #site-wind-data (site.njk). Without a forecast, or when it is too old or does
+// not cover the current hour, the box says so instead of assessing.
 (function () {
   "use strict";
 
@@ -12,15 +13,18 @@
 
   var forecast = { fetched: data.fetched, times: data.times, sites: {} };
   forecast.sites[data.site.id] = data.series;
-  // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML.
+  // The symbol in the circle before each rating, so the rating does not rest on colour alone.
+  var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×", none: "–" };
+  var block = el.closest(".block--now");
+  // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML. The first part is the verdict:
+  // the icon and the rating in large type.
   function show(rating, parts) {
     el.className = "site-wind site-wind--" + rating;
-    el.replaceChildren.apply(el, parts.map(function (p) {
-      var node = document.createElement(p[0]);
-      if (p[2]) node.className = p[2];
-      node.textContent = p[1];
-      return node;
-    }));
+    if (block) block.setAttribute("data-rating", rating);
+    var row = make("div", "site-wind__verdict");
+    row.append(make("span", "site-wind__icon", ICONS[rating] || ICONS.none), make("span", "site-wind__word", parts[0]));
+    row.firstChild.setAttribute("aria-hidden", "true");
+    el.replaceChildren.apply(el, [row].concat(parts.slice(1).map(function (p) { return make(p[0], p[2], p[1]); })));
     el.hidden = false;
   }
 
@@ -32,16 +36,19 @@
   function render() {
     var now = Date.now();
     if (W.isStale(forecast, data.rules, now)) {
-      show("none", [["strong", FS.t("wind.staleSite")], ["span", FS.t("wind.staleSiteText")], sun(now)]);
+      show("none", [FS.t("wind.staleSite"), ["span", FS.t("wind.staleSiteText")], sun(now)]);
+      hideDetails();
       return;
     }
     var index = W.slotIndex(forecast.times, "0", now);
     var wind = W.windAt(forecast, data.site.id, index);
     if (!wind) {
-      show("none", [["strong", FS.t("wind.noneNow")], ["span", FS.t("wind.noneNowText")], sun(now)]);
+      show("none", [FS.t("wind.noneNow"), ["span", FS.t("wind.noneNowText")], sun(now)]);
+      hideDetails();
       return;
     }
     var rating = W.rateWind(data.site, wind, data.rules);
+    renderCards(now);
     renderChart(now);
     renderWindows();
     renderLaunches(wind, rating.rating);
@@ -49,11 +56,49 @@
       (wind.gust != null ? ", " + FS.t("wind.gust", { g: Math.round(wind.gust) }) : "") +
       (wind.rain != null && wind.rain >= data.rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "");
     show(rating.rating, [
-      ["span", FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }), "site-wind__time"],
-      ["strong", W.RATINGS[rating.rating].label + ": " + text],
+      W.RATINGS[rating.rating].label,
+      ["strong", FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }) + ": " + text],
       ["span", (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + FS.t("wind.roughNote")],
       sun(now),
     ]);
+  }
+  function hideDetails() {
+    [cardsEl, cardsKeyEl, foldEl].forEach(function (n) { if (n) n.hidden = true; });
+  }
+
+  // The next 12 hours as cards: the hour, the rating symbol, a bar for the mean wind with a line for the gust, an arrow for
+  // where the wind blows and the numbers. The current hour is marked.
+  var cardsEl = document.getElementById("hour-cards");
+  var cardsKeyEl = document.getElementById("hour-cards-key");
+  var foldEl = document.getElementById("now-48");
+  var CARD_MAX = 12;
+  function renderCards(now) {
+    if (!cardsEl) return;
+    var start = W.slotIndex(forecast.times, "0", now);
+    var items = [];
+    for (var i = start; i >= 0 && i < Math.min(forecast.times.length, start + 12); i++) {
+      var wind = W.windAt(forecast, data.site.id, i);
+      if (!wind) continue;
+      var rating = W.rateWind(data.site, wind, data.rules).rating;
+      var li = make("li", "hour-card hour-card--" + rating + (i === start ? " hour-card--now" : ""));
+      var bar = make("span", "hour-card__bar");
+      var fill = bar.appendChild(make("i"));
+      fill.style.height = Math.min(100, (wind.speed / CARD_MAX) * 100) + "%";
+      if (wind.gust != null) bar.appendChild(make("b")).style.bottom = Math.min(100, (wind.gust / CARD_MAX) * 100) + "%";
+      var arrow = make("span", "hour-card__arrow", "↓");
+      arrow.style.transform = "rotate(" + Math.round(wind.dir) + "deg)";
+      arrow.setAttribute("aria-hidden", "true");
+      var numbers = make("span", "hour-card__wind", FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed));
+      if (wind.gust != null) numbers.appendChild(make("small", "", "(" + Math.round(wind.gust) + ")"));
+      var icon = make("span", "hour-card__icon", ICONS[rating]);
+      icon.setAttribute("aria-hidden", "true");
+      var hour = make("span", "hour-card__hour", W.formatClock(Date.parse(forecast.times[i])).slice(0, 2));
+      li.append(hour, icon, bar, arrow, numbers, make("span", "visually-hidden", W.RATINGS[rating].label));
+      items.push(li);
+    }
+    cardsEl.replaceChildren.apply(cardsEl, items);
+    cardsEl.hidden = cardsKeyEl.hidden = !items.length;
+    if (foldEl) foldEl.hidden = false;
   }
 
   // The next 48 hours as bars: height is the mean wind, the light top is the gust, the colour is the assessment for
