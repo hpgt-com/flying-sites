@@ -38,8 +38,31 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   PR, but runs no npm code. The fetched files go from one to the other as an artifact. When the club's GitHub App
   is set up, `pr` uses a short-lived app token limited to this repository (contents and pull requests), so the PR
   check runs on the airspace PRs too.
+- Every publish is signed. The `attest` job in «Build and deploy» makes a build provenance attestation (which
+  workflow, commit and run built the site) and an SBOM attestation (SPDX from `package-lock.json`, made with
+  `npm sbom`), both for the SHA-256 of the archive that is published to Pages. The job has `id-token` and
+  `attestations` but checks out no code; the build job never gets `id-token`. The SBOM is also kept as the
+  artifact `sbom` on the run for 90 days. See [Verifying a publish](#verifying-a-publish).
+- OpenSSF Scorecard (`scorecard.yml`) checks the repository against supply-chain good practice on every push to
+  `main` and weekly. The results are in Code scanning and behind the badge in README.
 - Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
   key files.
+
+## Verifying a publish
+
+Download the archive `github-pages` from a run of «Build and deploy» (Actions → the run → Artifacts), unzip it so
+you have `artifact.tar`, and run:
+
+```bash
+gh attestation verify artifact.tar --repo hpgt-com/flying-sites
+gh attestation verify artifact.tar --repo hpgt-com/flying-sites --predicate-type https://spdx.dev/Document/v2.3
+```
+
+The first checks the provenance, the second the SBOM. Both fail if the archive was not built by this repository's
+workflow. All attestations are listed under the repository's Actions → Attestations.
+
+`step-security/harden-runner` (blocks unexpected outbound traffic from the runner) is not used: it sends data about
+every run to StepSecurity. It is a choice for the owners if they want it.
 
 ## GitHub settings (done by someone with admin access)
 
