@@ -110,11 +110,31 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
 .a-nav a.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 
 /* Launches */
-.launches { display: grid; gap: 8px; }
-.launch { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: none; text-align: left; cursor: pointer; width: 100%; }
-.launch.best { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
-.launch .dirs { font-weight: 650; }
-.launch .txt { font-size: 13.5px; color: var(--muted); }
+.lhead { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: center; margin-bottom: 12px; }
+.lhead .rec { font-size: 15px; }
+.lhead .rec b { display: block; font-size: 17px; }
+.lhead .rec > span { display: block; font-size: 13.5px; }
+.lhead .rec .small { margin-top: 2px; }
+.lgroups { border-top: 1px solid var(--line); }
+.lgroup { border-bottom: 1px solid var(--line); }
+.lgroup summary { list-style: none; display: grid; grid-template-columns: 10px auto 1fr auto 14px; gap: 10px; align-items: center; padding: 10px 2px; cursor: pointer; }
+.lgroup summary::-webkit-details-marker { display: none; }
+.lgroup summary::after { content: "›"; color: var(--muted); font-size: 18px; line-height: 1; transition: transform .15s; }
+.lgroup[open] summary::after { transform: rotate(90deg); }
+.lgroup.best summary { font-weight: 600; }
+.ldot { width: 10px; height: 10px; border-radius: 50%; }
+.dirbadges { display: flex; gap: 3px; }
+.db { font: 700 11.5px/1 system-ui; padding: 4px 5px; border-radius: 5px; background: var(--accent); color: var(--panel); min-width: 24px; text-align: center; }
+.db.hit { outline: 2px solid var(--ink); outline-offset: 1px; }
+.lnames { font-size: 14.5px; min-width: 0; }
+.lnames small { color: var(--muted); font-weight: 400; }
+.lbody { padding: 0 2px 10px 20px; display: grid; gap: 8px; }
+.lone { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
+.lone p { margin: 0; color: var(--muted); }
+.lone b { color: var(--ink); }
+.mapbtn { flex: none; border: 1px solid var(--line); background: none; border-radius: 999px; padding: 2px 10px; font-size: 12.5px; cursor: pointer; }
+.lnot { display: flex; gap: 10px; align-items: baseline; padding: 10px 2px 0; font-size: 13px; color: var(--muted); }
+.lnot .db { background: var(--bg); color: var(--muted); }
 .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; color: #fff; white-space: nowrap; }
 .tag.no, .tag.none { color: var(--ink); }
 
@@ -212,8 +232,8 @@ h3 { font-size: 15px; margin: 14px 0 4px; }
   <!-- 3. Startplasser, vurdert mot vinden -->
   <section class="card a-launch" id="start" aria-labelledby="start-h">
     <h2 id="start-h">Startplasser</h2>
-    <p class="small muted" style="margin:-4px 0 10px">Stort startområde på toppen, med fint underlag om vinteren og noe steinete om sommeren. Merket etter vinden på valgt tidspunkt.</p>
-    <div class="launches" id="launches"></div>
+    <div class="lhead" id="lhead"></div>
+    <div class="lgroups" id="launches"></div>
   </section>
 
   <!-- 4. Kart -->
@@ -379,13 +399,14 @@ function demoRows() {
 
 // ---------- Ikoner ----------
 const arrow = (deg, color = "#fff") => `<svg viewBox="0 0 20 20" style="transform:rotate(${(deg + 180) % 360}deg)" aria-hidden="true"><path d="M10 2 L15 15 L10 12 L5 15 Z" fill="${color}"/></svg>`;
-function rose(dirs, size, highlight) {
+function rose(dirs, size, highlight, labels) {
   const c = size / 2, r = c - 2;
   const wedge = (i) => { const a0 = ((i * 45 - 22.5 - 90) * Math.PI) / 180, a1 = ((i * 45 + 22.5 - 90) * Math.PI) / 180;
     return `M${c} ${c} L${(c + r * Math.cos(a0)).toFixed(1)} ${(c + r * Math.sin(a0)).toFixed(1)} A${r} ${r} 0 0 1 ${(c + r * Math.cos(a1)).toFixed(1)} ${(c + r * Math.sin(a1)).toFixed(1)} Z`; };
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">` +
     DIRS.map((d, i) => `<path d="${wedge(i)}" fill="${dirs.includes(d) ? "var(--accent)" : "var(--bg)"}" stroke="var(--panel)" stroke-width="1.2"/>`).join("") +
     (highlight != null ? `<g transform="rotate(${highlight} ${c} ${c})"><line x1="${c}" y1="${c - r}" x2="${c}" y2="${c}" stroke="var(--ink)" stroke-width="2.2"/><circle cx="${c}" cy="${c - r + 3}" r="3.2" fill="var(--ink)"/></g>` : "") +
+    (labels ? [["N", c, 9], ["Ø", size - 7, c + 4], ["S", c, size - 2], ["V", 7, c + 4]].map(([t, x, y]) => `<text x="${x}" y="${y}" font-size="10" font-weight="700" text-anchor="middle" fill="var(--ink)" stroke="var(--panel)" stroke-width="3" paint-order="stroke">${t}</text>`).join("") : "") +
     `<circle cx="${c}" cy="${c}" r="2.5" fill="var(--ink)"/></svg>`;
 }
 
@@ -453,15 +474,35 @@ function renderWindows() {
     : `<span class="small muted">Ingen flyvinduer i dagslys de neste 48 timene.</span>`;
 }
 
+// Startplassene grupperes etter retninger (Toppen og Masta har samme sektor), så listen blir kort.
+// Én samlet rose viser alle retningene og vinden; detaljene per start ligger i en sammenfoldet rad.
+function launchGroups() {
+  const by = new Map();
+  SITE.launches.forEach((l) => { const k = l.dirs.join(","); if (!by.has(k)) by.set(k, []); by.get(k).push(l); });
+  return [...by.values()].map((ls) => ({ dirs: ls[0].dirs, launches: ls }));
+}
 function renderLaunches() {
-  const w = cur();
-  const fits = SITE.launches.map((l) => ({ l, f: launchFit(l, w) }));
-  const bestName = (fits.find((x) => x.f === "ok") || fits.find((x) => x.f === "maybe"))?.l.name;
-  const item = (l, f) => `<button class="launch${l.name === bestName ? " best" : ""}" data-lat="${l.lat}" data-lon="${l.lon}">${rose(l.dirs, 56, w?.dir)}` +
-    `<span><span class="dirs">${esc(l.name)} · ${l.dirs.map((d) => DIR_NB[d]).join(", ")}</span><br><span class="txt">${esc(l.text)}${l.cats.length === 1 ? " Bare " + l.cats[0] + "." : ""}</span></span>` +
-    `<span class="tag ${f}">${f === "ok" ? "Passer" : f === "maybe" ? "Usikkert" : f === "high" ? "For mye" : f === "none" ? "–" : "Ikke nå"}</span></button>`;
-  $("#launches").innerHTML = fits.map((x) => item(x.l, x.f)).join("") +
-    `<div class="launch" style="cursor:default">${rose(SITE.unsuitable.dirs, 56)}<span><span class="dirs">V, SV · ikke egnet</span><br><span class="txt">${esc(SITE.unsuitable.text)}</span></span><span></span></div>`;
+  const w = cur(), wc = w ? code(w.dir) : null;
+  const all = [...new Set(SITE.launches.flatMap((l) => l.dirs))];
+  const groups = launchGroups().map((g) => ({ ...g, f: launchFit(g.launches[0], w) }));
+  const best = groups.find((g) => g.f === "ok") || groups.find((g) => g.f === "maybe");
+  const bestLaunch = best?.launches[0];
+  const site = rate(w);
+  const rec = !w ? `<b>Ingen varsel</b>`
+    : best ? `<b>Bruk ${esc(best.launches.map((l) => l.name).join(" eller "))}</b><span class="muted">${best.f === "ok" ? "Passer vinden" : "Usikkert"} fra ${DIR_NB[wc]} ${Math.round(w.speed)} m/s${bestLaunch.hazard ? " · obs trakteffekt" : ""}</span>`
+    : site.r === "high" ? `<b>For mye vind</b><span class="muted">${DIR_NB[wc]} ${Math.round(w.speed)} m/s, kast ${Math.round(w.gust ?? w.speed)}</span>`
+    : `<b>Ingen start mot ${DIR_NB[wc]}</b><span class="muted">${SITE.unsuitable.dirs.includes(wc) ? "Ikke egnet, se under." : "Retningen passer ikke."}</span>`;
+  $("#lhead").innerHTML = `${rose(all, 112, w?.dir, true)}<div class="rec">${rec}<div class="small muted">${SITE.launches.length} startplasser i ${groups.length} retninger. Stort område på toppen, steinete om sommeren.</div></div>`;
+  const tag = (f) => `<span class="tag ${f}">${f === "ok" ? "Passer" : f === "maybe" ? "Usikkert" : f === "high" ? "For mye" : f === "none" ? "–" : "Ikke nå"}</span>`;
+  const open = new Set([...document.querySelectorAll(".lgroup[open]")].map((d) => d.dataset.k));
+  $("#launches").innerHTML = groups.map((g) => {
+    const k = g.dirs.join(","), cats = [...new Set(g.launches.flatMap((l) => l.cats))];
+    return `<details class="lgroup${g === best ? " best" : ""}" data-k="${k}"${open.has(k) ? " open" : ""}><summary>` +
+      `<span class="ldot ${g.f}"></span><span class="dirbadges">${g.dirs.map((d) => `<span class="db${d === wc ? " hit" : ""}">${DIR_NB[d]}</span>`).join("")}</span>` +
+      `<span class="lnames">${esc(g.launches.map((l) => l.name).join(", "))}${cats.length === 1 ? ` <small>· bare ${cats[0]}</small>` : ""}</span>${tag(g.f)}</summary>` +
+      `<div class="lbody">${g.launches.map((l) => `<div class="lone"><p><b>${esc(l.name)}.</b> ${esc(l.text)}</p><button class="mapbtn" data-lat="${l.lat}" data-lon="${l.lon}">Kart</button></div>`).join("")}</div></details>`;
+  }).join("") +
+    `<div class="lnot"><span class="dirbadges">${SITE.unsuitable.dirs.map((d) => `<span class="db">${DIR_NB[d]}</span>`).join("")}</span><span>${esc(SITE.unsuitable.text)}</span></div>`;
 }
 
 let map, launchMarkers = [];
@@ -528,7 +569,7 @@ function bind() {
   ch.addEventListener("pointercancel", () => (down = null));
   ch.addEventListener("keydown", (e) => { const d = { ArrowRight: 1, ArrowLeft: -1, PageUp: 6, PageDown: -6 }[e.key]; if (d) { e.preventDefault(); setIdx(state.idx + d); } });
   $("#windows").addEventListener("click", (e) => { const b = e.target.closest(".win"); if (b) setIdx(+b.dataset.i); });
-  $("#launches").addEventListener("click", (e) => { const b = e.target.closest("button.launch"); if (b && map) { map.setView([+b.dataset.lat, +b.dataset.lon], 16); $("#kart").scrollIntoView(); } });
+  $("#launches").addEventListener("click", (e) => { const b = e.target.closest(".mapbtn"); if (b && map) { map.setView([+b.dataset.lat, +b.dataset.lon], 16); $("#kart").scrollIntoView(); } });
   const dir = `https://www.google.com/maps/dir/?api=1&destination=${SITE.parking[0]},${SITE.parking[1]}`;
   ["#dirBtn", "#dirBar", "#dirDesk"].forEach((s) => ($(s).href = dir));
   $("#share").onclick = async () => { try { await navigator.share({ title: "Sollifjellet", url: location.href }); } catch { try { await navigator.clipboard.writeText(location.href); } catch {} } };

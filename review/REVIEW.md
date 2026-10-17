@@ -258,7 +258,8 @@ Vurderingen er en forenklet kopi av `rateWind` i `src/assets/js/wind.js`, med st
 `review/prototype/sollifjellet.html` viser hvordan en stedsside kan se ut med samme tankegang. Den er laget mobil-først.
 
 - **Status først:** et kort rett under bildet med vurdering, vind og kast for valgt time, og hvorfor.
-- **Anbefalt startplass:** hver startplass vurderes mot vindretningen, og siden sier «Bruk Toppen (S, SØ, Ø)». Startplassene får «Passer», «Usikkert» eller «Ikke nå», og markørene i kartet farges likt.
+- **Anbefalt startplass:** hver startplass vurderes mot vindretningen, og siden sier «Bruk Toppen (S, SØ, Ø)». Markørene i kartet farges likt.
+- **Kompakte startplasser:** én samlet rose med vindpil og anbefalingen ved siden av. Startplasser med samme retninger slås sammen i én rad (S/SØ/Ø: Toppen, Masta), og hver rad viser retninger, navn og «Passer», «Usikkert» eller «Ikke nå». Teksten per start og en kartknapp ligger sammenfoldet under raden. Retninger som ikke passer, vises som én dempet linje. På mobil tar seksjonen omtrent halvparten så mye plass som med ett kort per start.
 - **48-timers graf:** søyler for vind og kast, farget etter vurdering, med retningspiler, grenselinje og skyggelagt natt. Dra eller trykk for å velge time, og hele siden oppdateres. På mobil velger man time ved å dra sidelengs, mens loddrett bevegelse ruller siden.
 - **Flyvinduer** i dagslys som knapper som hopper til tidspunktet.
 - **«Før du starter»** ligger rett etter statusen og kan foldes sammen. Et enkelt flagg minner om bølge ved sterk vind fra S–SØ.
