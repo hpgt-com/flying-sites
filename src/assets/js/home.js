@@ -1127,8 +1127,8 @@
   setInterval(recheck, 60 * 1000);
 
   // --- Weather stations (stations.js) ---
-  // The measured wind as a map layer «Værstasjoner» (on by default): a dark box with an arrow for where the wind blows and
-  // the mean wind, dimmed when the measurement is old. A tap shows the station. The same stations as a list in the Vær tab.
+  // The measured wind as a map layer «Værstasjoner» (on by default): a compass dial with an arrow for where the wind
+  // blows, and the mean wind and the gust as measured, dimmed when the measurement is old. A tap shows the station. The same stations as a list in the Vær tab.
   function addStations() {
     var ST = window.FlyingSitesStations;
     var stationsEl = document.getElementById("stations");
@@ -1136,24 +1136,24 @@
     if (!ST || !stationsEl || !map.layersControl) return;
     var layer = L.layerGroup().addTo(map);
     map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", FS.t("stations.layer")));
+    // The popup is the same card as in the Vær tab: the wind now with the compass, and the chart of the last hours when
+    // the map is tall enough for it (on phones the chart is in the Vær tab below the map).
     function popup(item, now) {
-      var box = ST.make("div", "station-popup");
-      box.appendChild(ST.make("strong")).appendChild(ST.stationLink(item));
-      var wind = ST.windText(item);
-      if (wind && !ST.isOld(item, now)) box.appendChild(ST.make("span", null, wind));
-      var other = ST.otherText(item);
-      if (other && !ST.isOld(item, now)) box.appendChild(ST.make("span", null, other));
-      box.appendChild(ST.make("span", "muted", ST.ageText(item, now)));
+      var box = ST.card(item, now, "div", false, map.getSize().y < 600);
+      box.classList.add("station-popup");
       return box;
     }
     function icon(item, now) {
       var old = ST.isOld(item, now), w = item.wind;
-      var speed = w && typeof w.speed === "number" && !old ? String(Math.round(w.speed)) : "–";
-      // Numbers only in the HTML (the direction as a rotation, the speed as digits).
-      var arrow = w && typeof w.dir === "number" && !old
-        ? '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir + 180) + 'deg)"><path d="M12 3l6 16-6-4-6 4z" fill="currentColor"/></svg>'
+      var has = w && typeof w.speed === "number" && !old;
+      // Numbers only in the HTML: the direction as a rotation, the mean wind and the gust as measured («4,4 (7,2)»).
+      var arrow = has && typeof w.dir === "number"
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir) + 'deg)"><path d="M12 3v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22l-5-7h10z" fill="currentColor"/></svg>'
         : "";
-      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""), html: arrow + "<span>" + speed + "</span>", iconSize: [44, 26], iconAnchor: [22, 13] });
+      var nums = has ? ST.value(w.speed) + (typeof w.gust === "number" ? " <small>(" + ST.value(w.gust) + ")</small>" : "") : "–";
+      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""),
+        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + nums + "</span>",
+        iconSize: [88, 30], iconAnchor: [15, 15], popupAnchor: [0, -14] });
     }
     ST.watch(stationsEl.getAttribute("data-url"), function (data) {
       var now = Date.now();
@@ -1161,7 +1161,7 @@
       data.items.forEach(function (item) {
         if (typeof item.lat !== "number" || typeof item.lon !== "number") return;
         L.marker([item.lat, item.lon], { icon: icon(item, now), keyboard: true, title: item.name, zIndexOffset: 500 })
-          .bindPopup(popup(item, now)).addTo(layer);
+          .bindPopup(popup(item, now), { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(layer);
       });
       listEl2.replaceChildren.apply(listEl2, data.items.map(function (item) { return ST.listItem(item, now); }));
       stationsEl.hidden = !data.items.length;

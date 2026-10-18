@@ -64,7 +64,7 @@ export function parseHolfuy(data) {
 }
 
 // The dataset: one item per station in stations.js, in that order, with the latest measurement and the history as rows
-// [time, dir, speed, gust]. meta: name and position per station from Holfuy's answers. A station without measurements
+// [time, dir, speed, gust, min]. meta: name and position per station from Holfuy's answers. A station without measurements
 // has time null.
 export function buildStations(stations, rows, meta, now = Date.now()) {
   const items = stations.map((s) => {
@@ -84,7 +84,7 @@ export function buildStations(stations, rows, meta, now = Date.now()) {
       pressure: last?.pressure ?? null,
       rain: last?.rain ?? null,
       extra: last?.extra ?? null,
-      history: own.map((r) => [r.time, r.dir, r.speed, r.gust]),
+      history: own.map((r) => [r.time, r.dir, r.speed, r.gust, r.min]),
     };
   });
   return { dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), items };

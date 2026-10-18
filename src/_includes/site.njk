@@ -80,7 +80,7 @@ scripts:
       <p class="hour-cards__key" id="hour-cards-key" hidden>{{ t.site.hourCardsKey }}</p>
       {#- The weather station on this flying site, when it has one: the wind measured now, with a link to the station
           (stations.js; the stations and their sites are in workers/data/src/stations.js). -#}
-      <p class="station-now" id="station-now" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></p>
+      <div class="station-now" id="station-now" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></div>
       {% if wind_limits and wind_limits.max_wind %}<p class="now-limit">{{ t.site.siteMaxWind | fmt({ m: wind_limits.max_wind }) }}</p>{% endif %}
       <details class="fold now-48" id="now-48" hidden>
         <summary><h3>{{ t.site.next48 }}</h3></summary>

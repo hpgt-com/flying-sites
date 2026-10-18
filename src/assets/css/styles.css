@@ -1604,34 +1604,67 @@ body.sheet-open { overflow: hidden; }
 .map-touch-hint--on { opacity: 1; }
 
 /* ---------- Weather stations (stations.js) ---------- */
-/* On the map: a dark box with an arrow for where the wind blows and the mean wind (m/s), so it is not confused with the
-   launches' wind roses. Dimmed when the measurement is old. */
-.station-marker {
-  display: flex; align-items: center; justify-content: center; gap: 3px;
-  font: 700 13px/1 var(--font-body); color: #FFFFFF; background: #1C2B33; border: 2px solid #FFFFFF; border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5);
+/* On the map: a dark compass dial with an arrow for where the wind blows, and a dark label with the mean wind and the
+   gust as measured («4,4 (7,2)», m/s), so it is not confused with the launches' wind roses. Dimmed when old. */
+.station-marker { display: flex; align-items: center; gap: 0; font: 700 13px/1 var(--font-body); color: #FFFFFF; }
+.station-marker__dial {
+  display: flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px;
+  background: #1C2B33; border: 2px solid #FFFFFF; border-radius: 50%; box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5); position: relative; z-index: 1;
 }
-.station-marker svg { flex: none; }
+.station-marker__dial svg { flex: none; }
+.station-marker__nums {
+  margin-left: -6px; padding: 4px 7px 4px 10px; white-space: nowrap; background: #1C2B33; border: 2px solid #FFFFFF; border-left: 0;
+  border-radius: 0 8px 8px 0; box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5);
+}
+.station-marker__nums small { font-size: 11px; font-weight: 600; opacity: 0.85; }
 .station-marker--old { opacity: 0.55; }
-.station-popup { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
-.station-popup .muted { font-size: 13px; }
-/* «Målt vind nå» in the Vær tab. */
+.leaflet-popup-content .station-popup { width: min(300px, 70vw); padding: 0; border: 0; background: none; }
+/* «Målt vind nå» in the Vær tab, and the station on its site page: a card with the wind now and the last hours. */
 .stations { display: flex; flex-direction: column; gap: 10px; }
 .stations h2 { margin: 0; font-size: 18px; }
 .station-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.station { display: grid; gap: 4px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
-.station__head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.station { display: grid; gap: 8px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.station__head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
 .station__name { font-weight: 700; }
 .station__age, .station__other, .stations__note { font-size: 13px; color: var(--muted); }
 .stations__note { margin: 0; }
-.station__wind { font-size: 18px; }
 .station--old .station__age { color: var(--hazard-text); }
-.station-chart-wrap { display: flex; align-items: flex-end; gap: 8px; }
-.station-chart { width: 160px; height: 36px; flex: none; overflow: visible; }
-.station-chart__speed { fill: none; stroke: var(--fjord); stroke-width: 2; stroke-linejoin: round; }
-.station-chart__gust { fill: none; stroke: var(--fjord); stroke-opacity: 0.35; stroke-width: 1.5; stroke-linejoin: round; }
-[data-theme="dark"] .station-chart__speed, [data-theme="dark"] .station-chart__gust { stroke: var(--link); }
-.station-chart__max { font-size: 12px; color: var(--muted); }
+.station-now__wind { display: flex; align-items: center; gap: 12px; }
+.station-now__nums { display: flex; flex-direction: column; gap: 2px; }
+.station-now__speed { font: 700 24px/1.1 var(--font-body); font-variant-numeric: tabular-nums; }
+.station-now__more, .station-now__dir { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.station-compass { width: 64px; height: 64px; flex: none; }
+.station-compass__dial { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.station-compass__label { font: 600 9px var(--font-body); fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+.station-compass__shaft { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
+.station-compass__head { fill: var(--text); }
+/* The chart of the last hours: the band from the lowest wind to the gusts, the mean wind as a line, arrows for the direction. */
+.station-graph { position: relative; margin: 0; display: grid; gap: 4px; }
+.station-graph__svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; border-radius: 4px; }
+.station-graph__svg:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; }
+.station-graph__grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
+.station-graph__base, .station-graph__tick { stroke: var(--line); stroke-width: 1; }
+.station-graph__ylabel { font: 10px var(--font-body); fill: var(--muted); text-anchor: end; }
+.station-graph__xlabel { font: 10px var(--font-body); fill: var(--muted); text-anchor: middle; }
+.station-graph__band { fill: var(--fjord); fill-opacity: 0.2; }
+.station-graph__mean { fill: none; stroke: var(--fjord); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.station-graph__dot { fill: var(--fjord); }
+.station-graph__arrow { fill: var(--muted); }
+.station-graph__cross { stroke: var(--text); stroke-width: 1; stroke-opacity: 0.5; }
+.station-graph__focus { fill: var(--fjord); stroke: var(--card); stroke-width: 2; }
+[data-theme="dark"] .station-graph__band, [data-theme="dark"] .station-graph__dot, [data-theme="dark"] .station-graph__focus { fill: var(--link); }
+[data-theme="dark"] .station-graph__mean { stroke: var(--link); }
+.station-graph__tip {
+  position: absolute; top: -6px; left: 0; z-index: 2; margin: 0; padding: 4px 8px; max-width: 100%; white-space: nowrap;
+  font-size: 13px; font-variant-numeric: tabular-nums; color: var(--card); background: var(--text); border-radius: 6px; pointer-events: none;
+}
+.station-graph__legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.station-graph__key { display: inline-flex; align-items: center; gap: 6px; }
+.station-graph__key::before { content: ""; display: inline-block; width: 16px; }
+.station-graph__key--mean::before { height: 2px; background: var(--fjord); }
+.station-graph__key--band::before { height: 10px; background: color-mix(in srgb, var(--fjord) 20%, transparent); border-radius: 2px; }
+[data-theme="dark"] .station-graph__key--mean::before { background: var(--link); }
+[data-theme="dark"] .station-graph__key--band::before { background: color-mix(in srgb, var(--link) 20%, transparent); }
 /* The site page: the station on the flying site, in «Kan jeg fly her nå?». */
-.station-now { margin: 0; font-size: 15px; }
-.station-now a { font-weight: 600; }
+.station-now { margin: 0; }
+.station-now > .station { background: none; padding: 12px 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
