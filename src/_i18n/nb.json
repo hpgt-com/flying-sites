@@ -90,6 +90,9 @@
     "all": "Alle",
     "filters": "Filter",
     "filtersDone": "Vis flystedene",
+    "filtersClose": "Lukk filter",
+    "filtersReset": "Nullstill filtre",
+    "chosenFilters": "Valgte filtre",
     "level": "Nivå",
     "category": "Kategori",
     "sitesCount": "{n} flysteder",
@@ -440,7 +443,9 @@
       "see": "Se ›",
       "seeName": "Se {name}",
       "allDirections": "Alle retninger",
-      "directionsChosen": "Retning: {list}"
+      "directionsChosen": "Retning: {list}",
+      "removeFilter": "Fjern filteret {name}",
+      "suggestChip": "Kan passe"
     },
     "map": {
       "fullscreenOpen": "Vis kartet i fullskjerm",

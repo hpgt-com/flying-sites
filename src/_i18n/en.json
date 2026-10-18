@@ -90,6 +90,9 @@
     "all": "All",
     "filters": "Filters",
     "filtersDone": "Show the sites",
+    "filtersClose": "Close filters",
+    "filtersReset": "Reset filters",
+    "chosenFilters": "Chosen filters",
     "level": "Level",
     "category": "Category",
     "sitesCount": "{n} sites",
@@ -440,7 +443,9 @@
       "see": "See ›",
       "seeName": "See {name}",
       "allDirections": "All directions",
-      "directionsChosen": "Direction: {list}"
+      "directionsChosen": "Direction: {list}",
+      "removeFilter": "Remove the filter {name}",
+      "suggestChip": "May work"
     },
     "map": {
       "fullscreenOpen": "Show the map in full screen",

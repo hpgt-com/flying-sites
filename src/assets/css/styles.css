@@ -135,6 +135,7 @@ p { margin: 0; }
   flex: 1; font: inherit; font-size: 15px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
   border-radius: 999px; padding: 0 12px; min-height: 40px; cursor: pointer;
 }
+.theme-toggle button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
 .theme-toggle button[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
 /* The language choice in the menu looks like the colour mode choice, but is links to the same page in the other language. */
 .language-toggle { margin-bottom: 4px; }
@@ -158,7 +159,7 @@ p { margin: 0; }
   box-shadow: 0 8px 24px rgba(28, 43, 51, 0.18); padding: 14px; display: grid; gap: 14px;
 }
 .site-menu__panel[hidden] { display: none; }
-.site-menu__label { margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.site-menu__label { display: flex; align-items: center; gap: 6px; margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .site-menu__links { display: grid; margin-top: -4px; }
 .site-menu__links a { min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
 .site-menu__links a + a { border-top: 1px solid var(--line-soft); }
@@ -170,6 +171,7 @@ p { margin: 0; }
   font: inherit; color: var(--text); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; min-height: 44px;
 }
 .switch__text { font-weight: 600; font-size: 15px; }
+.switch__text .icon { vertical-align: -3px; margin-right: 6px; color: var(--muted); }
 .switch__hint { display: block; font-weight: 400; font-size: 13px; color: var(--muted); margin-top: 2px; }
 .switch__track { flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--rose-border); position: relative; transition: background 0.15s; }
 .switch__thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
@@ -248,6 +250,12 @@ p { margin: 0; }
   color: var(--on-color);
 }
 
+/* Line icons (macros.njk icon) in front of button texts. */
+.icon { flex: none; }
+.big-btn > .icon { color: var(--muted); }
+.big-btn > .icon + span { flex: 1; }
+.big-btn--dark > .icon { color: inherit; }
+.action-bar a .icon { margin-right: 6px; }
 .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn {
   flex-grow: 1;
@@ -1433,6 +1441,37 @@ body.sheet-open { overflow: hidden; }
 .filters-done {
   min-height: 48px; font: inherit; font-weight: 700; color: var(--on-color); background: var(--fjord); border: 0; border-radius: 12px; cursor: pointer;
 }
+/* Title and ✕ at the top of the panel, «Nullstill filtre» and «Vis N flysteder» at the bottom. On mobile the bottom row
+   stays visible while the panel scrolls. */
+.filters-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: -6px; }
+.filters-head__title { margin: 0; font-size: 26px; }
+.filters-close {
+  flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; color: var(--text);
+  background: var(--surface); border: 0; border-radius: 50%; cursor: pointer;
+}
+.filters-foot {
+  position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); display: flex; gap: 10px;
+  margin: 0 -16px calc(-16px - env(safe-area-inset-bottom)); padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  background: var(--card); border-top: 1px solid var(--line);
+}
+.filters-foot .filters-done { flex: 1; }
+.filters-reset {
+  min-height: 48px; padding: 0 18px; font: inherit; font-weight: 600; color: var(--text); background: var(--card);
+  border: 1px solid var(--rose-border); border-radius: 12px; cursor: pointer;
+}
+.filters-reset[hidden] { display: none; }
+.filters-close:focus-visible, .filters-reset:focus-visible, .filters-done:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; }
+/* The chosen filters under the search, each with ✕. */
+.filter-chips { order: 5; display: flex; flex-wrap: wrap; gap: 6px; margin-top: -6px; }
+.filter-chips[hidden] { display: none; }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px 0 14px;
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--text); background: var(--surface);
+  border: 1px solid var(--rose-border); border-radius: 22px; cursor: pointer;
+}
+.filter-chip svg { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; color: var(--muted); }
+.filter-chip:hover svg { color: var(--text); }
+.filter-chip:focus-visible { outline: 3px solid var(--fjord); outline-offset: 1px; }
 .filters-toggle {
   flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 46px; padding: 0 16px;
   font: inherit; font-weight: 600; color: var(--text); background: var(--card); border: 1px solid var(--rose-border); border-radius: 23px; cursor: pointer;
@@ -1446,6 +1485,12 @@ body.sheet-open { overflow: hidden; }
   .search-input { min-height: 40px; }
   .suggest-switch { min-height: 30px; font-size: 14px; }
   .filters-done, .filters-backdrop { display: none; }
+  .filters-head__title { font-size: 18px; }
+  .filters-close { width: 34px; height: 34px; }
+  .filters-foot { position: static; margin: 0; padding: 0; border: 0; background: none; }
+  .filters-reset { min-height: 34px; font-size: 14px; }
+  .filter-chips { order: 0; margin-top: -4px; }
+  .filter-chip { min-height: 32px; font-size: 14px; }
   /* Right below the search bar, which stays at the top while the list scrolls: also sticky, so the panel opens where the
      button is, also far down the list. At the top it pushes the list down; further down it lies over the list. */
   .filters-more.is-open {

@@ -48,10 +48,18 @@ scripts:
       </div>
       {#- Matches right below the field, so they are visible while typing. -#}
       <div class="search-hits" id="search-hits" aria-live="polite" hidden></div>
+      {#- The chosen filters as chips under the search, each with ✕ to remove it, so they are visible with the panel closed (home.js). -#}
+      <div class="filter-chips" id="filter-chips" role="group" aria-label="{{ t.home.chosenFilters }}" hidden></div>
 
       {#- Direction, level, category and «Bare steder som kan passe»: a panel from the bottom on mobile, folded out under the
           button on desktop (home.js). The button shows how many are chosen. -#}
-      <div class="filters-more" id="filters-more" role="group" aria-label="{{ t.home.filters }}">
+      <div class="filters-more" id="filters-more" role="group" aria-labelledby="filters-title">
+        {#- On mobile the panel is a dialog: the title and ✕ at the top, «Nullstill» and «Vis N flysteder» at the bottom, and Tab
+            stays inside it while it is open (home.js). -#}
+        <div class="filters-head">
+          <h2 class="filters-head__title" id="filters-title">{{ t.home.filters }}</h2>
+          <button type="button" class="filters-close" id="filters-close" aria-label="{{ t.home.filtersClose }}">{{ m.icon("close", 20) }}</button>
+        </div>
         <div class="filter">
           <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
           {#- A small wind rose with eight sectors to tap, like the roses on the map. Several directions can be chosen, and
@@ -89,7 +97,10 @@ scripts:
         {#- Dims sites where the forecast says «Passer ikke» or «For mye vind» at the time chosen in the timeline (home.js). -#}
         <button type="button" class="suggest-switch" data-suggest aria-pressed="false">{{ t.home.suggest }}</button>
         {% endif %}
-        <button type="button" class="filters-done" id="filters-done">{{ t.home.filtersDone }}</button>
+        <div class="filters-foot">
+          <button type="button" class="filters-reset" id="filters-reset" hidden>{{ t.home.filtersReset }}</button>
+          <button type="button" class="filters-done" id="filters-done">{{ t.home.filtersDone }}</button>
+        </div>
       </div>
       <div class="filters-backdrop" id="filters-backdrop" hidden></div>
 
