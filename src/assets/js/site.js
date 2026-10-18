@@ -311,6 +311,9 @@
 
     // «Vis hele stedet» and full screen below the zoom buttons (common.js).
     FS.addViewControls(map, mapEl, fitAll, FS.t("site.showWholeSite"));
+    // The weather stations as a layer, as on the home map (stations.js), from the same data as «Målt nå» on the page.
+    var stationNow = document.getElementById("station-now");
+    if (window.FlyingSitesStations && stationNow) window.FlyingSitesStations.addMapLayer(map, stationNow.getAttribute("data-url"));
 
     // --- Elevation profile ---
     var profileEl = document.getElementById("elevation-profile");

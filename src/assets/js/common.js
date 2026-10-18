@@ -778,6 +778,7 @@
     opensNewTab: I18N.opensNewTab || "",
     DIRECTIONS: DIRECTIONS,
     DIRECTION_LABELS: DIRECTION_LABELS,
+    ROSE_PATHS: ROSE_PATHS,
     directionType: directionType,
     roseSvg: roseSvg,
     launchPoints: launchPoints,

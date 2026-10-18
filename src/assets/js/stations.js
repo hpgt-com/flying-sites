@@ -120,19 +120,62 @@
     return { top: Math.max(4, Math.ceil(max / step) * step), step: step };
   }
 
-  // The compass: where the wind comes from, as an arrow blowing across the dial in the direction the wind blows.
-  // Without a direction only the dial.
-  function compass(dir) {
-    var L = globalThis.FlyingSites.DIRECTION_LABELS;
-    var svg = svgEl("svg", { class: "station-compass", viewBox: "0 0 64 64", "aria-hidden": "true" });
-    svgEl("circle", { class: "station-compass__dial", cx: 32, cy: 32, r: 23 }, svg);
-    [["N", 32, 6], ["E", 59, 32], ["S", 32, 59], ["W", 5, 32]].forEach(function (p) {
+  // The flying site of a station, from the page: its launch directions (primary, possible) and the position of the launch
+  // (lat, lon). The site page has its own site (site-data), the home page all sites (sites-data). Null for a station
+  // that is not on a flying site, or a site the page does not know.
+  var sites = null;
+  function siteInfo(siteId) {
+    var FS = globalThis.FlyingSites;
+    if (!siteId || !FS || !FS.readJson) return null;
+    if (!sites) {
+      sites = {};
+      (FS.readJson("sites-data") || []).forEach(function (s) { sites[s.id] = { primary: s.primary, possible: s.possible, lat: s.lat, lon: s.lon }; });
+      var one = FS.readJson("site-data"), page = document.getElementById("station-now");
+      if (one && page) {
+        var dirs = one.wind_directions || {}, launch = one.launch || {};
+        sites[page.getAttribute("data-site")] = { primary: dirs.primary, possible: dirs.possible, lat: launch.lat, lon: launch.lon };
+      }
+    }
+    return sites[siteId] || null;
+  }
+  var launchDirs = siteInfo;
+
+  // Where to show a station on a map: its own position from the source, else the launch of its flying site (the station
+  // stands at the launch), else nowhere ([lat, lon] or null).
+  function position(item) {
+    if (isNum(item.lat) && isNum(item.lon)) return [item.lat, item.lon];
+    var site = siteInfo(item.site);
+    return site && isNum(site.lat) && isNum(site.lon) ? [site.lat, site.lon] : null;
+  }
+
+  // «startretning», «mulig retning» or «utenfor startretningene»: where the measured wind is on the site's wind rose.
+  function launchText(dir, dirs) {
+    if (!isNum(dir) || !dirs) return "";
+    return text("stations.launch_" + globalThis.FlyingSites.directionType({ primary: dirs.primary || [], possible: dirs.possible || [] }, W().directionCode(dir)));
+  }
+
+  // The wind rose, as on the site page: the site's launch directions in the sectors (all blank for a station that is not
+  // on a flying site), with the measured wind as an arrow across it in the direction the wind blows.
+  function compass(dir, dirs) {
+    var FS = globalThis.FlyingSites, L = FS.DIRECTION_LABELS;
+    var svg = svgEl("svg", { class: "rose station-compass", viewBox: "-14 -14 188 188", "aria-hidden": "true" });
+    FS.DIRECTIONS.forEach(function (code, i) {
+      var type = dirs ? FS.directionType({ primary: dirs.primary || [], possible: dirs.possible || [] }, code) : "none";
+      svgEl("path", { d: FS.ROSE_PATHS[i], class: "sector sector--" + type }, svg);
+    });
+    [["N", 80, 0], ["E", 166, 80], ["S", 80, 160], ["W", -6, 80]].forEach(function (p) {
       svgEl("text", { class: "station-compass__label", x: p[1], y: p[2] }, svg).textContent = L[p[0]];
     });
     if (isNum(dir)) {
-      var g = svgEl("g", { transform: "rotate(" + Math.round(dir) + " 32 32)" }, svg);
-      svgEl("line", { class: "station-compass__shaft", x1: 32, y1: 11, x2: 32, y2: 46 }, g);
-      svgEl("path", { class: "station-compass__head", d: "M32 54l-7-11h14z" }, g);
+      var g = svgEl("g", { transform: "rotate(" + Math.round(dir) + " 80 80)" }, svg);
+      // The arrow twice: wide in the card colour under it, so it stands out on both blank and filled sectors.
+      ["station-compass__halo", "station-compass__arrow"].forEach(function (cls) {
+        var a = svgEl("g", { class: cls }, g);
+        svgEl("line", { x1: 80, y1: 26, x2: 80, y2: 112 }, a);
+        svgEl("path", { d: "M80 140l-16-28h32z" }, a);
+      });
+    } else {
+      svgEl("circle", { cx: 80, cy: 80, r: 9, class: "rose__center" }, svg);
     }
     return svg;
   }
@@ -141,14 +184,18 @@
   function windNow(item) {
     var w = item.wind || {};
     var box = make("div", "station-now__wind");
-    box.appendChild(compass(w.dir));
+    var dirs = launchDirs(item.site);
+    box.appendChild(compass(w.dir, dirs));
     var nums = make("div", "station-now__nums");
     nums.appendChild(make("strong", "station-now__speed", text("stations.speed", { speed: value(w.speed) })));
     var more = [];
     if (isNum(w.gust)) more.push(text("stations.gustValue", { gust: value(w.gust) }));
     if (isNum(w.min)) more.push(text("stations.minValue", { min: value(w.min) }));
     if (more.length) nums.appendChild(make("span", "station-now__more", more.join(" · ")));
-    if (isNum(w.dir)) nums.appendChild(make("span", "station-now__dir", text("stations.from", { dir: dirText(w.dir) })));
+    if (isNum(w.dir)) {
+      var where = launchText(w.dir, dirs);
+      nums.appendChild(make("span", "station-now__dir", text("stations.from", { dir: dirText(w.dir) }) + (where ? " · " + where : "")));
+    }
     box.appendChild(nums);
     return box;
   }
@@ -264,6 +311,15 @@
     return wrap;
   }
 
+  // Where the measurement comes from: «Kilde: Holfuy, stasjon 490», with the source as a link to the station there.
+  function sourceLine(item) {
+    var p = make("p", "station__source", text("stations.source", { source: "" }).trim() + " ");
+    var a = stationLink(item);
+    a.firstChild.textContent = item.source || "Holfuy";
+    p.append(a, document.createTextNode(text("stations.stationId", { id: String(item.id) })));
+    return p;
+  }
+
   // A station as a card: the name (to Holfuy) and how old the measurement is, the wind now with the compass, the rest,
   // and the chart of the last hours. An old measurement shows only its age and the chart. As li in the Vær tab, as div
   // on the site page (with «Målt nå på» before the name), as div in the map's popup (without the chart on small maps).
@@ -281,20 +337,73 @@
     if (other && !old) el.appendChild(make("span", "station__other", other));
     var graph = !noChart && chart(item);
     if (graph) el.appendChild(graph);
+    el.appendChild(sourceLine(item));
     return el;
   }
   function listItem(item, nowMs) { return card(item, nowMs, "li", false); }
 
+  // The stations as a map layer «Værstasjoner» (on by default): a compass dial with an arrow for where the wind blows, and
+  // the mean wind and the gust as measured («4,4 (7,2)»), dimmed when the measurement is old. A tap shows the station's
+  // card, with the chart when the map is tall enough for it. Used on the home map and the site page's map. onData(data, now)
+  // is called with each new answer, for the page's own use (the list in the Vær tab).
+  function addMapLayer(map, url, onData) {
+    var L = globalThis.L, FS = globalThis.FlyingSites;
+    if (!L || !url || !map.layersControl) return null;
+    var layer = L.layerGroup().addTo(map);
+    map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", text("stations.layer")));
+    // A station placed at its site's launch (no position of its own) is drawn up and to the right of the point, so it does
+    // not cover the launch's own marker.
+    function icon(item, now, atLaunch) {
+      var old = isOld(item, now), w = item.wind;
+      var has = w && isNum(w.speed) && !old;
+      // Numbers only in the HTML: the direction as a rotation, the mean wind and the gust as measured.
+      var arrow = has && isNum(w.dir)
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir) + 'deg)"><path d="M12 3v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22l-5-7h10z" fill="currentColor"/></svg>'
+        : "";
+      var nums = has ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–";
+      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""),
+        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + nums + "</span>",
+        iconSize: [88, 30], iconAnchor: atLaunch ? [-14, 44] : [15, 15], popupAnchor: atLaunch ? [29, -44] : [0, -14] });
+    }
+    watch(url, function (data) {
+      var now = Date.now();
+      layer.clearLayers();
+      data.items.forEach(function (item) {
+        var at = position(item);
+        if (!at) return;
+        var box = card(item, now, "div", false, map.getSize().y < 600);
+        box.classList.add("station-popup");
+        L.marker(at, { icon: icon(item, now, !(isNum(item.lat) && isNum(item.lon))), keyboard: true, title: item.name, zIndexOffset: 500 })
+          .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(layer);
+      });
+      if (onData) onData(data, now);
+    });
+    return layer;
+  }
+
   // Fetches the stations now and every minute while the page is in view, and calls done(data) with each new answer in
   // the right shape. On errors nothing happens, and the page keeps what it has.
+  // One fetch loop per address, shared by everything on the page that watches it (the site page's card and its map).
+  var watchers = {};
   function watch(url, done) {
     if (!url || typeof fetch !== "function") return;
-    var last = null;
+    if (watchers[url]) {
+      watchers[url].callbacks.push(done);
+      if (watchers[url].data) done(watchers[url].data);
+      return;
+    }
+    var w = watchers[url] = { callbacks: [done], data: null };
     function load() {
       if (document.hidden) return;
       fetch(url, { credentials: "omit" })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) { if (isStationsData(d) && d.fetched !== last) { last = d.fetched; done(d); } })
+        .then(function (d) {
+          if (!isStationsData(d) || (w.data && d.fetched === w.data.fetched)) return;
+          // Each station carries the source of the data set, for the card's source line.
+          d.items.forEach(function (i) { if (typeof i.source !== "string") i.source = typeof d.source === "string" ? d.source : ""; });
+          w.data = d;
+          w.callbacks.forEach(function (fn) { fn(d); });
+        })
         .catch(function () {});
     }
     load();
@@ -332,6 +441,9 @@
     dirText: dirText,
     scale: scale,
     compass: compass,
+    position: position,
+    addMapLayer: addMapLayer,
+    launchText: launchText,
     listItem: listItem,
     card: card,
     chart: chart,
