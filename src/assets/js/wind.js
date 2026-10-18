@@ -184,6 +184,19 @@
     return result(reasons.length ? "maybe" : "ok", reasons);
   }
 
+  // The assessment for the hour now when the site has a weather station with a fresh measurement (stations.js): the
+  // measured wind is assessed with the same rules (with the forecast's rain, which the station does not give). A measurement
+  // that is stricter than the forecast always counts. One that is better counts only when the wind is steady (not rising and
+  // not gusty, decided by the caller), since a lull in rising or gusty wind says little about the next minutes.
+  // { result (as rateWind), basis: "measured" | "forecast", unsteady (true when a better measurement was not used) }.
+  function rateNow(site, fcWind, measured, rules, steady) {
+    var fc = rateWind(site, fcWind, rules);
+    if (!measured || measured.speed == null) return { result: fc, basis: "forecast", unsteady: false };
+    var m = rateWind(site, { dir: measured.dir, speed: measured.speed, gust: measured.gust, rain: fcWind ? fcWind.rain : null }, rules);
+    if (RATINGS[m.rating].order >= RATINGS[fc.rating].order || steady) return { result: m, basis: "measured", unsteady: false };
+    return { result: fc, basis: "forecast", unsteady: true };
+  }
+
   // «0,3 mm» with the language's decimal separator.
   function formatRain(mm) {
     return (Math.round(mm * 10) / 10).toFixed(1).replace(".", meta().decimal) + " mm";
@@ -280,6 +293,7 @@
     slotIndex: slotIndex,
     directionCode: directionCode,
     rateWind: rateWind,
+    rateNow: rateNow,
     windAt: windAt,
     formatRain: formatRain,
     sunTimes: sunTimes,

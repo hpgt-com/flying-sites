@@ -383,7 +383,12 @@
       "sunPolarDay": "Midnight sun, the sun does not set.",
       "sunPolarNight": "Polar night, the sun does not rise above the horizon.",
       "mapWind": "{speed} ({gust}) m/s",
-      "showingWhen": "Showing wind {when}."
+      "showingWhen": "Showing wind {when}.",
+      "measuredNow": "Measured at {time} at {name}",
+      "basedOnMeasured": "Assessed from the measurement on the site. The forecast for the hour: {forecast}.",
+      "roughMeasured": "Rough assessment, always check for yourself.",
+      "unsteadyRising": "The wind measured at {name} is weaker than forecast, but rising, so the assessment follows the forecast.",
+      "unsteadyGusty": "The wind measured at {name} is weaker than forecast, but gusty, so the assessment follows the forecast."
     },
     "summary": {
       "places": {

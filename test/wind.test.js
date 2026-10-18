@@ -254,3 +254,24 @@ test("a forecast from the data service is used only when it is newer, well forme
   assert.equal(W.isNewerForecast({ error: "no forecast yet" }, page), false);
   assert.equal(W.isNewerForecast(null, page), false);
 });
+
+test("the hour now with a measurement: a stricter measurement always counts", () => {
+  const fc = { dir: 247, speed: 4, gust: 6, rain: 0 };
+  const r = W.rateNow(site, fc, { dir: 247, speed: rules.maxWind + 2, gust: rules.maxWind + 4 }, rules, false);
+  assert.equal(r.basis, "measured");
+  assert.equal(r.result.rating, "high");
+});
+
+test("the hour now with a measurement: a better measurement counts only when the wind is steady", () => {
+  const fc = { dir: 247, speed: rules.maxWind + 2, gust: rules.maxWind + 4, rain: 0 };
+  const calm = { dir: 247, speed: 4, gust: 6 };
+  assert.deepEqual([W.rateNow(site, fc, calm, rules, true).basis, W.rateNow(site, fc, calm, rules, true).result.rating], ["measured", "ok"]);
+  const unsteady = W.rateNow(site, fc, calm, rules, false);
+  assert.deepEqual([unsteady.basis, unsteady.result.rating, unsteady.unsteady], ["forecast", "high", true]);
+});
+
+test("the hour now with a measurement keeps the forecast's rain, and works without a measurement", () => {
+  const fc = { dir: 247, speed: 4, gust: 6, rain: rules.rainNo + 1 };
+  assert.equal(W.rateNow(site, fc, { dir: 247, speed: 4, gust: 6 }, rules, true).result.rating, "no", "rain the station does not see");
+  assert.equal(W.rateNow(site, fc, null, rules, true).basis, "forecast");
+});

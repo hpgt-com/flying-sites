@@ -383,7 +383,12 @@
       "sunPolarDay": "Midnattssol, sola går ikke ned.",
       "sunPolarNight": "Mørketid, sola kommer ikke over horisonten.",
       "mapWind": "{speed} ({gust}) m/s",
-      "showingWhen": "Viser vind {when}."
+      "showingWhen": "Viser vind {when}.",
+      "measuredNow": "Målt kl. {time} på {name}",
+      "basedOnMeasured": "Vurdert fra målingen på stedet. Varselet for timen: {forecast}.",
+      "roughMeasured": "Grov vurdering, sjekk alltid selv.",
+      "unsteadyRising": "Målt vind på {name} er svakere enn varslet, men øker, så vurderingen følger varselet.",
+      "unsteadyGusty": "Målt vind på {name} er svakere enn varslet, men urolig, så vurderingen følger varselet."
     },
     "summary": {
       "places": {
