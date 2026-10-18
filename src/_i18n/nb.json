@@ -101,7 +101,7 @@
     "resultsNote": "En grov guide: hver pilot vurderer selv om stedet og forholdene er OK.",
     "weatherIntro": "Flere værstasjoner og varsler:",
     "stationsTitle": "Målt vind nå",
-    "stationsNote": "Målt på Holfuy-stasjonene. Grafen viser de siste 6 timene: middelvind og kast (lysere), i m/s.",
+    "stationsNote": "Målt på Holfuy-stasjonene, tallene slik stasjonen sender dem. Grafen viser de siste 6 timene i m/s, med piler for hvor vinden blåser. Trykk eller bruk piltastene for å se hver måling.",
     "weatherLabel": "Vær",
     "flybart": "Værstasjoner i området samlet på ett sted",
     "xcc": "Værstasjonene til Egil Fonn",
@@ -534,16 +534,23 @@
     },
     "stations": {
       "layer": "Værstasjoner",
-      "calm": "Stille",
       "speed": "{speed} m/s",
       "gust": ", kast {gust}",
       "noData": "Ingen måling ennå",
       "old": "Gammel måling, kl. {time}",
       "justNow": "Nå nettopp",
       "minutesAgo": "for {n} min siden",
-      "max": "maks {v} m/s",
       "siteNow": "Målt nå på {name}",
-      "holfuy": "Holfuy"
+      "holfuy": "Holfuy",
+      "gustValue": "kast {gust}",
+      "minValue": "min {min}",
+      "min": ", min {min}",
+      "from": "fra {dir}",
+      "at": "kl. {time}",
+      "chartLabel": "Vind de siste {hours} timene: middelvind mellom {lo} og {hi} m/s, kast opptil {gust} m/s.",
+      "chartKeys": "Piltastene viser hver måling.",
+      "legendMean": "Middelvind",
+      "legendBand": "Fra laveste vind til kast"
     }
   },
   "about": {

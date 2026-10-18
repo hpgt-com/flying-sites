@@ -101,7 +101,7 @@
     "resultsNote": "A rough guide: each pilot decides whether the site and the conditions are OK.",
     "weatherIntro": "More weather stations and forecasts:",
     "stationsTitle": "Measured wind now",
-    "stationsNote": "Measured by the Holfuy stations. The chart shows the last 6 hours: mean wind and gusts (lighter), in m/s.",
+    "stationsNote": "Measured by the Holfuy stations, the numbers as the station sends them. The chart shows the last 6 hours in m/s, with arrows for where the wind blows. Tap or use the arrow keys to see each measurement.",
     "weatherLabel": "Weather",
     "flybart": "Weather stations in the area in one place",
     "xcc": "Egil Fonn's weather stations",
@@ -534,16 +534,23 @@
     },
     "stations": {
       "layer": "Weather stations",
-      "calm": "Calm",
       "speed": "{speed} m/s",
       "gust": ", gust {gust}",
       "noData": "No measurement yet",
       "old": "Old measurement, {time}",
       "justNow": "Just now",
       "minutesAgo": "{n} min ago",
-      "max": "max {v} m/s",
       "siteNow": "Measured now at {name}",
-      "holfuy": "Holfuy"
+      "holfuy": "Holfuy",
+      "gustValue": "gust {gust}",
+      "minValue": "min {min}",
+      "min": ", min {min}",
+      "from": "from {dir}",
+      "at": "{time}",
+      "chartLabel": "Wind over the last {hours} hours: mean wind between {lo} and {hi} m/s, gusts up to {gust} m/s.",
+      "chartKeys": "The arrow keys show each measurement.",
+      "legendMean": "Mean wind",
+      "legendBand": "From lowest wind to gusts"
     }
   },
   "about": {
