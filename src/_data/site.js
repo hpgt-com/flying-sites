@@ -11,6 +11,7 @@ export default {
   // The data service on Cloudflare (workers/data): the MET forecast, renewed every few minutes, and the Holfuy stations.
   // The pages use the forecast when it is newer than the one from the build. Must also be in connect-src in base.njk.
   forecastUrl: "https://data.hpgt.workers.dev/v1/forecast.json",
+  stationsUrl: "https://data.hpgt.workers.dev/v1/stations.json",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };

@@ -99,7 +99,9 @@
     "sitesCount": "{n} flysteder",
     "noResults": "Ingen flysteder passer filtrene.",
     "resultsNote": "En grov guide: hver pilot vurderer selv om stedet og forholdene er OK.",
-    "weatherIntro": "Målt vind fra værstasjoner i kartet kommer her. Til da: værstasjonene og varslene under.",
+    "weatherIntro": "Flere værstasjoner og varsler:",
+    "stationsTitle": "Målt vind nå",
+    "stationsNote": "Målt på Holfuy-stasjonene. Grafen viser de siste 6 timene: middelvind og kast (lysere), i m/s.",
     "weatherLabel": "Vær",
     "flybart": "Værstasjoner i området samlet på ett sted",
     "xcc": "Værstasjonene til Egil Fonn",
@@ -529,6 +531,19 @@
     },
     "offline": {
       "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok."
+    },
+    "stations": {
+      "layer": "Værstasjoner",
+      "calm": "Stille",
+      "speed": "{speed} m/s",
+      "gust": ", kast {gust}",
+      "noData": "Ingen måling ennå",
+      "old": "Gammel måling, kl. {time}",
+      "justNow": "Nå nettopp",
+      "minutesAgo": "for {n} min siden",
+      "max": "maks {v} m/s",
+      "siteNow": "Målt nå på {name}",
+      "holfuy": "Holfuy"
     }
   },
   "about": {

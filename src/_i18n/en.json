@@ -99,7 +99,9 @@
     "sitesCount": "{n} sites",
     "noResults": "No sites match the filters.",
     "resultsNote": "A rough guide: each pilot decides whether the site and the conditions are OK.",
-    "weatherIntro": "Measured wind from weather stations on the map will come here. Until then: the weather stations and forecasts below.",
+    "weatherIntro": "More weather stations and forecasts:",
+    "stationsTitle": "Measured wind now",
+    "stationsNote": "Measured by the Holfuy stations. The chart shows the last 6 hours: mean wind and gusts (lighter), in m/s.",
     "weatherLabel": "Weather",
     "flybart": "Weather stations in the area in one place",
     "xcc": "Egil Fonn's weather stations",
@@ -529,6 +531,19 @@
     },
     "offline": {
       "notice": "You are offline. The page may be out of date, and the wind assessment is only shown while the forecast is fresh enough."
+    },
+    "stations": {
+      "layer": "Weather stations",
+      "calm": "Calm",
+      "speed": "{speed} m/s",
+      "gust": ", gust {gust}",
+      "noData": "No measurement yet",
+      "old": "Old measurement, {time}",
+      "justNow": "Just now",
+      "minutesAgo": "{n} min ago",
+      "max": "max {v} m/s",
+      "siteNow": "Measured now at {name}",
+      "holfuy": "Holfuy"
     }
   },
   "about": {

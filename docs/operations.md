@@ -99,7 +99,9 @@ the menu and is marked `noindex`. It shows per site:
 ## Weather stations (Holfuy)
 
 - The stations are listed in `workers/data/src/stations.js`: `id` (the number in holfuy.com/en/weather/<id>), and
-  optionally `name` (otherwise Holfuy's) and `site` (the flying site's folder). A change there is published by itself.
+  optionally `name` (otherwise Holfuy's), `model` and `site` (the flying site's folder: that site page then shows the
+  station's wind and a Holfuy button). Today: 490 HPGT Heia (site `heia`) and 820 Modellflystripa. A change there is
+  published by itself.
 - The key: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `HOLFUY_KEY`
   (type Secret). Publishing keeps it. Without the key, or without stations, the service skips Holfuy.
 - Fetched every minute. `https://data.hpgt.workers.dev/v1/stations.json` has the latest measurement and the last
