@@ -473,7 +473,10 @@ p { margin: 0; }
    the list scrolls under it (sticky), with the search bar right below. --map-h is the map height: smaller once the list
    has been scrolled (home--small) and while searching (home--search), set by home.js. */
 .home {
-  --map-h: 300px;
+  /* The full height of the map, tall enough that the buttons on the left, the line about the selected site and the timeline
+     do not cover each other. */
+  --map-full: 360px;
+  --map-h: var(--map-full);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -497,7 +500,7 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 .home__map { order: 3; position: sticky; top: 0; z-index: 1200; display: flex; flex-direction: column; height: var(--map-h); margin: 0 -16px; overflow: hidden; background: var(--bg); }
 /* The size changes at once, not animated. The map gets smaller after scrolling without moving the list: the space it gives up is kept as margin below, which
    is scrolled past already. While searching the list moves up, so the hits are close to the field. */
-.home--small:not(.home--search) .home__map { margin-bottom: calc(300px - var(--map-h)); }
+.home--small:not(.home--search) .home__map { margin-bottom: calc(var(--map-full) - var(--map-h)); }
 .home-tabs { order: 4; }
 .home-pane { order: 5; display: flex; flex-direction: column; gap: 14px; }
 .home-pane--sites { display: contents; }
@@ -506,9 +509,9 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 /* Mobile: the map itself always has the full height, and only the frame around it (.home__map) gets lower, with the map
    moved up by half the difference so the middle stays in view. The map's size never changes while scrolling, so Leaflet
    does not have to redraw it, which lagged on older phones. The buttons at the top are moved back down by the same amount.
-   281 px = 300 px minus the attribution line below the map. */
-.map--home { flex: none; height: 281px; border-radius: 0; border: 0; transform: translateY(calc((var(--map-h) - 300px) / 2)); }
-.map--home .leaflet-top { transform: translateY(calc((300px - var(--map-h)) / 2)); }
+   The map is --map-full minus the attribution line (19 px) below it. */
+.map--home { flex: none; height: calc(var(--map-full) - 19px); border-radius: 0; border: 0; transform: translateY(calc((var(--map-h) - var(--map-full)) / 2)); }
+.map--home .leaflet-top { transform: translateY(calc((var(--map-full) - var(--map-h)) / 2)); }
 .map--home.map--fullscreen, .map--home.map--fullscreen .leaflet-top { transform: none; }
 
 /* Tabs: Flysteder and Vær, with an icon. */
