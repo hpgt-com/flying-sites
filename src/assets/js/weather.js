@@ -14,6 +14,30 @@
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
 
   var period = 30, sort = "name", data = null, forecast = null;
+  var rules = FS.readJson("weather-rules");
+  // The symbol in each rating chip, so the rating does not rest on colour alone (as on the home page).
+  var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
+
+  // A rough assessment of the measured wind, with the same rules as the forecast (wind.js): for a station on a flying site
+  // against the site's launch directions and limits; for a station that is not, only the strength (too much wind or too
+  // strong gusts), since without launch directions it cannot say that it may work. { rating, reasons } or null.
+  function assess(item, now) {
+    if (!rules || !hasWind(item, now)) return null;
+    var w = item.wind, site = ST.siteInfo(item.site);
+    var wind = { dir: w.dir, speed: w.speed, gust: isNum(w.gust) ? w.gust : null };
+    if (site) return W.rateWind({ primary: site.primary || [], possible: site.possible || [], maxWind: site.maxWind }, wind, rules);
+    if (!isNum(w.dir)) return null;
+    var all = { primary: FS.DIRECTIONS, possible: [], maxWind: null };
+    var r = W.rateWind(all, wind, rules);
+    return r.rating === "high" ? r : null;
+  }
+  function chip(r) {
+    var el = make("span", "rating-chip rating-chip--" + r.rating);
+    var icon = make("span", null, ICONS[r.rating]);
+    icon.setAttribute("aria-hidden", "true");
+    el.append(icon, document.createTextNode(W.RATINGS[r.rating].label));
+    return el;
+  }
   // The «Målt mot varslet» parts that are open, so they stay open when the page is redrawn.
   var openVs = {};
 
@@ -35,8 +59,11 @@
     a.href = "#" + anchor(item);
     var site = ST.siteInfo(item.site), w = item.wind || {};
     a.appendChild(ST.compass(hasWind(item, now) ? w.dir : null, site));
+    var rating = assess(item, now);
+    if (rating) a.setAttribute("data-rating", rating.rating);
     var info = make("span", "weather-row__info");
     info.appendChild(make("strong", "weather-row__name", item.name));
+    if (rating) info.appendChild(chip(rating));
     info.appendChild(make("span", "weather-row__sub", [site && site.name ? t("stations.site", { name: site.name }) : "", ST.altitudeText(item), ST.ageText(item, now)].filter(Boolean).join(" · ")));
     if (hasWind(item, now) && isNum(w.dir)) {
       var where = ST.launchText(w.dir, site);
@@ -125,6 +152,14 @@
       var s = make("a", "weather-card__site", t("stations.site", { name: site.name }));
       s.href = site.url;
       el.appendChild(s);
+    }
+    var rating = assess(item, now);
+    if (rating) {
+      el.setAttribute("data-rating", rating.rating);
+      var verdict = make("p", "weather-card__verdict");
+      verdict.appendChild(chip(rating));
+      verdict.appendChild(make("span", "muted", (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + t("weather.roughMeasured")));
+      el.appendChild(verdict);
     }
     if (hasWind(item, now)) {
       var ch = ST.change(item, period);

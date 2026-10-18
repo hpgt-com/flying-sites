@@ -323,7 +323,6 @@
     "sortWind": "Strongest wind first",
     "tableTitle": "All stations",
     "loading": "Fetching measurements …",
-    "failed": "Could not fetch the measurements. Trying again shortly.",
     "noScript": "The page needs JavaScript to show the measurements.",
     "note": "Measured by the Holfuy stations. The change is counted from the measurement closest to the start of the period to the latest one. «Gusty» means the gusts are on average more than 4 m/s above the mean wind. Rough information, always check for yourself.",
     "menuLink": "Measured wind",
@@ -608,6 +607,10 @@
       "tempRange": "Temperature, last {hours} h: lowest {min} °C, highest {max} °C",
       "tempTitle": "Temperature",
       "masl": "{m} m a.s.l."
+    },
+    "weather": {
+      "failed": "Could not fetch the measurements. Trying again shortly.",
+      "roughMeasured": "Assessed from the measurement now, with the same rules as the forecast. Rough assessment, always check for yourself."
     }
   },
   "about": {

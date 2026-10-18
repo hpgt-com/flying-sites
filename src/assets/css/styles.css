@@ -1650,8 +1650,8 @@ body.sheet-open { overflow: hidden; }
 /* The wind rose as on the site page (.rose), with the measured wind as an arrow across it. */
 .station-compass { width: 84px; height: 84px; flex: none; overflow: visible; }
 .station-compass .station-compass__label { font: 600 24px var(--font-body); fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
-.station-compass__halo line, .station-compass__halo path { stroke: var(--card); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; fill: var(--card); }
-.station-compass__arrow line { stroke: var(--text); stroke-width: 7; stroke-linecap: round; }
+.station-compass__halo line, .station-compass__halo path { stroke: var(--card); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; fill: var(--card); }
+.station-compass__arrow line { stroke: var(--text); stroke-width: 5; stroke-linecap: round; }
 .station-compass__arrow path { fill: var(--text); }
 .station__source { margin: 0; font-size: 12px; color: var(--muted); }
 .station__source a { color: inherit; }
@@ -1757,3 +1757,17 @@ body.sheet-open { overflow: hidden; }
 .station-graph__temp { fill: none; stroke: var(--temp); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .station-graph__ttitle { font: 600 10px var(--font-body); fill: var(--muted); }
 .station-graph__key--temp::before { height: 2px; background: var(--temp); }
+/* The weather page's assessment of the measured wind: the rating chip (with its symbol), a stripe on the row and the wind
+   in the rating's text colour, as the rest of the site does for the forecast. */
+.weather-row[data-rating], .weather-card[data-rating] { --r: var(--wind-no); }
+.weather-row[data-rating="ok"], .weather-card[data-rating="ok"] { --r: var(--wind-ok); }
+.weather-row[data-rating="maybe"], .weather-card[data-rating="maybe"] { --r: var(--wind-maybe); }
+.weather-row[data-rating="high"], .weather-card[data-rating="high"] { --r: var(--wind-high); }
+.weather-row[data-rating] { border-left: 6px solid var(--r); }
+.weather-card[data-rating] { border-top: 6px solid var(--r); }
+.weather-row[data-rating] .weather-row__wind, .weather-card[data-rating] .weather-tile__big { color: color-mix(in srgb, var(--r) 45%, var(--text)); }
+.weather-row[data-rating="no"] .weather-row__wind, .weather-card[data-rating="no"] .weather-tile__big { color: var(--text); }
+.weather-row .rating-chip { align-self: flex-start; margin: 2px 0; }
+.weather-card__verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0; font-size: 13px; }
+.weather-card__verdict .rating-chip { font-size: 15px; padding: 3px 11px 3px 4px; }
+.weather-card__verdict .rating-chip > span { width: 20px; height: 20px; font-size: 13px; }
