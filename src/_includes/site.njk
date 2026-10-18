@@ -78,9 +78,6 @@ scripts:
       {#- Scrolls sideways when the cards do not fit, so it can take focus and be scrolled with the arrow keys. -#}
       <ol class="hour-cards" id="hour-cards" aria-label="{{ t.site.next12 }}" tabindex="0" hidden></ol>
       <p class="hour-cards__key" id="hour-cards-key" hidden>{{ t.site.hourCardsKey }}</p>
-      {#- The weather station on this flying site, when it has one: the wind measured now, with a link to the station
-          (stations.js; the stations and their sites are in workers/data/src/stations.js). -#}
-      <div class="station-now" id="station-now" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></div>
       {% if wind_limits and wind_limits.max_wind %}<p class="now-limit">{{ t.site.siteMaxWind | fmt({ m: wind_limits.max_wind }) }}</p>{% endif %}
       <details class="fold now-48" id="now-48" hidden>
         <summary><h3>{{ t.site.next48 }}</h3></summary>
@@ -109,6 +106,11 @@ scripts:
       </details>
     </section>
     </div>
+    {#- The weather station on this flying site, when it has one: the wind measured now, with a link to the station
+        (stations.js; the stations and their sites are in workers/data/src/stations.js). Right after «Kan jeg fly her nå?»
+        on mobile; on desktop site.js moves it to the top of the right column (under «Før du starter»), where the chart is
+        not too big. -#}
+    <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></section>
     <section class="block block--notice{% if not local.hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
       <h2 id="h-hazards"><span class="notice-icon" aria-hidden="true">!</span>{{ t.site.hazardsTitle }}</h2>
       {% for hazard in local.hazards %}

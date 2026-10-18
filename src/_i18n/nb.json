@@ -313,6 +313,23 @@
     "description": "Telefonnumre til tårnene rundt HPGTs flysteder.",
     "intro": "Ring tårnet når du skal fly i kontrollert luftrom. Sjekk alltid luftrom og NOTAM i {ippc} før du flyr."
   },
+  "weather": {
+    "title": "Målt vind nå",
+    "description": "Målt vind fra værstasjonene i HPGTs område: vind, kast og retning nå, hvordan vinden har endret seg, og de siste 6 timene.",
+    "intro": "Alle værstasjonene vi henter data fra, med tallene slik stasjonene sender dem. Oppdateres hvert minutt.",
+    "periodLabel": "Endring siste",
+    "sortLabel": "Rekkefølge",
+    "sortName": "Navn",
+    "sortWind": "Sterkest vind først",
+    "tableTitle": "Alle stasjoner",
+    "loading": "Henter målinger …",
+    "failed": "Fikk ikke hentet målingene. Prøver igjen om litt.",
+    "noScript": "Siden trenger JavaScript for å vise målingene.",
+    "note": "Målt på Holfuy-stasjonene. Endringen regnes fra målingen nærmest starten av perioden til den siste. «Urolig» betyr at kastene i snitt ligger mer enn 4 m/s over middelvinden. Grov informasjon, sjekk alltid selv.",
+    "menuLink": "Målt vind",
+    "menuSub": "værstasjoner",
+    "homeLink": "Alle værstasjoner, med endring og varsel"
+  },
   "pwa": {
     "shortName": "Flysteder",
     "description": "Flysteder for paragliding og speedflying rundt Harstad, med kart, startplasser, landinger og vindvurdering.",
@@ -366,7 +383,12 @@
       "sunPolarDay": "Midnattssol, sola går ikke ned.",
       "sunPolarNight": "Mørketid, sola kommer ikke over horisonten.",
       "mapWind": "{speed} ({gust}) m/s",
-      "showingWhen": "Viser vind {when}."
+      "showingWhen": "Viser vind {when}.",
+      "measuredNow": "Målt kl. {time} på {name}",
+      "basedOnMeasured": "Vurdert fra målingen på stedet. Varselet for timen: {forecast}.",
+      "roughMeasured": "Grov vurdering, sjekk alltid selv.",
+      "unsteadyRising": "Målt vind på {name} er svakere enn varslet, men øker, så vurderingen følger varselet.",
+      "unsteadyGusty": "Målt vind på {name} er svakere enn varslet, men urolig, så vurderingen følger varselet."
     },
     "summary": {
       "places": {
@@ -555,7 +577,37 @@
       "stationId": ", stasjon {id}",
       "launch_primary": "startretning",
       "launch_possible": "mulig retning",
-      "launch_none": "utenfor startretningene"
+      "launch_none": "utenfor startretningene",
+      "period_15": "15 min",
+      "period_30": "30 min",
+      "period_60": "1 t",
+      "period_360": "6 t",
+      "windTile": "Vind",
+      "gustTile": "Kast",
+      "dirTile": "Retning",
+      "maxMin": "maks {max} · min {min}",
+      "turned": "Dreid {v}° siste {period}",
+      "change": "{v} siste {period}",
+      "char_steady": "Jevn vind",
+      "char_gusty": "Litt urolig",
+      "char_turbulent": "Urolig",
+      "trend_stable": ", stabil",
+      "trend_rising": ", øker",
+      "trend_falling": ", avtar",
+      "charText": "Kast i snitt {v} m/s over middelvinden siste {period}.",
+      "vsTitle": "Målt mot varslet (MET)",
+      "vsRow": "målt {m} · varslet {f}",
+      "vsNote": "Varselet for flystedet vises fra nå og fremover. Varsler bakover lagres ikke ennå, så grafen viser varselet som stiplet linje etter siste måling.",
+      "legendFc": "Varslet (MET)",
+      "nextTitle": "Neste timer (varsel)",
+      "noForecast": "Ingen varsel for flystedet akkurat nå.",
+      "site": "Flysted {name}",
+      "colStation": "Stasjon",
+      "colWind": "Vind (kast) · endring",
+      "trendLine": "Siste {minutes} min: {change} m/s · {character}",
+      "tempRange": "Temperatur siste {hours} t: laveste {min} °C, høyeste {max} °C",
+      "tempTitle": "Temperatur",
+      "masl": "{m} moh"
     }
   },
   "about": {

@@ -48,9 +48,7 @@ elevation:
   difference_m: 181
   source: kartverket
 airspace: []
-hazards:
-- title: Hester ved landing
-  text: Bonden ber om varsel før flyging, så hestene kan holdes inne. Unngå landingsområdet oppe på myra.
+hazards: []
 launches:
 - directions:
   - W
@@ -70,4 +68,4 @@ To starter. Den nedre er best og mest brukt, men ligger 75 m lavere enn toppen. 
 
 ## Landing
 
-På flystripa, eller foran åsen.
+Primært på flystripa. Må du lande foran åsen, velg et sted der du ikke er til hinder for de som rir i området, for eksempel en myr eller den gamle skytterbanen.

@@ -103,6 +103,21 @@ export default function (eleventyConfig) {
 
   // What the front-page map and cards need about each site.
   // lang: the front page's language. Links go to the site page in the same language, and the intro is translated when available.
+  // The sites for the weather page (vaer.njk): enough to place a station on its flying site, draw the site's wind rose
+  // and link to it.
+  eleventyConfig.addFilter("stationSites", function (sites, lang = "nb") {
+    const url = eleventyConfig.getFilter("url");
+    return sites.map((s) => ({
+      id: s.data.id,
+      name: s.data.name,
+      url: url(localeUrl(s.url, lang)),
+      lat: s.data.launch.lat,
+      lon: s.data.launch.lon,
+      primary: s.data.wind_directions?.primary ?? [],
+      possible: s.data.wind_directions?.possible ?? [],
+    }));
+  });
+
   eleventyConfig.addFilter("homeData", function (sites, lang = "nb") {
     const url = eleventyConfig.getFilter("url");
     const municipalities = new Set(sites.map((s) => s.data.municipality).filter(Boolean));

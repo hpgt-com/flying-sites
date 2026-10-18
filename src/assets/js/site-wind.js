@@ -1,7 +1,8 @@
 // «Kan jeg fly her nå?» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as
 // the home page (wind.js). The verdict in large type, the next 12 hours as cards, and folded below the periods that may
 // work and 48 hours as bars. The data is in #site-wind-data (site.njk). Without a forecast, or when it is too old or does
-// not cover the current hour, the box says so instead of assessing.
+// not cover the current hour, the box says so instead of assessing. When the site has a weather station with a fresh
+// measurement, the hour now is assessed from it as well (wind.js rateNow), and the box says so.
 (function () {
   "use strict";
 
@@ -55,19 +56,66 @@
       hideDetails();
       return;
     }
-    var rating = W.rateWind(data.site, wind, data.rules);
+    var m = measurement(now);
+    var assessed = W.rateNow(data.site, wind, m && m.wind, data.rules, m && m.steady);
+    var rating = assessed.result;
     renderCards(now);
     renderChart(now);
     renderWindows();
-    var text = FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s" +
-      (wind.gust != null ? ", " + FS.t("wind.gust", { g: Math.round(wind.gust) }) : "") +
-      (wind.rain != null && wind.rain >= data.rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "");
+    var text = windText(wind, Math.round);
+    var fcLine = FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }) + ": " + text;
+    var reasons = rating.reasons.length ? rating.reasons.join(". ") + ". " : "";
+    if (assessed.basis === "measured") {
+      // Assessed from the station: what it measured first, then the forecast for the hour for comparison.
+      show(rating.rating, [
+        W.RATINGS[rating.rating].label,
+        ["strong", FS.t("wind.measuredNow", { time: W.formatClock(Date.parse(m.item.time)), name: m.item.name }) + ": " + windText(m.wind, measuredValue)],
+        ["span", reasons + FS.t("wind.basedOnMeasured", { forecast: text }) + " " + FS.t("wind.roughMeasured")],
+        sun(now),
+      ]);
+      return;
+    }
     show(rating.rating, [
       W.RATINGS[rating.rating].label,
-      ["strong", FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }) + ": " + text],
-      ["span", (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + FS.t("wind.roughNote")],
+      ["strong", fcLine],
+      ["span", reasons + (assessed.unsteady ? FS.t(m.rising ? "wind.unsteadyRising" : "wind.unsteadyGusty", { name: m.item.name }) + " " : "") + FS.t("wind.roughNote")],
       sun(now),
     ]);
+  }
+
+  // «NØ 5 m/s, kast 8» (forecast, rounded) or «NØ 4,3 m/s, kast 7,2» (measured, as sent), with rain from the forecast.
+  function windText(w, num) {
+    return FS.DIRECTION_LABELS[W.directionCode(w.dir)] + " " + num(w.speed) + " m/s" +
+      (w.gust != null ? ", " + FS.t("wind.gust", { g: num(w.gust) }) : "") +
+      (w.rain != null && w.rain >= data.rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(w.rain) }) : "");
+  }
+  function measuredValue(v) { return ST ? ST.value(v) : String(v); }
+
+  // The site's weather station (stations.js), when it has one: its latest measurement while it is at most FRESH_MINUTES
+  // old, and whether the wind is steady over the last half hour (not rising, not gusty), which a better measurement needs
+  // to count. Null without a station or a fresh measurement.
+  var ST = window.FlyingSitesStations;
+  var FRESH_MINUTES = 15;
+  var stationItem = null;
+  function measurement(now) {
+    var item = stationItem;
+    if (!ST || !item || !item.wind || item.wind.speed == null || item.wind.dir == null) return null;
+    var age = ST.ageMinutes(item, now);
+    if (age === null || age > FRESH_MINUTES) return null;
+    var c = ST.character(ST.change(item, 30));
+    return {
+      item: item,
+      wind: { dir: item.wind.dir, speed: item.wind.speed, gust: item.wind.gust },
+      steady: !!c && c.kind !== "turbulent" && c.trend !== "rising",
+      rising: !!c && c.trend === "rising",
+    };
+  }
+  var stationEl = document.getElementById("station-now");
+  if (ST && stationEl) {
+    ST.watch(stationEl.getAttribute("data-url"), function (d) {
+      stationItem = d.items.filter(function (i) { return i.site === data.site.id; })[0] || null;
+      render();
+    });
   }
   function hideDetails() {
     [cardsEl, cardsKeyEl, foldEl].forEach(function (n) { if (n) n.hidden = true; });

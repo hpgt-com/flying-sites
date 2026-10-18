@@ -58,6 +58,22 @@
   }
 
   var data = FS.readJson("site-data");
+  // «Målt nå» (the weather station, stations.js) follows «Kan jeg fly her nå?» in the HTML, which is the mobile order. On
+  // desktop it goes to the top of the right column, under «Før du starter», where its chart has a sensible size and the
+  // left column does not have to wait for it.
+  var stationBlock = document.getElementById("station-now");
+  var asideEl = document.querySelector(".site-page__aside");
+  if (stationBlock && asideEl) {
+    var stationHome = stationBlock.nextElementSibling;
+    var desktop = window.matchMedia("(min-width: 1100px)");
+    var placeStation = function () {
+      if (desktop.matches) asideEl.insertBefore(stationBlock, asideEl.firstChild);
+      else stationHome.parentNode.insertBefore(stationBlock, stationHome);
+    };
+    placeStation();
+    desktop.addEventListener("change", placeStation);
+  }
+
   var mapEl = document.getElementById("site-map");
   if (!data || !mapEl) return;
 

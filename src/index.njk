@@ -141,6 +141,7 @@ scripts:
         <h2 id="stations-title">{{ t.home.stationsTitle }}</h2>
         <ul class="station-list" id="station-list"></ul>
         <p class="muted stations__note">{{ t.home.stationsNote }}</p>
+        <a class="stations__more" href="{{ '/vaer/' | localeUrl }}">{{ t.weather.homeLink }} ›</a>
       </section>
       {#- Day plan («Når kan det passe?»): time windows per site for the next few days, from the forecast (home.js, dayWindows in wind.js). -#}
       {% if forecast %}

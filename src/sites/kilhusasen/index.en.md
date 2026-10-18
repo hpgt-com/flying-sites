@@ -1,7 +1,4 @@
 ---
-hazards:
-  - title: Horses at the landing
-    text: The farmer asks to be notified before flying, so the horses can be kept inside. Avoid the landing area up on the bog.
 launches:
   - text: NW is ideal. Ridge soaring from the lower launch requires at least 3 m/s.
 landings:
@@ -20,4 +17,4 @@ Two launches. The lower one is the best and most used, but is 75 m lower than th
 
 ## Landing
 
-On the airstrip, or in front of the hill.
+Mainly on the airstrip. If you have to land in front of the hill, choose a spot where you are not in the way of people riding in the area, for example a bog or the old shooting range.

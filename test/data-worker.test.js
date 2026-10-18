@@ -102,7 +102,7 @@ test("Holfuy: one item per configured station, in that order, with the latest me
   assert.deepEqual(data.items[1].wind, { dir: 200, speed: 4, gust: 6, min: 3 });
   assert.equal(data.items[1].time, ago(5));
   assert.deepEqual(data.items[1].history.map((r) => r[2]), [3, 4]);
-  assert.deepEqual(data.items[1].history[1], [ago(5), 200, 4, 6, 3], "rows: time, dir, speed, gust, min");
+  assert.deepEqual(data.items[1].history[1], [ago(5), 200, 4, 6, 3, 5], "rows: time, dir, speed, gust, min, temperature");
   assert.equal(data.items[2].time, null);
   assert.equal(data.items[2].wind, null);
 });
