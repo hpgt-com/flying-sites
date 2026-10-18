@@ -1,6 +1,7 @@
 /* HPGT flying sites. Mobile first. */
 
 :root {
+  --temp: #9A4F1C;
   --bg: #F3F5F4;
   --text: #1C2B33;
   --muted: #45545C;
@@ -39,6 +40,7 @@
 /* Dark mode. data-theme is set by the script in <head> (base.njk): the choice in the colour button, or
    the device setting when the choice is «Auto». The base map is darkened with a filter. */
 :root[data-theme="dark"] {
+  --temp: #E8A26E;
   --bg: #11191D;
   --text: #E4ECEA;
   --muted: #A4B3B8;
@@ -283,6 +285,8 @@ p { margin: 0; }
   font-size: 16px;
   text-align: center;
 }
+/* A hidden button stays hidden (display above would otherwise show it), such as the Holfuy button on sites without a station. */
+.btn[hidden] { display: none; }
 .btn:hover { color: var(--text); background: var(--card); }
 .btn--primary { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-text); }
 .btn--primary:hover { background: var(--fjord); border-color: var(--fjord); color: var(--on-color); }
@@ -1192,7 +1196,6 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
   }
   .site-page__top, .site-page__main, .site-page__aside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
   .site-page__top { grid-area: top; }
-  .site-page__body > .block--notice { grid-area: notice; }
   .site-page__main { grid-area: main; padding-top: 16px; }
   .site-page__aside { grid-area: aside; padding-top: 16px; align-self: start; }
   .site-page__body > .page-footer { grid-area: footer; margin-top: 24px; }
@@ -1681,4 +1684,76 @@ body.sheet-open { overflow: hidden; }
 [data-theme="dark"] .station-graph__key--band::before { background: color-mix(in srgb, var(--link) 20%, transparent); }
 /* The site page: the station on the flying site, in «Kan jeg fly her nå?». */
 .station-now { margin: 0; }
-.station-now > .station { background: none; padding: 12px 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+.block--station[hidden] { display: none; }
+.station-now > .station { background: none; padding: 0; border: 0; border-radius: 0; }
+
+/* ---------- The weather page (vaer.njk, weather.js) ---------- */
+.weather-page { max-width: 760px; }
+.weather-page__controls { display: flex; flex-direction: column; gap: 12px; }
+.weather-page__control { display: flex; flex-direction: column; gap: 6px; }
+.weather-page__label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.weather-page__note { font-size: 13px; margin: 0; }
+/* The table (draft 7): one row per station, a link to its card. */
+.weather-rows { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.weather-row {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: var(--text); text-decoration: none;
+}
+.weather-row:hover { border-color: var(--fjord); }
+.weather-row:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; }
+.weather-row .station-compass { width: 56px; height: 56px; }
+.weather-row .station-compass .station-compass__label { display: none; }
+.weather-row__info, .weather-row__nums { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.weather-row__nums { align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; }
+.weather-row__name { font-size: 16px; }
+.weather-row__sub, .weather-row__char { font-size: 12px; color: var(--muted); }
+.weather-row__dir { font-size: 12px; font-weight: 600; color: var(--fjord); }
+[data-theme="dark"] .weather-row__dir { color: var(--link); }
+.weather-row__wind { font: 700 24px/1 var(--font-heading); }
+.weather-row__change { font-size: 12px; font-weight: 600; }
+.weather-row--old .station-compass { opacity: 0.5; }
+.weather-row--old .weather-row__sub { color: var(--hazard-text); }
+/* The cards (draft 6). */
+.weather-cards { display: grid; gap: 16px; }
+.weather-card { gap: 12px; padding: 16px; scroll-margin-top: 16px; }
+.weather-card:focus { outline: none; }
+.weather-card__name { margin: 0; font-size: 22px; font-family: var(--font-heading); }
+.weather-card__site { font-size: 14px; font-weight: 600; justify-self: start; }
+.weather-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.weather-tiles__col { display: grid; gap: 10px; }
+.weather-tile { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--surface); min-width: 0; }
+.weather-tile__label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.weather-tile__big { font: 700 32px/1.05 var(--font-heading); font-variant-numeric: tabular-nums; }
+.weather-tile__line { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.weather-tile--dir { align-items: center; text-align: center; }
+.weather-tile--dir .weather-tile__label { align-self: flex-start; }
+.weather-tile--dir .station-compass { width: 112px; height: 112px; }
+.weather-tile__dir { font: 700 22px/1.1 var(--font-heading); }
+.weather-tile__where { font-weight: 600; color: var(--fjord); }
+[data-theme="dark"] .weather-tile__where { color: var(--link); }
+.weather-char { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 15px; }
+.weather-char .muted { font-size: 13px; }
+.station-graph__period { fill: var(--surface); }
+.station-graph__fc { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 4 3; }
+.station-graph__fc-gust { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; stroke-opacity: 0.5; }
+.station-graph__now { stroke: var(--text); stroke-width: 1.5; }
+.station-graph__key--fc::before { height: 0; border-top: 2px dashed var(--muted); }
+/* «Målt mot varslet» (draft 4), folded. */
+.weather-vs { border-top: 1px solid var(--line); padding-top: 10px; }
+.weather-vs summary { cursor: pointer; font-weight: 600; min-height: 32px; display: flex; align-items: center; }
+.weather-vs[open] { display: grid; gap: 10px; }
+.weather-vs__grid { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.weather-vs__label { color: var(--muted); }
+.weather-vs__next-title { font-size: 14px; }
+.weather-vs__note { font-size: 12px; margin: 0; }
+.weather-next { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.weather-next li { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.weather-next .station-compass { width: 30px; height: 30px; }
+.weather-next .station-compass .station-compass__label { display: none; }
+.weather-next__time, .weather-next__gust { font-size: 12px; color: var(--muted); }
+.stations__more { font-weight: 600; }
+.station__trend { margin: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* The temperature strip below the wind chart: its own colour, not the wind's, and not the orange of hazards. */
+.station-graph__temp { fill: none; stroke: var(--temp); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.station-graph__ttitle { font: 600 10px var(--font-body); fill: var(--muted); }
+.station-graph__key--temp::before { height: 2px; background: var(--temp); }

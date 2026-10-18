@@ -1,0 +1,62 @@
+---
+layout: base.njk
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/vaer/' | localeUrl(language.code) }}"
+bodyClass: page-weather
+scripts:
+  - /assets/js/wind.js
+  - /assets/js/stations.js
+  - /assets/js/weather.js
+eleventyComputed:
+  name: "{{ t.weather.title }}"
+  description: "{{ t.weather.description }}"
+---
+{#- Measured wind from all the weather stations (stations.js, data service): a table of all stations, then a card per
+    station with the change over the chosen period, the wind rose of its flying site, the chart of the last hours, and the
+    forecast for the site against what is measured. Filled by weather.js. -#}
+{%- import "macros.njk" as m with context -%}
+<main class="simple-page weather-page">
+  <header class="topbar">
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
+    {{ m.siteMenu() }}
+  </header>
+
+  <div class="simple-page__intro" id="content" tabindex="-1">
+    <p class="home__eyebrow">{{ t.home.eyebrow }}</p>
+    <h1>{{ t.weather.title }}</h1>
+    <p class="muted">{{ t.weather.intro }}</p>
+  </div>
+
+  <div class="weather-page__controls">
+    <div class="weather-page__control">
+      <span class="weather-page__label" id="period-label">{{ t.weather.periodLabel }}</span>
+      <div class="pills" role="group" aria-labelledby="period-label" id="period">
+        {%- for p in [15, 30, 60, 360] %}
+        <button type="button" class="pill" data-period="{{ p }}" aria-pressed="{{ 'true' if p == 30 else 'false' }}">{{ t.js.stations['period_' ~ p] }}</button>
+        {%- endfor %}
+      </div>
+    </div>
+    <div class="weather-page__control">
+      <span class="weather-page__label" id="sort-label">{{ t.weather.sortLabel }}</span>
+      <div class="pills" role="group" aria-labelledby="sort-label" id="sort">
+        <button type="button" class="pill" data-sort="name" aria-pressed="true">{{ t.weather.sortName }}</button>
+        <button type="button" class="pill" data-sort="wind" aria-pressed="false">{{ t.weather.sortWind }}</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="weather-table" aria-labelledby="weather-table-title">
+    <h2 id="weather-table-title" class="visually-hidden">{{ t.weather.tableTitle }}</h2>
+    <p class="muted" id="weather-status" aria-live="polite">{{ t.weather.loading }}</p>
+    <noscript><p>{{ t.weather.noScript }}</p></noscript>
+    <ul class="weather-rows" id="weather-rows"></ul>
+  </section>
+
+  <div class="weather-cards" id="weather-cards" data-url="{{ site.stationsUrl }}" data-forecast-url="{{ site.forecastUrl }}"></div>
+
+  <p class="muted weather-page__note">{{ t.weather.note }}</p>
+</main>
+<script type="application/json" id="sites-data">{{ collections.sites | stationSites(lang) | json | safe }}</script>

@@ -67,3 +67,47 @@ test("temperature, humidity, pressure and rain, only those the station has", () 
 test("the link to the station at Holfuy", () => {
   assert.equal(ST.holfuyUrl(item()), "https://holfuy.com/en/weather/490");
 });
+
+// History rows every 5 minutes up to NOW: [time, dir, speed, gust, min].
+const hist = (n, f) => Array.from({ length: n }, (_, i) => { const t = NOW - (n - 1 - i) * 300000; return [new Date(t).toISOString(), ...f(i)]; });
+
+test("the change over a period: mean wind, gust, turning, gust spread and highest gust", () => {
+  const it = item({ history: hist(13, (i) => [350 + i * 2, 3 + i * 0.1, 5 + i * 0.2, 2]) });
+  const ch = ST.change(it, 30);
+  assert.equal(ch.speed, 0.6, "3,6 now against 3,0 30 minutes before");
+  assert.equal(ch.gust, 1.2);
+  assert.equal(ch.dir, 12, "the shortest way across north: 362 − 350");
+  assert.equal(ch.maxGust, 7.4);
+  assert.equal(ch.spread, 2.9, "gusts 2,6–3,2 above the mean wind over the last 30 minutes, 2,9 on average");
+  assert.equal(ST.change(item({ history: [] }), 30), null);
+});
+
+test("a change with an arrow and a sign, not by colour alone", () => {
+  assert.equal(ST.signed(0.8), "▲ +0,8");
+  assert.equal(ST.signed(-0.4), "▼ −0,4");
+  assert.equal(ST.signed(0), "● 0");
+  assert.equal(ST.signed(null), "");
+});
+
+test("how even the wind is, and whether it rises or falls", () => {
+  assert.deepEqual(ST.character({ spread: 1.8, speed: 0.2 }), { kind: "steady", trend: "stable" });
+  assert.deepEqual(ST.character({ spread: 3.1, speed: 1.2 }), { kind: "gusty", trend: "rising" });
+  assert.deepEqual(ST.character({ spread: 5, speed: -0.9 }), { kind: "turbulent", trend: "falling" });
+  assert.equal(ST.character({ spread: null, speed: 1 }), null);
+});
+
+test("the forecast for the station's site from this hour", () => {
+  const times = [0, 1, 2, 3].map((h) => new Date(Date.parse("2026-10-18T15:00:00Z") + h * 3600000).toISOString());
+  const forecast = { times, sites: { heia: [[40, 4, 7, 0], [45, 5, 8, 0], null, [50, 6, 9, 0]] } };
+  const fc = ST.forecastFrom(forecast, "heia", NOW, 6);
+  assert.deepEqual(fc.now, { time: Date.parse(times[0]), dir: 40, speed: 4, gust: 7 });
+  assert.deepEqual(fc.next.map((p) => p.speed), [5, 6], "hours without wind are left out");
+  assert.equal(ST.forecastFrom(forecast, "dale", NOW, 6), null);
+  assert.equal(ST.forecastFrom(null, "heia", NOW, 6), null);
+});
+
+test("the lowest and highest temperature over the last hours", () => {
+  const it = item({ history: hist(13, (i) => [200, 4, 6, 2, 3 + i * 0.25]) });
+  assert.deepEqual(ST.temperatureRange(it), { min: 3, max: 6, hours: 1 });
+  assert.equal(ST.temperatureRange(item({ history: hist(13, () => [200, 4, 6, 2]) })), null, "older rows without temperature");
+});
