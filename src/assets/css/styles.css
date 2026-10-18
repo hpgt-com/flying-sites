@@ -487,7 +487,8 @@ p { margin: 0; }
 .home .topbar { order: 1; }
 .logo { display: inline-flex; align-items: center; gap: 10px; font: 700 24px/1 var(--font-heading); }
 .logo img { border-radius: 7px; }
-a.logo { color: var(--text); text-decoration: none; }
+/* As a link: the size and weight of the logo, not of the other links in the top bar (.topbar a). */
+.topbar a.logo { font: 700 24px/1 var(--font-heading); color: var(--text); text-decoration: none; }
 a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; border-radius: 8px; }
 .home__intro { order: 2; display: flex; flex-direction: column; gap: 2px; }
 .home__eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
