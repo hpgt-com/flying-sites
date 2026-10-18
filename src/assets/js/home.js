@@ -1126,4 +1126,15 @@
   setInterval(recheck, 60 * 1000);
 
   readHash();
+
+  // A newer forecast from the weather service (workers/forecast), when the one built into the page is older. It also
+  // brings the assessment back if the page's forecast had become too old. Only when the page has a forecast at all,
+  // since the parts that show it are left out of the page without one.
+  if (forecast) {
+    W.fetchNewerForecast(fc.live, forecast, function (newer) {
+      forecast = newer;
+      if (stale) { stale = false; windSlot = "0"; setSuggest(false); }
+      update();
+    });
+  }
 })();

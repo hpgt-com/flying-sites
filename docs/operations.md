@@ -87,6 +87,14 @@ the menu and is marked `noindex`. It shows per site:
 
 - Fetched from MET on every build. `deploy.yml` builds at xx:17 and xx:47, but GitHub may delay or skip scheduled
   runs.
+- The **weather service** (`workers/forecast`, Cloudflare account «HPGT») fetches MET by itself every 5 minutes, six
+  launches per run, and the pages use its forecast when it is newer than the one built into the page. See it at
+  `https://forecast.hpgt.workers.dev/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
+  Cloudflare → Workers & Pages → forecast → Logs.
+- **Publishing the weather service:** happens by itself when `workers/forecast/`, `lib/weather/met.js` or a site file
+  changes on `main` (Actions → «Weather service»), or with «Run workflow» there. Test locally with
+  `node scripts/forecast-sites.mjs` and `cd workers/forecast && npm ci --ignore-scripts && npx wrangler dev --test-scheduled`
+  (then open `/__scheduled` to run a fetch, and `/forecast.json`).
 - If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), the wind assessment
   is turned off and the site says so.
 - **Fetch a new forecast now:** Actions → «Build and deploy» → «Run workflow».
@@ -167,6 +175,8 @@ set in `src/_data/photoCredit.json`.
 |---|---|---|
 | `OPENAIP_API_KEY` | GitHub → Settings → Secrets | Monthly airspace fetch |
 | GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
+| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The weather service (`forecast.hpgt.workers.dev`), later the change form |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the weather service. The token («GitHub – flying-sites», Workers and KV in HPGT only) expires 18.10.2027: make a new one under My Profile → API Tokens → Roll, and update the secret. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
@@ -183,5 +193,6 @@ MET and Kartverket require no key. MET requires the client to provide contact de
 | `gangruten … skal hete …` | Multiple routes must be named `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
 | `status er «reviewed», men reviewed …` | Fill in `reviewed.by` and `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Typo in the translation. See [Translation](site-files.md#translation). |
-| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Run «Build and deploy» manually. |
+| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://forecast.hpgt.workers.dev/forecast.json`, and run «Build and deploy» manually. |
+| «Weather service» fails with an authentication error | The Cloudflare token has expired or been changed. Roll it and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
 | The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |

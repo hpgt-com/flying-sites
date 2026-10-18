@@ -20,3 +20,7 @@ PROMPT.md
 
 # Skjermbilder fra lokal testing havner ikke i rotmappen (bildene til stedene ligger under src/).
 /*.png
+
+# Værtjenesten: stedene skrives ved hver publisering (scripts/forecast-sites.mjs).
+workers/forecast/src/sites.json
+workers/forecast/.wrangler/
