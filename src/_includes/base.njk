@@ -47,11 +47,14 @@
 {#- Visitor statistics (GoatCounter), without cookies. The address must also be in connect-src and img-src above. -#}
 <script data-goatcounter="{{ site.goatcounter }}" async src="{{ "/assets/js/goatcounter.js" | asset }}"></script>
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}
-{#- The fonts are self-hosted (Fontsource, see eleventy.config.js), so visitors do not send their IP address to Google. -#}
+{#- The fonts are self-hosted (Fontsource, see eleventy.config.js), so visitors do not send their IP address to Google. Only three
+    files: Barlow 400 and 600 (body text, 700 uses 600) and Barlow Condensed 700 (headings), all preloaded. -#}
 <link rel="preload" href="/assets/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/barlow-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ "/assets/css/fonts.css" | asset }}">
-<link rel="stylesheet" href="{{ "/assets/leaflet/leaflet.css" | asset }}">
+{#- Leaflet only on pages with a map (map: true in the front matter: the home page and the site pages). -#}
+{% if map %}<link rel="stylesheet" href="{{ "/assets/leaflet/leaflet.css" | asset }}">{% endif %}
 <link rel="stylesheet" href="{{ "/assets/css/styles.css" | asset }}">
 {% for style in styles %}<link rel="stylesheet" href="{{ style | asset }}">
 {% endfor %}
@@ -60,7 +63,7 @@
 {{ content | safe }}
 {#- The strings the scripts need, in the page's language (read by common.js). -#}
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
-<script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>
+{% if map %}<script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>{% endif %}
 <script src="{{ "/assets/js/common.js" | asset }}"></script>
 {#- The service worker, for offline use (src/assets/js/pwa.js). The URLs are given here, so they follow the path prefix. -#}
 <script src="{{ "/assets/js/pwa.js" | asset }}" data-sw="{{ '/sw.js' | url }}" data-scope="{{ '/' | url }}"></script>

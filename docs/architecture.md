@@ -152,6 +152,12 @@ flowchart LR
   so a site checked at home also works on the mountain. Pages are fetched from the network first, so the forecast is
   fresh when there is coverage. The static cache follows the content of the stored files, and the pages and tiles are
   kept across deploys. Nothing is downloaded in advance beyond the front pages, the offline pages and the scripts.
+- **Speed:** Leaflet is loaded only on the pages with a map (`map: true` in the front matter: the home page and the
+  site pages). On the site page the map and the elevation profile are set up when they come near the screen
+  (`IntersectionObserver` in `site.js`), so the map tiles are only fetched when they are needed. The map's first view is
+  the fitted one (`fitWhenVisible` in `common.js`), not a temporary view first. On mobile the home page map keeps its
+  size while the page scrolls, and only its frame gets lower, so Leaflet does not redraw it. Three font files, all
+  preloaded.
 - **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself, and images and
   data only from the sources above. A new external source must be added there. See [SECURITY.md](../SECURITY.md).
 

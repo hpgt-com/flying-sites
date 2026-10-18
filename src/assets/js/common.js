@@ -314,7 +314,9 @@
 
   function fitWhenVisible(map, element, fit) {
     var done = false, queued = false;
-    map.setView([68.8, 16.4], 9);
+    // The first view is the fitted one when the map already has a size. A temporary view first would make Leaflet draw
+    // the markers and fetch tiles twice, which costs time on slow phones and networks.
+    if (!element.clientWidth || !element.clientHeight) map.setView([68.8, 16.4], 9);
     function check() {
       queued = false;
       if (!element.clientWidth || !element.clientHeight) return;

@@ -14,7 +14,7 @@ const PRECACHE = [
   "/assets/js/site-wind.js", "/assets/js/windgram.js", "/assets/js/lightbox.js",
 ];
 // The fonts are requested from fonts.css without a version number, so they are stored under their plain URL.
-const FONTS = ["/assets/fonts/barlow-latin-400-normal.woff2", "/assets/fonts/barlow-condensed-latin-700-normal.woff2"];
+const FONTS = ["/assets/fonts/barlow-latin-400-normal.woff2", "/assets/fonts/barlow-latin-600-normal.woff2", "/assets/fonts/barlow-condensed-latin-700-normal.woff2"];
 
 export default class {
   data() {
