@@ -10,6 +10,8 @@ import { fetchSite, mergeSites } from "../../../../lib/weather/met.js";
 
 export const DATASET = "forecast";
 export const LICENSE = "CC BY 4.0, MET Norge";
+// MET's product the forecast comes from (api.met.no). MET does not say which weather model behind it in the answer.
+export const PRODUCT = "Locationforecast 2.0 (complete)";
 export const PER_RUN = 6;
 // Launches fetched longer ago than this are left out of the forecast (the site turns the assessment off after 6 hours).
 export const MAX_AGE_HOURS = 6;
@@ -37,7 +39,7 @@ export function buildForecast(state, now = Date.now()) {
   const rows = Object.fromEntries(fresh.map(([id, s]) => [id, s.rows]));
   const updated = Object.fromEntries(fresh.map(([id, s]) => [id, s.updated]));
   const oldest = Math.min(...fresh.map(([, s]) => Date.parse(s.fetched)));
-  return { dataset: DATASET, license: LICENSE, ...mergeSites(rows, new Date(oldest), updated) };
+  return { dataset: DATASET, license: LICENSE, product: PRODUCT, ...mergeSites(rows, new Date(oldest), updated) };
 }
 
 // One run: fetches the launches fetched longest ago, one after another (MET gets at most one request at a time from

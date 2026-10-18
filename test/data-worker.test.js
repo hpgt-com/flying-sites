@@ -5,6 +5,7 @@ import { buildForecast, keepSites, pickSites, MAX_AGE_HOURS } from "../workers/d
 import { buildStations, holfuyUrl, parseHolfuy } from "../workers/data/src/sources/holfuy.js";
 import { due } from "../workers/data/src/schedule.js";
 import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../workers/data/src/archive.js";
+import { extraValues } from "../workers/data/src/measurements.js";
 
 const NOW = Date.parse("2026-10-18T15:20:00Z");
 const ago = (min) => new Date(NOW - min * 60000).toISOString();
@@ -48,18 +49,34 @@ test("the forecast carries the common frame: dataset, source, license and fetche
   assert.equal(f.dataset, "forecast");
   assert.equal(f.source, "MET Norge");
   assert.match(f.license, /MET/);
+  assert.match(f.product, /Locationforecast/);
   assert.equal(f.fetched, ago(5));
 });
 
 test("Holfuy: one station as an object or several under measurements, times in UTC, bad entries skipped", () => {
   const one = { stationId: 101, stationName: "Heia", dateTime: "2026-10-18 15:10:00", location: { latitude: 68.8, longitude: 16.5, altitude: 420 },
     wind: { speed: 4.2, gust: 7.1, min: 2.0, unit: "m/s", direction: 230 }, temperature: 6.3 };
-  assert.deepEqual(parseHolfuy(one), [{ station: 101, name: "Heia", lat: 68.8, lon: 16.5, altitude: 420, time: "2026-10-18T15:10:00.000Z",
-    dir: 230, speed: 4.2, gust: 7.1, min: 2, temperature: 6.3 }]);
+  assert.deepEqual(parseHolfuy(one), [{ source: "holfuy", station: 101, name: "Heia", lat: 68.8, lon: 16.5, altitude: 420, time: "2026-10-18T15:10:00.000Z",
+    dir: 230, speed: 4.2, gust: 7.1, min: 2, temperature: 6.3, humidity: null, pressure: null, rain: null, extra: null }]);
   const several = parseHolfuy({ measurements: [one, { ...one, stationId: 102, wind: { speed: "3.5" } }, { stationId: 103 }, { dateTime: "2026-10-18 15:00:00" }] });
   assert.deepEqual(several.map((m) => [m.station, m.speed, m.dir]), [[101, 4.2, 230], [102, 3.5, null]]);
   assert.deepEqual(parseHolfuy(null), []);
   assert.deepEqual(parseHolfuy({ error: "wrong password" }), []);
+});
+
+test("Holfuy: humidity, pressure and rain when the station has them, and unknown numbers kept in extra", () => {
+  const m = { stationId: 820, dateTime: "2026-10-18 15:10:00", wind: { speed: 3, direction: 200, unit: "m/s", max: 9 },
+    temperature: 4, humidity: 81, pressure: "1012.4", rain: 0.2, battery: 3.9, snow: { depth: 12, note: "x" }, label: "text" };
+  const [p] = parseHolfuy(m);
+  assert.deepEqual([p.humidity, p.pressure, p.rain], [81, 1012.4, 0.2]);
+  assert.deepEqual(p.extra, { "wind.max": 9, battery: 3.9, "snow.depth": 12 });
+});
+
+test("unknown values: at most 20, only numbers, plain names", () => {
+  const many = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [`v${i}`, i]));
+  assert.equal(Object.keys(extraValues(many, new Set())).length, 20);
+  assert.equal(extraValues({ "bad key!": 1, ok: "2", text: "abc" }, new Set()).ok, 2);
+  assert.equal(extraValues({ "bad key!": 1 }, new Set()), null);
 });
 
 test("Holfuy: the request asks for JSON, m/s, °C and UTC for all stations", () => {
@@ -75,11 +92,12 @@ test("Holfuy: the request asks for JSON, m/s, °C and UTC for all stations", () 
 test("Holfuy: one item per configured station, in that order, with the latest measurement and the history", () => {
   const m = (station, min, speed) => ({ station, time: ago(min), dir: 200, speed, gust: speed + 2, min: speed - 1, temperature: 5 });
   const data = buildStations([{ id: 102, site: "heia" }, { id: 101, name: "Modellflystripa" }, { id: 999 }],
-    [m(101, 10, 3), m(101, 5, 4), m(102, 7, 6)], { 101: { name: "MFK", lat: 68.7, lon: 16.4, altitude: 20 }, 102: { name: "Heia Holfuy" } }, NOW);
+    [m(101, 10, 3), m(101, 5, 4), { ...m(102, 7, 6), station: "102" }], { 101: { name: "MFK", lat: 68.7, lon: 16.4, altitude: 20 }, 102: { name: "Heia Holfuy" } }, NOW);
   assert.equal(data.dataset, "stations");
   assert.equal(data.source, "Holfuy");
   assert.equal(data.fetched, new Date(NOW).toISOString());
   assert.deepEqual(data.items.map((i) => [i.id, i.name, i.site]), [[102, "Heia Holfuy", "heia"], [101, "Modellflystripa", null], [999, "999", null]]);
+  assert.equal(data.items[0].time, ago(7), "a station number stored as text still matches");
   assert.deepEqual(data.items[1].wind, { dir: 200, speed: 4, gust: 6, min: 3 });
   assert.equal(data.items[1].time, ago(5));
   assert.deepEqual(data.items[1].history.map((r) => r[2]), [3, 4]);
@@ -109,10 +127,11 @@ test("archive: nothing is deleted before it is archived, and never the last 7 da
 });
 
 test("archive: one table for all stations, the station in every row, units in the header, empty cells for missing", () => {
-  assert.equal(measurementsCsv([{ station: 490, time: "2026-10-17T10:00:00.000Z", dir: 230, speed: 4.2, gust: null, min: 2, temperature: 5.5 }]),
-    "station,time_utc,direction_deg,speed_ms,gust_ms,min_ms,temperature_c\n490,2026-10-17T10:00:00.000Z,230,4.2,,2,5.5\n");
-  assert.equal(measurementsCsv([]), "station,time_utc,direction_deg,speed_ms,gust_ms,min_ms,temperature_c\n");
+  const header = "source,station,time_utc,direction_deg,speed_ms,gust_ms,min_ms,temperature_c,humidity_pct,pressure_hpa,rain_mm,extra_json\n";
+  assert.equal(measurementsCsv([{ source: "holfuy", station: 490, time: "2026-10-17T10:00:00.000Z", dir: 230, speed: 4.2, gust: null, min: 2, temperature: 5.5, humidity: 80, pressure: null, rain: 0, extra: { battery: 3.9 } }]),
+    header + 'holfuy,490,2026-10-17T10:00:00.000Z,230,4.2,,2,5.5,80,,0,"{""battery"":3.9}"\n');
+  assert.equal(measurementsCsv([]), header);
   assert.equal(dayPath("holfuy", 490, "2026-10-17"), "holfuy/station=490/year=2026/2026-10-17.csv");
-  assert.equal(stationsCsv([{ id: 490, name: 'HPGT "Heia", topp', site: "heia", lat: 68.8, lon: 16.5, altitude: 420 }]),
-    'station,name,site,lat,lon,altitude_m\n490,"HPGT ""Heia"", topp",heia,68.8,16.5,420\n');
+  assert.equal(stationsCsv([{ source: "holfuy", id: 490, name: 'HPGT "Heia", topp', model: null, site: "heia", lat: 68.8, lon: 16.5, altitude: 420 }]),
+    'source,station,name,model,site,lat,lon,altitude_m\nholfuy,490,"HPGT ""Heia"", topp",,heia,68.8,16.5,420\n');
 });

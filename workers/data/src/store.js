@@ -3,6 +3,14 @@
 // Reached through env.STORE (wrangler.toml); the methods are called over RPC from index.js and the sources.
 
 import { DurableObject } from "cloudflare:workers";
+import { FIELDS } from "./measurements.js";
+
+const COLUMNS = FIELDS.map((f) => f.key);
+// A measurement row as stored: the fields as numbers, extra as JSON text.
+// The station is identified by its source and its number there (two providers can use the same number), kept as text.
+const toRow = (r) => [r.source, String(r.station), r.time, ...COLUMNS.map((c) => r[c] ?? null), r.extra ? JSON.stringify(r.extra) : null];
+const fromRow = (r) => ({ ...r, extra: r.extra ? JSON.parse(r.extra) : null });
+const SELECT = `SELECT source, station, time, ${COLUMNS.join(", ")}, extra FROM measurements`;
 
 export class Store extends DurableObject {
   constructor(ctx, env) {
@@ -10,8 +18,21 @@ export class Store extends DurableObject {
     this.sql = ctx.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
-    this.sql.exec(`CREATE TABLE IF NOT EXISTS measurements (station INTEGER NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL,
-      gust REAL, min REAL, temperature REAL, PRIMARY KEY (station, time))`);
+    let have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
+    // The first version (18.10.2026) had no source, and the station and time as the key. Rebuilt once with (source,
+    // station, time) as the key; the rows already there were all Holfuy's and keep their values.
+    const old = have.size > 0 && !have.has("source");
+    if (old) this.sql.exec("ALTER TABLE measurements RENAME TO measurements_v1");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL, PRIMARY KEY (source, station, time))");
+    // A field added to measurements.js gets its column here; the rows already stored get null in it.
+    have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
+    for (const c of COLUMNS) if (!have.has(c)) this.sql.exec(`ALTER TABLE measurements ADD COLUMN ${c} REAL`);
+    if (!have.has("extra")) this.sql.exec("ALTER TABLE measurements ADD COLUMN extra TEXT");
+    if (old) {
+      this.sql.exec(`INSERT OR IGNORE INTO measurements (source, station, time, dir, speed, gust, min, temperature)
+        SELECT 'holfuy', CAST(station AS TEXT), time, dir, speed, gust, min, temperature FROM measurements_v1`);
+      this.sql.exec("DROP TABLE measurements_v1");
+    }
   }
 
   getSnapshot(dataset) {
@@ -36,25 +57,25 @@ export class Store extends DurableObject {
   // The same measurement can come back on several runs while the station has not reported anew: kept once.
   addMeasurements(rows) {
     for (const r of rows) {
-      this.sql.exec("INSERT OR IGNORE INTO measurements (station, time, dir, speed, gust, min, temperature) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        r.station, r.time, r.dir, r.speed, r.gust, r.min, r.temperature);
+      this.sql.exec(`INSERT OR IGNORE INTO measurements (source, station, time, ${COLUMNS.join(", ")}, extra) VALUES (${["?", "?", "?", ...COLUMNS.map(() => "?"), "?"].join(", ")})`,
+        ...toRow(r));
     }
   }
 
-  measurementsSince(since) {
-    return this.sql.exec("SELECT station, time, dir, speed, gust, min, temperature FROM measurements WHERE time >= ? ORDER BY time", since).toArray();
+  measurementsSince(source, since) {
+    return this.sql.exec(`${SELECT} WHERE source = ? AND time >= ? ORDER BY time`, source, since).toArray().map(fromRow);
   }
 
-  measurementsBetween(from, to) {
-    return this.sql.exec("SELECT station, time, dir, speed, gust, min, temperature FROM measurements WHERE time >= ? AND time <= ? ORDER BY time", from, to).toArray();
+  measurementsBetween(source, from, to) {
+    return this.sql.exec(`${SELECT} WHERE source = ? AND time >= ? AND time <= ? ORDER BY time`, source, from, to).toArray().map(fromRow);
   }
 
-  oldestMeasurement() {
-    const rows = this.sql.exec("SELECT MIN(time) AS time FROM measurements").toArray();
+  oldestMeasurement(source) {
+    const rows = this.sql.exec("SELECT MIN(time) AS time FROM measurements WHERE source = ?", source).toArray();
     return rows[0]?.time ?? null;
   }
 
-  prune(before) {
-    this.sql.exec("DELETE FROM measurements WHERE time < ?", before);
+  prune(source, before) {
+    this.sql.exec("DELETE FROM measurements WHERE source = ? AND time < ?", source, before);
   }
 }
