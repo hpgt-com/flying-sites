@@ -1,5 +1,6 @@
 ---
 layout: base.njk
+map: true
 noAddressDetection: true
 bodyClass: page-site
 scripts:
@@ -29,7 +30,7 @@ scripts:
   {%- set heroImage = null -%}
   {%- for img in derived.images %}{% if not heroImage and img.field == "overview" %}{% set heroImage = img %}{% endif %}{% endfor %}
   <section class="hero{% if not heroImage %} hero--plain{% endif %}" aria-labelledby="site-name">
-    {% if heroImage %}<img class="hero__img" src="{{ heroImage.fullUrl }}" srcset="{{ heroImage.srcsetWebp }}" sizes="(min-width: 800px) 760px, 100vw" alt="" fetchpriority="high">{% endif %}
+    {% if heroImage %}<img class="hero__img" src="{{ heroImage.fullUrl }}" srcset="{{ heroImage.srcsetWebp }}" sizes="(min-width: 1100px) 1120px, (min-width: 800px) 760px, 100vw" alt="" fetchpriority="high">{% endif %}
     {#- The directions the site suits, on the image, so they are seen first. Only the site's own directions: the wind now
         is in «Kan jeg fly her nå?» right below. -#}
     {% if wind_directions.primary.length %}<div class="hero__rose">{{ m.rose(wind_directions, 104) }}</div>{% endif %}

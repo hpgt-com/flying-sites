@@ -22,7 +22,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
   // Fonts from Fontsource (SIL OFL 1.1), Latin subset and used weights only. @font-face is in src/assets/css/fonts.css.
-  for (const [pkg, weights] of [["barlow", [400, 500, 600]], ["barlow-condensed", [500, 600, 700]]]) {
+  for (const [pkg, weights] of [["barlow", [400, 600]], ["barlow-condensed", [700]]]) {
     for (const w of weights) {
       eleventyConfig.addPassthroughCopy({ [`node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}-normal.woff2`]: `assets/fonts/${pkg}-latin-${w}-normal.woff2` });
     }
