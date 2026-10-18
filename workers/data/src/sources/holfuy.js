@@ -21,7 +21,8 @@ export const KEEP_DAYS = 7;
 const API_URL = "https://api.holfuy.com/live/";
 const USER_AGENT = "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)";
 
-// The request for the latest measurement of several stations: JSON, °C, m/s and times in UTC. The key is in the address,
+// The request for the latest measurement of several stations: JSON, °C, m/s, times in UTC and the station's position
+// (loc), so the stations can be shown on the maps. The key is in the address,
 // so the address is never logged.
 export function holfuyUrl(ids, key, base = API_URL) {
   const url = new URL(base);
@@ -31,6 +32,7 @@ export function holfuyUrl(ids, key, base = API_URL) {
   url.searchParams.set("tu", "C");
   url.searchParams.set("su", "m/s");
   url.searchParams.set("utc", "");
+  url.searchParams.set("loc", "");
   return url;
 }
 

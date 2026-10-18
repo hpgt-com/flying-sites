@@ -120,19 +120,32 @@
     return { top: Math.max(4, Math.ceil(max / step) * step), step: step };
   }
 
-  // The launch directions of a flying site ({ primary, possible }), from the page: the site page has its own (site-data), the
-  // home page all sites (sites-data). Null for a station that is not on a flying site.
-  var siteDirs = null;
-  function launchDirs(siteId) {
+  // The flying site of a station, from the page: its launch directions (primary, possible) and the position of the launch
+  // (lat, lon). The site page has its own site (site-data), the home page all sites (sites-data). Null for a station
+  // that is not on a flying site, or a site the page does not know.
+  var sites = null;
+  function siteInfo(siteId) {
     var FS = globalThis.FlyingSites;
     if (!siteId || !FS || !FS.readJson) return null;
-    if (!siteDirs) {
-      siteDirs = {};
-      (FS.readJson("sites-data") || []).forEach(function (s) { siteDirs[s.id] = { primary: s.primary, possible: s.possible }; });
+    if (!sites) {
+      sites = {};
+      (FS.readJson("sites-data") || []).forEach(function (s) { sites[s.id] = { primary: s.primary, possible: s.possible, lat: s.lat, lon: s.lon }; });
       var one = FS.readJson("site-data"), page = document.getElementById("station-now");
-      if (one && one.wind_directions && page) siteDirs[page.getAttribute("data-site")] = one.wind_directions;
+      if (one && page) {
+        var dirs = one.wind_directions || {}, launch = one.launch || {};
+        sites[page.getAttribute("data-site")] = { primary: dirs.primary, possible: dirs.possible, lat: launch.lat, lon: launch.lon };
+      }
     }
-    return siteDirs[siteId] || null;
+    return sites[siteId] || null;
+  }
+  var launchDirs = siteInfo;
+
+  // Where to show a station on a map: its own position from the source, else the launch of its flying site (the station
+  // stands at the launch), else nowhere ([lat, lon] or null).
+  function position(item) {
+    if (isNum(item.lat) && isNum(item.lon)) return [item.lat, item.lon];
+    var site = siteInfo(item.site);
+    return site && isNum(site.lat) && isNum(site.lon) ? [site.lat, site.lon] : null;
   }
 
   // «startretning», «mulig retning» or «utenfor startretningene»: where the measured wind is on the site's wind rose.
@@ -329,21 +342,67 @@
   }
   function listItem(item, nowMs) { return card(item, nowMs, "li", false); }
 
+  // The stations as a map layer «Værstasjoner» (on by default): a compass dial with an arrow for where the wind blows, and
+  // the mean wind and the gust as measured («4,4 (7,2)»), dimmed when the measurement is old. A tap shows the station's
+  // card, with the chart when the map is tall enough for it. Used on the home map and the site page's map. onData(data, now)
+  // is called with each new answer, for the page's own use (the list in the Vær tab).
+  function addMapLayer(map, url, onData) {
+    var L = globalThis.L, FS = globalThis.FlyingSites;
+    if (!L || !url || !map.layersControl) return null;
+    var layer = L.layerGroup().addTo(map);
+    map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", text("stations.layer")));
+    // A station placed at its site's launch (no position of its own) is drawn up and to the right of the point, so it does
+    // not cover the launch's own marker.
+    function icon(item, now, atLaunch) {
+      var old = isOld(item, now), w = item.wind;
+      var has = w && isNum(w.speed) && !old;
+      // Numbers only in the HTML: the direction as a rotation, the mean wind and the gust as measured.
+      var arrow = has && isNum(w.dir)
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir) + 'deg)"><path d="M12 3v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22l-5-7h10z" fill="currentColor"/></svg>'
+        : "";
+      var nums = has ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–";
+      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""),
+        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + nums + "</span>",
+        iconSize: [88, 30], iconAnchor: atLaunch ? [-14, 44] : [15, 15], popupAnchor: atLaunch ? [29, -44] : [0, -14] });
+    }
+    watch(url, function (data) {
+      var now = Date.now();
+      layer.clearLayers();
+      data.items.forEach(function (item) {
+        var at = position(item);
+        if (!at) return;
+        var box = card(item, now, "div", false, map.getSize().y < 600);
+        box.classList.add("station-popup");
+        L.marker(at, { icon: icon(item, now, !(isNum(item.lat) && isNum(item.lon))), keyboard: true, title: item.name, zIndexOffset: 500 })
+          .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(layer);
+      });
+      if (onData) onData(data, now);
+    });
+    return layer;
+  }
+
   // Fetches the stations now and every minute while the page is in view, and calls done(data) with each new answer in
   // the right shape. On errors nothing happens, and the page keeps what it has.
+  // One fetch loop per address, shared by everything on the page that watches it (the site page's card and its map).
+  var watchers = {};
   function watch(url, done) {
     if (!url || typeof fetch !== "function") return;
-    var last = null;
+    if (watchers[url]) {
+      watchers[url].callbacks.push(done);
+      if (watchers[url].data) done(watchers[url].data);
+      return;
+    }
+    var w = watchers[url] = { callbacks: [done], data: null };
     function load() {
       if (document.hidden) return;
       fetch(url, { credentials: "omit" })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
-          if (!isStationsData(d) || d.fetched === last) return;
-          last = d.fetched;
+          if (!isStationsData(d) || (w.data && d.fetched === w.data.fetched)) return;
           // Each station carries the source of the data set, for the card's source line.
           d.items.forEach(function (i) { if (typeof i.source !== "string") i.source = typeof d.source === "string" ? d.source : ""; });
-          done(d);
+          w.data = d;
+          w.callbacks.forEach(function (fn) { fn(d); });
         })
         .catch(function () {});
     }
@@ -382,6 +441,8 @@
     dirText: dirText,
     scale: scale,
     compass: compass,
+    position: position,
+    addMapLayer: addMapLayer,
     launchText: launchText,
     listItem: listItem,
     card: card,

@@ -87,6 +87,7 @@ test("Holfuy: the request asks for JSON, m/s, °C and UTC for all stations", () 
   assert.equal(url.searchParams.get("su"), "m/s");
   assert.equal(url.searchParams.get("m"), "JSON");
   assert.ok(url.searchParams.has("utc"));
+  assert.ok(url.searchParams.has("loc"), "asks for the station's position");
 });
 
 test("Holfuy: one item per configured station, in that order, with the latest measurement and the history", () => {

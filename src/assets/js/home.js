@@ -1127,42 +1127,13 @@
   setInterval(recheck, 60 * 1000);
 
   // --- Weather stations (stations.js) ---
-  // The measured wind as a map layer «Værstasjoner» (on by default): a compass dial with an arrow for where the wind
-  // blows, and the mean wind and the gust as measured, dimmed when the measurement is old. A tap shows the station. The same stations as a list in the Vær tab.
+  // The measured wind as the map layer «Værstasjoner», and the same stations as a list in the Vær tab.
   function addStations() {
     var ST = window.FlyingSitesStations;
     var stationsEl = document.getElementById("stations");
     var listEl2 = document.getElementById("station-list");
-    if (!ST || !stationsEl || !map.layersControl) return;
-    var layer = L.layerGroup().addTo(map);
-    map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", FS.t("stations.layer")));
-    // The popup is the same card as in the Vær tab: the wind now with the compass, and the chart of the last hours when
-    // the map is tall enough for it (on phones the chart is in the Vær tab below the map).
-    function popup(item, now) {
-      var box = ST.card(item, now, "div", false, map.getSize().y < 600);
-      box.classList.add("station-popup");
-      return box;
-    }
-    function icon(item, now) {
-      var old = ST.isOld(item, now), w = item.wind;
-      var has = w && typeof w.speed === "number" && !old;
-      // Numbers only in the HTML: the direction as a rotation, the mean wind and the gust as measured («4,4 (7,2)»).
-      var arrow = has && typeof w.dir === "number"
-        ? '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir) + 'deg)"><path d="M12 3v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22l-5-7h10z" fill="currentColor"/></svg>'
-        : "";
-      var nums = has ? ST.value(w.speed) + (typeof w.gust === "number" ? " <small>(" + ST.value(w.gust) + ")</small>" : "") : "–";
-      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""),
-        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + nums + "</span>",
-        iconSize: [88, 30], iconAnchor: [15, 15], popupAnchor: [0, -14] });
-    }
-    ST.watch(stationsEl.getAttribute("data-url"), function (data) {
-      var now = Date.now();
-      layer.clearLayers();
-      data.items.forEach(function (item) {
-        if (typeof item.lat !== "number" || typeof item.lon !== "number") return;
-        L.marker([item.lat, item.lon], { icon: icon(item, now), keyboard: true, title: item.name, zIndexOffset: 500 })
-          .bindPopup(popup(item, now), { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(layer);
-      });
+    if (!ST || !stationsEl) return;
+    ST.addMapLayer(map, stationsEl.getAttribute("data-url"), function (data, now) {
       listEl2.replaceChildren.apply(listEl2, data.items.map(function (item) { return ST.listItem(item, now); }));
       stationsEl.hidden = !data.items.length;
     });
