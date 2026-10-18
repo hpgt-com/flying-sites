@@ -241,3 +241,16 @@ test("the day plan merges hours with the same assessment and skips dark hours", 
   assert.deepEqual([first.dir, first.min, first.max, first.gust], ["SW", 4, 4, 6]);
   assert.equal(days["2026-10-09"][1].gust, null); // gusts missing from the forecast
 });
+
+test("a forecast from the weather service is used only when it is newer, well formed and has every launch", () => {
+  const page = { fetched: "2026-10-18T12:00:00Z", times: ["2026-10-18T12:00:00Z"], sites: { a: [[200, 5, 9, 0]], b: [null] } };
+  const live = { fetched: "2026-10-18T15:00:00Z", times: ["2026-10-18T15:00:00Z", "2026-10-18T16:00:00Z"], sites: { a: [[200, 5, 9, 0], null], b: [[180, 3, null, null], [180, 3, 6, 0.2]] } };
+  assert.equal(W.isNewerForecast(live, page), true);
+  assert.equal(W.isNewerForecast(live, null), true);
+  assert.equal(W.isNewerForecast({ ...live, fetched: "2026-10-18T11:00:00Z" }, page), false, "older");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page), false, "a launch missing");
+  assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [[180, 3, 6, 0]] } }, page), false, "wrong length");
+  assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [["<b>", 3, 6, 0], null] } }, page), false, "text in a row");
+  assert.equal(W.isNewerForecast({ error: "no forecast yet" }, page), false);
+  assert.equal(W.isNewerForecast(null, page), false);
+});

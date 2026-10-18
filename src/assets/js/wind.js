@@ -60,6 +60,36 @@
     return !Number.isFinite(fetched) || now - fetched > rules.maxForecastAgeHours * HOUR;
   }
 
+  // --- The forecast from the weather service ---
+  // The pages carry the forecast from the build, which GitHub may build late. The weather service (workers/forecast)
+  // fetches MET every few minutes, and the pages use its forecast when it is newer. Only a forecast in the right shape
+  // (hours as times, a row per hour with numbers or null), newer than the page's, and with every launch the page has.
+  function isNewerForecast(candidate, current) {
+    if (!candidate || !Array.isArray(candidate.times) || !candidate.sites || typeof candidate.sites !== "object") return false;
+    if (!candidate.times.every(function (t) { return typeof t === "string" && Number.isFinite(Date.parse(t)); })) return false;
+    var n = candidate.times.length;
+    var okRow = function (row) {
+      return row === null || (Array.isArray(row) && row.length === 4 && row.every(function (v) { return v === null || typeof v === "number"; }));
+    };
+    var ids = Object.keys(candidate.sites);
+    if (!ids.every(function (id) { var s = candidate.sites[id]; return Array.isArray(s) && s.length === n && s.every(okRow); })) return false;
+    var fetched = Date.parse(candidate.fetched);
+    if (!Number.isFinite(fetched)) return false;
+    if (!current) return true;
+    if (fetched <= Date.parse(current.fetched)) return false;
+    return Object.keys(current.sites || {}).every(function (id) { return ids.indexOf(id) !== -1; });
+  }
+
+  // Fetches the forecast from the weather service, and calls done(forecast) only when isNewerForecast holds. On any
+  // error (offline, the service down) nothing happens, and the page keeps the forecast it has.
+  function fetchNewerForecast(url, current, done) {
+    if (!url || typeof fetch !== "function") return;
+    fetch(url, { credentials: "omit" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (f) { if (isNewerForecast(f, current)) done(f); })
+      .catch(function () {});
+  }
+
   // Index in the forecast for the chosen time, or -1 when the forecast does not cover it.
   // slot: "0", "3", "6" (hours from now) or "tomorrow" (tomorrow at 12 Norwegian time).
   function slotIndex(times, slot, now) {
@@ -245,6 +275,8 @@
     osloParts: osloParts,
     formatClock: formatClock,
     isStale: isStale,
+    isNewerForecast: isNewerForecast,
+    fetchNewerForecast: fetchNewerForecast,
     slotIndex: slotIndex,
     directionCode: directionCode,
     rateWind: rateWind,

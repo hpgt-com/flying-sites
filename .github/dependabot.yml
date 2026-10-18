@@ -26,3 +26,15 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+
+  # Wrangler for the weather service (workers/forecast), in its own package so the site build does not install it.
+  - package-ecosystem: npm
+    directory: /workers/forecast
+    schedule:
+      interval: monthly
+    labels: ["dependencies"]
+    cooldown:
+      default-days: 7
+    groups:
+      forecast-worker:
+        patterns: ["*"]

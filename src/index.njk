@@ -210,4 +210,4 @@ scripts:
 </div>
 
 <script type="application/json" id="sites-data">{{ collections.sites | homeData(lang) | json | safe }}</script>
-<script type="application/json" id="forecast-data">{{ { forecast: forecast, rules: windRules } | json | safe }}</script>
+<script type="application/json" id="forecast-data">{{ { forecast: forecast, rules: windRules, live: site.forecastUrl } | json | safe }}</script>

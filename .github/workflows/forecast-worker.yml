@@ -1,0 +1,54 @@
+name: Weather service
+
+# Publishes the weather service (workers/forecast) to Cloudflare Workers when it, the MET code or the sites change on
+# main. The service fetches the MET forecast every 5 minutes by itself (Cron Trigger), so this only runs on changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "workers/forecast/**"
+      - "lib/weather/met.js"
+      - "lib/site-files.js"
+      - "scripts/forecast-sites.mjs"
+      - "src/sites/*/index.md"
+      - ".github/workflows/forecast-worker.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: forecast-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The token and account are secrets in the environment «cloudflare», which only main may use. The token may only
+    # publish Workers in the HPGT account (see SECURITY.md).
+    environment: cloudflare
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No npm cache here: a job that publishes should not restore files another run could have written.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      # The launches from the site files (js-yaml from the root packages). --ignore-scripts as in the other workflows.
+      - run: npm ci --ignore-scripts
+      - run: node scripts/forecast-sites.mjs
+
+      # Wrangler, at the version in workers/forecast/package-lock.json.
+      - run: npm ci --ignore-scripts
+        working-directory: workers/forecast
+
+      - run: npx wrangler deploy
+        working-directory: workers/forecast
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

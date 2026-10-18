@@ -8,6 +8,9 @@ export default {
   homeRegion: "Harstad og Kvæfjord",
   // Visitor statistics (GoatCounter): anonymous, no cookies. See src/assets/js/goatcounter.js.
   goatcounter: "https://hpgt-flysteder.goatcounter.com/count",
+  // The weather service on Cloudflare (workers/forecast): the MET forecast, renewed every few minutes. The pages use it
+  // when it is newer than the forecast from the build. Must also be in connect-src in base.njk.
+  forecastUrl: "https://forecast.hpgt.workers.dev/forecast.json",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };
