@@ -651,13 +651,19 @@
   var filtersMore = document.getElementById("filters-more");
   var filtersDone = document.getElementById("filters-done");
   var filtersBackdrop = document.getElementById("filters-backdrop");
+  var filtersClose = document.getElementById("filters-close");
+  var filtersReset = document.getElementById("filters-reset");
+  var chipsEl = document.getElementById("filter-chips");
   var directionChosenEl = document.getElementById("direction-chosen");
+  var DESKTOP = window.matchMedia("(min-width: 1100px)");
   function updateFiltersToggle(shown) {
     if (!filtersToggle) return;
     var n = (filter.directions.length ? 1 : 0) + (filter.level ? 1 : 0) + (filter.category ? 1 : 0) + (suggest ? 1 : 0);
     var count = filtersToggle.querySelector(".filters-toggle__count");
     count.textContent = n ? String(n) : "";
     count.hidden = !n;
+    if (filtersReset) filtersReset.hidden = !n;
+    renderChips();
     if (filtersDone) filtersDone.textContent = FS.tn("home.showSites", shown);
     if (directionChosenEl) {
       directionChosenEl.textContent = filter.directions.length
@@ -665,20 +671,86 @@
         : FS.t("home.allDirections");
     }
   }
+  // The chosen filters as chips under the search: one per direction, level, category and «Kan passe», each removed with ✕.
+  // Built with DOM calls, so no text is read as markup.
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function chip(label, remove) {
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "filter-chip";
+    button.setAttribute("aria-label", FS.t("home.removeFilter", { name: label }));
+    button.appendChild(document.createTextNode(label));
+    var svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("width", "14"); svg.setAttribute("height", "14"); svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    var path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", "M6 6l12 12M18 6L6 18");
+    svg.appendChild(path);
+    button.appendChild(svg);
+    button.addEventListener("click", function () {
+      var index = Array.prototype.indexOf.call(chipsEl.children, button);
+      remove();
+      update();
+      writeHash();
+      // The chips are drawn again: focus goes to the one in the same place, or back to the search when none are left.
+      var left = chipsEl.children;
+      (left.length ? left[Math.min(index, left.length - 1)] : searchEl).focus();
+    });
+    return button;
+  }
+  function renderChips() {
+    if (!chipsEl) return;
+    var chips = filter.directions.map(function (d) {
+      return chip(FS.DIRECTION_LABELS[d], function () { FS.track("filter/chip/direction"); setFilter("direction", d); });
+    });
+    ["level", "category"].forEach(function (type) {
+      if (filter[type]) chips.push(chip(filter[type], function () { FS.track("filter/chip/" + type); setFilter(type, ""); }));
+    });
+    if (suggest) chips.push(chip(FS.t("home.suggestChip"), function () { FS.track("filter/chip/suggest"); setSuggest(false); }));
+    chipsEl.replaceChildren.apply(chipsEl, chips);
+    chipsEl.hidden = !chips.length;
+  }
+  function resetFilters() {
+    setDirections([]);
+    setFilter("level", "");
+    setFilter("category", "");
+    setSuggest(false);
+    update();
+    writeHash();
+  }
+
+  // On mobile the panel is a modal dialog: role and aria-modal while it is open, and Tab moves only between its buttons.
+  // On desktop it folds out under the search bar and the page stays usable.
+  function isSheet() { return !DESKTOP.matches; }
   function setFiltersOpen(open) {
     filtersToggle.setAttribute("aria-expanded", String(open));
     filtersMore.classList.toggle("is-open", open);
+    if (open && isSheet()) { filtersMore.setAttribute("role", "dialog"); filtersMore.setAttribute("aria-modal", "true"); }
+    else { filtersMore.setAttribute("role", "group"); filtersMore.removeAttribute("aria-modal"); }
     if (filtersBackdrop) filtersBackdrop.hidden = !open;
     document.body.classList.toggle("sheet-open", open);
-    if (open && filtersDone) filtersDone.focus();
-    else if (!open) filtersToggle.focus();
+    if (open) (isSheet() && filtersDone ? filtersDone : filtersClose || filtersToggle).focus();
+    else filtersToggle.focus();
+  }
+  function trapFocus(e) {
+    var items = Array.prototype.filter.call(filtersMore.querySelectorAll("button, a[href], input"), function (el) {
+      return !el.disabled && el.offsetParent !== null;
+    });
+    if (!items.length) return;
+    var first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !filtersMore.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !filtersMore.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
   }
   if (filtersToggle) {
     filtersToggle.addEventListener("click", function () { setFiltersOpen(filtersToggle.getAttribute("aria-expanded") !== "true"); });
     if (filtersDone) filtersDone.addEventListener("click", function () { setFiltersOpen(false); });
+    if (filtersClose) filtersClose.addEventListener("click", function () { setFiltersOpen(false); });
+    if (filtersReset) filtersReset.addEventListener("click", function () { FS.track("filter/reset"); resetFilters(); (isSheet() ? filtersDone : filtersClose).focus(); });
     if (filtersBackdrop) filtersBackdrop.addEventListener("click", function () { setFiltersOpen(false); });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && filtersToggle.getAttribute("aria-expanded") === "true") setFiltersOpen(false);
+      if (filtersToggle.getAttribute("aria-expanded") !== "true") return;
+      if (e.key === "Escape") setFiltersOpen(false);
+      else if (e.key === "Tab" && isSheet()) trapFocus(e);
     });
   }
 

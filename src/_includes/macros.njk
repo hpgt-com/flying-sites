@@ -43,6 +43,26 @@
 </ul>
 {%- endmacro %}
 
+{#- Small line icons in front of button and menu texts, so they are quick to recognise. Same style as the menu links. -#}
+{% macro icon(name, size=18) -%}
+{%- set ICONS = {
+  directions: '<path d="M12 3l7 18-7-4-7 4z"/>',
+  map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  cloud: '<path d="M7 19h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 10.5 4.3 4.3 0 0 0 7 19z"/>',
+  wind: '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',
+  log: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.3l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>'
+} -%}
+<svg class="icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ ICONS[name] | safe }}</svg>
+{%- endmacro %}
+
 {% macro chevron(direction="right") -%}
 <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   {%- if direction == "left" %}<path d="M15 18l-6-6 6-6"></path>{% else %}<path d="M9 18l6-6-6-6"></path>{% endif -%}
@@ -59,20 +79,20 @@
     <span class="visually-hidden">{{ t.common.menu }}</span>
   </button>
   <div class="site-menu__panel" id="site-menu-panel" hidden>
-    <p class="site-menu__label" id="language-label">{{ t.common.language }}</p>
+    <p class="site-menu__label" id="language-label">{{ icon("globe", 14) }}{{ t.common.language }}</p>
     <div class="theme-toggle language-toggle" role="group" aria-labelledby="language-label">
       {%- for l in languages %}
       <a href="{{ (page.url | localeUrl(l.code)) if language else (l.prefix ~ '/') }}" hreflang="{{ l.code }}" lang="{{ l.code }}" data-language="{{ l.code }}"{% if l.code == lang %} aria-current="true"{% endif %}>{{ l.name }}</a>
       {%- endfor %}
     </div>
-    <p class="site-menu__label" id="theme-label">{{ t.common.theme }}</p>
+    <p class="site-menu__label" id="theme-label">{{ icon("auto", 14) }}{{ t.common.theme }}</p>
     <div class="theme-toggle" role="group" aria-labelledby="theme-label">
-      <button type="button" data-theme-choice="auto" aria-pressed="false" title="{{ t.common.themeAutoTitle }}">{{ t.common.themeAuto }}</button>
-      <button type="button" data-theme-choice="light" aria-pressed="false">{{ t.common.themeLight }}</button>
-      <button type="button" data-theme-choice="dark" aria-pressed="false">{{ t.common.themeDark }}</button>
+      <button type="button" data-theme-choice="auto" aria-pressed="false" title="{{ t.common.themeAutoTitle }}">{{ icon("auto", 16) }}{{ t.common.themeAuto }}</button>
+      <button type="button" data-theme-choice="light" aria-pressed="false">{{ icon("sun", 16) }}{{ t.common.themeLight }}</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false">{{ icon("moon", 16) }}{{ t.common.themeDark }}</button>
     </div>
     <button type="button" class="switch" role="switch" aria-checked="false" data-cvd-toggle>
-      <span class="switch__text">{{ t.common.cvd }}<span class="switch__hint">{{ t.common.cvdHint }}</span></span>
+      <span class="switch__text">{{ icon("eye", 16) }}{{ t.common.cvd }}<span class="switch__hint">{{ t.common.cvdHint }}</span></span>
       <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
     </button>
     {#- Planning a trip (NOTAM, towers), about the site and privacy, and the club. Each link has an icon, so the list is quick to read. «Alle flysteder» is

@@ -112,7 +112,7 @@ scripts:
     <div class="site-page__main">
     <nav class="section-nav" aria-label="{{ t.site.sectionNav }}">
       <a href="#h-launch">{{ t.site.launch }}</a>
-      <a href="#h-map">{{ t.site.map }}</a>
+      <a href="#h-map">{{ m.icon("map") }}{{ t.site.map }}</a>
       <a href="#h-landing">{{ t.site.landingShort }}</a>
       <a href="#h-airspace">{{ t.site.airspace }}</a>
       <a href="#h-images">{{ t.site.images }}</a>
@@ -266,10 +266,10 @@ scripts:
         <p class="landing-note">{{ t.site.landingNote }}</p>
         <div class="buttons">
           {% for p in local.parking %}
-          <a class="btn btn--primary" href="https://www.google.com/maps/dir/?api=1&destination={{ p.lat }},{{ p.lon }}" target="_blank" rel="noopener">{{ t.site.directionsTo | fmt({ target: t.site.directionsParking if parking.length == 1 else p.name }) }}{{ m.external() }}</a>
+          <a class="btn btn--primary" href="https://www.google.com/maps/dir/?api=1&destination={{ p.lat }},{{ p.lon }}" target="_blank" rel="noopener">{{ m.icon("directions") }}{{ t.site.directionsTo | fmt({ target: t.site.directionsParking if parking.length == 1 else p.name }) }}{{ m.external() }}</a>
           {% endfor %}
           {% for r in routes %}
-          <a class="btn" href="{{ r.url }}" download>{{ t.site.downloadRoute | fmt({ name: (" " ~ (r.name or loop.index)) if routes.length > 1 else "" }) }}</a>
+          <a class="btn" href="{{ r.url }}" download>{{ m.icon("download") }}{{ t.site.downloadRoute | fmt({ name: (" " ~ (r.name or loop.index)) if routes.length > 1 else "" }) }}</a>
           {% endfor %}
         </div>
       </section>
@@ -359,14 +359,14 @@ scripts:
         <div class="link-group">
         <h3 class="link-group__title">{{ t.site.linksWeather }}</h3>
         <div class="now-links">
-          {% if external.yr_id %}<a class="btn" href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener">Yr{{ m.external() }}</a>{% endif %}
-          <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">Windy{{ m.external() }}</a>
+          {% if external.yr_id %}<a class="btn" href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener">{{ m.icon("cloud") }}Yr{{ m.external() }}</a>{% endif %}
+          <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">{{ m.icon("wind") }}Windy{{ m.external() }}</a>
         </div>
         </div>
         <div class="link-group">
         <h3 class="link-group__title">{{ t.site.linksLog }}</h3>
         {% if external.flightlog_id %}
-        <a class="big-btn big-btn--dark" href="https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id={{ external.flightlog_id }}" target="_blank" rel="noopener">{{ t.site.onFlightlog | fmt({ name: name }) }}{{ m.external() }}</a>
+        <a class="big-btn big-btn--dark" href="https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id={{ external.flightlog_id }}" target="_blank" rel="noopener">{{ m.icon("log") }}<span>{{ t.site.onFlightlog | fmt({ name: name }) }}</span>{{ m.external() }}</a>
         {% else %}
         <span class="big-btn big-btn--empty">{{ t.site.noFlightlog }}</span>
         {% endif %}
@@ -375,7 +375,7 @@ scripts:
         <div class="link-group">
         <h3 class="link-group__title">{{ t.site.linksMore }}</h3>
         {% for l in local.links %}
-        <a class="big-btn big-btn--two-line" href="{{ l.url }}" target="_blank" rel="noopener"><span>{{ l.title }}{% if l.text %}<small>{{ l.text }}</small>{% endif %}</span>{{ m.external() }}</a>
+        <a class="big-btn big-btn--two-line" href="{{ l.url }}" target="_blank" rel="noopener">{{ m.icon("link") }}<span>{{ l.title }}{% if l.text %}<small>{{ l.text }}</small>{% endif %}</span>{{ m.external() }}</a>
         {% endfor %}
         </div>
         {% endif %}
@@ -398,9 +398,9 @@ scripts:
   </div>
   {#- Mobile: the three things you need on the way, always at the bottom of the screen. -#}
   <nav class="action-bar" aria-label="{{ t.site.quickActions }}">
-    {% if parking.length %}<a class="action-bar__primary" href="https://www.google.com/maps/dir/?api=1&destination={{ parking[0].lat }},{{ parking[0].lon }}" target="_blank" rel="noopener">{{ t.site.directions }}</a>{% endif %}
-    <a href="#h-map">{{ t.site.map }}</a>
-    {% if routes.length %}<a href="{{ routes[0].url }}" download>GPX</a>{% endif %}
+    {% if parking.length %}<a class="action-bar__primary" href="https://www.google.com/maps/dir/?api=1&destination={{ parking[0].lat }},{{ parking[0].lon }}" target="_blank" rel="noopener">{{ m.icon("directions") }}{{ t.site.directions }}</a>{% endif %}
+    <a href="#h-map">{{ m.icon("map") }}{{ t.site.map }}</a>
+    {% if routes.length %}<a href="{{ routes[0].url }}" download>{{ m.icon("download") }}GPX</a>{% endif %}
   </nav>
 </div>
 
