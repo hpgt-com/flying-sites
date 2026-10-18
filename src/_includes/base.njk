@@ -53,13 +53,19 @@
 <link rel="preload" href="/assets/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/barlow-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ "/assets/css/fonts.css" | asset }}">
-{#- Leaflet only on pages with a map (map: true in the front matter: the home page and the site pages). -#}
+{#- Early connections to servers the page will use at once (the map tiles on the home page: preconnect in the front matter).
+    The site pages start their map only when it is scrolled into view, so they do not need it. -#}
+{% for origin in preconnect %}<link rel="preconnect" href="{{ origin }}">
+{% endfor %}{#- Leaflet only on pages with a map (map: true in the front matter: the home page and the site pages). -#}
 {% if map %}<link rel="stylesheet" href="{{ "/assets/leaflet/leaflet.css" | asset }}">{% endif %}
 <link rel="stylesheet" href="{{ "/assets/css/styles.css" | asset }}">
 {% for style in styles %}<link rel="stylesheet" href="{{ style | asset }}">
 {% endfor %}
 </head>
 <body class="{{ bodyClass }}">
+{#- For keyboard and screen reader users: the first Tab shows this link, which skips the top bar and the menu. Every
+    page has an element with id="content" (the title or the start of the main content). -#}
+<a class="skip-link" href="#content">{{ t.common.skipToContent }}</a>
 {{ content | safe }}
 {#- The strings the scripts need, in the page's language (read by common.js). -#}
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>

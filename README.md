@@ -76,6 +76,7 @@ Other commands:
 | `npm run airspace` | Fetches airspace from openAIP (requires `OPENAIP_API_KEY`). |
 | `npm run check:links` | After the build: checks that every internal link and image in `_site/` points to a file that exists. |
 | `npm run check:html` | After the build: validates the HTML of every page (`.htmlvalidate.mjs`). |
+| `npm run check:output` | After the build: fails if a page has «[object Object]», «undefined», «NaN» or a placeholder that was not filled in. Also runs in the deploy build. |
 | `npm run check:a11y` | After the build: axe accessibility check of a few pages in Chromium (`npx playwright install chromium` first). |
 
 ## Publishing

@@ -14,13 +14,13 @@ eleventyComputed:
     site pages link here, so they only need a short line each. -#}
 {%- import "macros.njk" as m with context -%}
 {%- set ext = m.external() -%}
-<div class="simple-page about-page">
+<main class="simple-page about-page">
   <header class="topbar">
     <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
     {{ m.siteMenu() }}
   </header>
 
-  <div class="simple-page__intro">
+  <div class="simple-page__intro" id="content" tabindex="-1">
     <h1>{{ t.about.title }}</h1>
     <p class="muted">{{ t.about.intro }}</p>
   </div>
@@ -68,4 +68,4 @@ eleventyComputed:
     <h2 id="about-changes">{{ t.about.changesTitle }}</h2>
     <p>{{ t.about.changes | fmt({ github: '<a href="https://github.com/hpgt-com/flying-sites" target="_blank" rel="noopener">GitHub' ~ ext ~ '</a>' }) | safe }}</p>
   </section>
-</div>
+</main>

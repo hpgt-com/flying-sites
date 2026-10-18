@@ -51,13 +51,13 @@ scripts:
   {#- Desktop: two columns under the image. Left: the introduction and «Kan jeg fly her nå?», then Start, Kart and Landing og
       adkomst. Right: «Før du starter» beside them, then Luftrom, Bilder and Lenker. The HTML order is the mobile order,
       so screen readers and the keyboard follow what is seen. -#}
-  <div class="site-page__body">
+  <main class="site-page__body" id="content" tabindex="-1">
     <div class="site-page__top">
     {% if untranslated %}<p class="translation-note" lang="{{ lang }}">{{ t.site.notTranslated }}</p>{% endif %}
     {% if intro %}<div class="lead"{% if untranslated %} lang="nb"{% endif %}>{{ intro | safe }}</div>{% endif %}
     {#- «Kan jeg fly her nå?»: the assessment now in large type, the next 12 hours as cards, and folded below the periods that
         may work and the next 48 hours as bars (site-wind.js). The details (Yr meteogram and winds aloft) are folded too. -#}
-    <section class="block block--now" id="vaer" aria-labelledby="h-weather">
+    <section class="block block--now{% if forecast and forecast.sites and forecast.sites[id] %} block--now-wait{% endif %}" id="vaer" aria-labelledby="h-weather">
       <h2 id="h-weather" class="now-eyebrow">{{ t.site.canIFly }}</h2>
       <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
       {#- Scrolls sideways when the cards do not fit, so it can take focus and be scrolled with the arrow keys. -#}
@@ -395,7 +395,7 @@ scripts:
     </dl>
     <p class="disclaimer">{{ t.site.footerDisclaimer }} <a href="{{ '/om/' | localeUrl }}">{{ t.common.aboutLink }}</a></p>
   </footer>
-  </div>
+  </main>
   {#- Mobile: the three things you need on the way, always at the bottom of the screen. -#}
   <nav class="action-bar" aria-label="{{ t.site.quickActions }}">
     {% if parking.length %}<a class="action-bar__primary" href="https://www.google.com/maps/dir/?api=1&destination={{ parking[0].lat }},{{ parking[0].lon }}" target="_blank" rel="noopener">{{ m.icon("directions") }}{{ t.site.directions }}</a>{% endif %}

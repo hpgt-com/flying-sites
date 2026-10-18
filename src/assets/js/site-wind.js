@@ -167,6 +167,8 @@
   }
 
   render();
+  // The space kept for the box while it was empty (site.njk, styles.css) is no longer needed.
+  if (block) block.classList.remove("block--now-wait");
   // The current hour and the forecast's age change while the page is open.
   setInterval(render, 60000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });

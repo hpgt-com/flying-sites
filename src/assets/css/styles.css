@@ -145,6 +145,15 @@ p { margin: 0; }
 }
 .language-toggle a[aria-current="true"] { background: var(--inverse-bg); color: var(--inverse-text); }
 
+/* «Hopp til innhold»: hidden until it gets focus with Tab, then at the top left above everything. The target gets focus
+   from the link only, so it has no focus ring of its own. */
+.skip-link {
+  position: absolute; left: 12px; top: -100px; z-index: 3000; padding: 12px 16px; font-weight: 700; color: var(--inverse-text);
+  background: var(--inverse-bg); border-radius: 10px; text-decoration: none;
+}
+.skip-link:focus { top: 12px; outline: 3px solid var(--fjord); outline-offset: 2px; }
+#content:focus { outline: none; }
+
 /* Menu at top right */
 .site-menu { position: relative; }
 .site-menu__button {
@@ -478,6 +487,8 @@ p { margin: 0; }
 .home .topbar { order: 1; }
 .logo { display: inline-flex; align-items: center; gap: 10px; font: 700 24px/1 var(--font-heading); }
 .logo img { border-radius: 7px; }
+a.logo { color: var(--text); text-decoration: none; }
+a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; border-radius: 8px; }
 .home__intro { order: 2; display: flex; flex-direction: column; gap: 2px; }
 .home__eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fjord); }
 [data-theme="dark"] .home__eyebrow { color: var(--link); }
@@ -1030,6 +1041,11 @@ p { margin: 0; }
 /* «Kan jeg fly her nå?»: the colours follow the rating now (data-rating, set by site-wind.js). --r is the rating colour,
    --rs a light tint of it for backgrounds and --rt a darker (lighter in the dark theme) shade for text. Mixed from the
    wind colours, so they follow the dark theme and the colour-blind-friendly colours. */
+/* Space for «Kan jeg fly her nå?» while site-wind.js fills it in, so the boxes below do not jump down (layout shift).
+   Only with a forecast (site.njk) and JavaScript on (data-theme is set by theme-init.js); site-wind.js removes the
+   class after the first render. The heights are a little below the smallest filled box (measured on all sites). */
+[data-theme] .block--now-wait { min-height: 540px; }
+@media (min-width: 800px) { [data-theme] .block--now-wait { min-height: 500px; } }
 .block--now, .hour-card { --r: var(--wind-no); }
 .block--now[data-rating="ok"], .hour-card--ok { --r: var(--wind-ok); }
 .block--now[data-rating="maybe"], .hour-card--maybe { --r: var(--wind-maybe); }
@@ -1053,6 +1069,7 @@ p { margin: 0; }
   border-radius: 10px; background: var(--rs); border-bottom: 4px solid var(--r);
 }
 .hour-card--now { outline: 2px solid var(--text); outline-offset: 1px; }
+.hour-cards[hidden] { display: none; }
 .hour-cards:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 10px; }
 .hour-card__hour { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .hour-card__icon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--r); color: #FFFFFF; font-size: 12px; font-weight: 700; }

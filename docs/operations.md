@@ -5,7 +5,7 @@ Practical how-tos for those who maintain the site. How the site fits together is
 
 ## Running the site locally
 
-Requires Node.js 20 or later.
+Requires Node.js 22.22 or later (html-validate needs it).
 
 ```bash
 npm ci          # install the packages
@@ -23,6 +23,7 @@ The quality checks in the PR check can be run locally after the build:
 ```bash
 npm run check:links   # internal links and images point to files that exist (no network)
 npm run check:html    # HTML validation of every page, rules in .htmlvalidate.mjs
+npm run check:output  # no «[object Object]», «undefined», «NaN» or unfilled placeholders in the pages
 npx playwright install chromium   # once
 npm run check:a11y    # axe in Chromium on a few pages, light and dark mode
 ```

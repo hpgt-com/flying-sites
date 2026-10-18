@@ -50,6 +50,9 @@ jobs:
       # HTML validation of every page (.htmlvalidate.mjs lists the rules turned off, and why).
       - run: npm run check:html
 
+      # No «[object Object]», «undefined», «NaN» or unfilled placeholders in the pages (lib/output-check.js).
+      - run: npm run check:output
+
       # The built pages for the accessibility check, without the image variants (large, and not needed for the check).
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
