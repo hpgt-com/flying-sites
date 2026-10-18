@@ -18,11 +18,21 @@ export class Store extends DurableObject {
     this.sql = ctx.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+    let have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
+    // The first version (18.10.2026) had no source, and the station and time as the key. Rebuilt once with (source,
+    // station, time) as the key; the rows already there were all Holfuy's and keep their values.
+    const old = have.size > 0 && !have.has("source");
+    if (old) this.sql.exec("ALTER TABLE measurements RENAME TO measurements_v1");
     this.sql.exec("CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL, PRIMARY KEY (source, station, time))");
     // A field added to measurements.js gets its column here; the rows already stored get null in it.
-    const have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
+    have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
     for (const c of COLUMNS) if (!have.has(c)) this.sql.exec(`ALTER TABLE measurements ADD COLUMN ${c} REAL`);
     if (!have.has("extra")) this.sql.exec("ALTER TABLE measurements ADD COLUMN extra TEXT");
+    if (old) {
+      this.sql.exec(`INSERT OR IGNORE INTO measurements (source, station, time, dir, speed, gust, min, temperature)
+        SELECT 'holfuy', CAST(station AS TEXT), time, dir, speed, gust, min, temperature FROM measurements_v1`);
+      this.sql.exec("DROP TABLE measurements_v1");
+    }
   }
 
   getSnapshot(dataset) {
