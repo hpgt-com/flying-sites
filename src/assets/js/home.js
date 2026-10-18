@@ -462,9 +462,13 @@
     var site = sites.find(function (s) { return s.id === id; });
     if (!site) return;
     var mobile = MOBILE.matches;
-    // Mobile: a second tap on the selected site in the list opens the site page. The first tap shows it in the map.
-    if (origin === "list" && mobile && id === selectedId) {
-      FS.track("list/open/" + id);
+    // In full screen the list is behind the map: the site is shown in the line on the map (with the link to its page), and
+    // the page behind is left as it is.
+    var fullscreen = mapEl.classList.contains("map--fullscreen");
+    // A second tap on the selected site opens the site page: in the map (also in full screen), and in the list on mobile.
+    // The first tap shows it in the map and the list.
+    if (id === selectedId && (origin === "map" || (origin === "list" && mobile))) {
+      FS.track(origin + "/open/" + id);
       // The link is in the page from the build (index.njk), so the address never comes from the script.
       var link = listEl.querySelector('[data-id="' + id + '"] .results__open');
       if (link) link.click();
@@ -472,14 +476,14 @@
     }
     selectedId = id;
     // A rose tapped in the map shows the site in the list, also when it is further down than the first few.
-    if (origin === "map" && mobile) listExpanded = true;
+    if (origin === "map" && mobile && !fullscreen) listExpanded = true;
     update();
     writeHash();
     if (origin !== "map") {
       // If the site is in a cluster, zoom in until the marker shows.
       cluster.zoomToShowLayer(markers[id], function () { map.panTo([site.lat, site.lon]); });
     }
-    if (origin === "map" && mobile) scrollToItem(id);
+    if (origin === "map" && mobile && !fullscreen) scrollToItem(id);
   }
   // Mobile: scrolls the list so the site sits right below the map and the search bar, which stay at the top. The position
   // is measured before the map is made small: the small map keeps its old height as margin below, so the list does not

@@ -1449,6 +1449,14 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* Full screen: the map is laid over the whole page (common.js). Not the browser's full screen, so it also works on iPhone. */
 .map--fullscreen { position: fixed !important; inset: 0; z-index: 2000; width: 100vw; height: 100vh !important; height: 100dvh !important; border: 0 !important; border-radius: 0 !important; }
 body.has-fullscreen-map { overflow: hidden; }
+/* The home map in full screen covers the page, so what lies on the map (the line about the selected site with the link to
+   its page, the card on desktop, the timeline and the status) is lifted above it. */
+body.has-fullscreen-map .home__map .map-note, body.has-fullscreen-map .home__map .timeline,
+body.has-fullscreen-map .home__map .map-status, body.has-fullscreen-map .home__map .selected { position: fixed; z-index: 2001; }
+@media (max-width: 1099px) {
+  body.has-fullscreen-map .home__map .map-note:not([hidden]) { display: flex; bottom: calc(86px + env(safe-area-inset-bottom)); }
+  body.has-fullscreen-map .home__map .timeline { bottom: calc(26px + env(safe-area-inset-bottom)); }
+}
 /* «Vis bare steder som kan passe» below the wind time (home.js). Its own line, so it does not mix with the times. */
 /* «Bare steder som kan passe» as a switch (on/off), not a large button. aria-pressed is set by home.js.
    Own class name: .switch is the switch in the menu (macros.njk). */
