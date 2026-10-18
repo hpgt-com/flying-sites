@@ -231,7 +231,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
 | Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json` | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`) |
-| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare) | `workers/data/src/sources/holfuy.js`, stations in `workers/data/src/stations.js` | Every minute | Durable Object (SQLite): every measurement for 7 days, served with the last 6 hours as `/v1/stations.json` | Not yet shown on the site |
+| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare) | `workers/data/src/sources/holfuy.js`, stations in `workers/data/src/stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, once R2 is on) | Not yet shown on the site |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
 
@@ -247,7 +247,10 @@ it fetches (a workflow today, a backend later) without the site noticing.
   `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `license`, `fetched`, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
   (`src/schedule.js`: stations every minute, forecast every 5). The store is one Durable Object with SQLite
-  (`src/store.js`): the free plan allows far more writes per day there than in KV (1000).
+  (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
+  the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
+  into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
+  archived (`src/archive.js`).
 - **Forecast in the data service:** GitHub skips many scheduled runs, so the forecast built into the pages can be hours old. The
   data service fetches MET by itself, and the pages use its forecast when it is newer, well formed and
   covers every launch the page has (`isNewerForecast` in `wind.js`); otherwise they keep their own. It also brings the

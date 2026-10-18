@@ -45,6 +45,15 @@ export class Store extends DurableObject {
     return this.sql.exec("SELECT station, time, dir, speed, gust, min, temperature FROM measurements WHERE time >= ? ORDER BY time", since).toArray();
   }
 
+  measurementsBetween(from, to) {
+    return this.sql.exec("SELECT station, time, dir, speed, gust, min, temperature FROM measurements WHERE time >= ? AND time <= ? ORDER BY time", from, to).toArray();
+  }
+
+  oldestMeasurement() {
+    const rows = this.sql.exec("SELECT MIN(time) AS time FROM measurements").toArray();
+    return rows[0]?.time ?? null;
+  }
+
   prune(before) {
     this.sql.exec("DELETE FROM measurements WHERE time < ?", before);
   }

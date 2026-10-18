@@ -102,8 +102,28 @@ the menu and is marked `noindex`. It shows per site:
   optionally `name` (otherwise Holfuy's) and `site` (the flying site's folder). A change there is published by itself.
 - The key: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `HOLFUY_KEY`
   (type Secret). Publishing keeps it. Without the key, or without stations, the service skips Holfuy.
-- Fetched every minute. Every measurement is kept for 7 days; `https://data.hpgt.workers.dev/v1/stations.json` has
-  the latest measurement and the last 6 hours per station.
+- Fetched every minute. `https://data.hpgt.workers.dev/v1/stations.json` has the latest measurement and the last
+  6 hours per station. The service keeps the last 7 days; older days go to the archive (below), and nothing is deleted
+  before it is there. Holfuy has accepted that the club stores the measurements over time.
+
+## Weather archive (R2)
+
+- One CSV per station per day (UTC) in the R2 bucket `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
+  (columns `station, time_utc, direction_deg, speed_ms, gust_ms, min_ms, temperature_c`), and the stations in
+  `holfuy/stations.csv` (`station, name, site, lat, lon, altitude_m`). Written after midnight UTC for the day before
+  (`workers/data/src/archive.js`).
+- The folders use the `key=value` form, so DuckDB, BigQuery, Athena and Spark read `station` and `year` as columns, and
+  every row carries the station, so all files load into one table. Example with DuckDB and R2's S3 address:
+  `SELECT station, date_trunc('day', time_utc) AS day, avg(speed_ms), max(gust_ms) FROM read_csv('s3://hpgt-data-archive/holfuy/*/*/*.csv', hive_partitioning = true) GROUP BY ALL ORDER BY day;`
+- **Turning it on** (until then the service keeps every measurement, so nothing is lost):
+  1. Cloudflare → R2 → enable R2 (Free: 10 GB and free downloads; Cloudflare may ask for a card even within the free
+     limits) and create the bucket `hpgt-data-archive` (private, no public access).
+  2. Give the token «GitHub – flying-sites» the permission `Account → Workers R2 Storage → Edit` (My Profile → API
+     Tokens → Edit). The token's value stays the same.
+  3. Add the binding to `workers/data/wrangler.toml` in a PR: `[[r2_buckets]]`, `binding = "ARCHIVE"`,
+     `bucket_name = "hpgt-data-archive"`.
+- Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
+  S3 address `https://<account id>.r2.cloudflarestorage.com`.
 - If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), the wind assessment
   is turned off and the site says so.
 - **Fetch a new forecast now:** Actions → «Build and deploy» → «Run workflow».

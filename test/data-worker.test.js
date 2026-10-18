@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { buildForecast, keepSites, pickSites, MAX_AGE_HOURS } from "../workers/data/src/sources/forecast.js";
 import { buildStations, holfuyUrl, parseHolfuy } from "../workers/data/src/sources/holfuy.js";
 import { due } from "../workers/data/src/schedule.js";
+import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../workers/data/src/archive.js";
 
 const NOW = Date.parse("2026-10-18T15:20:00Z");
 const ago = (min) => new Date(NOW - min * 60000).toISOString();
@@ -90,4 +91,28 @@ test("one schedule every minute: the stations every minute, the forecast every f
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
   assert.deepEqual([0, 1, 2, 3, 4, 5].map((m) => due("stations", minute(m))), [true, true, true, true, true, true]);
   assert.deepEqual([0, 1, 2, 3, 4, 5, 10].map((m) => due("forecast", minute(m))), [true, false, false, false, false, true, true]);
+});
+
+test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {
+  const now = Date.parse("2026-10-18T00:10:00Z");
+  assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", null, now), ["2026-10-15", "2026-10-16"]);
+  assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", "2026-10-16", now), ["2026-10-17"]);
+  assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", "2026-10-17", now), []);
+  assert.deepEqual(daysToArchive(null, null, now), []);
+});
+
+test("archive: nothing is deleted before it is archived, and never the last 7 days", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  assert.equal(pruneBefore(now, 7, null), null);
+  assert.equal(pruneBefore(now, 7, "2026-10-05"), "2026-10-06T00:00:00.000Z");
+  assert.equal(pruneBefore(now, 7, "2026-10-17"), "2026-10-11T12:00:00.000Z");
+});
+
+test("archive: one table for all stations, the station in every row, units in the header, empty cells for missing", () => {
+  assert.equal(measurementsCsv([{ station: 490, time: "2026-10-17T10:00:00.000Z", dir: 230, speed: 4.2, gust: null, min: 2, temperature: 5.5 }]),
+    "station,time_utc,direction_deg,speed_ms,gust_ms,min_ms,temperature_c\n490,2026-10-17T10:00:00.000Z,230,4.2,,2,5.5\n");
+  assert.equal(measurementsCsv([]), "station,time_utc,direction_deg,speed_ms,gust_ms,min_ms,temperature_c\n");
+  assert.equal(dayPath("holfuy", 490, "2026-10-17"), "holfuy/station=490/year=2026/2026-10-17.csv");
+  assert.equal(stationsCsv([{ id: 490, name: 'HPGT "Heia", topp', site: "heia", lat: 68.8, lon: 16.5, altitude: 420 }]),
+    'station,name,site,lat,lon,altitude_m\n490,"HPGT ""Heia"", topp",heia,68.8,16.5,420\n');
 });

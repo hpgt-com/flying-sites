@@ -62,7 +62,8 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   own details and memberships read), has no access to domains or DNS, and expires on 18.10.2027. The account has
   two-factor sign-in with a security key and an authenticator app. The service's only secret is the Holfuy key
   (`HOLFUY_KEY`), set in Cloudflare and never in GitHub or the code; it is sent only to api.holfuy.com and never logged.
-  The service serves only public data (forecast and measured wind).
+  The service serves only public data (forecast and measured wind). The weather archive is a private R2 bucket
+  (`hpgt-data-archive`), written only by the service; read access for reports is a separate read-only R2 token.
 
 ## Verifying a publish
 
