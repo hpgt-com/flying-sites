@@ -16,6 +16,8 @@
   // The symbol in the circle before each rating, so the rating does not rest on colour alone.
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×", none: "–" };
   var block = el.closest(".block--now");
+  // The same verdict as a chip in the image at the top (site.njk), so it is seen before scrolling. Not without an assessment.
+  var heroStatus = document.getElementById("hero-status");
   // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML. The first part is the verdict:
   // the icon and the rating in large type.
   function show(rating, parts) {
@@ -26,6 +28,12 @@
     row.firstChild.setAttribute("aria-hidden", "true");
     el.replaceChildren.apply(el, [row].concat(parts.slice(1).map(function (p) { return make(p[0] === "strong" ? "strong" : "span", p[2], p[1]); })));
     el.hidden = false;
+    if (heroStatus) {
+      heroStatus.hidden = rating === "none";
+      heroStatus.setAttribute("data-rating", rating);
+      heroStatus.querySelector(".hero__status-icon").textContent = ICONS[rating] || ICONS.none;
+      heroStatus.querySelector(".hero__status-text").textContent = parts[0];
+    }
   }
 
   // Today's sunrise and sunset at the launch, at the bottom of the box.

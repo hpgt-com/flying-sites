@@ -806,16 +806,17 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 }
 .section-nav a[aria-current="true"] { background: var(--inverse-bg); color: var(--inverse-text); border-color: var(--inverse-bg); }
 .section-nav a {
-  flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px;
+  flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px;
   font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);
 }
-.site-page h2[id], .site-page section[id] { scroll-margin-top: 64px; }
+.site-page h2[id], .site-page h3[id], .site-page section[id], .map--site { scroll-margin-top: 72px; }
 /* Parts that can be folded (the points in the map, the details in «Kan jeg fly her nå?», the elevation profile). The heading is the button. */
 .fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
 .fold > summary::-webkit-details-marker { display: none; }
 .fold > summary::after { content: "+"; font: 600 24px/1 var(--font-body); color: var(--muted); }
 .fold[open] > summary::after { content: "–"; }
-.fold > summary > h2, .fold > summary > h3 { margin: 0; }
+.fold > summary > h2, .fold > summary > h3, .fold > summary > h4 { margin: 0; }
+.launch-fold > summary > h4 { font: 600 16px var(--font-body); }
 .fold[open] { display: flex; flex-direction: column; gap: 12px; }
 /* HTML order is the mobile order (title, Før du starter, content, right column), so screen readers
    and keyboard follow what is seen. No `order` here. */
@@ -857,6 +858,9 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 .hazard strong { font-size: 16px; }
 .hazard span { font-size: 15px; line-height: 1.45; }
 
+/* Luftrom inside «Før du starter»: a line above it, so it reads as its own part of the box. */
+.notice-sub { margin: 4px 0 0; padding-top: 14px; font-size: 20px; border-top: 1px solid var(--notice-line); }
+.block--notice-empty .notice-sub { border-top-color: var(--line); }
 .airspace { display: flex; flex-direction: column; gap: 8px; }
 .airspace > .muted, .airspace > .missing { font-size: 14px; line-height: 1.45; }
 
@@ -1019,17 +1023,39 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
   position: relative; display: flex; align-items: flex-end; min-height: 280px; margin: 0 -16px; overflow: hidden;
   background: linear-gradient(160deg, #2E5E6E, #1C2B33);
 }
+/* «‹ Alle flysteder» at the top left of the image, dark and see-through so it reads on any photo. 44 px tall. */
+.hero__back {
+  position: absolute; top: 12px; left: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; min-height: 44px;
+  padding: 0 14px 0 8px; border-radius: 999px; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: none;
+  background: rgba(17, 25, 29, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.hero__back:hover { background: rgba(17, 25, 29, 0.75); }
+.hero__back:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
 .hero__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17, 25, 29, 0) 35%, rgba(17, 25, 29, 0.82) 100%); }
 .hero__text { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px; color: #FFFFFF; }
 .hero h1 { font-size: 46px; color: #FFFFFF; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35); }
-.hero__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.hero__chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .hero__chips li {
   padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #FFFFFF;
   background: rgba(17, 25, 29, 0.45); border: 1px solid rgba(255, 255, 255, 0.55);
 }
 .hero__chips .hero__chip--warn { background: #8A2C0D; border-color: #8A2C0D; }
 .hero__chips .hero__chip--muted { border-style: dashed; font-weight: 400; }
+/* The assessment now as the first chip (site-wind.js), light like the rating chips on the home page so it reads on any
+   photo, with the same symbol as in «Kan jeg fly her nå?». A link down to that box, 44 px tall as a touch target. */
+.hero__chips .hero__status { --r: var(--wind-no); padding: 0; background: color-mix(in srgb, var(--r) 18%, #FFFFFF); border: 0; }
+.hero__chips .hero__status[hidden] { display: none; }
+.hero__status[data-rating="ok"] { --r: var(--wind-ok); }
+.hero__status[data-rating="maybe"] { --r: var(--wind-maybe); }
+.hero__status[data-rating="high"] { --r: var(--wind-high); }
+.hero__status a {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 9px; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--r);
+  font-size: 15px; font-weight: 700; color: color-mix(in srgb, var(--r) 40%, #1C2B33); text-decoration: none;
+}
+.hero__status a:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.hero__status-icon { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--r); color: #FFFFFF; font-size: 15px; }
+.hero__status[data-rating="maybe"] .hero__status-icon { color: #1C2B33; }
 .hero__eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); }
 /* The site's directions on the image: a white disc so the rose reads on any photo. Light colours also in the dark theme. */
 .hero__rose {
@@ -1169,6 +1195,7 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
   .site-page__body > .page-footer { grid-area: footer; margin-top: 24px; }
   .site-page__aside .block h2 { font-size: 24px; }
   .section-nav { margin: 0; border-radius: 0 0 12px 12px; }
+  .section-nav a { min-height: 36px; }
   .map--site { height: 440px; }
 }
 

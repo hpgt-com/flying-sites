@@ -4,15 +4,25 @@
 
   var FS = window.FlyingSites;
 
-  // On mobile, the points in the map and the winds aloft start folded, so the page is shorter. They are open in the HTML,
-  // so desktop and pages without JavaScript show everything.
+  // On mobile, the points in the map, the launches by direction, the images and the links start folded, so the page is
+  // shorter. They are open in the HTML, so desktop and pages without JavaScript show everything.
   if (window.matchMedia("(max-width: 1023px)").matches) {
     document.querySelectorAll("details[data-fold-mobile]").forEach(function (d) { d.open = false; });
   }
+  // A link to a part that is folded (from the row of links or an address with #) opens it, so the content is shown.
+  function openTarget(id) {
+    var el = id && document.getElementById(id);
+    var fold = el && el.closest("details");
+    if (fold && !fold.open) fold.open = true;
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (a) openTarget(decodeURIComponent(a.getAttribute("href").slice(1)));
+  });
+  openTarget(decodeURIComponent(location.hash.slice(1)));
 
   // The row of links to the parts of the page: the part in view is marked, and the row scrolls so its link is visible.
-  // The part counts as in view once its heading has passed under the row. At the bottom of the page the last part is
-  // marked, also when it is too short to reach the top.
+  // The part counts as in view once its heading has passed under the row.
   var nav = document.querySelector(".section-nav");
   if (nav) {
     var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
@@ -20,9 +30,21 @@
     var current = null, queued = false;
     var mark = function () {
       queued = false;
-      var line = nav.getBoundingClientRect().bottom + 24, on = -1;
-      targets.forEach(function (el, i) { if (el && el.getBoundingClientRect().top <= line) on = i; });
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) on = targets.length - 1;
+      // The part whose heading is closest above the line. Not simply the last one in the list: on desktop the right
+      // column («Før du starter», Bilder, Lenker) runs beside the left one, so the order on screen is not the list order.
+      var line = nav.getBoundingClientRect().bottom + 24, on = -1, best = -Infinity;
+      targets.forEach(function (el, i) {
+        var top = el ? el.getBoundingClientRect().top : Infinity;
+        if (top <= line && top > best) { best = top; on = i; }
+      });
+      // At the bottom of the page the last parts may be too short to reach the line: then the lowest heading on screen.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+        best = -Infinity;
+        targets.forEach(function (el, i) {
+          var top = el ? el.getBoundingClientRect().top : Infinity;
+          if (top < window.innerHeight && top > best) { best = top; on = i; }
+        });
+      }
       if (on === current) return;
       current = on;
       links.forEach(function (a, i) {
