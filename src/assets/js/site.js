@@ -339,22 +339,28 @@
         }
       }
       var mid = (lo + hi) / 2;
-      var s = "";
+      // Built with DOM calls, not innerHTML, so no text is ever read as markup.
+      svg.replaceChildren();
+      function add(tag, attrs, text) {
+        var node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+        if (text != null) node.textContent = text;
+        svg.appendChild(node);
+      }
       [hi, mid].forEach(function (v) {
-        s += '<line class="profile__grid" x1="' + LEFT + '" x2="' + (width - RIGHT) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '"></line>';
+        add("line", { class: "profile__grid", x1: LEFT, x2: width - RIGHT, y1: y(v).toFixed(1), y2: y(v).toFixed(1) });
       });
       [lo, mid, hi].forEach(function (v) {
-        s += '<text class="profile__axis" x="' + (LEFT - 6) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + Math.round(v) + "</text>";
+        add("text", { class: "profile__axis", x: LEFT - 6, y: (y(v) + 4).toFixed(1), "text-anchor": "end" }, String(Math.round(v)));
       });
-      s += '<text class="profile__axis" x="' + LEFT + '" y="' + (HEIGHT - 8) + '">0 km</text>';
-      s += '<text class="profile__axis" x="' + (width - RIGHT) + '" y="' + (HEIGHT - 8) + '" text-anchor="end">' + FS.formatNumber(total / 1000, 1) + " km</text>";
-      s += '<text class="profile__axis" x="4" y="' + (TOP - 2) + '">' + FS.escapeHtml(FS.t("site.masl")) + "</text>";
-      s += '<path class="profile__area" d="' + area + '"></path>';
-      s += '<path class="profile__line" d="' + line + '"></path>';
-      s += '<path class="profile__steep" d="' + steep + '"></path>';
-      s += '<line class="profile__cursor-line" y1="' + TOP + '" y2="' + (HEIGHT - BOTTOM) + '"></line>';
-      s += '<circle class="profile__cursor" r="6"></circle>';
-      svg.innerHTML = s;
+      add("text", { class: "profile__axis", x: LEFT, y: HEIGHT - 8 }, "0 km");
+      add("text", { class: "profile__axis", x: width - RIGHT, y: HEIGHT - 8, "text-anchor": "end" }, FS.formatNumber(total / 1000, 1) + " km");
+      add("text", { class: "profile__axis", x: 4, y: TOP - 2 }, FS.t("site.masl"));
+      add("path", { class: "profile__area", d: area });
+      add("path", { class: "profile__line", d: line });
+      add("path", { class: "profile__steep", d: steep });
+      add("line", { class: "profile__cursor-line", y1: TOP, y2: HEIGHT - BOTTOM });
+      add("circle", { class: "profile__cursor", r: 6 });
       moveTo(index);
     }
 
@@ -384,7 +390,7 @@
         b.setAttribute("aria-selected", Number(b.getAttribute("data-route")) === k ? "true" : "false");
       });
       if (!route.profile) {
-        svg.innerHTML = "";
+        svg.replaceChildren();
         summaryEl.textContent = FS.t("site.noProfile");
         return;
       }
