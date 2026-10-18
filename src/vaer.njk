@@ -59,4 +59,5 @@ eleventyComputed:
 
   <p class="muted weather-page__note">{{ t.weather.note }}</p>
 </main>
+<script type="application/json" id="weather-rules">{{ windRules | json | safe }}</script>
 <script type="application/json" id="sites-data">{{ collections.sites | stationSites(lang) | json | safe }}</script>

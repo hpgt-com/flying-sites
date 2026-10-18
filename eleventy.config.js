@@ -115,6 +115,7 @@ export default function (eleventyConfig) {
       lon: s.data.launch.lon,
       primary: s.data.wind_directions?.primary ?? [],
       possible: s.data.wind_directions?.possible ?? [],
+      maxWind: s.data.wind_limits?.max_wind ?? null,
     }));
   });
 

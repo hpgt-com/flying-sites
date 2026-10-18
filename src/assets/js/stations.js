@@ -206,7 +206,7 @@
     if (!siteId || !FS || !FS.readJson) return null;
     if (!sites) {
       sites = {};
-      (FS.readJson("sites-data") || []).forEach(function (s) { sites[s.id] = { primary: s.primary, possible: s.possible, lat: s.lat, lon: s.lon, name: s.name, url: s.url }; });
+      (FS.readJson("sites-data") || []).forEach(function (s) { sites[s.id] = { primary: s.primary, possible: s.possible, lat: s.lat, lon: s.lon, name: s.name, url: s.url, maxWind: s.maxWind == null ? null : s.maxWind }; });
       var one = FS.readJson("site-data"), page = document.getElementById("station-now");
       if (one && page) {
         var dirs = one.wind_directions || {}, launch = one.launch || {};
@@ -248,8 +248,8 @@
       // The arrow twice: wide in the card colour under it, so it stands out on both blank and filled sectors.
       ["station-compass__halo", "station-compass__arrow"].forEach(function (cls) {
         var a = svgEl("g", { class: cls }, g);
-        svgEl("line", { x1: 80, y1: 26, x2: 80, y2: 112 }, a);
-        svgEl("path", { d: "M80 140l-16-28h32z" }, a);
+        svgEl("line", { x1: 80, y1: 36, x2: 80, y2: 108 }, a);
+        svgEl("path", { d: "M80 130l-11-23h22z" }, a);
       });
     } else {
       svgEl("circle", { cx: 80, cy: 80, r: 9, class: "rose__center" }, svg);

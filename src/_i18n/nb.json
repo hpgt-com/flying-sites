@@ -323,7 +323,6 @@
     "sortWind": "Sterkest vind først",
     "tableTitle": "Alle stasjoner",
     "loading": "Henter målinger …",
-    "failed": "Fikk ikke hentet målingene. Prøver igjen om litt.",
     "noScript": "Siden trenger JavaScript for å vise målingene.",
     "note": "Målt på Holfuy-stasjonene. Endringen regnes fra målingen nærmest starten av perioden til den siste. «Urolig» betyr at kastene i snitt ligger mer enn 4 m/s over middelvinden. Grov informasjon, sjekk alltid selv.",
     "menuLink": "Målt vind",
@@ -608,6 +607,10 @@
       "tempRange": "Temperatur siste {hours} t: laveste {min} °C, høyeste {max} °C",
       "tempTitle": "Temperatur",
       "masl": "{m} moh"
+    },
+    "weather": {
+      "failed": "Fikk ikke hentet målingene. Prøver igjen om litt.",
+      "roughMeasured": "Vurdert fra målingen nå, med samme regler som varselet. Grov vurdering, sjekk alltid selv."
     }
   },
   "about": {
