@@ -120,19 +120,49 @@
     return { top: Math.max(4, Math.ceil(max / step) * step), step: step };
   }
 
-  // The compass: where the wind comes from, as an arrow blowing across the dial in the direction the wind blows.
-  // Without a direction only the dial.
-  function compass(dir) {
-    var L = globalThis.FlyingSites.DIRECTION_LABELS;
-    var svg = svgEl("svg", { class: "station-compass", viewBox: "0 0 64 64", "aria-hidden": "true" });
-    svgEl("circle", { class: "station-compass__dial", cx: 32, cy: 32, r: 23 }, svg);
-    [["N", 32, 6], ["E", 59, 32], ["S", 32, 59], ["W", 5, 32]].forEach(function (p) {
+  // The launch directions of a flying site ({ primary, possible }), from the page: the site page has its own (site-data), the
+  // home page all sites (sites-data). Null for a station that is not on a flying site.
+  var siteDirs = null;
+  function launchDirs(siteId) {
+    var FS = globalThis.FlyingSites;
+    if (!siteId || !FS || !FS.readJson) return null;
+    if (!siteDirs) {
+      siteDirs = {};
+      (FS.readJson("sites-data") || []).forEach(function (s) { siteDirs[s.id] = { primary: s.primary, possible: s.possible }; });
+      var one = FS.readJson("site-data"), page = document.getElementById("station-now");
+      if (one && one.wind_directions && page) siteDirs[page.getAttribute("data-site")] = one.wind_directions;
+    }
+    return siteDirs[siteId] || null;
+  }
+
+  // «startretning», «mulig retning» or «utenfor startretningene»: where the measured wind is on the site's wind rose.
+  function launchText(dir, dirs) {
+    if (!isNum(dir) || !dirs) return "";
+    return text("stations.launch_" + globalThis.FlyingSites.directionType({ primary: dirs.primary || [], possible: dirs.possible || [] }, W().directionCode(dir)));
+  }
+
+  // The wind rose, as on the site page: the site's launch directions in the sectors (all blank for a station that is not
+  // on a flying site), with the measured wind as an arrow across it in the direction the wind blows.
+  function compass(dir, dirs) {
+    var FS = globalThis.FlyingSites, L = FS.DIRECTION_LABELS;
+    var svg = svgEl("svg", { class: "rose station-compass", viewBox: "-14 -14 188 188", "aria-hidden": "true" });
+    FS.DIRECTIONS.forEach(function (code, i) {
+      var type = dirs ? FS.directionType({ primary: dirs.primary || [], possible: dirs.possible || [] }, code) : "none";
+      svgEl("path", { d: FS.ROSE_PATHS[i], class: "sector sector--" + type }, svg);
+    });
+    [["N", 80, 0], ["E", 166, 80], ["S", 80, 160], ["W", -6, 80]].forEach(function (p) {
       svgEl("text", { class: "station-compass__label", x: p[1], y: p[2] }, svg).textContent = L[p[0]];
     });
     if (isNum(dir)) {
-      var g = svgEl("g", { transform: "rotate(" + Math.round(dir) + " 32 32)" }, svg);
-      svgEl("line", { class: "station-compass__shaft", x1: 32, y1: 11, x2: 32, y2: 46 }, g);
-      svgEl("path", { class: "station-compass__head", d: "M32 54l-7-11h14z" }, g);
+      var g = svgEl("g", { transform: "rotate(" + Math.round(dir) + " 80 80)" }, svg);
+      // The arrow twice: wide in the card colour under it, so it stands out on both blank and filled sectors.
+      ["station-compass__halo", "station-compass__arrow"].forEach(function (cls) {
+        var a = svgEl("g", { class: cls }, g);
+        svgEl("line", { x1: 80, y1: 26, x2: 80, y2: 112 }, a);
+        svgEl("path", { d: "M80 140l-16-28h32z" }, a);
+      });
+    } else {
+      svgEl("circle", { cx: 80, cy: 80, r: 9, class: "rose__center" }, svg);
     }
     return svg;
   }
@@ -141,14 +171,18 @@
   function windNow(item) {
     var w = item.wind || {};
     var box = make("div", "station-now__wind");
-    box.appendChild(compass(w.dir));
+    var dirs = launchDirs(item.site);
+    box.appendChild(compass(w.dir, dirs));
     var nums = make("div", "station-now__nums");
     nums.appendChild(make("strong", "station-now__speed", text("stations.speed", { speed: value(w.speed) })));
     var more = [];
     if (isNum(w.gust)) more.push(text("stations.gustValue", { gust: value(w.gust) }));
     if (isNum(w.min)) more.push(text("stations.minValue", { min: value(w.min) }));
     if (more.length) nums.appendChild(make("span", "station-now__more", more.join(" · ")));
-    if (isNum(w.dir)) nums.appendChild(make("span", "station-now__dir", text("stations.from", { dir: dirText(w.dir) })));
+    if (isNum(w.dir)) {
+      var where = launchText(w.dir, dirs);
+      nums.appendChild(make("span", "station-now__dir", text("stations.from", { dir: dirText(w.dir) }) + (where ? " · " + where : "")));
+    }
     box.appendChild(nums);
     return box;
   }
@@ -264,6 +298,15 @@
     return wrap;
   }
 
+  // Where the measurement comes from: «Kilde: Holfuy, stasjon 490», with the source as a link to the station there.
+  function sourceLine(item) {
+    var p = make("p", "station__source", text("stations.source", { source: "" }).trim() + " ");
+    var a = stationLink(item);
+    a.firstChild.textContent = item.source || "Holfuy";
+    p.append(a, document.createTextNode(text("stations.stationId", { id: String(item.id) })));
+    return p;
+  }
+
   // A station as a card: the name (to Holfuy) and how old the measurement is, the wind now with the compass, the rest,
   // and the chart of the last hours. An old measurement shows only its age and the chart. As li in the Vær tab, as div
   // on the site page (with «Målt nå på» before the name), as div in the map's popup (without the chart on small maps).
@@ -281,6 +324,7 @@
     if (other && !old) el.appendChild(make("span", "station__other", other));
     var graph = !noChart && chart(item);
     if (graph) el.appendChild(graph);
+    el.appendChild(sourceLine(item));
     return el;
   }
   function listItem(item, nowMs) { return card(item, nowMs, "li", false); }
@@ -294,7 +338,13 @@
       if (document.hidden) return;
       fetch(url, { credentials: "omit" })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) { if (isStationsData(d) && d.fetched !== last) { last = d.fetched; done(d); } })
+        .then(function (d) {
+          if (!isStationsData(d) || d.fetched === last) return;
+          last = d.fetched;
+          // Each station carries the source of the data set, for the card's source line.
+          d.items.forEach(function (i) { if (typeof i.source !== "string") i.source = typeof d.source === "string" ? d.source : ""; });
+          done(d);
+        })
         .catch(function () {});
     }
     load();
@@ -332,6 +382,7 @@
     dirText: dirText,
     scale: scale,
     compass: compass,
+    launchText: launchText,
     listItem: listItem,
     card: card,
     chart: chart,

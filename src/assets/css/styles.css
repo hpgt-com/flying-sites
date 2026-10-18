@@ -1633,11 +1633,14 @@ body.sheet-open { overflow: hidden; }
 .station-now__nums { display: flex; flex-direction: column; gap: 2px; }
 .station-now__speed { font: 700 24px/1.1 var(--font-body); font-variant-numeric: tabular-nums; }
 .station-now__more, .station-now__dir { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.station-compass { width: 64px; height: 64px; flex: none; }
-.station-compass__dial { fill: none; stroke: var(--line); stroke-width: 1.5; }
-.station-compass__label { font: 600 9px var(--font-body); fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
-.station-compass__shaft { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
-.station-compass__head { fill: var(--text); }
+/* The wind rose as on the site page (.rose), with the measured wind as an arrow across it. */
+.station-compass { width: 84px; height: 84px; flex: none; overflow: visible; }
+.station-compass .station-compass__label { font: 600 24px var(--font-body); fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+.station-compass__halo line, .station-compass__halo path { stroke: var(--card); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; fill: var(--card); }
+.station-compass__arrow line { stroke: var(--text); stroke-width: 7; stroke-linecap: round; }
+.station-compass__arrow path { fill: var(--text); }
+.station__source { margin: 0; font-size: 12px; color: var(--muted); }
+.station__source a { color: inherit; }
 /* The chart of the last hours: the band from the lowest wind to the gusts, the mean wind as a line, arrows for the direction. */
 .station-graph { position: relative; margin: 0; display: grid; gap: 4px; }
 .station-graph__svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; border-radius: 4px; }

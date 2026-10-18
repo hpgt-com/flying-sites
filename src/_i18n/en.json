@@ -550,7 +550,12 @@
       "chartLabel": "Wind over the last {hours} hours: mean wind between {lo} and {hi} m/s, gusts up to {gust} m/s.",
       "chartKeys": "The arrow keys show each measurement.",
       "legendMean": "Mean wind",
-      "legendBand": "From lowest wind to gusts"
+      "legendBand": "From lowest wind to gusts",
+      "source": "Source: {source}",
+      "stationId": ", station {id}",
+      "launch_primary": "launch direction",
+      "launch_possible": "possible direction",
+      "launch_none": "outside the launch directions"
     }
   },
   "about": {

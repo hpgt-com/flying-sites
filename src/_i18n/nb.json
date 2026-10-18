@@ -550,7 +550,12 @@
       "chartLabel": "Vind de siste {hours} timene: middelvind mellom {lo} og {hi} m/s, kast opptil {gust} m/s.",
       "chartKeys": "Piltastene viser hver måling.",
       "legendMean": "Middelvind",
-      "legendBand": "Fra laveste vind til kast"
+      "legendBand": "Fra laveste vind til kast",
+      "source": "Kilde: {source}",
+      "stationId": ", stasjon {id}",
+      "launch_primary": "startretning",
+      "launch_possible": "mulig retning",
+      "launch_none": "utenfor startretningene"
     }
   },
   "about": {
