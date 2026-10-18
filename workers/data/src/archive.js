@@ -1,10 +1,12 @@
 // The archive: data older than the store keeps (the last 7 days) is written as files to R2 (env.ARCHIVE), one file per
 // station per day (UTC), so it lasts for years at little cost and reports can run on the files (DuckDB, Excel).
-// The files are laid out to be loaded into a database later: every row carries the station, so files from all stations
+// The files are laid out to be loaded into a database later: every row carries the source and the station, so files from all stations
 // fit one table, and the folders use the key=value form (holfuy/station=490/year=2026/2026-10-16.csv) that DuckDB,
 // BigQuery, Athena and Spark read as columns, so a query can pick stations and years without opening every file.
 // Nothing is deleted from the store before its day is in the archive, so without R2 the store keeps everything.
 // Pure helpers here; the sources write their own files. Tested in test/data-worker.test.js.
+
+import { FIELDS } from "./measurements.js";
 
 const DAY = 86400000;
 
@@ -36,13 +38,16 @@ const csv = (header, rows) => header.join(",") + "\n" + rows.map((r) => r.map(ce
 // Where a station's day goes in the archive.
 export const dayPath = (source, station, day) => `${source}/station=${station}/year=${day.slice(0, 4)}/${day}.csv`;
 
-// Measurements as CSV, one row each with the station, times in UTC and the units in the header.
+// Measurements as CSV, one row each with the source and the station, times in UTC, a column per field in measurements.js with the unit
+// in its name, and the other values as JSON in extra_json.
 export function measurementsCsv(rows) {
-  return csv(["station", "time_utc", "direction_deg", "speed_ms", "gust_ms", "min_ms", "temperature_c"],
-    rows.map((r) => [r.station, r.time, r.dir, r.speed, r.gust, r.min, r.temperature]));
+  return csv(["source", "station", "time_utc", ...FIELDS.map((f) => f.csv), "extra_json"],
+    rows.map((r) => [r.source, r.station, r.time, ...FIELDS.map((f) => r[f.key]), r.extra ? JSON.stringify(r.extra) : null]));
 }
 
-// The stations as CSV (number, name, position), so reports and maps can show names and places.
+// The stations as CSV (source, number, name, the station's model when known, the flying site, position), so reports and
+// maps can show names and places, and tell measurements from different kinds of stations apart.
 export function stationsCsv(stations) {
-  return csv(["station", "name", "site", "lat", "lon", "altitude_m"], stations.map((s) => [s.id, s.name, s.site, s.lat, s.lon, s.altitude]));
+  return csv(["source", "station", "name", "model", "site", "lat", "lon", "altitude_m"],
+    stations.map((s) => [s.source, s.id, s.name, s.model, s.site, s.lat, s.lon, s.altitude]));
 }

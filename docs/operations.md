@@ -109,8 +109,11 @@ the menu and is marked `noindex`. It shows per site:
 ## Weather archive (R2)
 
 - One CSV per station per day (UTC) in the R2 bucket `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
-  (columns `station, time_utc, direction_deg, speed_ms, gust_ms, min_ms, temperature_c`), and the stations in
-  `holfuy/stations.csv` (`station, name, site, lat, lon, altitude_m`). Written after midnight UTC for the day before
+  (columns `source, station, time_utc, direction_deg, speed_ms, gust_ms, min_ms, temperature_c, humidity_pct,
+  pressure_hpa, rain_mm, extra_json`), and the stations in `holfuy/stations.csv` (`source, station, name, model, site,
+  lat, lon, altitude_m`). A station without a sensor leaves its column empty. Other numbers a station sends are kept in
+  `extra_json` until they get a column of their own (`workers/data/src/measurements.js`; the store adds the column).
+  `source` + `station` identify a station, since two providers can use the same number. Written after midnight UTC for the day before
   (`workers/data/src/archive.js`).
 - The folders use the `key=value` form, so DuckDB, BigQuery, Athena and Spark read `station` and `year` as columns, and
   every row carries the station, so all files load into one table. Example with DuckDB and R2's S3 address:

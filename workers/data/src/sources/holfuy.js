@@ -8,9 +8,12 @@
 // deleted from the store only after that.
 
 import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../archive.js";
+import { extraValues, num } from "../measurements.js";
 
 export const DATASET = "stations";
 export const SOURCE = "Holfuy";
+// The source's key in the store and the archive (measurements.js).
+export const KEY = "holfuy";
 export const LICENSE = "Holfuy, med tillatelse";
 export const HISTORY_HOURS = 6;
 // Measurements older than this are deleted from the store once they are in the archive, so the store stays small.
@@ -31,11 +34,14 @@ export function holfuyUrl(ids, key, base = API_URL) {
   return url;
 }
 
-const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : null);
+// Holfuy's names for what has its own field, or is not a measurement (units, the station's position and name).
+const KNOWN = new Set(["stationId", "stationName", "dateTime", "location.latitude", "location.longitude", "location.altitude",
+  "wind.direction", "wind.speed", "wind.gust", "wind.min", "wind.unit", "temperature", "humidity", "pressure", "rain"]);
 
 // Holfuy answers with an object for one station and { measurements: [...] } for several. Each measurement becomes
-// { station, name, lat, lon, altitude, time, dir, speed, gust, min, temperature }, with null for what is missing.
-// Measurements without a station number or a valid time are skipped.
+// { source, station, name, lat, lon, altitude, time } and the fields in measurements.js (wind, temperature, humidity, pressure,
+// rain), with null for what the station does not measure, and other numbers in extra. Measurements without a station
+// number or a valid time are skipped.
 export function parseHolfuy(data) {
   const list = Array.isArray(data?.measurements) ? data.measurements : data && typeof data === "object" ? [data] : [];
   return list.flatMap((m) => {
@@ -45,12 +51,14 @@ export function parseHolfuy(data) {
     const loc = m.location ?? {};
     const wind = m.wind ?? {};
     return [{
+      source: KEY,
       station,
       name: typeof m.stationName === "string" ? m.stationName.slice(0, 80) : null,
       lat: num(loc.latitude), lon: num(loc.longitude), altitude: num(loc.altitude),
       time: new Date(time).toISOString(),
       dir: num(wind.direction), speed: num(wind.speed), gust: num(wind.gust), min: num(wind.min),
-      temperature: num(m.temperature),
+      temperature: num(m.temperature), humidity: num(m.humidity), pressure: num(m.pressure), rain: num(m.rain),
+      extra: extraValues(m, KNOWN),
     }];
   });
 }
@@ -60,17 +68,22 @@ export function parseHolfuy(data) {
 // has time null.
 export function buildStations(stations, rows, meta, now = Date.now()) {
   const items = stations.map((s) => {
-    const own = rows.filter((r) => r.station === s.id).sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
+    const own = rows.filter((r) => String(r.station) === String(s.id)).sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
     const last = own[own.length - 1];
     const m = meta[s.id] ?? {};
     return {
       id: s.id,
       name: s.name ?? m.name ?? String(s.id),
+      model: s.model ?? null,
       site: s.site ?? null,
       lat: m.lat ?? null, lon: m.lon ?? null, altitude: m.altitude ?? null,
       time: last?.time ?? null,
       wind: last ? { dir: last.dir, speed: last.speed, gust: last.gust, min: last.min } : null,
       temperature: last?.temperature ?? null,
+      humidity: last?.humidity ?? null,
+      pressure: last?.pressure ?? null,
+      rain: last?.rain ?? null,
+      extra: last?.extra ?? null,
       history: own.map((r) => [r.time, r.dir, r.speed, r.gust]),
     };
   });
@@ -92,7 +105,7 @@ export async function run(store, env, stations, now = Date.now()) {
   for (const m of own) meta[m.station] = { name: m.name, lat: m.lat, lon: m.lon, altitude: m.altitude };
   await store.putState("holfuy-meta", meta);
   await archive(store, env, stations, now);
-  const rows = await store.measurementsSince(new Date(now - HISTORY_HOURS * 3600000).toISOString());
+  const rows = await store.measurementsSince(KEY, new Date(now - HISTORY_HOURS * 3600000).toISOString());
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(stations, rows, meta, now)));
 }
 
@@ -101,23 +114,23 @@ export async function run(store, env, stations, now = Date.now()) {
 async function archive(store, env, stations, now) {
   if (!env.ARCHIVE) return;
   const state = (await store.getState("holfuy-archive")) ?? { through: null };
-  const days = daysToArchive(await store.oldestMeasurement(), state.through, now);
+  const days = daysToArchive(await store.oldestMeasurement(KEY), state.through, now);
   if (days.length) {
     const meta = (await store.getState("holfuy-meta")) ?? {};
-    const list = stations.map((s) => ({ id: s.id, name: s.name ?? meta[s.id]?.name ?? null, site: s.site ?? null, lat: meta[s.id]?.lat ?? null, lon: meta[s.id]?.lon ?? null, altitude: meta[s.id]?.altitude ?? null }));
-    await env.ARCHIVE.put("holfuy/stations.csv", stationsCsv(list), { httpMetadata: { contentType: "text/csv; charset=utf-8" } });
+    const list = stations.map((s) => ({ source: KEY, id: s.id, name: s.name ?? meta[s.id]?.name ?? null, model: s.model ?? null, site: s.site ?? null, lat: meta[s.id]?.lat ?? null, lon: meta[s.id]?.lon ?? null, altitude: meta[s.id]?.altitude ?? null }));
+    await env.ARCHIVE.put(`${KEY}/stations.csv`, stationsCsv(list), { httpMetadata: { contentType: "text/csv; charset=utf-8" } });
   }
   for (const day of days) {
-    const rows = await store.measurementsBetween(day + "T00:00:00.000Z", day + "T23:59:59.999Z");
+    const rows = await store.measurementsBetween(KEY, day + "T00:00:00.000Z", day + "T23:59:59.999Z");
     for (const s of stations) {
-      const own = rows.filter((r) => r.station === s.id);
+      const own = rows.filter((r) => String(r.station) === String(s.id));
       if (own.length) {
-        await env.ARCHIVE.put(dayPath("holfuy", s.id, day), measurementsCsv(own), { httpMetadata: { contentType: "text/csv; charset=utf-8" } });
+        await env.ARCHIVE.put(dayPath(KEY, s.id, day), measurementsCsv(own), { httpMetadata: { contentType: "text/csv; charset=utf-8" } });
       }
     }
     state.through = day;
     await store.putState("holfuy-archive", state);
   }
   const before = pruneBefore(now, KEEP_DAYS, state.through);
-  if (before) await store.prune(before);
+  if (before) await store.prune(KEY, before);
 }
