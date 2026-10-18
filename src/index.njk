@@ -17,6 +17,7 @@ eleventyComputed:
 scripts:
   - /assets/leaflet-markercluster/leaflet.markercluster.js
   - /assets/js/wind.js
+  - /assets/js/stations.js
   - /assets/js/home.js
 ---
 {%- import "macros.njk" as m with context -%}
@@ -135,6 +136,12 @@ scripts:
     </div>
 
     <div class="home-pane" id="pane-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
+      {#- Measured wind from the weather stations (stations.js, data service): the latest measurement and the last hours. -#}
+      <section class="stations" id="stations" aria-labelledby="stations-title" data-url="{{ site.stationsUrl }}" hidden>
+        <h2 id="stations-title">{{ t.home.stationsTitle }}</h2>
+        <ul class="station-list" id="station-list"></ul>
+        <p class="muted stations__note">{{ t.home.stationsNote }}</p>
+      </section>
       {#- Day plan («Når kan det passe?»): time windows per site for the next few days, from the forecast (home.js, dayWindows in wind.js). -#}
       {% if forecast %}
       <section class="day-plan" id="day-plan" aria-labelledby="day-plan-title" hidden>

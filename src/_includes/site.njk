@@ -6,6 +6,7 @@ bodyClass: page-site
 scripts:
   - /assets/leaflet-markercluster/leaflet.markercluster.js
   - /assets/js/wind.js
+  - /assets/js/stations.js
   - /assets/js/site.js
   - /assets/js/site-wind.js
   - /assets/js/windgram.js
@@ -77,6 +78,9 @@ scripts:
       {#- Scrolls sideways when the cards do not fit, so it can take focus and be scrolled with the arrow keys. -#}
       <ol class="hour-cards" id="hour-cards" aria-label="{{ t.site.next12 }}" tabindex="0" hidden></ol>
       <p class="hour-cards__key" id="hour-cards-key" hidden>{{ t.site.hourCardsKey }}</p>
+      {#- The weather station on this flying site, when it has one: the wind measured now, with a link to the station
+          (stations.js; the stations and their sites are in workers/data/src/stations.js). -#}
+      <p class="station-now" id="station-now" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></p>
       {% if wind_limits and wind_limits.max_wind %}<p class="now-limit">{{ t.site.siteMaxWind | fmt({ m: wind_limits.max_wind }) }}</p>{% endif %}
       <details class="fold now-48" id="now-48" hidden>
         <summary><h3>{{ t.site.next48 }}</h3></summary>
@@ -363,6 +367,8 @@ scripts:
         <div class="now-links">
           {% if external.yr_id %}<a class="btn" href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener">{{ m.icon("cloud") }}Yr{{ m.external() }}</a>{% endif %}
           <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">{{ m.icon("wind") }}Windy{{ m.external() }}</a>
+          {#- The site's weather station at Holfuy, shown by stations.js when the site has one. -#}
+          <a class="btn" id="station-link" href="https://holfuy.com/" target="_blank" rel="noopener" hidden>{{ m.icon("wind") }}Holfuy{{ m.external() }}</a>
         </div>
         </div>
         <div class="link-group">

@@ -19,7 +19,8 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   scripts), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
   GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
-  `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.workers.dev`).
+  `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.workers.dev`). The station
+  data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
 - The forecast from the data service is only used when it has the expected shape (times as strings, rows of numbers
   or null; `isNewerForecast` in `wind.js`), and it is never parsed as HTML.
 - The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles

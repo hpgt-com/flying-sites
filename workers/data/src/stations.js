@@ -4,8 +4,8 @@
 // flying site the station belongs to (its folder name under src/sites/), when it has one. The API key is the secret HOLFUY_KEY in
 // Cloudflare, never here.
 //
-// The club's key gives access to HPGT Heia and Modellflystripa.
+// The club's key gives access to HPGT Heia (490, on the flying site Heia) and Modellflystripa (820).
 export const HOLFUY_STATIONS = [
-  { id: 490 },
+  { id: 490, site: "heia" },
   { id: 820 },
 ];

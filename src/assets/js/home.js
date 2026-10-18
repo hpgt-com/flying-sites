@@ -313,6 +313,7 @@
   var map = FS.createMap(mapEl);
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
   FS.addRadarLayer(map);
+  addStations();
   // On desktop the map fills its column and nothing scrolls, so the wheel zooms. Elsewhere the wheel scrolls the page,
   // and Ctrl/Cmd + wheel zooms (common.js).
   FS.wheelNeedsCtrl(map, function () { return MOBILE.matches; });
@@ -1124,6 +1125,48 @@
   }
   document.addEventListener("visibilitychange", function () { if (!document.hidden) recheck(); });
   setInterval(recheck, 60 * 1000);
+
+  // --- Weather stations (stations.js) ---
+  // The measured wind as a map layer «Værstasjoner» (on by default): a dark box with an arrow for where the wind blows and
+  // the mean wind, dimmed when the measurement is old. A tap shows the station. The same stations as a list in the Vær tab.
+  function addStations() {
+    var ST = window.FlyingSitesStations;
+    var stationsEl = document.getElementById("stations");
+    var listEl2 = document.getElementById("station-list");
+    if (!ST || !stationsEl || !map.layersControl) return;
+    var layer = L.layerGroup().addTo(map);
+    map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", FS.t("stations.layer")));
+    function popup(item, now) {
+      var box = ST.make("div", "station-popup");
+      box.appendChild(ST.make("strong")).appendChild(ST.stationLink(item));
+      var wind = ST.windText(item);
+      if (wind && !ST.isOld(item, now)) box.appendChild(ST.make("span", null, wind));
+      var other = ST.otherText(item);
+      if (other && !ST.isOld(item, now)) box.appendChild(ST.make("span", null, other));
+      box.appendChild(ST.make("span", "muted", ST.ageText(item, now)));
+      return box;
+    }
+    function icon(item, now) {
+      var old = ST.isOld(item, now), w = item.wind;
+      var speed = w && typeof w.speed === "number" && !old ? String(Math.round(w.speed)) : "–";
+      // Numbers only in the HTML (the direction as a rotation, the speed as digits).
+      var arrow = w && typeof w.dir === "number" && !old
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir + 180) + 'deg)"><path d="M12 3l6 16-6-4-6 4z" fill="currentColor"/></svg>'
+        : "";
+      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""), html: arrow + "<span>" + speed + "</span>", iconSize: [44, 26], iconAnchor: [22, 13] });
+    }
+    ST.watch(stationsEl.getAttribute("data-url"), function (data) {
+      var now = Date.now();
+      layer.clearLayers();
+      data.items.forEach(function (item) {
+        if (typeof item.lat !== "number" || typeof item.lon !== "number") return;
+        L.marker([item.lat, item.lon], { icon: icon(item, now), keyboard: true, title: item.name, zIndexOffset: 500 })
+          .bindPopup(popup(item, now)).addTo(layer);
+      });
+      listEl2.replaceChildren.apply(listEl2, data.items.map(function (item) { return ST.listItem(item, now); }));
+      stationsEl.hidden = !data.items.length;
+    });
+  }
 
   readHash();
 
