@@ -242,7 +242,7 @@ test("the day plan merges hours with the same assessment and skips dark hours", 
   assert.equal(days["2026-10-09"][1].gust, null); // gusts missing from the forecast
 });
 
-test("a forecast from the weather service is used only when it is newer, well formed and has every launch", () => {
+test("a forecast from the data service is used only when it is newer, well formed and has every launch", () => {
   const page = { fetched: "2026-10-18T12:00:00Z", times: ["2026-10-18T12:00:00Z"], sites: { a: [[200, 5, 9, 0]], b: [null] } };
   const live = { fetched: "2026-10-18T15:00:00Z", times: ["2026-10-18T15:00:00Z", "2026-10-18T16:00:00Z"], sites: { a: [[200, 5, 9, 0], null], b: [[180, 3, null, null], [180, 3, 6, 0.2]] } };
   assert.equal(W.isNewerForecast(live, page), true);

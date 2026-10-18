@@ -1,8 +1,8 @@
 {
-  "name": "hpgt-flysteder-forecast",
+  "name": "hpgt-flysteder-data",
   "version": "1.0.0",
   "private": true,
-  "description": "Værtjenesten for flysteder.hpgt.com: henter MET-varselet på Cloudflare Workers",
+  "description": "Datatjenesten for flysteder.hpgt.com på Cloudflare Workers: værvarsel og værstasjoner",
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy"
