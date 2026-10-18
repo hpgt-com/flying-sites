@@ -60,8 +60,8 @@
     return !Number.isFinite(fetched) || now - fetched > rules.maxForecastAgeHours * HOUR;
   }
 
-  // --- The forecast from the weather service ---
-  // The pages carry the forecast from the build, which GitHub may build late. The weather service (workers/forecast)
+  // --- The forecast from the data service ---
+  // The pages carry the forecast from the build, which GitHub may build late. The data service (workers/data)
   // fetches MET every few minutes, and the pages use its forecast when it is newer. Only a forecast in the right shape
   // (hours as times, a row per hour with numbers or null), newer than the page's, and with every launch the page has.
   function isNewerForecast(candidate, current) {
@@ -80,7 +80,7 @@
     return Object.keys(current.sites || {}).every(function (id) { return ids.indexOf(id) !== -1; });
   }
 
-  // Fetches the forecast from the weather service, and calls done(forecast) only when isNewerForecast holds. On any
+  // Fetches the forecast from the data service, and calls done(forecast) only when isNewerForecast holds. On any
   // error (offline, the service down) nothing happens, and the page keeps the forecast it has.
   function fetchNewerForecast(url, current, done) {
     if (!url || typeof fetch !== "function") return;

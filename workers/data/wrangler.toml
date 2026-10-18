@@ -1,0 +1,23 @@
+# The data service (src/index.js). Deployed from main by .github/workflows/data-worker.yml, with the token and account in
+# the GitHub environment «cloudflare». The Holfuy key is the secret HOLFUY_KEY, set in Cloudflare (Workers & Pages →
+# data → Settings → Variables and Secrets); deploys keep it.
+name = "data"
+main = "src/index.js"
+compatibility_date = "2026-09-30"
+workers_dev = true
+
+# The store: one Durable Object with SQLite (src/store.js).
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "Store"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Store"]
+
+[triggers]
+# Every minute: each source has its own interval in src/index.js (INTERVALS), so one schedule serves them all.
+crons = ["* * * * *"]
+
+[observability]
+enabled = true

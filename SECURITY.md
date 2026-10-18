@@ -19,8 +19,8 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   scripts), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
   GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
-  `connect-src` allows the site, GoatCounter, RainViewer and the weather service (`forecast.hpgt.workers.dev`).
-- The forecast from the weather service is only used when it has the expected shape (times as strings, rows of numbers
+  `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.workers.dev`).
+- The forecast from the data service is only used when it has the expected shape (times as strings, rows of numbers
   or null; `isNewerForecast` in `wind.js`), and it is never parsed as HTML.
 - The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles
   (fetched with CORS and without cookies, at most 300). Responses from GoatCounter, Yr and other third parties are
@@ -55,13 +55,15 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   `main` and weekly. The results are in Code scanning and behind the badge in README.
 - Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
   key files.
-- The weather service (`workers/forecast`) runs in the club's Cloudflare account «HPGT». It is published by
-  `forecast-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
+- The data service (`workers/data`) runs in the club's Cloudflare account «HPGT». It is published by
+  `data-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
   environment `cloudflare`, which only `main` may use, so a PR branch cannot publish. The token may only change Workers
-  and KV in the HPGT account (Workers Scripts, Workers KV Storage, Workers Tail, Account Settings read, and the user's
+  (including their Durable Objects) and KV in the HPGT account (Workers Scripts, Workers KV Storage, Workers Tail, Account Settings read, and the user's
   own details and memberships read), has no access to domains or DNS, and expires on 18.10.2027. The account has
-  two-factor sign-in with a security key and an authenticator app. The service has no secrets of its own and serves
-  only public forecast data.
+  two-factor sign-in with a security key and an authenticator app. The service's only secret is the Holfuy key
+  (`HOLFUY_KEY`), set in Cloudflare and never in GitHub or the code; it is sent only to api.holfuy.com and never logged.
+  The service serves only public data (forecast and measured wind). The weather archive is a private R2 bucket
+  (`hpgt-data-archive`), written only by the service; read access for reports is a separate read-only R2 token.
 
 ## Verifying a publish
 

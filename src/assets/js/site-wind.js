@@ -177,7 +177,7 @@
   render();
   // The space kept for the box while it was empty (site.njk, styles.css) is no longer needed.
   if (block) block.classList.remove("block--now-wait");
-  // A newer forecast for this launch from the weather service (workers/forecast), when the page's own is older.
+  // A newer forecast for this launch from the data service (workers/data), when the page's own is older.
   W.fetchNewerForecast(data.live, forecast, function (newer) {
     forecast = { fetched: newer.fetched, updated: newer.updated, times: newer.times, sites: {} };
     forecast.sites[data.site.id] = newer.sites[data.site.id];

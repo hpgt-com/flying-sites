@@ -87,14 +87,43 @@ the menu and is marked `noindex`. It shows per site:
 
 - Fetched from MET on every build. `deploy.yml` builds at xx:17 and xx:47, but GitHub may delay or skip scheduled
   runs.
-- The **weather service** (`workers/forecast`, Cloudflare account «HPGT») fetches MET by itself every 5 minutes, six
-  launches per run, and the pages use its forecast when it is newer than the one built into the page. See it at
-  `https://forecast.hpgt.workers.dev/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
-  Cloudflare → Workers & Pages → forecast → Logs.
-- **Publishing the weather service:** happens by itself when `workers/forecast/`, `lib/weather/met.js` or a site file
-  changes on `main` (Actions → «Weather service»), or with «Run workflow» there. Test locally with
-  `node scripts/forecast-sites.mjs` and `cd workers/forecast && npm ci --ignore-scripts && npx wrangler dev --test-scheduled`
-  (then open `/__scheduled` to run a fetch, and `/forecast.json`).
+- The **data service** (`workers/data`, Cloudflare account «HPGT») fetches MET by itself every 5 minutes, six launches
+  per run, and the pages use its forecast when it is newer than the one built into the page. See it at
+  `https://data.hpgt.workers.dev/v1/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
+  Cloudflare → Workers & Pages → data → Logs.
+- **Publishing the data service:** happens by itself when `workers/data/`, `lib/weather/met.js` or a site file changes
+  on `main` (Actions → «Data service»), or with «Run workflow» there. Test locally with `node scripts/data-sites.mjs`
+  and `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (then open `/__scheduled` to run
+  the schedule, and `/v1/forecast.json`). For Holfuy locally, put `HOLFUY_KEY=…` in `workers/data/.dev.vars` (ignored by Git).
+
+## Weather stations (Holfuy)
+
+- The stations are listed in `workers/data/src/stations.js`: `id` (the number in holfuy.com/en/weather/<id>), and
+  optionally `name` (otherwise Holfuy's) and `site` (the flying site's folder). A change there is published by itself.
+- The key: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `HOLFUY_KEY`
+  (type Secret). Publishing keeps it. Without the key, or without stations, the service skips Holfuy.
+- Fetched every minute. `https://data.hpgt.workers.dev/v1/stations.json` has the latest measurement and the last
+  6 hours per station. The service keeps the last 7 days; older days go to the archive (below), and nothing is deleted
+  before it is there. Holfuy has accepted that the club stores the measurements over time.
+
+## Weather archive (R2)
+
+- One CSV per station per day (UTC) in the R2 bucket `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
+  (columns `station, time_utc, direction_deg, speed_ms, gust_ms, min_ms, temperature_c`), and the stations in
+  `holfuy/stations.csv` (`station, name, site, lat, lon, altitude_m`). Written after midnight UTC for the day before
+  (`workers/data/src/archive.js`).
+- The folders use the `key=value` form, so DuckDB, BigQuery, Athena and Spark read `station` and `year` as columns, and
+  every row carries the station, so all files load into one table. Example with DuckDB and R2's S3 address:
+  `SELECT station, date_trunc('day', time_utc) AS day, avg(speed_ms), max(gust_ms) FROM read_csv('s3://hpgt-data-archive/holfuy/*/*/*.csv', hive_partitioning = true) GROUP BY ALL ORDER BY day;`
+- **Turning it on** (until then the service keeps every measurement, so nothing is lost):
+  1. Cloudflare → R2 → enable R2 (Free: 10 GB and free downloads; Cloudflare may ask for a card even within the free
+     limits) and create the bucket `hpgt-data-archive` (private, no public access).
+  2. Give the token «GitHub – flying-sites» the permission `Account → Workers R2 Storage → Edit` (My Profile → API
+     Tokens → Edit). The token's value stays the same.
+  3. Add the binding to `workers/data/wrangler.toml` in a PR: `[[r2_buckets]]`, `binding = "ARCHIVE"`,
+     `bucket_name = "hpgt-data-archive"`.
+- Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
+  S3 address `https://<account id>.r2.cloudflarestorage.com`.
 - If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), the wind assessment
   is turned off and the site says so.
 - **Fetch a new forecast now:** Actions → «Build and deploy» → «Run workflow».
@@ -175,8 +204,9 @@ set in `src/_data/photoCredit.json`.
 |---|---|---|
 | `OPENAIP_API_KEY` | GitHub → Settings → Secrets | Monthly airspace fetch |
 | GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
-| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The weather service (`forecast.hpgt.workers.dev`), later the change form |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the weather service. The token («GitHub – flying-sites», Workers and KV in HPGT only) expires 18.10.2027: make a new one under My Profile → API Tokens → Roll, and update the secret. |
+| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.workers.dev`), later the change form |
+| `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | The Holfuy stations |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites», Workers and KV in HPGT only) expires 18.10.2027: make a new one under My Profile → API Tokens → Roll, and update the secret. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
@@ -193,6 +223,6 @@ MET and Kartverket require no key. MET requires the client to provide contact de
 | `gangruten … skal hete …` | Multiple routes must be named `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
 | `status er «reviewed», men reviewed …` | Fill in `reviewed.by` and `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Typo in the translation. See [Translation](site-files.md#translation). |
-| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://forecast.hpgt.workers.dev/forecast.json`, and run «Build and deploy» manually. |
-| «Weather service» fails with an authentication error | The Cloudflare token has expired or been changed. Roll it and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
+| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.workers.dev/v1/forecast.json`, and run «Build and deploy» manually. |
+| «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Roll it and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
 | The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |

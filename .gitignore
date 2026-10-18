@@ -21,6 +21,8 @@ PROMPT.md
 # Skjermbilder fra lokal testing havner ikke i rotmappen (bildene til stedene ligger under src/).
 /*.png
 
-# Værtjenesten: stedene skrives ved hver publisering (scripts/forecast-sites.mjs).
-workers/forecast/src/sites.json
-workers/forecast/.wrangler/
+# Datatjenesten: stedene skrives ved hver publisering (scripts/data-sites.mjs).
+workers/data/src/sites.json
+workers/data/.wrangler/
+# Lokale hemmeligheter for wrangler dev (HOLFUY_KEY).
+.dev.vars

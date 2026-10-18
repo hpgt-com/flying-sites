@@ -214,7 +214,7 @@ sequenceDiagram
 |---|---|---|
 | `pr-check.yml` | Every PR | Tests, build, link check, HTML validation and the check for template slips such as «[object Object]» (`build`), axe in Chromium on a few pages (`accessibility`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
 | `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Four jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `deploy` publishes, and `attest` signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
-| `forecast-worker.yml` | Push to `main` when the weather service, the MET code or the sites change, manually | Publishes the weather service (`workers/forecast`) to Cloudflare Workers, with the token in the environment `cloudflare` (only `main`). |
+| `data-worker.yml` | Push to `main` when the data service, the MET code or the sites change, manually | Publishes the data service (`workers/data`) to Cloudflare Workers, with the token in the environment `cloudflare` (only `main`). |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
 | `scorecard.yml` | Push to `main`, Mondays, branch protection changes | OpenSSF Scorecard (supply-chain good practice). Results in Code scanning and behind the README badge. |
@@ -230,7 +230,8 @@ it fetches (a workflow today, a backend later) without the site noticing.
 |---|---|---|---|---|---|
 | Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
-| Weather service | MET Locationforecast | `workers/forecast/` (Cloudflare Worker, the same `lib/weather/met.js`) | Every 5 minutes (Cron Trigger), 6 launches per run | Cloudflare KV, served as `https://forecast.hpgt.workers.dev/forecast.json` | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`) |
+| Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json` | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`) |
+| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare) | `workers/data/src/sources/holfuy.js`, stations in `workers/data/src/stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, once R2 is on) | Not yet shown on the site |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
 
@@ -241,12 +242,21 @@ it fetches (a workflow today, a backend later) without the site noticing.
 - **Locally**, `npm start` fetches the weather by itself when `.cache/weather/` is missing or older than 30 minutes.
   In CI the build only reads the files (`WEATHER_FETCH=0`), and the PR check skips the weather (`FORECAST_OFFLINE=1`).
 - **Shared code:** `lib/site-files.js` reads the front matter of all sites for the scripts.
-- **Weather service:** GitHub skips many scheduled runs, so the forecast built into the pages can be hours old. The
-  weather service on Cloudflare fetches MET by itself, and the pages use its forecast when it is newer, well formed and
+- **Data service** (`workers/data`): one Cloudflare Worker with one module per source in `src/sources/`. Each module
+  fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
+  `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `license`, `fetched`, then the dataset's own fields),
+  and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
+  (`src/schedule.js`: stations every minute, forecast every 5). The store is one Durable Object with SQLite
+  (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
+  the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
+  into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
+  archived (`src/archive.js`).
+- **Forecast in the data service:** GitHub skips many scheduled runs, so the forecast built into the pages can be hours old. The
+  data service fetches MET by itself, and the pages use its forecast when it is newer, well formed and
   covers every launch the page has (`isNewerForecast` in `wind.js`); otherwise they keep their own. It also brings the
   assessment back when the page's forecast has become too old. The free plan gives 10 ms of CPU per run, so each run
   fetches the 6 launches fetched longest ago, and the whole forecast is renewed about every half hour.
-- **Next step:** the winds aloft (Open-Meteo) can move to the same service. Then the `weather` job and the schedule in
+- **Next steps:** the stations on the map and in the Vær tab; the winds aloft (Open-Meteo) to the same service. Then the `weather` job and the schedule in
   `deploy.yml` can go, and the site is only built when the content changes.
 
 ## What has been built
@@ -283,11 +293,11 @@ flowchart LR
   agent -- "approved" --> pr["PR with the change"]
   pr --> review["Review and merge"]
   worker -. "later" .-> live["Live weather data and NOTAM<br/>(cache)"]
-  forecast["Weather service (built)<br/>forecast.hpgt.workers.dev"] -. "same account" .- worker
+  data["Data service (built)<br/>data.hpgt.workers.dev: forecast, stations"] -. "same account" .- worker
 ```
 
-- **Weather service** (built): the MET forecast on Cloudflare Workers, see [Data modules](#data-modules). The Cloudflare
-  account «HPGT» is the club's; the form and live data go in the same account.
+- **Data service** (built): the MET forecast and the Holfuy stations on Cloudflare Workers, see [Data modules](#data-modules).
+  The Cloudflare account «HPGT» is the club's; the form, more stations, winds aloft and OGN/FANET go in the same service.
 - **Change form** without a GitHub account, via a Cloudflare Worker that creates the issue and replies with a link
   to it. An agent summarises the issue, and creates the change as a PR once it is labelled `approved`.
 - **Live weather data** from the club's and the model aircraft club's (Modellflyklubben) stations, and **NOTAM** as a

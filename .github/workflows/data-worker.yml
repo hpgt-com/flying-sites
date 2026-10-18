@@ -1,23 +1,23 @@
-name: Weather service
+name: Data service
 
-# Publishes the weather service (workers/forecast) to Cloudflare Workers when it, the MET code or the sites change on
-# main. The service fetches the MET forecast every 5 minutes by itself (Cron Trigger), so this only runs on changes.
+# Publishes the data service (workers/data) to Cloudflare Workers when it, the MET code or the sites change on main.
+# The service fetches its data every 5 minutes by itself (Cron Trigger), so this only runs on changes.
 on:
   push:
     branches: [main]
     paths:
-      - "workers/forecast/**"
+      - "workers/data/**"
       - "lib/weather/met.js"
       - "lib/site-files.js"
-      - "scripts/forecast-sites.mjs"
+      - "scripts/data-sites.mjs"
       - "src/sites/*/index.md"
-      - ".github/workflows/forecast-worker.yml"
+      - ".github/workflows/data-worker.yml"
   workflow_dispatch:
 
 permissions: {}
 
 concurrency:
-  group: forecast-worker
+  group: data-worker
   cancel-in-progress: false
 
 jobs:
@@ -41,14 +41,14 @@ jobs:
 
       # The launches from the site files (js-yaml from the root packages). --ignore-scripts as in the other workflows.
       - run: npm ci --ignore-scripts
-      - run: node scripts/forecast-sites.mjs
+      - run: node scripts/data-sites.mjs
 
-      # Wrangler, at the version in workers/forecast/package-lock.json.
+      # Wrangler, at the version in workers/data/package-lock.json.
       - run: npm ci --ignore-scripts
-        working-directory: workers/forecast
+        working-directory: workers/data
 
       - run: npx wrangler deploy
-        working-directory: workers/forecast
+        working-directory: workers/data
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

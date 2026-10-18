@@ -1127,7 +1127,7 @@
 
   readHash();
 
-  // A newer forecast from the weather service (workers/forecast), when the one built into the page is older. It also
+  // A newer forecast from the data service (workers/data), when the one built into the page is older. It also
   // brings the assessment back if the page's forecast had become too old. Only when the page has a forecast at all,
   // since the parts that show it are left out of the page without one.
   if (forecast) {
