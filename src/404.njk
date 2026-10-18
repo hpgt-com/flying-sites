@@ -8,13 +8,13 @@ eleventyExcludeFromCollections: true
 ---
 {#- GitHub Pages shows this for every address that does not exist, including links to the old overview. -#}
 {%- import "macros.njk" as m with context -%}
-<div class="simple-page">
+<main class="simple-page">
   <header class="topbar">
     <a class="back-link" href="/">{{ m.chevron("left") }}Alle flysteder</a>
     {{ m.siteMenu() }}
   </header>
 
-  <div class="simple-page__intro">
+  <div class="simple-page__intro" id="content" tabindex="-1">
     <h1>Fant ikke siden</h1>
     <p class="muted">Siden finnes ikke, eller den har flyttet. Flystedsoversikten er ny, så gamle lenker og bokmerker virker ikke lenger. Alle stedene finner du på forsiden.</p>
     {#- GitHub Pages has only one 404 page for the whole site, so it says the same briefly in English. -#}
@@ -32,4 +32,4 @@ eleventyExcludeFromCollections: true
       {% endfor %}
     </ul>
   </details>
-</div>
+</main>

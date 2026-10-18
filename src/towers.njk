@@ -12,13 +12,13 @@ eleventyComputed:
 ---
 {#- The numbers are in src/_data/towers.json, with names in other languages in names. Towers without a number are not shown. -#}
 {%- import "macros.njk" as m with context -%}
-<div class="towers-page">
+<main class="towers-page">
   <header class="topbar">
     <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
     {{ m.siteMenu() }}
   </header>
 
-  <div class="towers-page__intro">
+  <div class="towers-page__intro" id="content" tabindex="-1">
     <h1>{{ t.towers.title }}</h1>
     <p class="muted">{{ t.towers.intro | fmt({ ippc: '<a href="https://ippc.no" target="_blank" rel="noopener">IPPC' ~ m.external() ~ '</a>' }) | safe }}</p>
   </div>
@@ -33,4 +33,4 @@ eleventyComputed:
     </li>
     {% endif %}{% endfor %}
   </ul>
-</div>
+</main>

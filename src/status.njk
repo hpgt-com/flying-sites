@@ -7,13 +7,13 @@ noindex: true
 ---
 {%- import "macros.njk" as m with context -%}
 {%- set s = collections.sites | statusSummary -%}
-<div class="status-page">
+<main class="status-page">
   <header class="topbar">
     <a class="back-link" href="/">{{ m.chevron("left") }}Alle flysteder</a>
     {{ m.siteMenu() }}
   </header>
 
-  <div class="status-page__intro">
+  <div class="status-page__intro" id="content" tabindex="-1">
     <h1>Status for flystedene</h1>
     <p class="muted">For dere som vedlikeholder siden. Lages automatisk fra stedsfilene ved hver bygging.</p>
   </div>
@@ -50,4 +50,4 @@ noindex: true
       </table>
     </div>
   </section>
-</div>
+</main>

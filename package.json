@@ -14,10 +14,11 @@
     "test": "node --test",
     "check:links": "node scripts/check-links.mjs",
     "check:html": "html-validate \"_site/**/*.html\"",
+    "check:output": "node scripts/check-output.mjs",
     "check:a11y": "node scripts/check-a11y.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.22"
   },
   "license": "MIT",
   "devDependencies": {
