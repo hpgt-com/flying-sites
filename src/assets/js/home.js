@@ -465,9 +465,10 @@
     // In full screen the list is behind the map: the site is shown in the line on the map (with the link to its page), and
     // the page behind is left as it is.
     var fullscreen = mapEl.classList.contains("map--fullscreen");
-    // Mobile: a second tap on the selected site in the list opens the site page. The first tap shows it in the map.
-    if (origin === "list" && mobile && id === selectedId) {
-      FS.track("list/open/" + id);
+    // A second tap on the selected site opens the site page: in the map (also in full screen), and in the list on mobile.
+    // The first tap shows it in the map and the list.
+    if (id === selectedId && (origin === "map" || (origin === "list" && mobile))) {
+      FS.track(origin + "/open/" + id);
       // The link is in the page from the build (index.njk), so the address never comes from the script.
       var link = listEl.querySelector('[data-id="' + id + '"] .results__open');
       if (link) link.click();
