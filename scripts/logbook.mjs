@@ -6,6 +6,7 @@
 //
 //   npm run logbook -- ~/turer [~/turer-fra-andre …]
 //   npm run logbook -- --list ~/turer     (also lists the files without a flight, to see why)
+//   npm run logbook -- --skip 2020-05-01_10-54 ~/turer     (leaves out the files whose name holds it; repeatable)
 //
 // Look over src/_data/logbook.json before committing it.
 
@@ -16,7 +17,11 @@ import { parseIgc, parseKml, analyzeFlight, launchPoints, aggregate, flightKey }
 
 const OUT = "src/_data/logbook.json";
 const list = process.argv.includes("--list");
-const folders = process.argv.slice(2).filter((a) => a !== "--list");
+const args = process.argv.slice(2), skip = [], folders = [];
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--skip") skip.push(args[++i]);
+  else if (args[i] !== "--list") folders.push(args[i]);
+}
 if (!folders.length) {
   console.error("Bruk: npm run logbook -- <mappe med IGC/KML> [flere mapper …]");
   process.exit(1);
@@ -34,10 +39,11 @@ function files(dir) {
 
 const launches = launchPoints(readSites().map((s) => ({ id: s.id, launch: s.data.launch, launches: s.data.launches })));
 const byKey = new Map();
-let read = 0, noFlight = 0, failed = 0;
+let read = 0, noFlight = 0, failed = 0, skipped = 0;
 const used = { igc: 0, kml: 0 }, without = [];
 for (const folder of folders) {
   for (const file of files(folder)) {
+    if (skip.some((s) => path.basename(file).includes(s))) { skipped++; continue; }
     read++;
     try {
       const text = fs.readFileSync(file, "utf8");
@@ -57,7 +63,7 @@ for (const folder of folders) {
 const sums = aggregate([...byKey.values()]);
 const body = { generated: new Date().toISOString().slice(0, 10), pilots: folders.length, ...sums };
 fs.writeFileSync(OUT, JSON.stringify(body, null, 1) + "\n");
-console.log(`Leste ${read} filer: ${byKey.size} turer (${sums.flights - sums.unattributed} fra kjente steder, ${sums.unattributed} andre steder), ${noFlight} uten tur, ${failed} som ikke kunne leses.`);
+console.log(`Leste ${read} filer: ${byKey.size} turer (${sums.flights - sums.unattributed} fra kjente steder, ${sums.unattributed} andre steder), ${noFlight} uten tur, ${failed} som ikke kunne leses${skipped ? `, ${skipped} hoppet over (--skip)` : ""}.`);
 console.log(`Turer funnet i ${used.igc} IGC- og ${used.kml} KML-filer (samme tur i begge telles én gang).`);
 if (list && without.length) console.log("Uten tur (ingen tidspunkter, eller ingen bevegelse):\n" + without.map((f) => "  " + f).join("\n"));
 else if (without.length) console.log("Kjør med --list for å se filene uten tur.");
