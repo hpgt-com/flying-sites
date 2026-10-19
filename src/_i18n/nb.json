@@ -689,7 +689,7 @@
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
     "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}.",
-    "sourceOgn": "piloter og fly i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Ingenting lagres."
+    "sourceOgn": "piloter og fly i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet, og ingenting lagres."
   },
   "report": {
     "title": "Meld fra om endring",

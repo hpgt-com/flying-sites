@@ -1,7 +1,8 @@
 // «Piloter i lufta»: the aircraft the Open Glider Network hears in the area right now (FANET from paragliders' varios,
 // FLARM and others), as /v1/live.json. Fetched on demand, not on the schedule: the map asks every few seconds while the
 // layer is on, and the answer is kept CACHE_SECONDS in Cloudflare's cache, so OGN gets at most one request per few
-// seconds however many look. Nothing is stored. OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners'
+// seconds however many look. Each aircraft's track over the last TRAIL_MINUTES is kept in memory in the store (never
+// written down) and sent along as trail, so the map can draw it at once. OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners'
 // privacy choices are followed (OGN's live data already leaves out devices that must not be tracked, and gives those that
 // must not be identified a random short name, which is shown as unknown here), and nothing older than 24 hours is passed
 // on (positions older than MAX_AGE_SECONDS are left out). Tested in test/data-worker.test.js.
@@ -11,6 +12,7 @@ export const SOURCE = "Open Glider Network";
 export const LICENSE = "ODbL, Open Glider Network";
 export const CACHE_SECONDS = 5;
 export const MAX_AGE_SECONDS = 600;
+export const TRAIL_MINUTES = 10;
 const API = "https://live.glidernet.org/lxml.php";
 // OGN's aircraft types: 6 hang glider, 7 paraglider; the others are kept with their type (planes, gliders and helicopters
 // are worth seeing too), except 15, a static object.
@@ -48,8 +50,25 @@ export function parseLive(xml, now = Date.now()) {
   return items.sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
 }
 
-// The answer to GET /v1/live.json: { status, body } from OGN, or from the cache when it is fresh.
-export async function handleLive(sites, now = Date.now(), cache = globalThis.caches?.default) {
+// Adds the positions ([{ id, time, lat, lon }]) to the tracks (a Map id → [[ms, lat, lon], ...]), drops what is older than
+// keepMs before now, and returns { id: [[lat, lon], ...] } oldest first for the ids given.
+export function mergeTrails(tracks, positions, now, keepMs) {
+  for (const p of positions) {
+    const t = Date.parse(p.time);
+    const track = tracks.get(p.id) ?? [];
+    if (!track.length || track[track.length - 1][0] < t) track.push([t, p.lat, p.lon]);
+    tracks.set(p.id, track);
+  }
+  for (const [id, track] of tracks) {
+    const kept = track.filter((x) => x[0] >= now - keepMs);
+    if (kept.length) tracks.set(id, kept);
+    else tracks.delete(id);
+  }
+  return Object.fromEntries(positions.map((p) => [p.id, (tracks.get(p.id) ?? []).map((x) => [x[1], x[2]])]));
+}
+
+// The answer to GET /v1/live.json, from OGN, or from the cache when it is fresh. store: for the tracks (mergeLive).
+export async function handleLive(sites, now = Date.now(), cache = globalThis.caches?.default, store = null) {
   const key = new Request("https://data.hpgt.workers.dev/v1/live.json");
   const hit = cache && (await cache.match(key));
   if (hit) return hit;
@@ -59,7 +78,12 @@ export async function handleLive(sites, now = Date.now(), cache = globalThis.cac
   try {
     const r = await fetch(url, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error(`OGN svarte ${r.status}`);
-    body = JSON.stringify({ dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), items: parseLive(await r.text(), now) });
+    const items = parseLive(await r.text(), now);
+    if (store && items.length) {
+      const trails = await store.mergeLive(items.map(({ id, time, lat, lon }) => ({ id, time, lat, lon })), now, TRAIL_MINUTES * 60000);
+      for (const item of items) item.trail = trails[item.id] ?? [];
+    }
+    body = JSON.stringify({ dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), items });
   } catch (err) {
     console.warn(`live: ${err.message}`);
     return Response.json({ dataset: DATASET, error: "unavailable" }, { status: 503, headers: { "cache-control": "no-store" } });

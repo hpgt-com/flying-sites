@@ -444,3 +444,26 @@ test("live: answered from the cache when fresh, OGN asked otherwise, 503 when OG
     console.warn = warn;
   }
 });
+
+test("live: the track of each aircraft over the last minutes, oldest first, the old part dropped", async () => {
+  const tracks = new Map();
+  const at = (min) => new Date(NOW + min * 60000).toISOString();
+  liveMod.mergeTrails(tracks, [{ id: "a", time: at(0), lat: 1, lon: 1 }], NOW, 600000);
+  liveMod.mergeTrails(tracks, [{ id: "a", time: at(0), lat: 9, lon: 9 }], NOW, 600000);
+  const t = liveMod.mergeTrails(tracks, [{ id: "a", time: at(5), lat: 2, lon: 2 }, { id: "b", time: at(5), lat: 3, lon: 3 }], NOW + 5 * 60000, 600000);
+  assert.deepEqual(t, { a: [[1, 1], [2, 2]], b: [[3, 3]] }, "the same time is not added twice");
+  const later = liveMod.mergeTrails(tracks, [{ id: "b", time: at(16), lat: 4, lon: 4 }], NOW + 16 * 60000, 600000);
+  assert.deepEqual(later, { b: [[4, 4]] }, "the point from 11 minutes ago is dropped");
+  assert.equal(tracks.has("a"), false, "a track older than ten minutes is dropped");
+
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('<markers><m a="68.8,16.5,P,Pilot,900,09:00:00,0,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>');
+  try {
+    const mem = new Map();
+    const store = { mergeLive: async (p, now, keep) => liveMod.mergeTrails(mem, p, now, keep) };
+    const res = await (await liveMod.handleLive([{ lat: 68.8, lon: 16.5 }], NOW, null, store)).json();
+    assert.deepEqual(res.items[0].trail, [[68.8, 16.5]]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

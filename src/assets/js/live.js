@@ -1,7 +1,9 @@
 // «Piloter i lufta» on the maps: the aircraft the Open Glider Network hears in the area right now (FANET from
 // paragliders' varios, FLARM and others), from the data service (/v1/live.json, workers/data/src/live.js). A layer that
 // is off by default; while it is on and the page is in view, it asks every POLL_MS and moves the markers. Each marker is
-// an arrow pointing where the aircraft flies, with the height and the climb; paragliders and hang gliders stand out.
+// an arrow pointing where the aircraft flies, with the height and the climb, and a line for its track over the last
+// minutes (from the data service, so it shows at once), where circling in a thermal is easy to see; paragliders and
+// hang gliders stand out.
 // Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only; numbers only in the HTML.
 // Exposed as window.FlyingSitesLive; tested in test/live.test.js.
 (function () {
@@ -20,7 +22,8 @@
     return d.items.every(function (i) {
       return i && typeof i.id === "string" && /^[0-9a-f]{6,16}$/.test(i.id) && isNum(i.lat) && isNum(i.lon) &&
         (i.name === null || typeof i.name === "string") && typeof i.time === "string" && Number.isFinite(Date.parse(i.time)) &&
-        ["alt", "track", "speed", "climb", "type"].every(function (k) { return i[k] === null || isNum(i[k]); });
+        ["alt", "track", "speed", "climb", "type"].every(function (k) { return i[k] === null || isNum(i[k]); }) &&
+        (i.trail === undefined || (Array.isArray(i.trail) && i.trail.every(function (p) { return Array.isArray(p) && isNum(p[0]) && isNum(p[1]); })));
     });
   }
   function isFlyer(item) { return item.type === 6 || item.type === 7; }
@@ -65,7 +68,7 @@
     if (!L || !url || !map.layersControl) return null;
     var layer = L.layerGroup([], { attribution: text("live.credit") });
     map.layersControl.addOverlay(layer, FS.layerLabel(map, "live", text("live.layer")));
-    var markers = {}, timer = null, on = false;
+    var markers = {}, trails = {}, timer = null, on = false;
 
     function icon(item) {
       var arrow = isNum(item.track)
@@ -78,6 +81,12 @@
       var now = Date.now(), seen = {};
       data.items.forEach(function (item) {
         seen[item.id] = true;
+        // The track, ending at the marker, under it.
+        var points = (item.trail || []).concat([[item.lat, item.lon]]);
+        if (points.length > 1) {
+          if (trails[item.id]) trails[item.id].setLatLngs(points);
+          else trails[item.id] = L.polyline(points, { className: "live-trail" + (isFlyer(item) ? " live-trail--flyer" : ""), weight: 3, interactive: false }).addTo(layer);
+        }
         var m = markers[item.id];
         if (!m) {
           m = markers[item.id] = L.marker([item.lat, item.lon], { icon: icon(item), keyboard: true, title: item.name || text("live.unknown"), zIndexOffset: 1000 }).addTo(layer);
@@ -91,6 +100,7 @@
         m.setPopupContent(popup(item, now));
       });
       Object.keys(markers).forEach(function (id) { if (!seen[id]) { layer.removeLayer(markers[id]); delete markers[id]; } });
+      Object.keys(trails).forEach(function (id) { if (!seen[id]) { layer.removeLayer(trails[id]); delete trails[id]; } });
     }
     function load() {
       if (!on || document.hidden || typeof fetch !== "function") return;
