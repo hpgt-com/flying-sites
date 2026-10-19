@@ -1162,7 +1162,7 @@
       stationData = data;
       update();
       // The club's stations as rows, in their own order (Heia first); MET's as a small folded table under them.
-      listEl2.replaceChildren.apply(listEl2, ST.groups(data.items).club.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item)); }));
+      listEl2.replaceChildren.apply(listEl2, ST.groups(data.items).club.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item), true); }));
       var oldMet = stationsEl.querySelector(".met-stations"), met = ST.metTable(data.items, now, oldMet && oldMet.open);
       if (oldMet) oldMet.remove();
       if (met) listEl2.after(met);

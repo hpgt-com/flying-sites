@@ -1728,6 +1728,14 @@ body.sheet-open { overflow: hidden; }
 .weather-row__change { font-size: 12px; font-weight: 600; }
 .weather-row--old .station-compass { opacity: 0.5; }
 .weather-row--old .weather-row__sub { color: var(--hazard-text); }
+/* The Vær tab: about as tall as the site cards beside it (the same rose size, corners and padding), the name on one line. */
+.stations .weather-row { grid-template-columns: 40px minmax(0, 1fr) auto; align-items: start; padding: 10px 12px; border-radius: 14px; }
+.stations .weather-row .station-compass { width: 40px; height: 40px; }
+.stations .weather-row__name { font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stations .weather-row__wind { font-size: 22px; }
+.stations .weather-row__info { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.stations .weather-row__name, .stations .weather-row__sub { flex-basis: 100%; }
+.stations .weather-row .rating-chip { margin: 0; }
 /* MET's stations under the club's (stations.js metTable): a small folded table, no cards. */
 .met-stations { margin-top: 10px; font-size: 13px; }
 .met-stations summary { cursor: pointer; font-weight: 700; font-size: 14px; padding: 4px 0; }
