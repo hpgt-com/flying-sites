@@ -1,24 +1,21 @@
-// «Piloter i lufta» on the maps: the paragliders and hang gliders the Open Glider Network hears in the area right now
+// «Piloter i lufta» on the maps: the paragliders (and speedflyers) the Open Glider Network hears in the area right now
 // (FANET from varios and phone apps, FLARM), from the data service (/v1/live.json, workers/data/src/live.js). A layer
 // that is off by default; while it is on and the page is in view, it asks every POLL_MS and moves the markers. Each
-// marker is the wing seen from above (a paraglider's curved wing, a hang glider's delta) pointing where it flies, with
-// the height and the climb, and a line for its track over the last minutes (from the data service, so it shows at once),
-// coloured by the climb at each point, so where the lift and the sink were is easy to see; a small legend explains the
-// colours while the layer is on.
+// marker is the wing seen from above, with the lines down to the pilot, pointing where it flies, with the height and the
+// climb, and a line for its track over the last minutes (from the data service, so it shows at once), coloured by the
+// climb at each point, so where the lift and the sink were is easy to see; a small legend explains the colours while the
+// layer is on.
 // Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only; numbers only in the HTML.
 // Exposed as window.FlyingSitesLive; tested in test/live.test.js.
 (function () {
   "use strict";
 
   var POLL_MS = 5000;
-  // The wing seen from above, nose up (north) before it is turned to the track: OGN's type 7, a paraglider's curved wing
-  // with the lines down to the pilot, and 6, a hang glider's delta. The data service sends only these two.
-  var SHAPES = {
-    7: '<path d="M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z" fill="currentColor"/>' +
-      '<path d="M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
-      '<circle cx="12" cy="17.8" r="2" fill="currentColor"/>',
-    6: '<path d="M12 4L23 17.5L12 14.5L1 17.5Z" fill="currentColor"/><circle cx="12" cy="13" r="2" fill="currentColor"/>'
-  };
+  // The wing seen from above, nose up (north) before it is turned to the track: a paraglider's curved wing with the lines
+  // down to the pilot. The data service sends only paragliders (OGN's type 7).
+  var WING = '<path d="M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z" fill="currentColor"/>' +
+    '<path d="M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
+    '<circle cx="12" cy="17.8" r="2" fill="currentColor"/>';
   // The track's colours, by the climb in m/s, from sink to lift (CSS .live-trail--…). A paraglider sinks about 1 m/s in
   // still air, so plain gliding is the grey middle, not sink.
   var CLIMB = [{ key: "sink2", below: -3 }, { key: "sink1", below: -1.5 }, { key: "glide", below: 0.5 }, { key: "lift1", below: 2 }, { key: "lift2", below: Infinity }];
@@ -38,7 +35,6 @@
         })));
     });
   }
-  function typeText(item) { return text(item.type === 6 ? "live.type_hangGlider" : "live.type_paraglider"); }
   // The colour of a climb (m/s): sink2 … lift2; glide when it is not known.
   function climbKey(v) {
     if (!isNum(v)) return "glide";
@@ -82,7 +78,6 @@
   function popup(item, now) {
     var box = make("div", "live-popup");
     box.appendChild(make("strong", null, item.name || text("live.unknown")));
-    box.appendChild(make("span", null, typeText(item)));
     var lines = [];
     if (isNum(item.alt)) lines.push(text("live.altLine", { m: Math.round(item.alt) }));
     if (isNum(item.speed)) lines.push(text("live.speed", { kmh: Math.round(item.speed * 3.6) }));
@@ -130,7 +125,7 @@
 
     function icon(item) {
       var shape = isNum(item.track)
-        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + (SHAPES[item.type] || SHAPES[7]) + '</svg>'
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + WING + '</svg>'
         : '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
       return L.divIcon({ className: "live-marker",
         html: '<span class="live-marker__wing">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
@@ -180,5 +175,5 @@
     return layer;
   }
 
-  globalThis.FlyingSitesLive = { addMapLayer: addMapLayer, isLiveData: isLiveData, labelText: labelText, climbKey: climbKey, trailRuns: trailRuns, climbText: climbText, typeText: typeText, useText: useText };
+  globalThis.FlyingSitesLive = { addMapLayer: addMapLayer, isLiveData: isLiveData, labelText: labelText, climbKey: climbKey, trailRuns: trailRuns, climbText: climbText, useText: useText };
 })();

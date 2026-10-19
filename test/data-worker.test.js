@@ -405,10 +405,11 @@ test("report: a general report from /meld-fra/ has no site and its own kinds", (
 // --- Piloter i lufta (OGN) ---
 const liveMod = await import("../workers/data/src/live.js");
 
-test("live: OGN's answer as items, unknown names hidden, old ones and other aircraft than paragliders and hang gliders left out, newest first", () => {
+test("live: OGN's answer as items, unknown names hidden, old ones and other aircraft than paragliders left out, newest first", () => {
   const xml = `<?xml version="1.0"?><markers>
 <m a="68.625748,15.306080,_e6,c37e55e6,807,09:01:35,40,240,36,-1.4,7,AVX1058,0,c37e55e6"/>
-<m a="69.483269,18.693029,FS,Ola,1613,09:09:04,10,216,40,4.9,6,AVX1004,4780BA,e42e25c5"/>
+<m a="69.483269,18.693029,FS,Ola,1613,09:09:04,10,216,40,4.9,7,AVX1004,4780BA,e42e25c5"/>
+<m a="69.483269,18.693029,FS,Hang,1613,09:09:04,10,216,40,4.9,6,AVX1004,4780BA,d42e25c5"/>
 <m a="69.483269,18.693029,FS,LN-WFS,3613,09:09:04,10,216,198,4.9,9,AVX1004,4780BA,f42e25c5"/>
 <m a="68.8,16.5,X,Old,500,08:00:00,900,0,0,0,7,AVX970,0,aaaaaaaa"/>
 <m a="68.8,16.5,X,Mast,500,08:00:00,5,0,0,0,15,AVX970,0,bbbbbbbb"/>
@@ -417,7 +418,6 @@ test("live: OGN's answer as items, unknown names hidden, old ones and other airc
   assert.deepEqual(items.map((i) => i.id), ["e42e25c5", "c37e55e6"]);
   assert.equal(items[1].name, null, "OGN's random name is not shown");
   assert.equal(items[0].name, "Ola");
-  assert.equal(items[0].type, 6);
   assert.equal(items[1].speed, 10, "km/h to m/s");
   assert.equal(items[1].type, 7);
   assert.equal(items[1].time, new Date(NOW - 40000).toISOString());

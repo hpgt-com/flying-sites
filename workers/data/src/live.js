@@ -1,4 +1,4 @@
-// «Piloter i lufta»: the paragliders and hang gliders the Open Glider Network hears in the area right now (FANET from
+// «Piloter i lufta»: the paragliders (and speedflyers) the Open Glider Network hears in the area right now (FANET from
 // varios and phone apps, FLARM), as /v1/live.json. Fetched on demand, not on the schedule: the map asks every few seconds
 // while the layer is on, and the answer is kept CACHE_SECONDS in Cloudflare's cache, so OGN gets at most one request per
 // few seconds however many look. Each pilot's track over the last TRAIL_MINUTES, with the climb at each point, is kept in
@@ -15,9 +15,9 @@ export const CACHE_SECONDS = 5;
 export const MAX_AGE_SECONDS = 600;
 export const TRAIL_MINUTES = 10;
 const API = "https://live.glidernet.org/lxml.php";
-// OGN's aircraft types: only 6 hang gliders and 7 paragliders are kept, the pilots this is for (planes, gliders and the
-// rest would need their own symbols, and fill the map without telling a free-flight pilot much).
-export const FREE_FLYERS = new Set([6, 7]);
+// OGN's aircraft type 7, paraglider (speed wings too), is the only one kept: the pilots this is for. Hang gliders are
+// not flown here, and planes, gliders and the rest would fill the map without telling a paraglider pilot much.
+export const PARAGLIDER = 7;
 
 // The area: the flying sites (sites.json) with a margin, as OGN's bounds (north, south, east, west).
 export function bounds(sites, margin = 0.5) {
@@ -35,7 +35,7 @@ export function parseLive(xml, now = Date.now()) {
     const f = m[1].split(",");
     if (f.length < 14) continue;
     const lat = num(f[0]), lon = num(f[1]), age = num(f[6]), type = num(f[10]);
-    if (lat === null || lon === null || age === null || age > MAX_AGE_SECONDS || !FREE_FLYERS.has(type)) continue;
+    if (lat === null || lon === null || age === null || age > MAX_AGE_SECONDS || type !== PARAGLIDER) continue;
     const id = /^[0-9a-f]{6,16}$/i.test(f[13]) ? f[13].toLowerCase() : null;
     if (!id) continue;
     // A short name starting with «_» (and the id as the name) is OGN's way of showing a device that must not be identified,

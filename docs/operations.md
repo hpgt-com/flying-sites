@@ -147,7 +147,7 @@ the menu and is marked `noindex`. It shows per site:
 
 - The map layer «Piloter i lufta» asks the data service every 5 seconds while it is on; the data service asks OGN's live
   map (`live.glidernet.org/lxml.php`, the area of the sites with a margin) at most once per 5 seconds and passes on what
-  it gets for paragliders and hang gliders (`workers/data/src/live.js`; other aircraft are left out), with each pilot's
+  it gets for paragliders (`workers/data/src/live.js`; hang gliders and other aircraft are left out), with each pilot's
   track and climb over the last 10 minutes, kept in the store's memory
   only (never written down; gone when the store is evicted). No key.
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
