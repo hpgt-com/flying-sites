@@ -4,22 +4,18 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Build twice an hour, so the front-page wind assessment has a fresh MET forecast (the weather job).
-  # GitHub does not guarantee scheduled runs: they can be delayed for hours or skipped under heavy load,
-  # especially around the top of the hour. Hence the odd minutes, and the forecast is accepted until it is 6 hours old
-  # (maxForecastAgeHours in src/_data/windRules.json).
-  # GitHub disables scheduled runs after 60 days without repository activity.
-  schedule:
-    - cron: "17,47 * * * *"
+# No schedule: the site is built only when its content changes. The pages fetch the forecast, the winds aloft and the
+# stations from the data service (workers/data) when it has newer than what is built in, so they stay fresh between
+# builds.
 
 # Four jobs:
 #   weather  fetches the MET wind forecast and the Open-Meteo winds aloft (lib/weather/, npm run weather) and hands
-#            them on as an artifact. Read-only, no secrets. A source that fails is written as null, so the job does
+#            them on as an artifact, so each build starts from a fresh forecast (the pages then use the data service's
+#            when it is newer). Read-only, no secrets. A source that fails is written as null, so the job does
 #            not stop publishing.
 #   build    builds the site with the fetched weather and never queries MET or Open-Meteo itself (WEATHER_FETCH=0).
 #   deploy   publishes. Only this job has publishing permissions (pages, id-token), and it runs no code from the repo.
 #   attest   signs build provenance and the SBOM for the published archive (see the job below).
-# When the weather moves to a backend, the weather job and the schedule below can go.
 # Actions are pinned to commit SHAs (Dependabot updates them).
 permissions:
   contents: read

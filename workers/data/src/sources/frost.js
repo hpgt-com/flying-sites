@@ -140,7 +140,8 @@ export async function run(store, env, sites, siteOf = {}, now = Date.now(), excl
   const area = `${areaPolygon(sites)} ${NEAR_KM} ${exclude.join(",")}`;
   let state = (await store.getState("met-stations")) ?? { found: null, stations: [] };
   if (!state.found || state.area !== area || now - Date.parse(state.found) > DISCOVER_HOURS * 3600000) {
-    const data = await frost(env, "/sources/v0.jsonld", { types: "SensorSystem", geometry: areaPolygon(sites), validtime: "now" });
+    // Only the fields parseSources reads, so the answer for the whole region stays small to read.
+    const data = await frost(env, "/sources/v0.jsonld", { types: "SensorSystem", geometry: areaPolygon(sites), validtime: "now", fields: "id,name,geometry,masl" });
     state = { found: new Date(now).toISOString(), area, stations: nearSites(parseSources(data), sites).filter((s) => !exclude.includes(s.id)) };
   }
   const measurements = [];

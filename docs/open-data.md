@@ -2,7 +2,7 @@
 
 The paragliding and speedflying sites around Harstad, Northern Norway, published by Harstad Hang og Paragliderklubb
 (HPGT) as open data. The files are rebuilt from the site files in this repository every time the site is published
-(twice an hour), so the URLs always serve the current data.
+(on every change), so the URLs always serve the current data.
 
 | File | URL | Use it for |
 |---|---|---|

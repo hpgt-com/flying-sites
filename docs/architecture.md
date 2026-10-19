@@ -4,8 +4,9 @@ How flysteder.hpgt.com is put together: where the data comes from, what happens 
 runs in the browser. The diagrams are Mermaid and render as diagrams on GitHub.
 
 In short: **a static site with no server and no database.** All content lives as files in the repository. GitHub
-Actions builds the site with Eleventy and publishes it to GitHub Pages, twice an hour and on every change. Data that
-must be fresh (the wind forecast) is fetched in its own job just before the build. Data that is slow to fetch
+Actions builds the site with Eleventy and publishes it to GitHub Pages on every change. Data that must be fresh (the
+wind forecast, winds aloft, weather stations) comes from the data service on Cloudflare, which the pages read after
+loading; each build also starts from a forecast fetched in its own job just before it. Data that is slow to fetch
 (airspace, heights) is cached in the repository. Each kind of external data is a module, see
 [Data modules](#data-modules).
 
@@ -22,7 +23,7 @@ flowchart LR
 
   subgraph actions["GitHub Actions"]
     prcheck["PR check<br/>tests + build,<br/>links, HTML, axe"]
-    deploy["Build and deploy<br/>on merge + twice an hour<br/>(weather → build → deploy)"]
+    deploy["Build and deploy<br/>on merge<br/>(weather → build → deploy)"]
     airspace["Update airspace<br/>1st of each month → PR"]
     scan["Code scanning<br/>CodeQL"]
   end
@@ -215,14 +216,13 @@ sequenceDiagram
   CI-->>PR: green / red
   PR->>Main: merge
   Main->>Deploy: push to main
-  Note over Deploy: also at xx:17 and xx:47<br/>for a fresh wind forecast
   Deploy->>Pages: _site/ is published
 ```
 
 | Workflow | When | What |
 |---|---|---|
 | `pr-check.yml` | Every PR | Tests, build, link check, HTML validation and the check for template slips such as «[object Object]» (`build`), axe in Chromium on a few pages (`accessibility`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
-| `deploy.yml` | Push to `main`, at xx:17 and xx:47, manually | Four jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `deploy` publishes, and `attest` signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
+| `deploy.yml` | Push to `main`, manually | Four jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `deploy` publishes, and `attest` signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
 | `data-worker.yml` | Push to `main` when the data service, the MET code or the sites change, manually | Publishes the data service (`workers/data`) to Cloudflare Workers, with the token in the environment `cloudflare` (only `main`). |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
@@ -241,7 +241,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
 | Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
 | Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Kan jeg fly her nå?» on the station's site), refetched every minute |
-| Data service: winds aloft | Open-Meteo, for the launches in `WINDGRAM_SITES` | `workers/data/src/sources/windgram.js` (the same `lib/weather/open-meteo.js` and `lib/windgram.js`) | Every 30 minutes | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/windgram.json` | `windgram.js` on the site page, when newer than the grid in the page (or the page has none) |
+| Data service: winds aloft | Open-Meteo, for the launches in `WINDGRAM_SITES` (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen) | `workers/data/src/sources/windgram.js` (the same `lib/weather/open-meteo.js` and `lib/windgram.js`) | Every 10 minutes, 2 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/windgram.json` | `windgram.js` on the site page, when newer than the grid in the page (or the page has none) |
 | Data service: MET stations | MET Frost (client ID `FROST_CLIENT_ID` in Cloudflare): the stations within 50 km of a launch (Lofoten to Bardu), found once a day | `workers/data/src/sources/frost.js` | Every 10 minutes | As the Holfuy stations (source `met`), served in `/v1/stations.json` together with them (`merge.js`) | As the Holfuy stations |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
@@ -257,7 +257,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
   fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
   `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
-  (`src/schedule.js`: Holfuy every minute, forecast every 5, MET's stations every 10, winds aloft every 30). The store is one Durable Object with SQLite
+  (`src/schedule.js`: Holfuy every minute, forecast every 5, MET's stations and winds aloft every 10, on different minutes so the heavier sources never share an invocation's 10 ms of CPU). The store is one Durable Object with SQLite
   (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
   the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
   into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
@@ -267,10 +267,11 @@ it fetches (a workflow today, a backend later) without the site noticing.
   covers every launch the page has (`isNewerForecast` in `wind.js`); otherwise they keep their own. It also brings the
   assessment back when the page's forecast has become too old. The free plan gives 10 ms of CPU per run, so each run
   fetches the 6 launches fetched longest ago, and the whole forecast is renewed about every half hour.
-- **Winds aloft in the data service:** the same grid as the build's, fetched every half hour; the site page draws the one
+- **Winds aloft in the data service:** the same grid as the build's, two launches every 10 minutes (each renewed about
+  every half hour); the site page draws the one
   in the page and replaces it with the service's when that is newer, so the section also works when the build has none.
-- **Next steps:** both weather sources are now in the data service, so the `weather` job and the schedule in `deploy.yml`
-  can go once the service has run well for a while, and the site is only built when the content changes.
+- **No scheduled builds:** both weather sources are in the data service, so `deploy.yml` has no schedule, and the site
+  is built only when the content changes. The `weather` job stays, so each build starts from a fresh forecast.
 
 ## What has been built
 
