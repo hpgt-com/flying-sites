@@ -59,7 +59,6 @@
     "cvd": "Colour-blind friendly colours",
     "cvdHint": "Blue instead of green in the wind assessment",
     "language": "Language",
-    "links": "Links",
     "toHpgt": "To hpgt.com",
     "notTranslated": "This text has not been translated yet and is shown in Norwegian.",
     "legendLabel": "Wind rose legend",
@@ -71,10 +70,12 @@
     "noneLabel": "none",
     "trainingSite": "Training site",
     "notReviewed": "Not reviewed yet",
-    "notSet": "Not set",
     "notRegistered": "Not registered yet",
     "siteTitle": "HPGT flying sites",
-    "aboutLink": "About the site and privacy"
+    "aboutLink": "About the site and privacy",
+    "menuPlan": "Plan a trip",
+    "menuClub": "The club and the site",
+    "menuSettings": "Settings"
   },
   "home": {
     "description": "Paragliding and speedflying sites in the HPGT area (Harstad, Northern Norway). Filter by wind direction, level and category.",
@@ -108,7 +109,6 @@
     "yrHarstad": "Forecast for the Harstad area",
     "yrUrl": "https://www.yr.no/en/forecast/daily-table/1-294009",
     "windyHome": "Wind aloft and several weather models",
-    "beforeYouGo": "Before you go",
     "notamTitle": "NOTAM and airspace",
     "towersTitle": "Towers",
     "towersSubtitle": "Phone numbers for the control towers",
@@ -207,11 +207,9 @@
     "season": "Season",
     "maxWind": "Max wind",
     "notRegistered": "Not registered",
-    "airspaceOverLaunch": "Airspace above launch",
     "class": "Class {c}",
     "fromGround": "From the ground",
     "lower": "Lower {limit}",
-    "launchAboveLimit": "The launch is above the limit",
     "noAirspace": "No fixed airspace above the launch.",
     "kmAway": "{km} km away",
     "airspaceSource": "Fetched automatically from openAIP {date}.",
@@ -227,9 +225,6 @@
     "meteogramAlt": "Meteogram from Yr for {name}",
     "meteogramCaption": "Forecast from Yr, provided by NRK and the Norwegian Meteorological Institute. Tap for hour by hour.",
     "noYr": "No Yr location has been added for {name} yet.",
-    "weatherServices": "Weather services",
-    "windySite": "Wind aloft and models",
-    "flybartSite": "Weather stations in the area",
     "images": "Photos",
     "seeAllImages": "See all {n} photos",
     "photo": "Photo",
@@ -452,7 +447,6 @@
       "suggest": "Only sites that may work",
       "emptyCard": "Tap a site on the map or in the list to see more.",
       "showAll": "Show all {n}",
-      "showFewer": "Show fewer",
       "showSites": {
         "one": "Show 1 site",
         "other": "Show {n} sites"
@@ -469,7 +463,6 @@
       "see": "See ›",
       "seeName": "See {name}",
       "allDirections": "All directions",
-      "directionsChosen": "Direction: {list}",
       "removeFilter": "Remove the filter {name}",
       "suggestChip": "May work",
       "measured": "measured"
@@ -585,7 +578,6 @@
       "justNow": "Just now",
       "minutesAgo": "{n} min ago",
       "siteNow": "Measured now at {name}",
-      "holfuy": "Holfuy",
       "gustValue": "gust {gust}",
       "minValue": "min {min}",
       "min": ", min {min}",
@@ -624,8 +616,6 @@
       "nextTitle": "Next hours (forecast)",
       "noForecast": "No forecast for the flying site right now.",
       "site": "Flying site {name}",
-      "colStation": "Station",
-      "colWind": "Wind (gusts) · change",
       "trendLine": "Last {minutes} min: {change} m/s · {character}",
       "tempRange": "Temperature, last {hours} h: lowest {min} °C, highest {max} °C",
       "tempTitle": "Temperature",
@@ -692,6 +682,16 @@
     "name": "Name or contact (optional)",
     "send": "Send",
     "privacy": "What you write becomes a public issue on GitHub. Cloudflare Turnstile checks that you are not a robot.",
-    "noScript": "The form needs JavaScript."
+    "noScript": "The form needs JavaScript.",
+    "pageTitle": "Report",
+    "pageDescription": "Tell HPGT about a new flying site, an error on the site, an idea or anything else.",
+    "pageIntro": "Do you know a flying site that is missing, have you found an error, or do you have an idea? Write briefly, and the club gets an issue to follow up. If it concerns one flying site, it is easiest to report at the bottom of that site's page.",
+    "notReady": "The form is not turned on yet.",
+    "kind_newsite": "New flying site",
+    "kind_bug": "Error on the site",
+    "kind_idea": "Idea",
+    "menuLink": "Report",
+    "menuSub": "new site, error or idea",
+    "messageGeneral": "What would you like to report?"
   }
 }

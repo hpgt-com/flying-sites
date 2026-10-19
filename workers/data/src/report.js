@@ -8,14 +8,17 @@
 
 import { installationToken } from "./github-app.js";
 
+// What a report about a site can concern, and one from /meld-fra/ (no site). The pages have the same lists (macros.njk).
 export const KINDS = ["landing", "access", "hazard", "launch", "other"];
+export const GENERAL_KINDS = ["newsite", "bug", "idea", "other"];
 export const MAX_MESSAGE = 1000;
 export const MIN_MESSAGE = 10;
 export const MAX_NAME = 80;
 export const DAILY_LIMIT = 20;
 export const ORIGINS = ["https://flysteder.hpgt.com"];
 const REPO = "hpgt-com/flying-sites";
-const KIND_TITLES = { landing: "Landing", access: "Vei, parkering eller adkomst", hazard: "Fare eller hindring", launch: "Start", other: "Annet" };
+const KIND_TITLES = { landing: "Landing", access: "Vei, parkering eller adkomst", hazard: "Fare eller hindring", launch: "Start", other: "Annet",
+  newsite: "Nytt flysted", bug: "Feil på siden", idea: "Forslag" };
 
 // The report checked and trimmed, or { error } with what is wrong. siteNames: { id: name } for the sites that exist.
 export function checkReport(body, siteNames) {
@@ -25,10 +28,11 @@ export function checkReport(body, siteNames) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const token = typeof body.token === "string" ? body.token : "";
-  if (!Object.hasOwn(siteNames, site) || !KINDS.includes(kind)) return { error: "bad-request" };
+  // No site: a general report from /meld-fra/.
+  if (site === "" ? !GENERAL_KINDS.includes(kind) : !Object.hasOwn(siteNames, site) || !KINDS.includes(kind)) return { error: "bad-request" };
   if (message.length < MIN_MESSAGE || message.length > MAX_MESSAGE || name.length > MAX_NAME) return { error: "bad-length" };
   if (!token || token.length > 4096) return { error: "no-token" };
-  return { site, siteName: siteNames[site], kind, message, name, token };
+  return { site, siteName: site ? siteNames[site] : null, kind, message, name, token };
 }
 
 // The issue: the title names the site and the kind; the text from the form goes in a code block, so nothing in it is
@@ -36,7 +40,7 @@ export function checkReport(body, siteNames) {
 export function issueFor(report, now = Date.now()) {
   const fence = (s) => "~~~text\n" + s.replace(/~~~/g, "~ ~ ~") + "\n~~~";
   const lines = [
-    `Meldt fra skjemaet på stedssiden for **${report.siteName}** (\`src/sites/${report.site}/\`).`,
+    report.site ? `Meldt fra skjemaet på stedssiden for **${report.siteName}** (\`src/sites/${report.site}/\`).` : "Meldt fra skjemaet «Meld fra» i menyen (gjelder ikke ett bestemt flysted).",
     "",
     `- Gjelder: ${KIND_TITLES[report.kind]}`,
     `- Tidspunkt: ${new Date(now).toISOString()}`,
@@ -45,7 +49,7 @@ export function issueFor(report, now = Date.now()) {
   ];
   if (report.name) lines.push("", "Fra:", fence(report.name));
   lines.push("", "_Sendt inn av en besøkende. Sjekk opplysningene før stedet endres._");
-  return { title: `[Meld fra] ${report.siteName}: ${KIND_TITLES[report.kind]}`, body: lines.join("\n") };
+  return { title: `[Meld fra] ${report.siteName ?? "Generelt"}: ${KIND_TITLES[report.kind]}`, body: lines.join("\n") };
 }
 
 async function turnstileOk(env, token, ip) {

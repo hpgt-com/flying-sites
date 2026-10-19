@@ -59,7 +59,6 @@
     "cvd": "Fargeblindvennlige farger",
     "cvdHint": "Blå i stedet for grønn i vindvurderingen",
     "language": "Språk",
-    "links": "Lenker",
     "toHpgt": "Til hpgt.com",
     "notTranslated": "",
     "legendLabel": "Forklaring til vindrosen",
@@ -71,10 +70,12 @@
     "noneLabel": "ingen",
     "trainingSite": "Kursplass",
     "notReviewed": "Ikke gjennomgått ennå",
-    "notSet": "Ikke satt",
     "notRegistered": "Ikke registrert ennå",
     "siteTitle": "HPGT flysteder",
-    "aboutLink": "Om siden og personvern"
+    "aboutLink": "Om siden og personvern",
+    "menuPlan": "Planlegg tur",
+    "menuClub": "Klubben og siden",
+    "menuSettings": "Innstillinger"
   },
   "home": {
     "description": "Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.",
@@ -108,7 +109,6 @@
     "yrHarstad": "Varsel for Harstad-området",
     "yrUrl": "https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-294009",
     "windyHome": "Vind i høyden og flere værmodeller",
-    "beforeYouGo": "Før du drar",
     "notamTitle": "NOTAM og luftrom",
     "towersTitle": "Tårn",
     "towersSubtitle": "Telefonnumre til tårnene",
@@ -207,11 +207,9 @@
     "season": "Sesong",
     "maxWind": "Maks vind",
     "notRegistered": "Ikke registrert",
-    "airspaceOverLaunch": "Luftrom over start",
     "class": "Klasse {c}",
     "fromGround": "Fra bakken",
     "lower": "Nedre {limit}",
-    "launchAboveLimit": "Starten er over grensen",
     "noAirspace": "Ingen faste luftrom over starten.",
     "kmAway": "{km} km unna",
     "airspaceSource": "Hentet automatisk fra openAIP {date}.",
@@ -227,9 +225,6 @@
     "meteogramAlt": "Meteogram fra Yr for {name}",
     "meteogramCaption": "Varsel fra Yr, levert av NRK og Meteorologisk institutt. Trykk for time for time.",
     "noYr": "Yr-sted er ikke lagt inn for {name} ennå.",
-    "weatherServices": "Værtjenester",
-    "windySite": "Vind i høyden og modeller",
-    "flybartSite": "Værstasjoner i området",
     "images": "Bilder",
     "seeAllImages": "Se alle {n} bilder",
     "photo": "Foto",
@@ -452,7 +447,6 @@
       "suggest": "Bare steder som kan passe",
       "emptyCard": "Trykk på et flysted i kartet eller i listen for å se mer.",
       "showAll": "Vis alle {n}",
-      "showFewer": "Vis færre",
       "showSites": {
         "one": "Vis 1 flysted",
         "other": "Vis {n} flysteder"
@@ -469,7 +463,6 @@
       "see": "Se ›",
       "seeName": "Se {name}",
       "allDirections": "Alle retninger",
-      "directionsChosen": "Retning: {list}",
       "removeFilter": "Fjern filteret {name}",
       "suggestChip": "Kan passe",
       "measured": "målt"
@@ -585,7 +578,6 @@
       "justNow": "Nå nettopp",
       "minutesAgo": "for {n} min siden",
       "siteNow": "Målt nå på {name}",
-      "holfuy": "Holfuy",
       "gustValue": "kast {gust}",
       "minValue": "min {min}",
       "min": ", min {min}",
@@ -624,8 +616,6 @@
       "nextTitle": "Neste timer (varsel)",
       "noForecast": "Ingen varsel for flystedet akkurat nå.",
       "site": "Flysted {name}",
-      "colStation": "Stasjon",
-      "colWind": "Vind (kast) · endring",
       "trendLine": "Siste {minutes} min: {change} m/s · {character}",
       "tempRange": "Temperatur siste {hours} t: laveste {min} °C, høyeste {max} °C",
       "tempTitle": "Temperatur",
@@ -692,6 +682,16 @@
     "name": "Navn eller kontakt (valgfritt)",
     "send": "Send",
     "privacy": "Det du skriver blir en offentlig sak på GitHub. Cloudflare Turnstile sjekker at du ikke er en robot.",
-    "noScript": "Skjemaet trenger JavaScript."
+    "noScript": "Skjemaet trenger JavaScript.",
+    "pageTitle": "Meld fra",
+    "pageDescription": "Meld fra om et nytt flysted, en feil på siden, et forslag eller noe annet til HPGT.",
+    "pageIntro": "Kjenner du et flysted som mangler, har du funnet en feil, eller har du et forslag? Skriv kort, så får klubben en sak å følge opp. Gjelder det ett bestemt flysted, er det enklest å melde fra nederst på stedets egen side.",
+    "notReady": "Skjemaet er ikke slått på ennå.",
+    "kind_newsite": "Nytt flysted",
+    "kind_bug": "Feil på siden",
+    "kind_idea": "Forslag",
+    "menuLink": "Meld fra",
+    "menuSub": "nytt sted, feil eller forslag",
+    "messageGeneral": "Hva vil du melde fra om?"
   }
 }

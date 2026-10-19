@@ -389,3 +389,15 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
     globalThis.fetch = realFetch;
   }
 });
+
+test("report: a general report from /meld-fra/ has no site and its own kinds", () => {
+  const names = { heia: "Heia" };
+  const base = { message: "Det mangler et flysted på Senja.", token: "t" };
+  const r = reportMod.checkReport({ ...base, site: "", kind: "newsite" }, names);
+  assert.equal(r.error, undefined);
+  assert.equal(reportMod.checkReport({ ...base, site: "", kind: "landing" }, names).error, "bad-request", "site kinds need a site");
+  assert.equal(reportMod.checkReport({ ...base, site: "heia", kind: "newsite" }, names).error, "bad-request");
+  const issue = reportMod.issueFor(r, NOW);
+  assert.equal(issue.title, "[Meld fra] Generelt: Nytt flysted");
+  assert.match(issue.body, /gjelder ikke ett bestemt flysted/);
+});

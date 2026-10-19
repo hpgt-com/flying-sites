@@ -123,7 +123,8 @@ the menu and is marked `noindex`. It shows per site:
 ## «Meld fra om endring» (report a change)
 
 - A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
-  <kind>». The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
+  <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
+  Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
   `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day.
 - **Turning it on** (once):
   1. Cloudflare → Turnstile → Add widget: name «flysteder», hostname `flysteder.hpgt.com`, mode «Managed». Copy the
