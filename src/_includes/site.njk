@@ -386,7 +386,7 @@ scripts:
         <h3>{{ t.logbook.directions }}</h3>
         <ul class="logbook-dirs" aria-label="{{ t.logbook.directions }}">
           {% for c in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}{% set n = lb.directions[c] or 0 %}
-          <li><span class="logbook-dirs__code">{{ t.directions.labels[c] }}</span><span class="logbook-dirs__track"><span class="logbook-dirs__bar" style="width: {{ ((n / dmax) * 100) | round if dmax else 0 }}%"></span></span><span class="logbook-dirs__n">{{ n }}</span></li>
+          <li><span class="logbook-dirs__code">{{ t.directions.labels[c] }}</span><span class="logbook-dirs__track">{% set pct = (((n / dmax) * 20) | round) * 5 if dmax else 0 %}<span class="logbook-dirs__bar" data-pct="{{ 5 if (n > 0 and pct < 5) else pct }}"></span></span><span class="logbook-dirs__n">{{ n }}</span></li>
           {% endfor %}
         </ul>
         {%- set mmax = 0 -%}{%- for k in ["01","02","03","04","05","06","07","08","09","10","11","12"] %}{% if (lb.months[k] or 0) > mmax %}{% set mmax = lb.months[k] %}{% endif %}{% endfor %}
@@ -394,7 +394,7 @@ scripts:
         <ol class="flights-chart" aria-label="{{ t.logbook.months }}">
           {% for k in ["01","02","03","04","05","06","07","08","09","10","11","12"] %}{% set n = lb.months[k] or 0 %}
           <li class="flights-chart__month" title="{{ t.meta.months[loop.index0] }}: {{ n }}">
-            <span class="flights-chart__col" aria-hidden="true"><span class="flights-chart__bar" style="height: {{ ((n / mmax) * 100) | round if mmax else 0 }}%">{% if n == mmax and n > 0 %}<span class="flights-chart__value">{{ n }}</span>{% endif %}</span></span>
+            <span class="flights-chart__col" aria-hidden="true">{% set pct = (((n / mmax) * 20) | round) * 5 if mmax else 0 %}<span class="flights-chart__bar" data-pct="{{ 5 if (n > 0 and pct < 5) else pct }}">{% if n == mmax and n > 0 %}<span class="flights-chart__value">{{ n }}</span>{% endif %}</span></span>
             <span class="flights-chart__label" aria-hidden="true">{{ t.meta.months[loop.index0] | replace(".", "") | truncate(3, true, "") }}</span>
             <span class="visually-hidden">{{ t.meta.months[loop.index0] }}: {{ n }}</span>
           </li>
