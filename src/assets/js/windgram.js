@@ -13,6 +13,8 @@
 
   var NS = "http://www.w3.org/2000/svg";
   var CW = 34, TOP = 14, BOT = 290, MTOP = 2600, AXIS_W = 66;
+  // The oldest grid drawn (the data service renews it about every half hour; the build's can be older).
+  var MAX_AGE_MS = 12 * 3600000;
   // The rows under the grid (y in the drawing).
   var Y = { hour: BOT + 16, day: BOT + 30, launch: BOT + 40, gust: BOT + 80, thermal: BOT + 110, clouds: BOT + 140, rain: BOT + 184, end: BOT + 222 };
   var CLOUD = "M-8,3 C-11,3 -11,-3 -7,-3 C-6,-7 0,-8 2,-4 C6,-6 10,-2 7,1 C9,3 7,4 6,3 Z";
@@ -75,10 +77,14 @@
     }
 
     // Draws the grid and the rows. false when there are no hours left.
-    function render(data) {
+    // fetched: when the grid was fetched. A grid older than MAX_AGE_MS, or fetched in the future, is not drawn, and the
+    // section is hidden again (the forecast it shows would be too old to go by).
+    function render(data, fetched) {
       if (!data || !data.times || !data.times.length) return false;
+      var now = Date.now(), at = Date.parse(fetched);
+      if (Number.isFinite(at) && (now - at > MAX_AGE_MS || at > now + 15 * 60000)) { if (box) box.hidden = true; return false; }
       // Only hours from now on (the build or the data service can be some hours old).
-      var now = Date.now(), first = 0;
+      var first = 0;
       while (first < data.times.length - 1 && data.times[first + 1] <= now) first++;
       if (data.times[first] + 3600000 <= now) return false;
       var cols = [];
@@ -219,18 +225,27 @@
       el.insertAdjacentElement("afterend", wrap);
     }
 
-    render(page);
-    // The data service's grid, when it is newer than the one in the page (or the page has none).
-    if (page.live && typeof fetch === "function") {
+    var shown = { grid: page, fetched: page.fetched };
+    // The data service's grid, when it is newer than the one shown (or the page has none): at once, every ten minutes
+    // while the page is in view, and when it comes back into view. The one shown is drawn again each time, so the hours
+    // move on and a grid that has become too old is taken away.
+    function refresh() {
+      if (document.hidden) return;
+      render(shown.grid, shown.fetched);
+      if (!page.live || typeof fetch !== "function") return;
       fetch(page.live, { credentials: "omit" })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
           var grid = d && d.sites && d.sites[page.site];
-          if (!grid || (page.fetched && !(Date.parse(d.fetched) > Date.parse(page.fetched)))) return;
-          render(grid);
+          if (!grid || (shown.fetched && !(Date.parse(d.fetched) > Date.parse(shown.fetched)))) return;
+          shown = { grid: grid, fetched: d.fetched };
+          render(grid, d.fetched);
         })
         .catch(function () {});
     }
+    refresh();
+    setInterval(refresh, 10 * 60000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
   }
 
   globalThis.FlyingSitesWindgram = { speedClass: speedClass, gustClass: gustClass, usableThermal: usableThermal };

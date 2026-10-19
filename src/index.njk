@@ -100,7 +100,7 @@ scripts:
             {% endfor %}
           </div>
         </div>
-        {% if forecast %}
+        {% if forecast or site.forecastUrl %}
         {#- Dims sites where the forecast says «Passer ikke» or «For mye vind» at the time chosen in the timeline (home.js). -#}
         <button type="button" class="suggest-switch" data-suggest aria-pressed="false">{{ t.home.suggest }}</button>
         {% endif %}
@@ -145,7 +145,7 @@ scripts:
         <a class="stations__more" href="{{ '/vaer/' | localeUrl }}">{{ t.weather.homeLink }} ›</a>
       </section>
       {#- Day plan («Når kan det passe?»): time windows per site for the next few days, from the forecast (home.js, dayWindows in wind.js). -#}
-      {% if forecast %}
+      {% if forecast or site.forecastUrl %}
       <section class="day-plan" id="day-plan" aria-labelledby="day-plan-title" hidden>
         <h2 id="day-plan-title">{{ t.home.dayPlanTitle }}</h2>
         <p class="muted day-plan__note">{{ t.home.dayPlanNote }}</p>
@@ -181,7 +181,7 @@ scripts:
         <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
         <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
         {{ m.legend() }}
-        {% if forecast %}
+        {% if forecast or site.forecastUrl %}
         <ul class="legend wind-legend" id="wind-legend" aria-label="{{ t.home.windLegendLabel }}">
           <li><span class="wind-dot wind-dot--ok"></span>{{ t.home.ratingOk }}</li>
           <li><span class="wind-dot wind-dot--maybe"></span>{{ t.home.ratingMaybe }}</li>
@@ -196,7 +196,7 @@ scripts:
         {% endif %}
       </div>
     </div>
-    {% if forecast %}
+    {% if forecast or site.forecastUrl %}
     {#- The time for the wind assessment: «Nå» and a slider over the hours in the forecast. The track is coloured by the best
         rating among the sites matching the filters, hour by hour, so you can see when it may work (home.js). -#}
     <div class="timeline" id="timeline" hidden>

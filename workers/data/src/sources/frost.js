@@ -155,7 +155,12 @@ export async function run(store, env, sites, siteOf = {}, now = Date.now(), excl
   if (measurements.length) state.stations = state.stations.filter((s) => active.has(s.id));
   await store.putState("met-stations", state);
   await store.addMeasurements(measurements);
-  await archiveSource(store, env, KEY, state.stations.map((s) => ({ source: KEY, id: s.id, name: s.name, model: null, site: siteOf[s.id] ?? null, lat: s.lat, lon: s.lon, altitude: s.altitude })), KEEP_DAYS, now);
+  // The fresh measurements are published first; the archive comes after, and a failing archive (R2 down) only logs.
   const rows = await store.measurementsSince(KEY, new Date(now - HISTORY_HOURS * 3600000).toISOString());
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(state.stations, rows, siteOf, now)));
+  try {
+    await archiveSource(store, env, KEY, state.stations.map((s) => ({ source: KEY, id: s.id, name: s.name, model: null, site: siteOf[s.id] ?? null, lat: s.lat, lon: s.lon, altitude: s.altitude })), KEEP_DAYS, now);
+  } catch (err) {
+    console.warn(`Frost: arkivet: ${err.message}`);
+  }
 }

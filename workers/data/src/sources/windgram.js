@@ -22,9 +22,10 @@ export function buildWindgram(state, now = Date.now()) {
   return { dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(oldest).toISOString(), sites: Object.fromEntries(fresh.map(([id, s]) => [id, s.grid])) };
 }
 
-// The launches to fetch now: those missing from the state first, then those fetched longest ago.
+// The launches to fetch now: those missing from the state first, then those tried longest ago. A failed try counts
+// (tried), so launches that keep failing go to the back of the queue instead of taking every run's places.
 export function pickSites(sites, state, count = PER_RUN) {
-  const age = (id) => Date.parse(state.sites[id]?.fetched) || 0;
+  const age = (id) => Math.max(Date.parse(state.sites[id]?.fetched) || 0, Date.parse(state.sites[id]?.tried) || 0);
   return [...sites].sort((a, b) => age(a.id) - age(b.id)).slice(0, count);
 }
 
@@ -37,6 +38,7 @@ export async function run(store, sites, now = Date.now(), ids = WINDGRAM_SITES, 
     try {
       state.sites[site.id] = { fetched: new Date(now).toISOString(), grid: await fetchSite({ lat: site.lat, lon: site.lon }, site.altitude ?? undefined, now) };
     } catch (err) {
+      state.sites[site.id] = { ...state.sites[site.id], tried: new Date(now).toISOString() };
       console.warn(`Open-Meteo: ${site.id}: ${err.message}`);
     }
   }

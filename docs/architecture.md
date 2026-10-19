@@ -266,7 +266,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 |---|---|---|---|---|---|
 | Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
-| Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
+| Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, at once and every 10 minutes while the page is in view (`watchForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
 | Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Kan jeg fly her nå?» on the station's site), refetched every minute |
 | Data service: winds aloft | Open-Meteo, for the launches in `WINDGRAM_SITES` (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen) | `workers/data/src/sources/windgram.js` (the same `lib/weather/open-meteo.js` and `lib/windgram.js`) | Every 10 minutes, 2 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/windgram.json` | `windgram.js` on the site page, when newer than the grid in the page (or the page has none) |
 | Data service: verification | The forecast hours and the measurements already stored | `workers/data/src/sources/verify.js`, the sites in `siteLinks()` in `stations.js` | Twice an hour (:09, :39) | Durable Object (SQLite) `verify_hours`, kept a year; the last 30 days as `https://data.hpgt.workers.dev/v1/verification.json` | «Målt nå» on the site page and «Målt mot varslet» on /vaer/ (`verifyBlock` in `stations.js`) |
@@ -294,12 +294,16 @@ it fetches (a workflow today, a backend later) without the site noticing.
   into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
   archived (`src/archive.js`).
 - **Forecast in the data service:** GitHub skips many scheduled runs, so the forecast built into the pages can be hours old. The
-  data service fetches MET by itself, and the pages use its forecast when it is newer, well formed and
-  covers every launch the page has (`isNewerForecast` in `wind.js`); otherwise they keep their own. It also brings the
-  assessment back when the page's forecast has become too old. The free plan gives 10 ms of CPU per run, so each run
-  fetches the 6 launches fetched longest ago, and the whole forecast is renewed about every half hour.
+  data service fetches MET by itself, and the pages use its forecast when it is newer and well formed (hours in order,
+  without repeats; `isNewerForecast` in `wind.js`), fetching it at once, every 10 minutes while the page is in view, and
+  when it comes back into view or online (`watchForecast`). A launch missing from it only has no assessment; the site
+  page takes it only when it has its own launch (or the page has no usable forecast). A page built without a forecast
+  gets one this way too. It also brings the assessment back when the page's forecast has become too old. The free plan
+  gives 10 ms of CPU per run, so each run fetches the 6 launches tried longest ago (a failed try counts, so launches that
+  keep failing go to the back of the queue), and the whole forecast is renewed about every half hour.
 - **Winds aloft in the data service:** the same grid as the build's, two launches every 10 minutes (each renewed about
-  every half hour); the site page draws the one
+  every half hour, a failed try counting as for the forecast); the site page asks again every 10 minutes, leaves out a
+  grid older than 12 hours, and draws the one
   in the page and replaces it with the service's when that is newer, so the section also works when the build has none.
 - **No scheduled builds:** both weather sources are in the data service, so `deploy.yml` has no schedule, and the site
   is built only when the content changes. The `weather` job stays, so each build starts from a fresh forecast.

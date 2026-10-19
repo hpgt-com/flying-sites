@@ -236,8 +236,10 @@ the menu and is marked `noindex`. It shows per site:
   pressure_hpa, rain_mm, extra_json`), and the stations in `holfuy/stations.csv` (`source, station, name, model, site,
   lat, lon, altitude_m`). A station without a sensor leaves its column empty. Other numbers a station sends are kept in
   `extra_json` until they get a column of their own (`workers/data/src/measurements.js`; the store adds the column).
-  `source` + `station` identify a station, since two providers can use the same number. Written after midnight UTC for the day before
-  (`workers/data/src/archive.js`).
+  `source` + `station` identify a station, since two providers can use the same number. Written from 03:00 UTC for the day before, so
+  measurements that come in late are included (`workers/data/src/archive.js`). The fresh measurements are published
+  before the archive is written, so a failing archive (R2 down) does not stop «Målt nå»; nothing is deleted from the
+  store before its day is archived.
 - The folders use the `key=value` form, so DuckDB, BigQuery, Athena and Spark read `station` and `year` as columns, and
   every row carries the station, so all files load into one table. Example with DuckDB and R2's S3 address:
   `SELECT station, date_trunc('day', time_utc) AS day, avg(speed_ms), max(gust_ms) FROM read_csv('s3://hpgt-data-archive/holfuy/*/*/*.csv', hive_partitioning = true) GROUP BY ALL ORDER BY day;`
@@ -251,7 +253,8 @@ the menu and is marked `noindex`. It shows per site:
      Only after steps 1 and 2: a deploy with the binding and no bucket fails.
 - Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
   S3 address `https://<account id>.r2.cloudflarestorage.com`.
-- If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), the wind assessment
+- If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), or comes from a MET
+  model run more than 12 hours old (`maxModelAgeHours`), the wind assessment
   is turned off and the site says so.
 - **Fetch a new forecast now:** Actions → «Build and deploy» → «Run workflow».
 - The limits for the assessment are in `src/_data/windRules.json`. A site's own limit is set with

@@ -75,7 +75,7 @@ scripts:
     {% if intro %}<div class="lead"{% if untranslated %} lang="nb"{% endif %}>{{ intro | safe }}</div>{% endif %}
     {#- «Kan jeg fly her nå?»: the assessment now in large type, the next 12 hours as cards, and folded below the periods that
         may work and the next 48 hours as bars (site-wind.js). The details (Yr meteogram and winds aloft) are folded too. -#}
-    <section class="block block--now{% if forecast and forecast.sites and forecast.sites[id] %} block--now-wait{% endif %}" id="vaer" aria-labelledby="h-weather">
+    <section class="block block--now{% if (forecast and forecast.sites and forecast.sites[id]) or site.forecastUrl %} block--now-wait{% endif %}" id="vaer" aria-labelledby="h-weather">
       <h2 id="h-weather" class="now-eyebrow">{{ t.site.canIFly }}</h2>
       <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
       {#- Scrolls sideways when the cards do not fit, so it can take focus and be scrolled with the arrow keys. -#}
@@ -488,12 +488,15 @@ scripts:
   rules: { minWind: windRules.minWind, maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else windRules.maxWind), maxGust: windRules.maxGust }
 } | json | safe }}</script>
 {% endif %}
-{#- The forecast for this launch, for «vind nå» in Vær (site-wind.js). Only this site, so the page stays small. -#}
-{% if forecast and forecast.sites and forecast.sites[id] %}
+{#- The forecast for this launch, for «vind nå» in Vær (site-wind.js). Only this site, so the page stays small. Without
+    one in the build (MET failed then) the box asks the data service for it. -#}
+{% set builtWind = forecast and forecast.sites and forecast.sites[id] %}
+{% if builtWind or site.forecastUrl %}
 <script type="application/json" id="site-wind-data">{{ {
-  fetched: forecast.fetched,
-  times: forecast.times,
-  series: forecast.sites[id],
+  fetched: (forecast.fetched if builtWind else null),
+  updated: (forecast.updated if builtWind else null),
+  times: (forecast.times if builtWind else null),
+  series: (forecast.sites[id] if builtWind else null),
   rules: windRules,
   live: site.forecastUrl,
   site: { id: id, lat: launch.lat, lon: launch.lon, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null), soarMinWind: (wind_limits.soar_min_wind if wind_limits and wind_limits.soar_min_wind else null) }

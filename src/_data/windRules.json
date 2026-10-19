@@ -6,5 +6,6 @@
   "sectorMargin": 10,
   "rainMaybe": 0.1,
   "rainNo": 0.5,
-  "maxForecastAgeHours": 6
+  "maxForecastAgeHours": 6,
+  "maxModelAgeHours": 12
 }

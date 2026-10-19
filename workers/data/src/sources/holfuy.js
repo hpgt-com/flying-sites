@@ -108,9 +108,14 @@ export async function run(store, env, stations, now = Date.now()) {
   const meta = (await store.getState("holfuy-meta")) ?? {};
   for (const m of own) meta[m.station] = { name: m.name, lat: m.lat, lon: m.lon, altitude: m.altitude };
   await store.putState("holfuy-meta", meta);
-  await archive(store, env, stations, now);
+  // The fresh measurements are published first; the archive comes after, and a failing archive (R2 down) only logs.
   const rows = await store.measurementsSince(KEY, new Date(now - HISTORY_HOURS * 3600000).toISOString());
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(stations, rows, meta, now)));
+  try {
+    await archive(store, env, stations, now);
+  } catch (err) {
+    console.warn(`Holfuy: arkivet: ${err.message}`);
+  }
 }
 
 // The archive (archive.js): the finished days per station, and the station list from Holfuy's names and positions.

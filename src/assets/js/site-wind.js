@@ -13,13 +13,17 @@
   // The verdict chip in the image keeps its room until it is filled in (site.njk data-pending); without an assessment
   // it is taken away.
   var heroStatus = document.getElementById("hero-status");
-  if (!data || !data.series) {
+  if (!data || !(data.series || data.live)) {
     if (heroStatus) { heroStatus.hidden = true; heroStatus.removeAttribute("data-pending"); }
     return;
   }
 
-  var forecast = { fetched: data.fetched, times: data.times, sites: {} };
-  forecast.sites[data.site.id] = data.series;
+  // The forecast built into the page, or null until the data service has answered (the build had none).
+  var forecast = null, failed = false;
+  if (data.series) {
+    forecast = { fetched: data.fetched, updated: data.updated, times: data.times, sites: {} };
+    forecast.sites[data.site.id] = data.series;
+  }
   // The symbol in the circle before each rating, so the rating does not rest on colour alone.
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×", none: "–" };
   var block = el.closest(".block--now");
@@ -50,7 +54,13 @@
 
   function render() {
     var now = Date.now();
-    if (W.isStale(forecast, data.rules, now)) {
+    // No forecast yet: fetching it, or, when the data service did not answer, the same as a forecast too old.
+    if (!forecast && !failed) {
+      show("none", [FS.t("wind.loading"), sun(now)]);
+      hideDetails();
+      return;
+    }
+    if (!forecast || W.isStale(forecast, data.rules, now)) {
       show("none", [FS.t("wind.staleSite"), ["span", FS.t("wind.staleSiteText")], sun(now)]);
       hideDetails();
       return;
@@ -217,11 +227,15 @@
   render();
   // The space kept for the box while it was empty (site.njk, styles.css) is no longer needed.
   if (block) block.classList.remove("block--now-wait");
-  // A newer forecast for this launch from the data service (workers/data), when the page's own is older.
-  W.fetchNewerForecast(data.live, forecast, function (newer) {
+  // A newer forecast for this launch from the data service (workers/data): at once, every ten minutes while the page is
+  // in view, and when it comes back into view or online (wind.js watchForecast). Only one that has this launch replaces
+  // the page's own forecast while that is still usable.
+  W.watchForecast(data.live, function () { return forecast && !W.isStale(forecast, data.rules, Date.now()) ? forecast : null; }, function (newer) {
     forecast = { fetched: newer.fetched, updated: newer.updated, times: newer.times, sites: {} };
-    forecast.sites[data.site.id] = newer.sites[data.site.id];
+    forecast.sites[data.site.id] = newer.sites[data.site.id] || null;
     render();
+  }, data.site.id, function () {
+    if (!forecast && !failed) { failed = true; render(); }
   });
   // The current hour and the forecast's age change while the page is open.
   setInterval(render, 60000);

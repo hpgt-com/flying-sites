@@ -53,20 +53,29 @@
     return (p.hour < 10 ? "0" : "") + p.hour + meta().clockSep + (p.minute < 10 ? "0" : "") + p.minute;
   }
 
-  // The forecast is too old when it was fetched more than maxForecastAgeHours ago, e.g. because the scheduled
-  // build has stopped. No assessment is shown then.
+  // The forecast is too old when it was fetched more than maxForecastAgeHours ago (the data service or the build has
+  // stopped), when MET's model run it comes from is more than maxModelAgeHours old (fetched lately, but from an old
+  // run), or when either time is in the future (a wrong clock or wrong data). No assessment is shown then.
+  var FUTURE_SLACK = 15 * 60000;
   function isStale(forecast, rules, now) {
     var fetched = Date.parse(forecast && forecast.fetched);
-    return !Number.isFinite(fetched) || now - fetched > rules.maxForecastAgeHours * HOUR;
+    if (!Number.isFinite(fetched) || fetched > now + FUTURE_SLACK || now - fetched > rules.maxForecastAgeHours * HOUR) return true;
+    var updated = Date.parse(forecast.updated);
+    return Number.isFinite(updated) && (updated > now + FUTURE_SLACK || now - updated > (rules.maxModelAgeHours || 12) * HOUR);
   }
 
   // --- The forecast from the data service ---
   // The pages carry the forecast from the build, which GitHub may build late. The data service (workers/data)
   // fetches MET every few minutes, and the pages use its forecast when it is newer. Only a forecast in the right shape
-  // (hours as times, a row per hour with numbers or null), newer than the page's, and with every launch the page has.
-  function isNewerForecast(candidate, current) {
+  // (hours as times, in order without repeats, a row per hour with numbers or null) and newer than the page's. A launch
+  // missing from it (the service leaves out a launch it has not fetched lately) only has no assessment; it does not
+  // keep the fresh forecast from the others. needSite: a launch the candidate must have (the site page), unless the page
+  // has no forecast of its own to keep.
+  function isNewerForecast(candidate, current, needSite) {
     if (!candidate || !Array.isArray(candidate.times) || !candidate.sites || typeof candidate.sites !== "object") return false;
-    if (!candidate.times.every(function (t) { return typeof t === "string" && Number.isFinite(Date.parse(t)); })) return false;
+    if (!candidate.times.every(function (t, i, all) {
+      return typeof t === "string" && Number.isFinite(Date.parse(t)) && (i === 0 || Date.parse(t) > Date.parse(all[i - 1]));
+    })) return false;
     var n = candidate.times.length;
     var okRow = function (row) {
       return row === null || (Array.isArray(row) && row.length === 4 && row.every(function (v) { return v === null || typeof v === "number"; }));
@@ -77,17 +86,38 @@
     if (!Number.isFinite(fetched)) return false;
     if (!current) return true;
     if (fetched <= Date.parse(current.fetched)) return false;
-    return Object.keys(current.sites || {}).every(function (id) { return ids.indexOf(id) !== -1; });
+    return !needSite || ids.indexOf(needSite) !== -1;
   }
 
   // Fetches the forecast from the data service, and calls done(forecast) only when isNewerForecast holds. On any
-  // error (offline, the service down) nothing happens, and the page keeps the forecast it has.
-  function fetchNewerForecast(url, current, done) {
+  // error (offline, the service down, no answer in 15 s) it calls fail() if given, and the page keeps what it has.
+  function fetchNewerForecast(url, current, done, needSite, fail) {
     if (!url || typeof fetch !== "function") return;
-    fetch(url, { credentials: "omit" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (f) { if (isNewerForecast(f, current)) done(f); })
-      .catch(function () {});
+    var ctrl = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 15000) : null;
+    fetch(url, ctrl ? { credentials: "omit", signal: ctrl.signal } : { credentials: "omit" })
+      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; })
+      .then(function (f) { if (isNewerForecast(f, current, needSite)) done(f); else if (!f && fail) fail(); })
+      .catch(function () { clearTimeout(timer); if (fail) fail(); });
+  }
+
+  // Keeps a page's forecast fresh: fetches at once, every REFRESH_MS while the page is in view, when the page comes
+  // back into view, and when the connection comes back. current(): the forecast the page has now (or null).
+  var REFRESH_MS = 10 * 60000;
+  function watchForecast(url, current, done, needSite, fail) {
+    if (!url || typeof fetch !== "function") return;
+    var busy = false;
+    function load() {
+      if (busy || (typeof document !== "undefined" && document.hidden)) return;
+      busy = true;
+      fetchNewerForecast(url, current(), function (f) { busy = false; done(f); }, needSite, function () { busy = false; if (fail) fail(); });
+      // Also free when the answer was not newer (neither done nor fail is called then).
+      setTimeout(function () { busy = false; }, 16000);
+    }
+    load();
+    setInterval(load, REFRESH_MS);
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+    if (typeof window !== "undefined") window.addEventListener("online", load);
   }
 
   // Index in the forecast for the chosen time, or -1 when the forecast does not cover it.
@@ -107,8 +137,10 @@
     var current = -1;
     ms.forEach(function (x, i) { if (x <= now) current = i; });
     if (current < 0 || now - ms[current] >= HOUR) return -1;
-    var index = current + Number(slot);
-    return index < ms.length ? index : -1;
+    // The hour that many hours on, found by its time (not by counting rows, so a missing hour gives -1, not a later one).
+    var target = ms[current] + Number(slot) * HOUR;
+    for (var j = current; j < ms.length; j++) if (ms[j] === target) return j;
+    return -1;
   }
 
   // --- Assessment ---
@@ -300,6 +332,7 @@
     isStale: isStale,
     isNewerForecast: isNewerForecast,
     fetchNewerForecast: fetchNewerForecast,
+    watchForecast: watchForecast,
     slotIndex: slotIndex,
     directionCode: directionCode,
     rateWind: rateWind,
