@@ -665,7 +665,7 @@
     "privacyNoAccount": "The site has no login and no forms, and stores no personal data about you.",
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",
-    "changes": "Tell someone in the club. If you have a GitHub account, you can also open an issue on {github}. A form on the site that does not need a GitHub account is coming."
+    "changes": "Use the form at the bottom of the site's page, or {form} in the menu for what does not concern one site. It becomes an issue for the club, without you needing an account. You can also tell someone in the club, or open an issue yourself on {github}."
   },
   "report": {
     "title": "Report a change",
