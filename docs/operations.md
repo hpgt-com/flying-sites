@@ -130,10 +130,15 @@ the menu and is marked `noindex`. It shows per site:
      **site key** (public) into `turnstileSiteKey` in `src/_data/site.js`. The form is hidden while it is empty.
   2. The **secret key** from the same widget: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets →
      add the secret `TURNSTILE_SECRET`.
-  3. GitHub → Settings → Developer settings → Fine-grained tokens → Generate: resource owner `hpgt-com`, only the
-     repository `hpgt-com/flying-sites`, permission **Issues: Read and write** (nothing else), an expiry date. Add it as
-     the secret `GITHUB_ISSUES_TOKEN` on the data service as above. Renew it before it expires.
-- Without both secrets the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
+  3. The issues are made by the club's **GitHub App**, so they show as from the app and nothing expires:
+     organisation `hpgt-com` → Settings → Developer settings → GitHub Apps → New GitHub App. Name «HPGT flysteder»,
+     homepage `https://flysteder.hpgt.com`, Webhook off, permissions **Repository → Issues: Read and write** (nothing
+     else), «Only on this account». Create it; note the **App ID**; «Generate a private key» downloads a `.pem` file.
+     Then «Install App» → only the repository `flying-sites`. Add the secrets `GITHUB_APP_ID` (the number) and
+     `GITHUB_APP_PRIVATE_KEY` (the whole `.pem` file, as it is) on the data service as above, and delete the `.pem`.
+     A fine-grained token in `GITHUB_ISSUES_TOKEN` (Issues: read and write, only this repository) is used instead when
+     the app's secrets are missing; once the app works it can be deleted, in Cloudflare and on GitHub.
+- Without Turnstile and the app (or the token) the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
   (Observability), as `report: GitHub svarte …`.
 
 ## How well the forecast hits

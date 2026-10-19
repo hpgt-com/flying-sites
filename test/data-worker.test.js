@@ -357,3 +357,35 @@ test("report: needs both secrets, Turnstile and stays within the daily limit", a
     globalThis.fetch = realFetch;
   }
 });
+
+test("report: with the GitHub App, a signed JWT gets an installation token that makes the issue", async () => {
+  const { generateKeyPairSync, createVerify } = await import("node:crypto");
+  const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const pem = privateKey.export({ type: "pkcs1", format: "pem" });
+  const ghApp = await import("../workers/data/src/github-app.js");
+  const jwt = await ghApp.appJwt(12345, pem, NOW);
+  const [h, c, s] = jwt.split(".");
+  const verify = createVerify("RSA-SHA256");
+  verify.update(`${h}.${c}`);
+  assert.ok(verify.verify(publicKey, Buffer.from(s, "base64url")), "signed with the app's key (PKCS#1 wrapped as PKCS#8)");
+  assert.deepEqual(JSON.parse(Buffer.from(c, "base64url")), { iat: NOW / 1000 - 60, exp: NOW / 1000 + 540, iss: "12345" });
+
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    calls.push([String(url), init.headers?.authorization ?? ""]);
+    if (String(url).includes("siteverify")) return Response.json({ success: true });
+    if (String(url).endsWith("/installation")) return Response.json({ id: 99 });
+    if (String(url).endsWith("/app/installations/99/access_tokens")) return Response.json({ token: "inst-token" }, { status: 201 });
+    return new Response("{}", { status: 201 });
+  };
+  try {
+    const store = { getState: async () => 0, putState: async () => {} };
+    const req = new Request("https://data.test/v1/report", { method: "POST", body: JSON.stringify({ site: "heia", kind: "other", message: "Test av appen her.", token: "t" }) });
+    const res = await reportMod.handleReport(req, { TURNSTILE_SECRET: "s", GITHUB_APP_ID: "12345", GITHUB_APP_PRIVATE_KEY: pem }, store, { heia: "Heia" }, NOW);
+    assert.equal(res.status, 200);
+    assert.deepEqual(calls.find(([u]) => u.endsWith("/repos/hpgt-com/flying-sites/issues")), ["https://api.github.com/repos/hpgt-com/flying-sites/issues", "Bearer inst-token"]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
