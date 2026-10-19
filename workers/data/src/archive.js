@@ -4,7 +4,8 @@
 // fit one table, and the folders use the key=value form (holfuy/station=490/year=2026/2026-10-16.csv) that DuckDB,
 // BigQuery, Athena and Spark read as columns, so a query can pick stations and years without opening every file.
 // Nothing is deleted from the store before its day is in the archive, so without R2 the store keeps everything.
-// Pure helpers here; the sources write their own files. Tested in test/data-worker.test.js.
+// The helpers are pure; archiveSource writes a source's files and is shared by the sources. Tested in
+// test/data-worker.test.js.
 
 import { FIELDS } from "./measurements.js";
 
@@ -50,4 +51,27 @@ export function measurementsCsv(rows) {
 export function stationsCsv(stations) {
   return csv(["source", "station", "name", "model", "site", "lat", "lon", "altitude_m"],
     stations.map((s) => [s.source, s.id, s.name, s.model, s.site, s.lat, s.lon, s.altitude]));
+}
+
+const CSV = { httpMetadata: { contentType: "text/csv; charset=utf-8" } };
+
+// Writes a source's finished days not yet in the archive (at most two per run) and its station list, then deletes from
+// the store what is both in the archive and older than keepDays. stations: [{ source, id, name, model, site, lat, lon,
+// altitude }]. Without R2 (env.ARCHIVE) nothing is written or deleted.
+export async function archiveSource(store, env, key, stations, keepDays, now) {
+  if (!env.ARCHIVE) return;
+  const state = (await store.getState(`${key}-archive`)) ?? { through: null };
+  const days = daysToArchive(await store.oldestMeasurement(key), state.through, now);
+  if (days.length) await env.ARCHIVE.put(`${key}/stations.csv`, stationsCsv(stations), CSV);
+  for (const day of days) {
+    const rows = await store.measurementsBetween(key, day + "T00:00:00.000Z", day + "T23:59:59.999Z");
+    const ids = new Set(rows.map((r) => String(r.station)));
+    for (const id of ids) {
+      await env.ARCHIVE.put(dayPath(key, id, day), measurementsCsv(rows.filter((r) => String(r.station) === id)), CSV);
+    }
+    state.through = day;
+    await store.putState(`${key}-archive`, state);
+  }
+  const before = pruneBefore(now, keepDays, state.through);
+  if (before) await store.prune(key, before);
 }

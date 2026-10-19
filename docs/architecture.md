@@ -241,6 +241,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
 | Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
 | Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Kan jeg fly her nå?» on the station's site), refetched every minute |
+| Data service: MET stations | MET Frost (client ID `FROST_CLIENT_ID` in Cloudflare): the stations within 15 km of a launch, found once a day | `workers/data/src/sources/frost.js` | Every 10 minutes | As the Holfuy stations (source `met`), served in `/v1/stations.json` together with them (`merge.js`) | As the Holfuy stations |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
 
@@ -255,7 +256,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
   fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
   `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
-  (`src/schedule.js`: stations every minute, forecast every 5). The store is one Durable Object with SQLite
+  (`src/schedule.js`: Holfuy every minute, forecast every 5, MET's stations every 10). The store is one Durable Object with SQLite
   (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
   the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
   into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is

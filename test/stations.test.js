@@ -118,3 +118,10 @@ test("the forecast's past hours for «Målt mot varslet», only those before thi
   const fc = ST.forecastFrom({ times, sites: { heia: [[40, 4, 7, 0], [45, 5, 8, 0]] }, past }, "heia", NOW, 6);
   assert.deepEqual(fc.past, [{ time: Date.parse("2026-10-18T13:00:00Z"), dir: 30, speed: 3, gust: 6 }]);
 });
+
+test("the station's page at its source: the data service's address, Holfuy's for older Holfuy items, none for MET", () => {
+  assert.equal(ST.stationUrl(item({ url: "https://holfuy.com/en/weather/490" })), "https://holfuy.com/en/weather/490");
+  assert.equal(ST.stationUrl(item({ source: "Holfuy" })), "https://holfuy.com/en/weather/490");
+  assert.equal(ST.stationUrl(item({ id: "SN84970", source: "MET Norge", url: null })), null);
+  assert.equal(ST.stationUrl(item({ url: "javascript:alert(1)", source: "MET Norge" })), null, "only https addresses");
+});

@@ -103,7 +103,14 @@
     return r ? text("stations.tempRange", { hours: r.hours, min: value(r.min), max: value(r.max) }) : "";
   }
 
+  // The station's own page at its source: the address the data service gives (url), or Holfuy's for a Holfuy station
+  // from before it gave one. null when the source has no page per station (MET).
+  function isHolfuy(item) { return !item.source || /holfuy/i.test(item.source); }
   function holfuyUrl(item) { return "https://holfuy.com/en/weather/" + encodeURIComponent(String(item.id)); }
+  function stationUrl(item) {
+    if (typeof item.url === "string" && /^https:\/\//.test(item.url)) return item.url;
+    return isHolfuy(item) ? holfuyUrl(item) : null;
+  }
 
   // --- Change over a period (the weather page) ---
   // How the wind has changed over the last `minutes`: the latest measurement against the one closest to that long before,
@@ -216,7 +223,7 @@
   }
 
   // One station as a row, a link to `href` (its card): the site's wind rose with the measured arrow, the name, the rating
-  // chip, the site, height and age, the direction against the launch directions, and on the right the wind (gust), the
+  // chip, the site, the source, height and age, the direction against the launch directions, and on the right the wind (gust), the
   // change over `minutes` and how even the wind is.
   function row(item, now, minutes, href) {
     var li = make("li");
@@ -229,7 +236,7 @@
     var info = make("span", "weather-row__info");
     info.appendChild(make("strong", "weather-row__name", item.name));
     if (rating) info.appendChild(ratingChip(rating));
-    info.appendChild(make("span", "weather-row__sub", [site && site.name ? text("stations.site", { name: site.name }) : "", altitudeText(item), ageText(item, now)].filter(Boolean).join(" · ")));
+    info.appendChild(make("span", "weather-row__sub", [site && site.name ? text("stations.site", { name: site.name }) : "", item.source || "", altitudeText(item), ageText(item, now)].filter(Boolean).join(" · ")));
     if (hasWind(item, now) && isNum(w.dir)) {
       var where = launchText(w.dir, site);
       info.appendChild(make("span", "weather-row__dir", dirText(w.dir) + (where ? " · " + where : "")));
@@ -247,10 +254,13 @@
     return li;
   }
 
-  // A link to the station at Holfuy, in a new tab, which screen readers are told (as the external() macro does).
+  // The station's name as a link to its page at the source, in a new tab, which screen readers are told (as the external()
+  // macro does); just the name when the source has no such page.
   function stationLink(item, cls) {
+    var url = stationUrl(item);
+    if (!url) return make("span", cls, item.name);
     var a = make("a", cls, item.name);
-    a.href = holfuyUrl(item);
+    a.href = url;
     a.target = "_blank";
     a.rel = "noopener";
     a.appendChild(make("span", "visually-hidden", " " + (globalThis.FlyingSites.opensNewTab || "")));
@@ -524,7 +534,8 @@
     return wrap;
   }
 
-  // Where the measurement comes from: «Kilde: Holfuy, stasjon 490», with the source as a link to the station there.
+  // Where the measurement comes from: «Kilde: Holfuy, stasjon 490» or «Kilde: MET Norge, stasjon SN84970», with the source
+  // as a link to the station there when it has a page.
   function sourceLine(item) {
     var p = make("p", "station__source", text("stations.source", { source: "" }).trim() + " ");
     var a = stationLink(item);
@@ -643,9 +654,10 @@
       var now = Date.now(), site = siteEl.getAttribute("data-site");
       var item = data.items.filter(function (i) { return i.site === site; })[0];
       siteEl.hidden = !item;
-      if (linkEl) linkEl.hidden = !item;
+      // The «Holfuy» button among the weather links, only for a Holfuy station.
+      if (linkEl) linkEl.hidden = !item || !isHolfuy(item);
       if (!item) return;
-      if (linkEl) linkEl.href = holfuyUrl(item);
+      if (linkEl && isHolfuy(item)) linkEl.href = stationUrl(item);
       siteEl.replaceChildren(card(item, now, "div", true));
     });
   }
@@ -659,6 +671,7 @@
     ageText: ageText,
     otherText: otherText,
     holfuyUrl: holfuyUrl,
+    stationUrl: stationUrl,
     stationLink: stationLink,
     value: value,
     dirText: dirText,

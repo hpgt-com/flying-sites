@@ -627,7 +627,7 @@
     "sourceKartverket": "kart, høyder og høydeprofiler (CC BY 4.0).",
     "sourceOpenaip": "luftrom over startene (CC BY-NC 4.0). Ikke for navigasjon.",
     "metName": "Meteorologisk institutt (MET)",
-    "sourceMet": "vindvarselet for hver start (CC BY 4.0), og meteogrammene fra Yr (levert av NRK og MET).",
+    "sourceMet": "vindvarselet for hver start og målinger fra METs værstasjoner i nærheten av flystedene (CC BY 4.0), og meteogrammene fra Yr (levert av NRK og MET).",
     "sourceOpenMeteo": "vind i høyden (CC BY 4.0).",
     "sourceHolfuy": "målt vind, temperatur og trykk fra værstasjonene, på værsiden og stedssidene.",
     "sourceFlightlog": "startkoordinater og retninger for mange steder, og lenker til stedene der.",

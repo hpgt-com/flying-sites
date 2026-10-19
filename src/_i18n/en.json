@@ -627,7 +627,7 @@
     "sourceKartverket": "maps, heights and elevation profiles (CC BY 4.0).",
     "sourceOpenaip": "airspace over the launches (CC BY-NC 4.0). Not for navigation.",
     "metName": "Norwegian Meteorological Institute (MET)",
-    "sourceMet": "the wind forecast for each launch (CC BY 4.0), and the meteograms from Yr (delivered by NRK and MET).",
+    "sourceMet": "the wind forecast for each launch and measurements from MET's weather stations near the flying sites (CC BY 4.0), and the meteograms from Yr (delivered by NRK and MET).",
     "sourceOpenMeteo": "winds aloft (CC BY 4.0).",
     "sourceHolfuy": "measured wind, temperature and pressure from the weather stations, on the weather page and the site pages.",
     "sourceFlightlog": "launch coordinates and directions for many sites, and links to the sites there.",
