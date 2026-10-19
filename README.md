@@ -4,7 +4,8 @@
 
 Source code for **[flysteder.hpgt.com](https://flysteder.hpgt.com)**, the flying site guide of Harstad Hang og
 Paragliderklubb (HPGT). It shows paragliding and speedflying sites around Harstad and Kvæfjord, Northern Norway, with
-wind directions, hazards, airspace, walking routes, weather forecasts and a rough wind assessment based on MET data.
+wind directions, hazards, airspace, walking routes, weather forecasts, measured wind from the club's weather stations
+and a rough wind assessment based on MET data and the stations.
 The site is in Norwegian, with an [English version](https://flysteder.hpgt.com/en/).
 
 It builds on Lars Sletten's old flying site guide, which he has handed over to the club.
@@ -41,6 +42,7 @@ Do you have corrections, photos or new information about a site?
 | `src/_includes/` | Page templates for the home page and the site pages. |
 | `src/assets/` | CSS, JavaScript and images. |
 | `lib/`, `scripts/` | Validation, GPX, images, airspace, weather and maintenance scripts. See [Data modules](docs/architecture.md#data-modules). |
+| `workers/data/` | The data service on Cloudflare Workers: the MET forecast and the Holfuy weather stations, with the archive in R2. See [operations](docs/operations.md#weather-stations-holfuy). |
 | `src/_i18n/` | Dictionaries for Norwegian and English (all fixed text in templates and scripts). |
 | `docs/` | Documentation, see above. |
 
