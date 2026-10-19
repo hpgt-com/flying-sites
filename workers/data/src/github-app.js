@@ -1,5 +1,5 @@
 // Signing in as the club's GitHub App, so the issues from «Meld fra om endring» (report.js) come from the app (shown as
-// a bot) and no personal token has to be renewed. The app's ID and private key are the secrets GITHUB_APP_ID and
+// a bot) and no personal token has to be renewed. The app's ID (or Client ID) and private key are the secrets GITHUB_APP_ID and
 // GITHUB_APP_PRIVATE_KEY (the .pem file GitHub gives, as it is); the installation on the repository is looked up. Each
 // call asks GitHub for a token that lasts an hour (a report is rare, so nothing is kept). Tested in
 // test/data-worker.test.js.
