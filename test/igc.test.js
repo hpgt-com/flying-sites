@@ -1,7 +1,7 @@
 // Tests for the flight logs (lib/igc.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseIgc, parseKml, analyzeFlight, launchPoints, aggregate, flightKey, sector } from "../lib/igc.js";
+import { parseIgc, parseKml, analyzeFlight, launchPoints, aggregate, flightKey } from "../lib/igc.js";
 
 // An IGC B record: time (s), position and height.
 function b(t, lat, lon, alt) {
@@ -38,14 +38,12 @@ test("an IGC file: the date, the points in order, past midnight carries on", () 
   assert.deepEqual(night.points.map((p) => p.t), [86398, 86402]);
 });
 
-test("the flight: takeoff from the nearest launch, the direction just after it, time, height, distance and climbing", () => {
+test("the flight: takeoff from the nearest launch, time, height and distance", () => {
   const f = analyzeFlight(parseIgc(flightIgc()), launchPoints(sites));
   assert.equal(f.site, "sollifjellet");
-  assert.equal(f.direction, "W");
   assert.ok(f.minutes >= 9 && f.minutes <= 11, String(f.minutes));
   assert.equal(f.maxAlt, 623, "sinks first, then climbs 240 m");
   assert.ok(f.maxDistKm > 5.5 && f.maxDistKm < 6.5, String(f.maxDistKm));
-  assert.ok(f.cells.length >= 1, "climbed somewhere");
   assert.equal(f.date, "2026-07-15");
   assert.equal(analyzeFlight(parseIgc(flightIgc(69.5, 18.0)), launchPoints(sites)).site, null, "far from every site: no site");
   assert.equal(analyzeFlight({ date: "2026-07-15", points: Array.from({ length: 50 }, (_, i) => ({ t: i * 2, lat: 68.8, lon: 16.4, alt: 500 })) }, []), null, "standing still is no flight");
@@ -77,13 +75,13 @@ test("a KML with gx:Track gives the same flight; the same flight in two files ha
   assert.equal(flightKey(t), flightKey(a), "the same flight from FsInfo");
 });
 
-test("the sums per site: months, directions, records, and thermal cells from several flights only", () => {
-  const base = { site: "sollifjellet", takeoff: 0, cells: ["1:2"] };
+test("the sums per site: months and records", () => {
+  const base = { site: "sollifjellet", takeoff: 0 };
   const sum = aggregate([
-    { ...base, date: "2020-06-01", direction: "W", minutes: 30, maxAlt: 1200, maxDistKm: 3, cells: ["1:2", "5:5"] },
-    { ...base, date: "2024-07-10", direction: "W", minutes: 95, maxAlt: 900, maxDistKm: 12.5 },
-    { ...base, date: "2023-06-20", direction: "NW", minutes: 10, maxAlt: null, maxDistKm: 1 },
-    { ...base, site: null, date: "2025-08-01", direction: "S", minutes: 5, maxAlt: 600, maxDistKm: 1, cells: [] },
+    { ...base, date: "2020-06-01", minutes: 30, maxAlt: 1200, maxDistKm: 3 },
+    { ...base, date: "2024-07-10", minutes: 95, maxAlt: 900, maxDistKm: 12.5 },
+    { ...base, date: "2023-06-20", minutes: 10, maxAlt: null, maxDistKm: 1 },
+    { ...base, site: null, date: "2025-08-01", minutes: 5, maxAlt: 600, maxDistKm: 1 },
   ]);
   assert.equal(sum.flights, 4);
   assert.equal(sum.unattributed, 1);
@@ -91,10 +89,7 @@ test("the sums per site: months, directions, records, and thermal cells from sev
   const s = sum.sites.sollifjellet;
   assert.deepEqual([s.flights, s.minutes, s.first, s.last], [3, 135, "2020-06-01", "2024-07-10"]);
   assert.deepEqual(s.months, { "06": 2, "07": 1 });
-  assert.deepEqual(s.directions, { W: 2, NW: 1 });
   assert.deepEqual(s.longest, { value: 95, date: "2024-07-10" });
   assert.deepEqual(s.highest, { value: 1200, date: "2020-06-01" });
   assert.deepEqual(s.farthest, { value: 12.5, date: "2024-07-10" });
-  assert.deepEqual(sum.thermals, [[0.0075, 0.025, 3]], "the cell climbed in by three flights; the one-off is left out");
-  assert.equal(sector(359), "N");
 });

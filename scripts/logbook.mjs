@@ -1,7 +1,7 @@
 // «Fra turlogger»: reads flight logs (IGC, and KML with times) from one or more folders on your own machine and writes
-// only the sums per site to src/_data/logbook.json (lib/igc.js): flights per month, the directions flown just after
-// takeoff, the longest, highest and farthest, and a coarse grid of where flights climbed. The logs themselves, the
-// tracks and the names in them are never written anywhere. Run it again over all the folders when logs are added (the
+// only the sums per site to src/_data/logbook.json (lib/igc.js): flights per month and the longest, highest and
+// farthest. The logs themselves, the tracks and the names in them are never written anywhere. The box on the site page
+// shows only while logbook.json exists; it is left out until more pilots have added logs. Run it again over all the folders when logs are added (the
 // file is written anew each time); the same flight in an IGC and a KML file counts once (the IGC is kept).
 //
 //   npm run logbook -- ~/turer [~/turer-fra-andre …]

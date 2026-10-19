@@ -369,8 +369,8 @@ scripts:
         <div class="flights"></div>
       </section>
       {#- «Fra turlogger»: sums from the flight logs the club's pilots have added (scripts/logbook.mjs, lib/igc.js,
-          src/_data/logbook.json): flights and years, the records, the directions flown just after takeoff (about into
-          the wind) and the flights per calendar month. Only when the logs have flights from this site. -#}
+          src/_data/logbook.json): flights and years, the records and the flights per calendar month. Only when the logs have
+          flights from this site; hidden while there is no logbook.json (left out until more pilots have added logs). -#}
       {%- set lb = logbook.sites[id] if logbook and logbook.sites and logbook.sites[id] else null -%}
       {% if lb %}
       <section class="block block--logbook" aria-labelledby="h-logbook">
@@ -382,13 +382,6 @@ scripts:
           {% if lb.farthest %}<div><strong>{{ lb.farthest.value | formatNumber(1) }}</strong> <span>km</span><small>{{ t.logbook.farthest }}</small></div>{% endif %}
           <div><strong>{{ (lb.minutes / lb.flights) | round }}</strong> <span>{{ t.units.minutes }}</span><small>{{ t.logbook.typical }}</small></div>
         </div>
-        {%- set dmax = 0 -%}{%- for c in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}{% if (lb.directions[c] or 0) > dmax %}{% set dmax = lb.directions[c] %}{% endif %}{% endfor %}
-        <h3>{{ t.logbook.directions }}</h3>
-        <ul class="logbook-dirs" aria-label="{{ t.logbook.directions }}">
-          {% for c in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}{% set n = lb.directions[c] or 0 %}
-          <li><span class="logbook-dirs__code">{{ t.directions.labels[c] }}</span><span class="logbook-dirs__track">{% set pct = (((n / dmax) * 20) | round) * 5 if dmax else 0 %}<span class="logbook-dirs__bar" data-pct="{{ 5 if (n > 0 and pct < 5) else pct }}"></span></span><span class="logbook-dirs__n">{{ n }}</span></li>
-          {% endfor %}
-        </ul>
         {%- set mmax = 0 -%}{%- for k in ["01","02","03","04","05","06","07","08","09","10","11","12"] %}{% if (lb.months[k] or 0) > mmax %}{% set mmax = lb.months[k] %}{% endif %}{% endfor %}
         <h3>{{ t.logbook.months }}</h3>
         <ol class="flights-chart" aria-label="{{ t.logbook.months }}">

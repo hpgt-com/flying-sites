@@ -2,22 +2,6 @@
   "entries": [
     {
       "date": "2026-10-19",
-      "title": { "nb": "Fra turlogger: slik flys stedene", "en": "From flight logs: how the sites are flown" },
-      "what": {
-        "nb": "Summer fra turlogger som piloter i klubben har lagt inn: antall turer og år, lengste tur, høyeste punkt, lengst fra start, gjennomsnittlig tur, retning rett etter takeoff og turer per måned. Bare summene publiseres, aldri sporene eller hvem som fløy.",
-        "en": "Sums from the flight logs club pilots have added: number of flights and years, the longest flight, the highest point, the farthest from launch, the average flight, the direction just after takeoff and flights per month. Only the sums are published, never the tracks or who flew."
-      },
-      "where": {
-        "nb": "Stedssiden, i boksen «Fra turlogger», for steder med turer i loggene (foreløpig rundt 20 steder, flest på Sollifjellet og Storlitinden).",
-        "en": "The site page, in the box «From flight logs», for sites with flights in the logs (about 20 sites so far, most on Sollifjellet and Storlitinden)."
-      },
-      "read": {
-        "nb": "Retningen er den piloten fløy de første sekundene etter takeoff, omtrent mot vinden, og viser hvilke startretninger som faktisk brukes. Enkeltturer kan avvike når loggen starter litt etter takeoff. Turer per måned er summen for alle år, så den viser sesongen. Tallene gjelder bare loggene som er lagt inn, ikke alle som flyr der.",
-        "en": "The direction is the one flown in the first seconds after takeoff, roughly into the wind, and shows which launch directions are actually used. Single flights can differ when the log starts a little after takeoff. Flights per month is the sum over all years, so it shows the season. The numbers only cover the logs added, not everyone who flies there."
-      }
-    },
-    {
-      "date": "2026-10-19",
       "title": { "nb": "Vind over starten har fått nytt utseende", "en": "Wind above the launch has a new look" },
       "what": {
         "nb": "Vinden i høyden over starten time for time, nå med kast, termikk, skyer og regn under. Foreløpig på Sollifjellet, Sætertinden, Heia, Kilhusåsen og Elgen.",
@@ -121,7 +105,7 @@
     },
     {
       "title": { "nb": "Statistikk fra turloggene", "en": "Statistics from the flight logs" },
-      "text": { "nb": "Lengste turer og hvilke startretninger som brukes, fra Flightlog eller pgpilot. Venter på en datakilde.", "en": "Longest flights and which launch directions are used, from Flightlog or pgpilot. Waiting for a data source." },
+      "text": { "nb": "Lengste turer og sesongen per sted, fra Flightlog eller pgpilot, eller fra turlogger når flere piloter har lagt inn sine. Venter på mer data.", "en": "Longest flights and the season per site, from Flightlog or pgpilot, or from flight logs once more pilots have added theirs. Waiting for more data." },
       "issue": 105
     },
     {

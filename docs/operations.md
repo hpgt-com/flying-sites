@@ -161,7 +161,9 @@ the menu and is marked `noindex`. It shows per site:
   or that could not be read (`--list` names them). KML works with times: a gx:Track, or one placemark per fix with
   its time, or a GpsDump trip (the tracklog's times in FsInfo); a KML with only a line has no times and gives no
   flight (export IGC instead; XCTracer writes such a KML beside its IGC, and the IGC is counted).
-- Shown on the site page as «Fra turlogger» when the site has flights in the file.
+- Shown on the site page as «Fra turlogger» when the site has flights in the file. For now there is no
+  `src/_data/logbook.json`, so the box is hidden: one pilot's logs were too few, and the records did not match Flightlog.
+  Commit the file again when more pilots have added logs (or Flightlog or pgpilot get an API, #105).
 
 ## Pilots in the air (OGN)
 
