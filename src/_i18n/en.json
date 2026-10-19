@@ -326,6 +326,19 @@
     "loading": "Fetching the numbers …",
     "noScript": "The numbers are fetched with JavaScript. Turn it on to see them."
   },
+  "news": {
+    "title": "What's new",
+    "description": "What is new on HPGT flying sites, how to use it, and what is planned.",
+    "intro": "Newest first. For each thing it says what it is, where to find it and how to read it.",
+    "menuLink": "What's new",
+    "menuSub": "New and planned",
+    "where": "Where",
+    "read": "How to read it",
+    "planTitle": "Planned",
+    "planIntro": "This is what we are working on or waiting for. The links go to the issues on GitHub.",
+    "issue": "issue #{n}",
+    "wish": "Have a wish, or see something missing? Use {link}."
+  },
   "pwa": {
     "shortName": "Flying sites",
     "description": "Paragliding and speedflying sites around Harstad, with maps, launches, landings and wind assessment.",
@@ -574,6 +587,7 @@
       "layer": "Club weather stations",
       "layerMet": "MET weather stations",
       "vTitle": "How well does the forecast hit here?",
+      "vExplain": "Each hour the forecast for the launch is compared with what the station measured. «Stronger than forecast» means it blew more than MET forecast, «weaker» less. «Off by … on average» is how much the forecast missed on average, whether it blew more or less. The direction only counts when it blows at least 2 m/s. Use it as a hint of how the forecast tends to turn out here, not as the answer for today.",
       "vNear": "The forecast for the launch compared with what is measured at {name}, nearby.",
       "vCollecting": "Collecting data: {n} of {min} hours so far.",
       "vMean": "Last {days} days ({hours} hours): the mean wind was {strength} (off by {mae} m/s on average).",
@@ -719,6 +733,10 @@
       "none": "No flights have been recorded yet.",
       "noneRecent": "No flights in the last 30 days.",
       "failed": "Could not fetch the numbers. Try again later."
+    },
+    "help": {
+      "howToRead": "How to read this",
+      "howCounted": "How the flights are counted"
     }
   },
   "about": {
@@ -753,7 +771,8 @@
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",
     "changes": "Use the form at the bottom of the site's page, or {form} in the menu for what does not concern one site. It becomes an issue for the club, without you needing an account. You can also tell someone in the club, or open an issue yourself on {github}.",
-    "sourceOgn": "an open network that collects positions from flying equipment (ODbL). The map layer «Pilots in the air» shows paraglider and speed-flying pilots who share their position with OGN from their app or vario while they fly. We only fetch data from OGN: if you use an app such as pgpilot, XCTrack or Flyskyhy, or a vario, you are only included if it shares your position with OGN. Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory. For «Flying activity» on the site pages, the flights from each site are counted; only the sums per site and day are stored, never who they were or where they flew."
+    "sourceOgn": "an open network that collects positions from flying equipment (ODbL). The map layer «Pilots in the air» shows paraglider and speed-flying pilots who share their position with OGN from their app or vario while they fly. We only fetch data from OGN: if you use an app such as pgpilot, XCTrack or Flyskyhy, or a vario, you are only included if it shares your position with OGN. Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory. For «Flying activity» on the site pages, the flights from each site are counted; only the sums per site and day are stored, never who they were or where they flew.",
+    "news": "See {link} for what is new, how to use it, and what is planned."
   },
   "report": {
     "title": "Report a change",

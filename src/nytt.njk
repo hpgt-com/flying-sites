@@ -1,0 +1,61 @@
+---
+layout: base.njk
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/nytt/' | localeUrl(language.code) }}"
+bodyClass: page-news
+eleventyComputed:
+  name: "{{ t.news.title }}"
+  description: "{{ t.news.description }}"
+---
+{#- «Nytt på siden»: what is new, for the pilots, and what is planned. Each entry says what it is, where to find it and
+    how to read it (src/_data/news.json, in both languages; newest first, grouped by date). The plan links to the issues
+    on GitHub, and asks for wishes through «Meld fra». A new entry goes into news.json with the change. -#}
+{%- import "macros.njk" as m with context -%}
+{%- set ext = m.external() -%}
+<main class="simple-page news-page">
+  <header class="topbar">
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
+    {{ m.siteMenu() }}
+  </header>
+
+  <div class="simple-page__intro" id="content" tabindex="-1">
+    <p class="home__eyebrow">{{ t.home.eyebrow }}</p>
+    <h1>{{ t.news.title }}</h1>
+    <p class="muted">{{ t.news.intro }}</p>
+  </div>
+
+  {%- set dates = [] -%}
+  {%- for e in news.entries %}{% if not (e.date in dates) %}{% set dates = (dates.push(e.date), dates) %}{% endif %}{% endfor %}
+  {% for date in dates %}
+  <section class="news-day" aria-labelledby="news-{{ date }}">
+    <h2 id="news-{{ date }}">{{ date | formatDate }}</h2>
+    {% for e in news.entries %}{% if e.date == date %}
+    <article class="news-entry">
+      <h3>{{ e.title[lang] or e.title.nb }}</h3>
+      <p>{{ e.what[lang] or e.what.nb }}</p>
+      <dl class="news-entry__facts">
+        <div><dt>{{ t.news.where }}</dt><dd>{{ e.where[lang] or e.where.nb }}</dd></div>
+        <div><dt>{{ t.news.read }}</dt><dd>{{ e.read[lang] or e.read.nb }}</dd></div>
+      </dl>
+    </article>
+    {% endif %}{% endfor %}
+  </section>
+  {% endfor %}
+
+  <section class="news-plan" aria-labelledby="news-plan">
+    <h2 id="news-plan">{{ t.news.planTitle }}</h2>
+    <p class="muted">{{ t.news.planIntro }}</p>
+    <ul class="news-plan__list">
+      {% for r in news.roadmap %}
+      <li>
+        <strong>{{ r.title[lang] or r.title.nb }}</strong>
+        <span>{{ r.text[lang] or r.text.nb }}{% if r.issue %} <a href="https://github.com/hpgt-com/flying-sites/issues/{{ r.issue }}" target="_blank" rel="noopener">{{ t.news.issue | fmt({ n: r.issue }) }}{{ ext }}</a>{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p>{{ t.news.wish | fmt({ link: '<a href="' ~ ('/meld-fra/' | localeUrl) ~ '">' ~ t.report.menuLink ~ '</a>' }) | safe }}</p>
+  </section>
+</main>

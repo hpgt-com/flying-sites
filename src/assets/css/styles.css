@@ -1844,6 +1844,27 @@ body.sheet-open { overflow: hidden; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
 
+/* «Slik leser du dette» (windgram.js, stations.js, flights.js): a small folded explanation next to the drawing or the
+   numbers, closed at first so it is not in the way. */
+.help-fold { font-size: 13px; color: var(--muted); }
+.help-fold > summary { cursor: pointer; color: var(--link); font-weight: 600; width: fit-content; padding: 4px 0; }
+.help-fold[open] > summary { margin-bottom: 4px; }
+.help-fold p { margin: 0; }
+
+/* The page «Nytt på siden» (nytt.njk, src/_data/news.json): each entry a card with what it is, then «Hvor» and «Slik
+   leser du det» as short labelled lines; the plan as a plain list with links to the issues. */
+.news-day, .news-plan { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.news-day h2, .news-plan h2 { margin: 0; font-size: 22px; }
+.news-entry { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); display: flex; flex-direction: column; gap: 6px; }
+.news-entry h3 { margin: 0; font-size: 18px; }
+.news-entry p { margin: 0; }
+.news-entry__facts { margin: 4px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.news-entry__facts dt { font-weight: 700; font-size: 13px; color: var(--muted); }
+.news-entry__facts dd { margin: 0; }
+.news-plan p { margin: 0; }
+.news-plan__list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.news-plan__list li { display: flex; flex-direction: column; gap: 2px; }
+
 /* The page «Flyaktivitet» (activity.js): the four numbers as .access-stats, then tables that scroll sideways in a box on
    a phone, numbers right-aligned. */
 .activity { display: flex; flex-direction: column; gap: 14px; }

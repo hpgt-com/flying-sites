@@ -326,6 +326,19 @@
     "loading": "Henter tallene …",
     "noScript": "Tallene hentes med JavaScript. Slå det på for å se dem."
   },
+  "news": {
+    "title": "Nytt på siden",
+    "description": "Hva som er nytt på HPGT flysteder, hvordan du bruker det, og hva som er planlagt.",
+    "intro": "Det nyeste først. For hver ting står det hva det er, hvor du finner det og hvordan du leser det.",
+    "menuLink": "Nytt på siden",
+    "menuSub": "Nytt og planlagt",
+    "where": "Hvor",
+    "read": "Slik leser du det",
+    "planTitle": "Planlagt",
+    "planIntro": "Dette er det vi jobber med eller venter på. Lenkene går til sakene på GitHub.",
+    "issue": "sak #{n}",
+    "wish": "Har du et ønske, eller ser du noe som mangler? Bruk {link}."
+  },
   "pwa": {
     "shortName": "Flysteder",
     "description": "Flysteder for paragliding og speedflying rundt Harstad, med kart, startplasser, landinger og vindvurdering.",
@@ -574,6 +587,7 @@
       "layer": "Klubbens værstasjoner",
       "layerMet": "METs værstasjoner",
       "vTitle": "Hvor godt treffer varselet her?",
+      "vExplain": "Hver time sammenlignes varselet for starten med det stasjonen målte. «Sterkere enn varslet» betyr at det blåste mer enn MET varslet, «svakere» mindre. «Bommet i snitt» er hvor mye varselet bommet i gjennomsnitt, enten det blåste mer eller mindre. Retningen teller bare når det blåser minst 2 m/s. Bruk det som en pekepinn på hvordan varselet pleier å slå ut her, ikke som en fasit for i dag.",
       "vNear": "Varselet for starten sammenlignet med det som måles på {name}, i nærheten.",
       "vCollecting": "Samler data: {n} av {min} timer så langt.",
       "vMean": "Siste {days} dager ({hours} timer): middelvinden var {strength} (bommet i snitt {mae} m/s).",
@@ -719,6 +733,10 @@
       "none": "Ingen turer er registrert ennå.",
       "noneRecent": "Ingen turer de siste 30 dagene.",
       "failed": "Fikk ikke hentet tallene. Prøv igjen senere."
+    },
+    "help": {
+      "howToRead": "Slik leser du dette",
+      "howCounted": "Slik telles turene"
     }
   },
   "about": {
@@ -753,7 +771,8 @@
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
     "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}.",
-    "sourceOgn": "et åpent nettverk som samler posisjoner fra flyutstyr (ODbL). Kartlaget «Piloter i lufta» viser paraglider- og speedflypiloter som deler posisjonen sin med OGN fra appen eller varioen mens de flyr. Vi henter bare data fra OGN: bruker du en app som pgpilot, XCTrack eller Flyskyhy, eller en vario, kommer du bare med hvis den deler posisjonen med OGN. Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet. For «Flyaktivitet» på stedssidene telles turene fra hvert sted; bare summene per sted og dag lagres, aldri hvem eller hvor de fløy."
+    "sourceOgn": "et åpent nettverk som samler posisjoner fra flyutstyr (ODbL). Kartlaget «Piloter i lufta» viser paraglider- og speedflypiloter som deler posisjonen sin med OGN fra appen eller varioen mens de flyr. Vi henter bare data fra OGN: bruker du en app som pgpilot, XCTrack eller Flyskyhy, eller en vario, kommer du bare med hvis den deler posisjonen med OGN. Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet. For «Flyaktivitet» på stedssidene telles turene fra hvert sted; bare summene per sted og dag lagres, aldri hvem eller hvor de fløy.",
+    "news": "Se {link} for hva som er nytt, hvordan du bruker det, og hva som er planlagt."
   },
   "report": {
     "title": "Meld fra om endring",
