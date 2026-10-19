@@ -657,7 +657,8 @@
         if (!at) return;
         var box = card(item, now, "div", false, map.getSize().y < 600);
         box.classList.add("station-popup");
-        L.marker(at, { icon: icon(item, now, !(isNum(item.lat) && isNum(item.lon))), keyboard: true, title: item.name, zIndexOffset: 500 })
+        // MET's stations under everything else (the launches, the club's stations), so they never cover them.
+        L.marker(at, { icon: icon(item, now, !(isNum(item.lat) && isNum(item.lon))), keyboard: true, title: item.name, zIndexOffset: isHolfuy(item) ? 500 : -1000 })
           .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(isHolfuy(item) ? layer : metGroup());
       });
       if (onData) onData(data, now);

@@ -356,6 +356,10 @@ p { margin: 0; }
 .leaflet-container .leaflet-control-attribution a { color: var(--link); text-decoration: underline; }
 .leaflet-container img { max-width: none !important; }
 .leaflet-control-layers-toggle { width: 44px !important; height: 44px !important; }
+/* While the layer list is open, what lies over the home map (the status, the line about the selected site, the timeline,
+   the card on desktop) is hidden, so the list has the whole map and can scroll to its last layer. The map is its own
+   stacking context, so the list cannot be lifted above them. */
+.home__map:has(.leaflet-control-layers-expanded) :is(.map-status, .map-note, .timeline, .selected) { visibility: hidden; }
 .leaflet-touch .leaflet-bar a { width: 44px; height: 44px; line-height: 44px; }
 
 /* Wind roses on the map */
@@ -1635,7 +1639,10 @@ body.sheet-open { overflow: hidden; }
 .station-marker--old { opacity: 0.55; }
 /* MET's stations: smaller and grey, with «MET» in the label (stations.js), so they are not taken for the club's. White on
    #56636B is about 6:1. */
-.station-marker--met { font-size: 12px; }
+.station-marker--met { font-size: 12px; opacity: 0.6; transition: opacity 0.15s; }
+/* Translucent, so they do not take over the map; whole again when pointed at or focused. Old ones fainter still. */
+.station-marker--met:hover, .station-marker--met:focus-visible { opacity: 1; }
+.station-marker--met.station-marker--old { opacity: 0.4; }
 .station-marker--met .station-marker__dial { width: 24px; height: 24px; background: #56636B; }
 .station-marker--met .station-marker__dial svg { width: 14px; height: 14px; }
 .station-marker--met .station-marker__nums { background: #56636B; padding: 3px 6px 3px 9px; }
