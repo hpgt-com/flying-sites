@@ -675,7 +675,7 @@
       "chartLabel": "Flights per month, last 12 months",
       "barTitle": "{month}: flights {flights}, days with flying {days}",
       "none": "No flights from here have been recorded yet.",
-      "note": "Counted from the Open Glider Network since {date}. Only pilots who send their position there, for example with pgpilot or a FANET vario, are included. A flight counts for the site nearest where the pilot was first seen in the air, and a new flight once the pilot has landed. If the signal is lost for a while with the pilot high over the ground, it counts as the same flight."
+      "note": "Counted since {date} from the Open Glider Network (OGN), an open network that collects positions from flying equipment. You are included when your app or vario shares your position with OGN while you fly. A flight counts for the site nearest where you took off, and a new flight once you have landed."
     }
   },
   "about": {
@@ -710,7 +710,7 @@
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",
     "changes": "Use the form at the bottom of the site's page, or {form} in the menu for what does not concern one site. It becomes an issue for the club, without you needing an account. You can also tell someone in the club, or open an issue yourself on {github}.",
-    "sourceOgn": "paraglider and speed-flying pilots in the air in the map layer «Pilots in the air», from FANET and FLARM devices (ODbL). Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory. For «Flying activity» on the site pages, the flights from each site are counted; only the sums per site and day are stored, never who they were or where they flew."
+    "sourceOgn": "an open network that collects positions from flying equipment (ODbL). The map layer «Pilots in the air» shows paraglider and speed-flying pilots who share their position with OGN from their app or vario while they fly. We do not fetch data from apps such as pgpilot, XCTrack or Flyskyhy, only from OGN. Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory. For «Flying activity» on the site pages, the flights from each site are counted; only the sums per site and day are stored, never who they were or where they flew."
   },
   "report": {
     "title": "Report a change",

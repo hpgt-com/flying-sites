@@ -675,7 +675,7 @@
       "chartLabel": "Turer per måned, siste 12 måneder",
       "barTitle": "{month}: turer {flights}, dager med flyging {days}",
       "none": "Ingen turer herfra er registrert ennå.",
-      "note": "Telt fra Open Glider Network siden {date}. Bare piloter som sender posisjonen dit, for eksempel med pgpilot eller en FANET-vario, kommer med. En tur telles på stedet nærmest der piloten først ble sett i lufta, og en ny tur når piloten har landet. Forsvinner signalet en stund mens piloten er høyt over bakken, regnes det som samme tur."
+      "note": "Telt siden {date} fra Open Glider Network (OGN), et åpent nettverk som samler posisjoner fra flyutstyr. Du kommer med når appen eller varioen din deler posisjonen med OGN mens du flyr. En tur telles på stedet nærmest der du startet, og en ny tur når du har landet."
     }
   },
   "about": {
@@ -710,7 +710,7 @@
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
     "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}.",
-    "sourceOgn": "paraglider- og speedflypiloter i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet. For «Flyaktivitet» på stedssidene telles turene fra hvert sted; bare summene per sted og dag lagres, aldri hvem eller hvor de fløy."
+    "sourceOgn": "et åpent nettverk som samler posisjoner fra flyutstyr (ODbL). Kartlaget «Piloter i lufta» viser paraglider- og speedflypiloter som deler posisjonen sin med OGN fra appen eller varioen mens de flyr. Vi henter ikke data fra apper som pgpilot, XCTrack eller Flyskyhy, bare fra OGN. Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet. For «Flyaktivitet» på stedssidene telles turene fra hvert sted; bare summene per sted og dag lagres, aldri hvem eller hvor de fløy."
   },
   "report": {
     "title": "Meld fra om endring",
