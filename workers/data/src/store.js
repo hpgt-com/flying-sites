@@ -6,6 +6,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { FIELDS } from "./measurements.js";
 import { mergeTrails } from "./live.js";
+import { INDEXES } from "./indexes.js";
 
 const COLUMNS = FIELDS.map((f) => f.key);
 // A measurement row as stored: the fields as numbers, extra as JSON text.
@@ -42,6 +43,7 @@ export class Store extends DurableObject {
         SELECT 'holfuy', CAST(station AS TEXT), time, dir, speed, gust, min, temperature FROM measurements_v1`);
       this.sql.exec("DROP TABLE measurements_v1");
     }
+    for (const index of INDEXES) this.sql.exec(index);
   }
 
   // The recent track of each aircraft for «Piloter i lufta» (live.js mergeTrails), in memory only: lost when the object
