@@ -169,7 +169,8 @@ flowchart LR
   size while the page scrolls, and only its frame gets lower, so Leaflet does not redraw it. Three font files, all
   preloaded. The home page opens the connections to the tile servers early (`preconnect` in the front matter). The
   site page keeps space for «Kan jeg fly her nå?» until `site-wind.js` has filled it in, so the boxes below do not jump.
-- **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself, and images and
+- **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself (and Cloudflare
+  Turnstile for «Meld fra om endring»), and images and
   data only from the sources above. A new external source must be added there. See [SECURITY.md](../SECURITY.md).
 
 ## Languages

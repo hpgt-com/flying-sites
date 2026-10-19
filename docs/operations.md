@@ -120,6 +120,22 @@ the menu and is marked `noindex`. It shows per site:
   (the latest fetch during the hour wins), kept for 30 days in the store (`forecast_hours`). The last 6 hours are in
   `/v1/forecast.json` as `past`, which «Målt mot varslet» on the weather page draws over the measurements.
 
+## «Meld fra om endring» (report a change)
+
+- A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
+  <kind>». The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
+  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day.
+- **Turning it on** (once):
+  1. Cloudflare → Turnstile → Add widget: name «flysteder», hostname `flysteder.hpgt.com`, mode «Managed». Copy the
+     **site key** (public) into `turnstileSiteKey` in `src/_data/site.js`. The form is hidden while it is empty.
+  2. The **secret key** from the same widget: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets →
+     add the secret `TURNSTILE_SECRET`.
+  3. GitHub → Settings → Developer settings → Fine-grained tokens → Generate: resource owner `hpgt-com`, only the
+     repository `hpgt-com/flying-sites`, permission **Issues: Read and write** (nothing else), an expiry date. Add it as
+     the secret `GITHUB_ISSUES_TOKEN` on the data service as above. Renew it before it expires.
+- Without both secrets the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
+  (Observability), as `report: GitHub svarte …`.
+
 ## How well the forecast hits
 
 - The data service pairs the forecast for each finished hour (as it stood during the hour, `forecast_hours`) with what

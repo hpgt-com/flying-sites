@@ -632,6 +632,15 @@
     "weather": {
       "failed": "Could not fetch the measurements. Trying again shortly.",
       "roughMeasured": "Assessed from the measurement now, with the same rules as the forecast. Rough assessment, always check for yourself."
+    },
+    "report": {
+      "sending": "Sending …",
+      "sent": "Thank you! The report has been sent to the club.",
+      "failed": "Could not send. Try again later.",
+      "limit": "Many reports have been sent today. Try again tomorrow.",
+      "checkFailed": "The robot check failed. Reload the page and try again.",
+      "waitCheck": "Wait for the robot check to finish.",
+      "tooShort": "Write at least 10 characters."
     }
   },
   "about": {
@@ -660,10 +669,27 @@
     "privacySearch": "What you type in the search field is never sent anywhere. Searches without hits are only counted as a number.",
     "privacyStorage": "Your choices for colour mode and colour-blind-friendly colours are only stored in your browser. Once you have visited a page, the browser may store it and the map tiles you have seen, so it works offline.",
     "privacyThirdParty": "Maps, satellite imagery, thermals, radar and the Yr meteogram are loaded from the services that make them, and they see your IP address, as with any website. The fonts are served from the site itself.",
+    "privacyReport": "«Report a change» on the site pages sends what you write to the club as a public issue on GitHub, with your name only if you write it. Cloudflare Turnstile checks that it is not a robot, and is loaded only when you open the form. The data service stores only how many reports were sent that day.",
     "privacyData": "The forecast and the measurements are fetched from the club's own data service on Cloudflare, which sees your IP address like other websites. It stores only weather data (the measurements for 7 days, older ones in an archive), nothing about you.",
     "privacyNoAccount": "The site has no login and no forms, and stores no personal data about you.",
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",
     "changes": "Tell someone in the club. If you have a GitHub account, you can also open an issue on {github}. A form on the site that does not need a GitHub account is coming."
+  },
+  "report": {
+    "title": "Report a change",
+    "intro": "A new landing, a closed road, a new hazard or something wrong? Write briefly what and where. It becomes an issue for the club, which checks before the site is changed.",
+    "kind": "Concerns",
+    "kind_landing": "Landing",
+    "kind_access": "Road, parking or access",
+    "kind_hazard": "Hazard or obstacle",
+    "kind_launch": "Launch",
+    "kind_other": "Other",
+    "message": "What has changed?",
+    "messageHint": "10–1000 characters. Do not write phone numbers or anything you do not want public.",
+    "name": "Name or contact (optional)",
+    "send": "Send",
+    "privacy": "What you write becomes a public issue on GitHub. Cloudflare Turnstile checks that you are not a robot.",
+    "noScript": "The form needs JavaScript."
   }
 }

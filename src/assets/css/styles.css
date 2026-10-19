@@ -1821,3 +1821,19 @@ body.sheet-open { overflow: hidden; }
 .weather-card__verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0; font-size: 13px; }
 .weather-card__verdict .rating-chip { font-size: 15px; padding: 3px 11px 3px 4px; }
 .weather-card__verdict .rating-chip > span { width: 20px; height: 20px; font-size: 13px; }
+
+/* «Meld fra om endring» on the site page (report.js). */
+.report__form { display: grid; gap: 12px; margin-top: 8px; }
+.report__field { display: grid; gap: 4px; font-weight: 600; font-size: 14px; }
+.report__field select, .report__field textarea, .report__field input {
+  width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text); font: 400 16px/1.4 var(--font-body);
+}
+.report__field textarea { resize: vertical; }
+.report__field :focus-visible { outline: 3px solid var(--fjord); outline-offset: 1px; }
+.report__hint, .report__privacy { font-weight: 400; font-size: 13px; margin: 0; }
+.report__check:empty { display: none; }
+.report__send { justify-self: start; }
+.report__status { margin: 0; font-size: 14px; }
+.report__status:empty { display: none; }
+.report__status--ok { font-weight: 600; }
+.report__status--error { color: var(--hazard-text); font-weight: 600; }

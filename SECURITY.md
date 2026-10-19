@@ -16,11 +16,17 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
 
 **The site**
 - Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
-  scripts), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
+  scripts) and Cloudflare Turnstile (`challenges.cloudflare.com`, also the only `frame-src`; loaded only when someone
+  opens «Meld fra om endring»), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
   GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
   `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.workers.dev`). The station
   data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
+- «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
+  `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000
+  characters, and makes at most 20 issues a day. The text goes into the issue inside a code block, so it cannot add
+  links, images or @mentions. The GitHub token is fine-grained, for this repository only, with only Issues: read and
+  write, and is a Cloudflare secret.
 - The forecast from the data service is only used when it has the expected shape (times as strings, rows of numbers
   or null; `isNewerForecast` in `wind.js`), and it is never parsed as HTML.
 - The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles

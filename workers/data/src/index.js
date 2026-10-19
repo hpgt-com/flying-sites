@@ -13,6 +13,8 @@
 // - verification: how well the forecast hit at each flying site with its own station (sources/verify.js), on the weather
 //   page and the site page.
 //
+// - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
+//
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
 
 import * as forecast from "./sources/forecast.js";
@@ -23,6 +25,7 @@ import * as verify from "./sources/verify.js";
 import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE, siteLinks } from "./stations.js";
 import { due } from "./schedule.js";
 import { mergeStations } from "./merge.js";
+import { handleReport, ORIGINS } from "./report.js";
 import SITES from "./sites.json";
 
 export { Store } from "./store.js";
@@ -56,6 +59,18 @@ export default {
 
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
+    // «Meld fra om endring» (report.js): only from the site itself (or REPORT_ORIGINS when testing).
+    if (pathname === "/v1/report") {
+      const origin = request.headers.get("origin") || "";
+      const allowed = (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).includes(origin);
+      const cors = { "access-control-allow-origin": allowed ? origin : ORIGINS[0], "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store" };
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+      if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
+      if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
+      const { status, body } = await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])));
+      return Response.json(body, { status, headers: cors });
+    }
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
     if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
     const dataset = DATASETS[pathname];

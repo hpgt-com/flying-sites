@@ -310,3 +310,50 @@ test("verification: the sites with their own station, and its run time", () => {
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
   assert.deepEqual([9, 39, 10].map((m) => due("verify", minute(m))), [true, true, false]);
 });
+
+// --- «Meld fra om endring» ---
+const reportMod = await import("../workers/data/src/report.js");
+
+test("report: checked fields, and the issue with the text in a code block", () => {
+  const names = { heia: "Heia" };
+  const ok = { site: "heia", kind: "access", message: "  Bommen ved P-plassen er låst.  ", name: "Kari", token: "t" };
+  const r = reportMod.checkReport(ok, names);
+  assert.equal(r.message, "Bommen ved P-plassen er låst.");
+  assert.equal(reportMod.checkReport({ ...ok, site: "toString" }, names).error, "bad-request", "only real sites");
+  assert.equal(reportMod.checkReport({ ...ok, kind: "spam" }, names).error, "bad-request");
+  assert.equal(reportMod.checkReport({ ...ok, message: "kort" }, names).error, "bad-length");
+  assert.equal(reportMod.checkReport({ ...ok, message: "x".repeat(1001) }, names).error, "bad-length");
+  assert.equal(reportMod.checkReport({ ...ok, token: "" }, names).error, "no-token");
+  const issue = reportMod.issueFor({ ...r, message: "Se @noen og ~~~ ![x](http://a)" }, NOW);
+  assert.equal(issue.title, "[Meld fra] Heia: Vei, parkering eller adkomst");
+  assert.match(issue.body, /~~~text\nSe @noen og ~ ~ ~ !\[x\]\(http:\/\/a\)\n~~~/, "the text stays inside one code block");
+});
+
+test("report: needs both secrets, Turnstile and stays within the daily limit", async () => {
+  const state = {};
+  const store = { getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = v; } };
+  const req = (body) => new Request("https://data.test/v1/report", { method: "POST", body: JSON.stringify(body) });
+  const body = { site: "heia", kind: "hazard", message: "Ny kraftlinje over landingen.", token: "t" };
+  const names = { heia: "Heia" };
+  assert.equal((await reportMod.handleReport(req(body), {}, store, names, NOW)).status, 503);
+  const env = { TURNSTILE_SECRET: "s", GITHUB_ISSUES_TOKEN: "g" };
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  let turnstile = true;
+  globalThis.fetch = async (url, init) => {
+    calls.push(String(url));
+    if (String(url).includes("siteverify")) return Response.json({ success: turnstile });
+    return new Response("{}", { status: 201 });
+  };
+  try {
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 200);
+    assert.ok(calls.some((u) => u.endsWith("/repos/hpgt-com/flying-sites/issues")));
+    turnstile = false;
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 403);
+    turnstile = true;
+    state["reports-2026-10-18"] = reportMod.DAILY_LIMIT;
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 429);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
