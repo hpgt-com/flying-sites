@@ -124,13 +124,14 @@ the menu and is marked `noindex`. It shows per site:
 - The folders use the `key=value` form, so DuckDB, BigQuery, Athena and Spark read `station` and `year` as columns, and
   every row carries the station, so all files load into one table. Example with DuckDB and R2's S3 address:
   `SELECT station, date_trunc('day', time_utc) AS day, avg(speed_ms), max(gust_ms) FROM read_csv('s3://hpgt-data-archive/holfuy/*/*/*.csv', hive_partitioning = true) GROUP BY ALL ORDER BY day;`
-- **Turning it on** (until then the service keeps every measurement, so nothing is lost):
+- **Turned on** 19.10.2026: the bucket exists and is bound in `workers/data/wrangler.toml`. How it was done, for a new
+  account or bucket (without it the service keeps every measurement, so nothing is lost):
   1. Cloudflare → R2 → enable R2 (Free: 10 GB and free downloads; Cloudflare may ask for a card even within the free
      limits) and create the bucket `hpgt-data-archive` (private, no public access).
   2. Give the token «GitHub – flying-sites» the permission `Account → Workers R2 Storage → Edit` (My Profile → API
      Tokens → Edit). The token's value stays the same.
-  3. Remove the `#` on the three `[[r2_buckets]]` lines in `workers/data/wrangler.toml` in a PR (binding `ARCHIVE`,
-     bucket `hpgt-data-archive`). Do this only after steps 1 and 2: a deploy with the binding and no bucket fails.
+  3. The `[[r2_buckets]]` binding in `workers/data/wrangler.toml` (binding `ARCHIVE`, bucket `hpgt-data-archive`).
+     Only after steps 1 and 2: a deploy with the binding and no bucket fails.
 - Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
   S3 address `https://<account id>.r2.cloudflarestorage.com`.
 - If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), the wind assessment
