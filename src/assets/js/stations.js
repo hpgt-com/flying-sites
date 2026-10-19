@@ -805,6 +805,46 @@
     document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
   }
 
+  // --- How well the forecast hit (the data service's verification) ---
+  // Below this many hours the numbers say little, so only how far the collecting has come is shown.
+  var VERIFY_MIN_HOURS = 24;
+  function verifyStrength(v) {
+    if (Math.abs(v) < 0.3) return text("stations.vAbout");
+    return text(v > 0 ? "stations.vStronger" : "stations.vWeaker", { v: value(Math.abs(v)) });
+  }
+  // The lines for one site's summary (workers/data/src/sources/verify.js), as plain text: [] without one.
+  function verifyLines(s, days) {
+    if (!s || !isNum(s.hours)) return [];
+    if (s.hours < VERIFY_MIN_HOURS) return [text("stations.vCollecting", { n: s.hours, min: VERIFY_MIN_HOURS })];
+    var lines = [text("stations.vMean", { days: days, hours: s.hours, strength: verifyStrength(s.bias), mae: value(s.mae) })];
+    if (isNum(s.gustBias)) lines.push(text("stations.vGust", { strength: verifyStrength(s.gustBias) }));
+    if (isNum(s.dirHit)) lines.push(text("stations.vDir", { pct: Math.round(s.dirHit * 100) }));
+    var worst = Object.keys(s.sectors || {}).sort(function (a, b) { return Math.abs(s.sectors[b].bias) - Math.abs(s.sectors[a].bias); })[0];
+    if (worst && Math.abs(s.sectors[worst].bias) >= 1) lines.push(text("stations.vSector", { dir: globalThis.FlyingSites.DIRECTION_LABELS[worst], v: signed(s.sectors[worst].bias) }));
+    return lines;
+  }
+  // A block with the heading and the lines for `siteId`, or null when the data service has nothing for it.
+  function verifyBlock(data, siteId) {
+    var s = data && data.sites && data.sites[siteId];
+    var lines = verifyLines(s, data && data.days);
+    if (!lines.length) return null;
+    var box = make("div", "station-verify");
+    box.appendChild(make("strong", "station-verify__title", text("stations.vTitle")));
+    lines.forEach(function (l) { box.appendChild(make("span", null, l)); });
+    return box;
+  }
+  // Fetches the verification once (it changes twice an hour), and calls done(data) when it is in the right shape.
+  var verifyCache = {};
+  function loadVerification(url, done) {
+    if (!url || typeof fetch !== "function") return;
+    if (!verifyCache[url]) {
+      verifyCache[url] = fetch(url, { credentials: "omit" }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { return d && d.dataset === "verification" && d.sites && typeof d.sites === "object" ? d : null; })
+        .catch(function () { return null; });
+    }
+    verifyCache[url].then(function (d) { if (d) done(d); });
+  }
+
   // The site page: the station on this flying site (item.site), as a line in «Kan jeg fly her nå?» with the station's name
   // as a link to Holfuy, and the Holfuy button among the weather links. Nothing when the site has no station.
   var siteEl = typeof document !== "undefined" && document.getElementById("station-now");
@@ -819,6 +859,13 @@
       if (!item) return;
       if (linkEl && isHolfuy(item)) linkEl.href = stationUrl(item);
       siteEl.replaceChildren(card(item, now, "div", true));
+      // How well the forecast has hit here, under the card.
+      loadVerification(siteEl.getAttribute("data-verify-url"), function (v) {
+        var block = verifyBlock(v, site);
+        var old = siteEl.querySelector(".station-verify");
+        if (old) old.remove();
+        if (block) siteEl.appendChild(block);
+      });
     });
   }
 
@@ -829,6 +876,9 @@
     markerHtml: markerHtml,
     groups: groups,
     metTable: metTable,
+    verifyLines: verifyLines,
+    verifyBlock: verifyBlock,
+    loadVerification: loadVerification,
     isHolfuy: isHolfuy,
     isStationsData: isStationsData,
     ageMinutes: ageMinutes,

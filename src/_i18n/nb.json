@@ -558,6 +558,15 @@
     "stations": {
       "layer": "Klubbens værstasjoner",
       "layerMet": "METs værstasjoner",
+      "vTitle": "Hvor godt treffer varselet her?",
+      "vCollecting": "Samler data: {n} av {min} timer så langt.",
+      "vMean": "Siste {days} dager ({hours} timer): middelvinden var {strength} (bommet i snitt {mae} m/s).",
+      "vGust": "Kastene var {strength}.",
+      "vDir": "Retningen traff innen 45° i {pct} % av timene.",
+      "vSector": "Størst avvik ved {dir}: {v} m/s.",
+      "vStronger": "{v} m/s sterkere enn varslet",
+      "vWeaker": "{v} m/s svakere enn varslet",
+      "vAbout": "omtrent som varslet",
       "modeLabel": "Vis på værstasjonene",
       "mode_wind": "Vind",
       "mode_temp": "Temp",
@@ -623,6 +632,15 @@
     "weather": {
       "failed": "Fikk ikke hentet målingene. Prøver igjen om litt.",
       "roughMeasured": "Vurdert fra målingen nå, med samme regler som varselet. Grov vurdering, sjekk alltid selv."
+    },
+    "report": {
+      "sending": "Sender …",
+      "sent": "Takk! Meldingen er sendt til klubben.",
+      "failed": "Kunne ikke sende. Prøv igjen senere.",
+      "limit": "Det er sendt mange meldinger i dag. Prøv igjen i morgen.",
+      "checkFailed": "Robotsjekken feilet. Last siden på nytt og prøv igjen.",
+      "waitCheck": "Vent til robotsjekken er ferdig.",
+      "tooShort": "Skriv minst 10 tegn."
     }
   },
   "about": {
@@ -651,10 +669,27 @@
     "privacySearch": "Det du skriver i søkefeltet, blir aldri sendt noe sted. Søk uten treff telles bare som et antall.",
     "privacyStorage": "Valgene for fargemodus og fargeblindvennlige farger lagres bare i nettleseren din. Når du har besøkt en side, kan nettleseren lagre den, og kartflisene du har sett, så den virker uten nett.",
     "privacyThirdParty": "Kart, satellittbilder, termikk, radar og Yr-meteogrammet hentes fra tjenestene som lager dem, og de ser da IP-adressen din, slik alle nettsider gjør. Skriftene ligger på siden selv.",
+    "privacyReport": "«Meld fra om endring» på stedssidene sender det du skriver til klubben som en offentlig sak på GitHub, med navnet bare hvis du skriver det. Cloudflare Turnstile sjekker at det ikke er en robot, og lastes bare når du åpner skjemaet. Datatjenesten lagrer bare hvor mange meldinger som er sendt den dagen.",
     "privacyData": "Varselet og målingene hentes fra klubbens egen datatjeneste på Cloudflare, som ser IP-adressen din som andre nettsider. Den lagrer bare værdata (målingene i 7 dager, eldre i et arkiv), ingen opplysninger om deg.",
     "privacyNoAccount": "Siden har ingen innlogging og ingen skjema, og lagrer ingen personopplysninger om deg.",
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
     "changes": "Si fra til noen i klubben. Har du en GitHub-konto, kan du også lage en sak på {github}. Et skjema på siden som ikke krever GitHub-konto, kommer."
+  },
+  "report": {
+    "title": "Meld fra om endring",
+    "intro": "Ny landing, stengt vei, ny fare eller noe som er feil? Skriv kort hva og hvor. Det blir en sak for klubben, som sjekker før stedet endres.",
+    "kind": "Gjelder",
+    "kind_landing": "Landing",
+    "kind_access": "Vei, parkering eller adkomst",
+    "kind_hazard": "Fare eller hindring",
+    "kind_launch": "Start",
+    "kind_other": "Annet",
+    "message": "Hva er endret?",
+    "messageHint": "10–1000 tegn. Ikke skriv telefonnummer eller annet du ikke vil ha offentlig.",
+    "name": "Navn eller kontakt (valgfritt)",
+    "send": "Send",
+    "privacy": "Det du skriver blir en offentlig sak på GitHub. Cloudflare Turnstile sjekker at du ikke er en robot.",
+    "noScript": "Skjemaet trenger JavaScript."
   }
 }

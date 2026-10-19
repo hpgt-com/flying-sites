@@ -112,7 +112,7 @@ test("one schedule every minute: the stations every minute, the forecast every f
   assert.deepEqual([0, 1, 2, 3, 4, 5].map((m) => due("stations", minute(m))), [true, true, true, true, true, true]);
   assert.deepEqual([0, 1, 2, 3, 4, 5, 10].map((m) => due("forecast", minute(m))), [true, false, false, false, false, true, true]);
   // The heavier sources never share a minute (one invocation has 10 ms of CPU in all).
-  for (let m = 0; m < 60; m++) assert.ok(["forecast", "met", "windgram"].filter((n) => due(n, minute(m))).length <= 1, `minute ${m}`);
+  for (let m = 0; m < 60; m++) assert.ok(["forecast", "met", "windgram", "verify"].filter((n) => due(n, minute(m))).length <= 1, `minute ${m}`);
 });
 
 test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {
@@ -268,4 +268,92 @@ test("windgram: every ten minutes, only fresh launches, as old as the oldest, an
   assert.deepEqual(Object.keys(saved.state.sites), ["a"], "sites no longer in the list are dropped");
   assert.equal(saved.state.sites.a.fetched, ago(10), "the failed launch keeps its previous grid");
   assert.deepEqual(saved.windgram.sites.a, grid);
+});
+
+// --- How well the forecast hit ---
+const verifyMod = await import("../workers/data/src/sources/verify.js");
+const { siteLinks } = await import("../workers/data/src/stations.js");
+
+test("verification: the hour's measurements, the pairs for finished hours, and the summary", () => {
+  const H = Date.parse("2026-10-18T14:00:00Z");
+  const at = (min) => new Date(H + min * 60000).toISOString();
+  const rows = [
+    { source: "holfuy", station: "490", time: at(0), dir: 200, speed: 9, gust: 20 },
+    { source: "holfuy", station: "490", time: at(20), dir: 200, speed: 4, gust: 6 },
+    { source: "holfuy", station: "490", time: at(40), dir: 220, speed: 6, gust: 9 },
+    { source: "met", station: "SN1", time: at(60), dir: 270, speed: 8, gust: 12 },
+  ];
+  const m = verifyMod.measuredHour(rows.filter((r) => r.source === "holfuy"), H);
+  assert.equal(m.n, 2, "the row exactly at the start belongs to the hour before");
+  assert.equal(m.speed, 5);
+  assert.equal(m.gust, 9);
+  assert.equal(verifyMod.measuredHour(rows.filter((r) => r.source === "met"), H).speed, 8, "MET's value at the end of the hour");
+  const links = [{ site: "heia", source: "holfuy", station: "490" }, { site: "saetertinden", source: "met", station: "SN1" }];
+  const hours = [
+    { site: "heia", time: at(0), dir: 210, speed: 4, gust: 7 },
+    { site: "saetertinden", time: at(0), dir: 260, speed: 10, gust: 15 },
+    { site: "heia", time: at(60), dir: 210, speed: 4, gust: 7 },
+  ];
+  const p = verifyMod.pairs(links, hours, rows, H - 3600000, H + 61 * 60000);
+  assert.deepEqual(p.map((x) => [x.site, x.m_speed, x.f_speed]), [["heia", 5, 4], ["saetertinden", 8, 10]], "the unfinished hour is left out");
+  const sum = verifyMod.summarize([...Array(5)].map(() => p[0]).concat([p[1]]));
+  assert.equal(sum.hours, 6);
+  assert.equal(sum.bias, 0.5, "(5 × +1 − 2) / 6, measured minus forecast");
+  assert.equal(sum.mae, 1.2);
+  assert.equal(sum.dirHit, 1);
+  assert.deepEqual(sum.sectors, { SW: { hours: 5, bias: 1 } }, "W has too few hours");
+  assert.equal(verifyMod.summarize([]), null);
+});
+
+test("verification: the sites with their own station, and its run time", () => {
+  assert.deepEqual(siteLinks(), [{ site: "heia", source: "holfuy", station: "490" }, { site: "saetertinden", source: "met", station: "SN87772" }]);
+  const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
+  assert.deepEqual([9, 39, 10].map((m) => due("verify", minute(m))), [true, true, false]);
+});
+
+// --- «Meld fra om endring» ---
+const reportMod = await import("../workers/data/src/report.js");
+
+test("report: checked fields, and the issue with the text in a code block", () => {
+  const names = { heia: "Heia" };
+  const ok = { site: "heia", kind: "access", message: "  Bommen ved P-plassen er låst.  ", name: "Kari", token: "t" };
+  const r = reportMod.checkReport(ok, names);
+  assert.equal(r.message, "Bommen ved P-plassen er låst.");
+  assert.equal(reportMod.checkReport({ ...ok, site: "toString" }, names).error, "bad-request", "only real sites");
+  assert.equal(reportMod.checkReport({ ...ok, kind: "spam" }, names).error, "bad-request");
+  assert.equal(reportMod.checkReport({ ...ok, message: "kort" }, names).error, "bad-length");
+  assert.equal(reportMod.checkReport({ ...ok, message: "x".repeat(1001) }, names).error, "bad-length");
+  assert.equal(reportMod.checkReport({ ...ok, token: "" }, names).error, "no-token");
+  const issue = reportMod.issueFor({ ...r, message: "Se @noen og ~~~ ![x](http://a)" }, NOW);
+  assert.equal(issue.title, "[Meld fra] Heia: Vei, parkering eller adkomst");
+  assert.match(issue.body, /~~~text\nSe @noen og ~ ~ ~ !\[x\]\(http:\/\/a\)\n~~~/, "the text stays inside one code block");
+});
+
+test("report: needs both secrets, Turnstile and stays within the daily limit", async () => {
+  const state = {};
+  const store = { getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = v; } };
+  const req = (body) => new Request("https://data.test/v1/report", { method: "POST", body: JSON.stringify(body) });
+  const body = { site: "heia", kind: "hazard", message: "Ny kraftlinje over landingen.", token: "t" };
+  const names = { heia: "Heia" };
+  assert.equal((await reportMod.handleReport(req(body), {}, store, names, NOW)).status, 503);
+  const env = { TURNSTILE_SECRET: "s", GITHUB_ISSUES_TOKEN: "g" };
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  let turnstile = true;
+  globalThis.fetch = async (url, init) => {
+    calls.push(String(url));
+    if (String(url).includes("siteverify")) return Response.json({ success: turnstile });
+    return new Response("{}", { status: 201 });
+  };
+  try {
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 200);
+    assert.ok(calls.some((u) => u.endsWith("/repos/hpgt-com/flying-sites/issues")));
+    turnstile = false;
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 403);
+    turnstile = true;
+    state["reports-2026-10-18"] = reportMod.DAILY_LIMIT;
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 429);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

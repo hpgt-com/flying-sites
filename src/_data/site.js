@@ -13,6 +13,11 @@ export default {
   forecastUrl: "https://data.hpgt.workers.dev/v1/forecast.json",
   stationsUrl: "https://data.hpgt.workers.dev/v1/stations.json",
   windgramUrl: "https://data.hpgt.workers.dev/v1/windgram.json",
+  verificationUrl: "https://data.hpgt.workers.dev/v1/verification.json",
+  // «Meld fra om endring» on the site pages (report.js, workers/data/src/report.js). The form is shown only when the
+  // Turnstile site key is set (public; the secret is TURNSTILE_SECRET in Cloudflare), see docs/operations.md.
+  reportUrl: "https://data.hpgt.workers.dev/v1/report",
+  turnstileSiteKey: "0x4AAAAAAFbKpuCOckRpqREy",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };

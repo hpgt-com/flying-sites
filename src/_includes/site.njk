@@ -10,6 +10,7 @@ scripts:
   - /assets/js/site.js
   - /assets/js/site-wind.js
   - /assets/js/windgram.js
+  - /assets/js/report.js
   - /assets/js/lightbox.js
 ---
 {%- import "macros.njk" as m with context -%}
@@ -110,7 +111,7 @@ scripts:
         (stations.js; the stations and their sites are in workers/data/src/stations.js). Right after «Kan jeg fly her nå?»
         on mobile; on desktop site.js moves it to the top of the right column (under «Før du starter»), where the chart is
         not too big. -#}
-    <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></section>
+    <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-verify-url="{{ site.verificationUrl }}" data-site="{{ id }}" hidden></section>
     <section class="block block--notice{% if not local.hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
       <h2 id="h-hazards"><span class="notice-icon" aria-hidden="true">!</span>{{ t.site.hazardsTitle }}</h2>
       {% for hazard in local.hazards %}
@@ -391,6 +392,35 @@ scripts:
         {% endif %}
         </details>
       </section>
+      {#- 10. «Meld fra om endring»: a short form that becomes an issue for the club (report.js, the data service's
+          /v1/report), checked with Cloudflare Turnstile. Only when the site key is set (src/_data/site.js). -#}
+      {% if site.turnstileSiteKey %}
+      <section class="block block--report" aria-labelledby="h-report">
+        <details class="fold report" id="report" data-url="{{ site.reportUrl }}" data-sitekey="{{ site.turnstileSiteKey }}" data-site="{{ id }}">
+        <summary><h2 id="h-report">{{ t.report.title }}</h2></summary>
+        <p class="muted">{{ t.report.intro }}</p>
+        <form class="report__form" id="report-form" novalidate>
+          <label class="report__field">{{ t.report.kind }}
+            <select name="kind" required>
+              {% for k in ["landing", "access", "hazard", "launch", "other"] %}<option value="{{ k }}">{{ t.report["kind_" + k] }}</option>{% endfor %}
+            </select>
+          </label>
+          <label class="report__field">{{ t.report.message }}
+            <textarea name="message" rows="4" minlength="10" maxlength="1000" required aria-describedby="report-message-hint"></textarea>
+            <span class="muted report__hint" id="report-message-hint">{{ t.report.messageHint }}</span>
+          </label>
+          <label class="report__field">{{ t.report.name }}
+            <input type="text" name="name" maxlength="80" autocomplete="name">
+          </label>
+          <div class="report__check" id="report-check"></div>
+          <button type="submit" class="btn report__send">{{ t.report.send }}</button>
+          <p class="report__status" id="report-status" role="status" aria-live="polite"></p>
+          <p class="muted report__privacy">{{ t.report.privacy }}</p>
+        </form>
+        <noscript><p>{{ t.report.noScript }}</p></noscript>
+        </details>
+      </section>
+      {% endif %}
     </div>
     {# Footer #}
   <footer class="page-footer">
