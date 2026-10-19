@@ -1147,7 +1147,7 @@
   setInterval(recheck, 60 * 1000);
 
   // --- Weather stations (stations.js) ---
-  // The measured wind as the map layer «Værstasjoner», and the same stations as short rows in the Vær tab (the change over
+  // The measured wind as the map layers «Klubbens værstasjoner» and «METs værstasjoner», and the same stations as short rows in the Vær tab (the change over
   // the last half hour); the charts and the rest are on the weather page, which each row links to.
   function addStations() {
     var ST = window.FlyingSitesStations;
@@ -1161,7 +1161,11 @@
     ST.addMapLayer(map, stationsEl.getAttribute("data-url"), function (data, now) {
       stationData = data;
       update();
-      listEl2.replaceChildren.apply(listEl2, data.items.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item)); }));
+      // The club's stations as rows, in their own order (Heia first); MET's as a small folded table under them.
+      listEl2.replaceChildren.apply(listEl2, ST.groups(data.items).club.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item)); }));
+      var oldMet = stationsEl.querySelector(".met-stations"), met = ST.metTable(data.items, now, oldMet && oldMet.open);
+      if (oldMet) oldMet.remove();
+      if (met) listEl2.after(met);
       stationsEl.hidden = !data.items.length;
     });
   }

@@ -1,5 +1,5 @@
 // Measured wind from the weather stations, from the data service (workers/data, /v1/stations.json): on the home map as
-// the layer «Værstasjoner», as «Målt vind nå» in the Vær tab, and on the site page of the station's flying site.
+// the layers «Klubbens værstasjoner» and «METs værstasjoner», as «Målt vind nå» in the Vær tab, and on the site page of the station's flying site.
 // Refetched every minute while the page is in view. The checks and texts are plain functions, tested in
 // test/stations.test.js; the drawing uses DOM methods only, so nothing from the data is read as HTML.
 // Loaded after common.js and wind.js, and exposed as window.FlyingSitesStations.
@@ -7,8 +7,11 @@
   "use strict";
 
   var REFRESH_MS = 60000;
-  // A measurement older than this is shown as old (the station may be down), and not as the wind now.
+  // A measurement older than this is shown as old (the station may be down), and not as the wind now. The club's Holfuy
+  // stations send every minute or two; MET's stations mostly once an hour, and Frost has them some minutes after, so theirs
+  // are old only after OLD_MINUTES_MET.
   var OLD_MINUTES = 30;
+  var OLD_MINUTES_MET = 90;
   // The trend line on the cards (the site page, the home page) is over this many minutes; the weather page lets you choose.
   var TREND_MINUTES = 30;
   var SVG_NS = "http://www.w3.org/2000/svg";
@@ -40,9 +43,10 @@
   function ageMinutes(item, now) {
     return item.time ? Math.max(0, Math.round((now - Date.parse(item.time)) / 60000)) : null;
   }
+  function oldMinutes(item) { return isHolfuy(item) ? OLD_MINUTES : OLD_MINUTES_MET; }
   function isOld(item, now) {
     var age = ageMinutes(item, now);
-    return age === null || age > OLD_MINUTES;
+    return age === null || age > oldMinutes(item);
   }
 
   // A value as the station sent it, with the page's decimal separator: 4.4 → «4,4», 7 → «7». Not rounded to whole
@@ -70,7 +74,7 @@
   function ageText(item, now) {
     var age = ageMinutes(item, now);
     if (age === null) return text("stations.noData");
-    if (age > OLD_MINUTES) return text("stations.old", { time: W().formatClock(Date.parse(item.time)) });
+    if (age > oldMinutes(item)) return text("stations.old", { time: W().formatClock(Date.parse(item.time)) });
     return age < 1 ? text("stations.justNow") : text("stations.minutesAgo", { n: age });
   }
 
@@ -106,6 +110,12 @@
   // The station's own page at its source: the address the data service gives (url), or Holfuy's for a Holfuy station
   // from before it gave one. null when the source has no page per station (MET).
   function isHolfuy(item) { return !item.source || /holfuy/i.test(item.source); }
+
+  // The club's stations (Holfuy, where we fly) first, then MET's (in the area, often by the sea or at an airport), each in
+  // its own order: { club: [...], met: [...] }.
+  function groups(items) {
+    return { club: items.filter(isHolfuy), met: items.filter(function (i) { return !isHolfuy(i); }) };
+  }
   function holfuyUrl(item) { return "https://holfuy.com/en/weather/" + encodeURIComponent(String(item.id)); }
   function stationUrl(item) {
     if (typeof item.url === "string" && /^https:\/\//.test(item.url)) return item.url;
@@ -252,6 +262,34 @@
     }
     li.appendChild(a);
     return li;
+  }
+
+  // MET's stations as a small folded table under the club's (the Vær tab, the weather page): there are many, and they say
+  // little about the wind at the launches, so they get no cards. One row per station: name and height, the wind (gust), the
+  // direction and when it was measured. open: whether it was open before the page was redrawn. Null without MET stations.
+  function metTable(items, now, open) {
+    var met = groups(items).met;
+    if (!met.length) return null;
+    var box = make("details", "met-stations");
+    box.open = !!open;
+    box.appendChild(make("summary", null, text("stations.metTitle") + " (" + met.length + ")"));
+    box.appendChild(make("p", "met-stations__note", text("stations.metNote")));
+    var table = box.appendChild(make("table", "met-stations__table"));
+    var head = table.appendChild(make("thead")).appendChild(make("tr"));
+    ["metStation", "metWind", "metDir", "metTime"].forEach(function (k) { head.appendChild(make("th", null, text("stations." + k))).scope = "col"; });
+    var body = table.appendChild(make("tbody"));
+    met.forEach(function (item) {
+      var tr = body.appendChild(make("tr", hasWind(item, now) ? null : "met-stations__old"));
+      var name = tr.appendChild(make("th", null, item.name));
+      name.scope = "row";
+      var alt = altitudeText(item);
+      if (alt) name.appendChild(make("small", null, alt));
+      var w = item.wind || {};
+      tr.appendChild(make("td", "met-stations__num", hasWind(item, now) ? value(w.speed) + (isNum(w.gust) ? " (" + value(w.gust) + ")" : "") : "–"));
+      tr.appendChild(make("td", null, hasWind(item, now) ? dirText(w.dir) : ""));
+      tr.appendChild(make("td", null, item.time ? W().formatClock(Date.parse(item.time)) : ""));
+    });
+    return box;
   }
 
   // The station's name as a link to its page at the source, in a new tab, which screen readers are told (as the external()
@@ -583,8 +621,17 @@
   function addMapLayer(map, url, onData) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !url || !map.layersControl) return null;
-    var layer = L.layerGroup().addTo(map);
+    // Two layers, so MET's stations (in the area, mostly hourly) can be turned off and are not mistaken for the club's.
+    // MET's layer is added when the first MET station comes.
+    var layer = L.layerGroup().addTo(map), metLayer = null;
     map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", text("stations.layer")));
+    function metGroup() {
+      if (!metLayer) {
+        metLayer = L.layerGroup().addTo(map);
+        map.layersControl.addOverlay(metLayer, FS.layerLabel(map, "stations-met", text("stations.layerMet")));
+      }
+      return metLayer;
+    }
     // A station placed at its site's launch (no position of its own) is drawn up and to the right of the point, so it does
     // not cover the launch's own marker.
     function icon(item, now, atLaunch) {
@@ -595,20 +642,23 @@
         ? '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir) + 'deg)"><path d="M12 3v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22l-5-7h10z" fill="currentColor"/></svg>'
         : "";
       var nums = has ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–";
-      return L.divIcon({ className: "station-marker" + (old ? " station-marker--old" : ""),
-        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + nums + "</span>",
+      // MET's stations: grey, and «MET» in the label, so the difference is not told by colour alone.
+      var met = !isHolfuy(item);
+      return L.divIcon({ className: "station-marker" + (met ? " station-marker--met" : "") + (old ? " station-marker--old" : ""),
+        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + (met ? '<span class="station-marker__tag">MET</span>' : "") + nums + "</span>",
         iconSize: [88, 30], iconAnchor: atLaunch ? [-14, 44] : [15, 15], popupAnchor: atLaunch ? [29, -44] : [0, -14] });
     }
     watch(url, function (data) {
       var now = Date.now();
       layer.clearLayers();
+      if (metLayer) metLayer.clearLayers();
       data.items.forEach(function (item) {
         var at = position(item);
         if (!at) return;
         var box = card(item, now, "div", false, map.getSize().y < 600);
         box.classList.add("station-popup");
         L.marker(at, { icon: icon(item, now, !(isNum(item.lat) && isNum(item.lon))), keyboard: true, title: item.name, zIndexOffset: 500 })
-          .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(layer);
+          .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(isHolfuy(item) ? layer : metGroup());
       });
       if (onData) onData(data, now);
     });
@@ -664,6 +714,10 @@
 
   globalThis.FlyingSitesStations = {
     OLD_MINUTES: OLD_MINUTES,
+    OLD_MINUTES_MET: OLD_MINUTES_MET,
+    groups: groups,
+    metTable: metTable,
+    isHolfuy: isHolfuy,
     isStationsData: isStationsData,
     ageMinutes: ageMinutes,
     isOld: isOld,

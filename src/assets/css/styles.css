@@ -1633,6 +1633,13 @@ body.sheet-open { overflow: hidden; }
 }
 .station-marker__nums small { font-size: 11px; font-weight: 600; opacity: 0.85; }
 .station-marker--old { opacity: 0.55; }
+/* MET's stations: smaller and grey, with «MET» in the label (stations.js), so they are not taken for the club's. White on
+   #56636B is about 6:1. */
+.station-marker--met { font-size: 12px; }
+.station-marker--met .station-marker__dial { width: 24px; height: 24px; background: #56636B; }
+.station-marker--met .station-marker__dial svg { width: 14px; height: 14px; }
+.station-marker--met .station-marker__nums { background: #56636B; padding: 3px 6px 3px 9px; }
+.station-marker__tag { margin-right: 5px; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; opacity: 0.9; }
 .leaflet-popup-content .station-popup { width: min(300px, 64vw); padding: 0; border: 0; background: none; }
 /* «Målt vind nå» in the Vær tab, and the station on its site page: a card with the wind now and the last hours. */
 .stations { display: flex; flex-direction: column; gap: 10px; }
@@ -1714,6 +1721,17 @@ body.sheet-open { overflow: hidden; }
 .weather-row__change { font-size: 12px; font-weight: 600; }
 .weather-row--old .station-compass { opacity: 0.5; }
 .weather-row--old .weather-row__sub { color: var(--hazard-text); }
+/* MET's stations under the club's (stations.js metTable): a small folded table, no cards. */
+.met-stations { margin-top: 10px; font-size: 13px; }
+.met-stations summary { cursor: pointer; font-weight: 700; font-size: 14px; padding: 4px 0; }
+.met-stations__note { margin: 4px 0 8px; color: var(--muted); }
+.met-stations__table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.met-stations__table th, .met-stations__table td { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.met-stations__table thead th { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.met-stations__table tbody th { font-weight: 600; }
+.met-stations__table tbody th small { display: block; font-weight: 400; color: var(--muted); }
+.met-stations__num { font-weight: 700; white-space: nowrap; }
+.met-stations__old td { color: var(--muted); }
 /* The cards (draft 6). */
 .weather-cards { display: grid; gap: 16px; }
 .weather-card { gap: 12px; padding: 16px; scroll-margin-top: 16px; }

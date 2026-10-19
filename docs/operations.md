@@ -108,7 +108,7 @@ the menu and is marked `noindex`. It shows per site:
 - Fetched every minute. `https://data.hpgt.workers.dev/v1/stations.json` has the latest measurement and the last
   6 hours per station. The service keeps the last 7 days; older days go to the archive (below), and nothing is deleted
   before it is there. Holfuy has accepted that the club stores the measurements over time.
-- Where they are shown: the layer «Værstasjoner» on the home map and the site maps (at Holfuy's position, or at the
+- Where they are shown: the layer «Klubbens værstasjoner» (MET's in their own layer, «METs værstasjoner») on the home map and the site maps (at Holfuy's position, or at the
   site's launch when Holfuy gives none), short rows in the Vær tab, the weather page `/vaer/`, and «Målt nå» on the
   station's site page. The rating of the measured wind, the change over a period and how even the wind is are worked out
   in the browser (`src/assets/js/stations.js`), with the limits in `src/_data/windRules.json`.
