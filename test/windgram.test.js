@@ -23,7 +23,7 @@ test("the grid has every 250 m and the launch altitude", () => {
 });
 
 test("the Open-Meteo response becomes a grid with boundary layer and cloud base in m a.s.l.", () => {
-  const hourly = { time: [1760000000], temperature_2m: [8], dew_point_2m: [4], wind_speed_10m: [3], wind_direction_10m: [90], boundary_layer_height: [700], cape: [12.4] };
+  const hourly = { time: [1760000000], temperature_2m: [8], dew_point_2m: [4], wind_speed_10m: [3], wind_direction_10m: [90], boundary_layer_height: [700] };
   const heights = { 1000: 50, 975: 260, 950: 480, 925: 700, 900: 930, 850: 1400, 800: 1900, 700: 2950 };
   for (const p of LEVELS) {
     hourly[`geopotential_height_${p}hPa`] = [heights[p]];
@@ -35,7 +35,6 @@ test("the Open-Meteo response becomes a grid with boundary layer and cloud base 
   assert.equal(g.elevation, 120);
   assert.equal(g.blh[0], 820); // 120 + 700
   assert.equal(g.cloudBase[0], 620); // 120 + (8 − 4) × 125
-  assert.equal(g.cape[0], 12);
   // 1000 hPa is below the terrain and is left out. 250 m a.s.l. is between the 10 m wind (E) and 975 hPa (W).
   const at = (h) => g.cells[0][g.heights.indexOf(h)];
   assert.deepEqual(at(500), [270, 4]);

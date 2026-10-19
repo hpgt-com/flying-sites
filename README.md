@@ -42,7 +42,7 @@ Do you have corrections, photos or new information about a site?
 | `src/_includes/` | Page templates for the home page and the site pages. |
 | `src/assets/` | CSS, JavaScript and images. |
 | `lib/`, `scripts/` | Validation, GPX, images, airspace, weather and maintenance scripts. See [Data modules](docs/architecture.md#data-modules). |
-| `workers/data/` | The data service on Cloudflare Workers: the MET forecast and the Holfuy weather stations, with the archive in R2. See [operations](docs/operations.md#weather-stations-holfuy). |
+| `workers/data/` | The data service on Cloudflare Workers: the MET forecast, the weather stations (Holfuy and MET's Frost), winds aloft, how well the forecast hit, pilots in the air and flying activity (Open Glider Network), and «Meld fra» as GitHub issues, with the archive in R2. See [operations](docs/operations.md#weather-stations-holfuy). |
 | `src/_i18n/` | Dictionaries for Norwegian and English (all fixed text in templates and scripts). |
 | `docs/` | Documentation, see above. |
 
@@ -105,7 +105,9 @@ Other commands:
 - Heights of launches, landings and parking: Kartverket
 - Heights along walking routes: Kartverket
 - Wind forecast: [MET Norway](https://api.met.no/) and [Yr](https://www.yr.no/)
-- Winds aloft (draft, Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+- Winds aloft, thermals, clouds, rain and gusts for «Vind over starten» (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+- Measured wind: the club's [Holfuy](https://holfuy.com/) stations and MET Norway's stations ([Frost](https://frost.met.no/), CC BY 4.0)
+- Pilots in the air and flying activity: [Open Glider Network](https://www.glidernet.org/) (ODbL)
 - Precipitation radar: [Rain Viewer](https://www.rainviewer.com/) (free for non-commercial use, with attribution)
 - Airspace: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
 - Thermals: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)

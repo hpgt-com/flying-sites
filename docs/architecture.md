@@ -59,7 +59,8 @@ flowchart LR
   site files before they go live.
 - **Automatic imports never write to the site files**, only to `src/_data/cache/`. Airspace arrives as a separate PR
   that is reviewed.
-- **No secrets in the browser.** The only key (`OPENAIP_API_KEY`) is used only in the workflow.
+- **No secrets in the browser.** `OPENAIP_API_KEY` is used only in the workflow; the data service's keys (`HOLFUY_KEY`,
+  `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`) are Cloudflare secrets, never in the repository or the pages.
 
 ## The build
 
@@ -129,7 +130,11 @@ flowchart LR
   sitewind["site-wind.js<br/>«Kan jeg fly her nå?» on the site page"]
   stations["stations.js<br/>weather stations: map layer, rows,<br/>cards, charts, rating"]
   weather["weather.js<br/>the weather page /vaer/"]
-  data["data service<br/>data.hpgt.workers.dev<br/>/v1/stations.json, /v1/forecast.json,<br/>/v1/windgram.json"]
+  data["data service<br/>data.hpgt.workers.dev<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live (.json),<br/>POST /v1/report"]
+  live["live.js<br/>«Piloter i lufta» map layer"]
+  windgram["windgram.js<br/>«Vind over starten»"]
+  flights["flights.js, activity.js<br/>flying activity: site page,<br/>/flyaktivitet/"]
+  report["report.js<br/>«Meld fra» form"]
   lightbox["lightbox.js<br/>image viewer"]
   goat["goatcounter.js<br/>(copy, CSP allows only own scripts)"]
   pwa["pwa.js<br/>registers the service worker,<br/>«Du er offline» notice"]
@@ -140,6 +145,8 @@ flowchart LR
   j2 --> home & site
   j3 --> wind --> home & sitewind
   data -- "fetch every minute" --> stations --> home & site & sitewind & weather
+  data --> live & windgram & flights
+  report -- "POST /v1/report" --> data
   common -- "FS.track()" --> goat
   common --> pwa --> sw
 ```
@@ -261,7 +268,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
   fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
   `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
-  (`src/schedule.js`: Holfuy every minute, forecast every 5, MET's stations and winds aloft every 10, on different minutes so the heavier sources never share an invocation's 10 ms of CPU). The store is one Durable Object with SQLite
+  (`src/schedule.js`: Holfuy every minute, the flying activity every 2, forecast every 5, MET's stations and winds aloft every 10, the verification every 30, on different minutes so the heavier sources never share an invocation's 10 ms of CPU; pilots in the air are fetched on demand). The store is one Durable Object with SQLite
   (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
   the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
   into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
@@ -307,21 +314,11 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
 
 ## Planned
 
-```mermaid
-flowchart LR
-  form["Form on the site<br/>(«Foreslå endring»)"] --> worker["Cloudflare Worker<br/>Turnstile + GitHub key"]
-  worker --> issue["GitHub issue<br/>labelled from-form"]
-  issue --> agent["Agent (GitHub Action)<br/>summarises and labels"]
-  agent -- "approved" --> pr["PR with the change"]
-  pr --> review["Review and merge"]
-  worker -. "later" .-> live["NOTAM<br/>(cache)"]
-  data["Data service (built)<br/>data.hpgt.workers.dev: forecast, stations"] -. "same account" .- worker
-```
-
-- **Data service** (built): the MET forecast and the Holfuy stations on Cloudflare Workers, see [Data modules](#data-modules).
-  The Cloudflare account «HPGT» is the club's; the form, more stations, winds aloft and OGN/FANET go in the same service.
-- **Change form** without a GitHub account, via a Cloudflare Worker that creates the issue and replies with a link
-  to it. An agent summarises the issue, and creates the change as a PR once it is labelled `approved`.
+- **Data service** (built): the forecast, the stations, winds aloft, the verification, the flying activity, pilots in
+  the air and «Meld fra», all in one Cloudflare Worker, see [Data modules](#data-modules). The Cloudflare account
+  «HPGT» is the club's.
+- **«Meld fra»** (built): reports become GitHub issues labelled by what they concern (`endringsforslag`, `site-data`,
+  `safety`, `bug`, `enhancement`), see `workers/data/src/report.js`. Still planned: an agent that summarises the issue
+  and makes the change as a PR once it is labelled `approved`.
 - **NOTAM** as a separate map layer, once there is a safe and permitted way to fetch from IPPC. It needs a server-side
-  intermediary (the data service). The weather stations (Holfuy) are built, see above; more stations and OGN/FANET go in
-  the same service.
+  intermediary (the data service), the same way as the other sources.
