@@ -400,6 +400,13 @@
     spiderfyDistanceMultiplier: 1.6,
     iconCreateFunction: clusterIcon,
   }).addTo(map);
+  // «Flysteder» as a layer, so the map can show only the weather. What belongs to the sites (the status, the line about
+  // the selected site, the timeline, the card) is hidden with it.
+  map.layersControl.addOverlay(cluster, FS.layerLabel(map, "sites", FS.t("map.layerSites")));
+  var homeMapEl = mapEl.closest(".home__map");
+  map.on("overlayadd overlayremove", function (ev) {
+    if (ev.layer === cluster && homeMapEl) homeMapEl.classList.toggle("home__map--no-sites", ev.type === "overlayremove");
+  });
 
   sites.forEach(function (site) {
     var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, "match", false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });

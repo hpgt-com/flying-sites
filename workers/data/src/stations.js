@@ -14,3 +14,6 @@ export const HOLFUY_STATIONS = [
 // here. A MET station that belongs to a flying site is linked to it here, by MET's number (SN…) and the site's folder,
 // as `site` above: that site page then shows it and uses it for the assessment of the hour now.
 export const MET_STATION_SITES = {};
+// MET's stations that are found in the area but should not be shown (MET's number, "SN…"), e.g. one that says nothing
+// useful for flying.
+export const MET_EXCLUDE = [];
