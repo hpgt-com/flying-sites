@@ -117,6 +117,7 @@ New version of flysteder.hpgt.com. It replaces Lars Sletten's old iframe-based f
 - All pages have Open Graph tags (title, description, image, URL), so links get a preview on Facebook and Messenger. Site pages use one of the site's own images (overview, launch or landing) and the introduction; other pages use `src/assets/img/share.jpg` (1200×630, a screenshot of the home page).
 - `/404.html`: «Fant ikke siden» ("Page not found"), a link to the home page and a list of all sites. No link to the old guide.
 - `/sitemap.xml` with all pages without `noindex` (site pages dated from Git), and `/robots.txt` pointing to it.
+- Every page without `noindex` has `<link rel="canonical">` to its own address. Each site page has structured data (JSON-LD, schema.org `TouristAttraction` with `touristType` «Paragliding»): name, description (the intro), address, the first image and the launch's position and height. Redirect pages have their own canonical to the new address.
 
 ## App and offline
 - Installable as an app: a web app manifest per language (`/manifest.webmanifest`, `/en/manifest.webmanifest`, `lib/pwa.js`) with the front page in that language as start page, and icons made from `src/assets/img/icon.svg` (`node scripts/app-icons.mjs`).
