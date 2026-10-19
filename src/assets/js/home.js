@@ -411,7 +411,7 @@
 
   sites.forEach(function (site) {
     var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, "match", false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
-    marker.bindTooltip(site.name, { direction: "top", offset: [0, -14] });
+    marker.bindTooltip(FS.escapeHtml(site.name), { direction: "top", offset: [0, -14] });
     marker.on("click", function () { FS.track("map/select/" + site.id, site.name); select(site.id, "map"); });
     cluster.addLayer(marker);
     markers[site.id] = marker;

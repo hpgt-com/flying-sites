@@ -1,7 +1,7 @@
 name: Data service
 
 # Publishes the data service (workers/data) to Cloudflare Workers when it, the MET code or the sites change on main.
-# The service fetches its data every 5 minutes by itself (Cron Trigger), so this only runs on changes.
+# The service fetches its data by itself (a Cron Trigger every minute, each source on its own interval), so this only runs on changes.
 on:
   push:
     branches: [main]
@@ -54,3 +54,30 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
+  # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.
+  alert:
+    needs: [deploy]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Meld feilen som issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW: ${{ github.workflow }}
+        run: |
+          title="Jobben «$WORKFLOW» feilet"
+          n=$(gh issue list --state open --label bug --search "in:title \"$title\"" --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "Feilet igjen: $RUN_URL"
+          else
+            gh issue create --title "$title" --label bug --body "Kjøringen feilet: $RUN_URL
+
+          Se loggen, rett feilen og kjør jobben på nytt (Actions → «$WORKFLOW» → «Run workflow»). Lukk saken når den går grønt."
+          fi

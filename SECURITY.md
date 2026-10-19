@@ -12,7 +12,9 @@ Errors in site information (hazards, directions, airspace) are not security issu
 
 ## What is in place
 
-The site is static (Eleventy on GitHub Pages), with no login, forms or database.
+The site is static (Eleventy on GitHub Pages), with no login or accounts. Beside it runs the data service, a Cloudflare
+Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh data and takes the one public form,
+«Meld fra om endring».
 
 **The site**
 - Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
@@ -24,7 +26,11 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
 - «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
   `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000
-  characters, and makes at most 20 issues a day. The text goes into the issue inside a code block, so it cannot add
+  characters, and makes at most 20 issues a day and 5 from one address. Turnstile's answer must be for
+  `flysteder.hpgt.com`, the body is read only as JSON up to 8 KB, and the day's count and the per-address count are
+  reserved in one step in the Durable Object (so two reports at the same time cannot pass the limit), and given back
+  when GitHub fails. The address is kept only as a hash with a salt for the day, deleted with the count the next day.
+  The text goes into the issue inside a code block, so it cannot add
   links, images or @mentions. The issues are made by the club's GitHub App, installed only on this repository with
   only Issues: read and write; its private key is a Cloudflare secret, and each report gets a token that lasts an hour
   (`workers/data/src/github-app.js`).
@@ -55,23 +61,34 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   is set up, `pr` uses a short-lived app token limited to this repository (contents and pull requests), so the PR
   check runs on the airspace PRs too. The power line workflow (`obstacles.yml`) is built the same way, without any
   key.
-- Every publish is signed. The `attest` job in «Build and deploy» makes a build provenance attestation (which
+- Every successful publish is signed. The `attest` job in «Build and deploy» makes a build provenance attestation (which
   workflow, commit and run built the site) and an SBOM attestation (SPDX from `package-lock.json`, made with
   `npm sbom`), both for the SHA-256 of the archive that is published to Pages. The job has `id-token` and
   `attestations` but checks out no code; the build job never gets `id-token`. The SBOM is also kept as the
-  artifact `sbom` on the run for 90 days. See [Verifying a publish](#verifying-a-publish).
+  artifact `sbom` on the run for 90 days. `deploy` does not wait for `attest`, so a failed attestation does not stop a
+  publish; it fails the run and opens an issue (below). See [Verifying a publish](#verifying-a-publish).
+- A failed run of «Build and deploy», the data service deploy, «Update airspace» or «Update power lines and obstacles»
+  opens an issue labelled `bug` (or comments on the open one), from the job `alert`, which only has `issues: write`
+  and runs no project code. Scheduled runs on GitHub can be hours late, and GitHub turns off the schedule of a public
+  repository after 60 days without activity, so a missing monthly PR is a sign to check Actions.
 - OpenSSF Scorecard (`scorecard.yml`) checks the repository against supply-chain good practice on every push to
   `main` and weekly. The results are in Code scanning and behind the badge in README.
-- Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. `.gitignore` blocks `.env` and
+- Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. Planned: move
+  them to an environment `automation` that only `main` may use, so a workflow on another branch cannot read them. `.gitignore` blocks `.env` and
   key files.
 - The data service (`workers/data`) runs in the club's Cloudflare account «HPGT». It is published by
   `data-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
   environment `cloudflare`, which only `main` may use, so a PR branch cannot publish. The token may only change Workers
   (including their Durable Objects) and KV in the HPGT account (Workers Scripts, Workers KV Storage, Workers Tail, Account Settings read, and the user's
   own details and memberships read), has no access to domains or DNS, and expires on 18.10.2027. The account has
-  two-factor sign-in with a security key and an authenticator app. The service's only secret is the Holfuy key
-  (`HOLFUY_KEY`), set in Cloudflare and never in GitHub or the code; it is sent only to api.holfuy.com and never logged.
-  The service serves only public data (forecast and measured wind). The weather archive is a private R2 bucket
+  two-factor sign-in with a security key and an authenticator app. The service's secrets are set in Cloudflare and
+  never in GitHub or the code, and never logged: `HOLFUY_KEY` (sent only to api.holfuy.com), `FROST_CLIENT_ID` (MET's
+  Frost), `TURNSTILE_SECRET`, and `REPORTS_APP_ID` with `REPORTS_APP_PRIVATE_KEY` (the GitHub App for «Meld fra»).
+  The service serves only public data: forecast, measured wind, winds aloft, how well the forecast hit, flying activity
+  as sums per site and day, and pilots in the air from the Open Glider Network (their tracks over the last 10 minutes
+  only in memory). To count the day's flights it keeps, until the next day, a random salt, a hash per device and each
+  pilot's last position in the air, and asks Kartverket for the terrain height at it; nothing that names a device or
+  pilot is kept longer. The weather archive is a private R2 bucket
   (`hpgt-data-archive`), written only by the service; read access for reports is a separate read-only R2 token.
 
 ## Verifying a publish
@@ -105,7 +122,8 @@ GitHub in autumn 2026.
   Target = Include default branch:
   - Restrict deletions and Block force pushes.
   - Require a pull request before merging, Required approvals = 0 as long as one person merges alone.
-  - Require status checks to pass: `build`, `dependency-review` and `workflow-security`, with source GitHub Actions.
+  - Require status checks to pass: `build`, `dependency-review`, `workflow-security` and `accessibility`, with source
+    GitHub Actions.
     «Require branches to be up to date» off. A check can only be selected once it has run recently.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
     (once CodeQL has run on `main`).

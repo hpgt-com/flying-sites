@@ -3,7 +3,10 @@
 // made by the club's GitHub App (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY, github-app.js), or else with a
 // fine-grained token (the secret GITHUB_ISSUES_TOKEN, only Issues: read and write on hpgt-com/flying-sites).
 // Without Turnstile and one of the two the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
-// src/_data/site.js). At most DAILY_LIMIT reports a day. Nothing is stored here but the day's count. The issue gets the
+// src/_data/site.js). At most DAILY_LIMIT reports a day, and PER_IP_LIMIT from one address: both are counted and
+// reserved in one step in the store (store.js reserveReport), so two reports at the same time cannot both slip past the
+// limit, and a reservation is given back when GitHub fails. The address is kept only as a hash with a salt that is thrown
+// away with the day's count the next day. Turnstile's answer must be for the site's own hostname. The issue gets the
 // labels for its kind (LABELS), and the answer gives its number and address, so the form can link to it. Tested in
 // test/data-worker.test.js.
 
@@ -16,6 +19,9 @@ export const MAX_MESSAGE = 1000;
 export const MIN_MESSAGE = 10;
 export const MAX_NAME = 80;
 export const DAILY_LIMIT = 20;
+export const PER_IP_LIMIT = 5;
+// The largest request body read (the form's fields and the Turnstile token are far below it).
+export const MAX_BODY = 8192;
 export const ORIGINS = ["https://flysteder.hpgt.com"];
 const REPO = "hpgt-com/flying-sites";
 const KIND_TITLES = { landing: "Landing", access: "Vei, parkering eller adkomst", hazard: "Fare eller hindring", launch: "Start", other: "Annet",
@@ -63,14 +69,32 @@ export function issueFor(report, now = Date.now()) {
   return { title: `[Meld fra] ${report.siteName ?? "Generelt"}: ${KIND_TITLES[report.kind]}`, body: lines.join("\n"), labels };
 }
 
+// The hostnames Turnstile's answer may be for: those of the allowed origins (ORIGINS, or REPORT_ORIGINS when testing).
+export function reportHosts(env) {
+  return (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).map((o) => { try { return new URL(o.trim()).hostname; } catch { return null; } }).filter(Boolean);
+}
+
+// Whether Turnstile accepts the token, for one of our hostnames (a token solved on another site is refused). A timeout or
+// an error from Turnstile counts as not accepted.
 async function turnstileOk(env, token, ip) {
   const form = new FormData();
   form.append("secret", env.TURNSTILE_SECRET);
   form.append("response", token);
   if (ip) form.append("remoteip", ip);
-  const r = await fetch(env.TURNSTILE_URL || "https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form, signal: AbortSignal.timeout(10000) });
-  const d = r.ok ? await r.json() : null;
-  return !!(d && d.success);
+  try {
+    const r = await fetch(env.TURNSTILE_URL || "https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form, signal: AbortSignal.timeout(10000) });
+    const d = r.ok ? await r.json() : null;
+    return !!(d && d.success && reportHosts(env).includes(d.hostname));
+  } catch {
+    return false;
+  }
+}
+
+// The sender's address as a hash with the day's salt (never the address itself), or "" without an address.
+export async function ipKey(ip, salt) {
+  if (!ip) return "";
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${ip}`));
+  return [...new Uint8Array(digest)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 const hasApp = (env) => !!(env.REPORTS_APP_ID && env.REPORTS_APP_PRIVATE_KEY);
@@ -92,20 +116,26 @@ async function createIssue(env, issue, now) {
 // The answer to POST /v1/report: { status, body }. store: for the day's count; siteNames as for checkReport.
 export async function handleReport(request, env, store, siteNames, now = Date.now()) {
   if (!env.TURNSTILE_SECRET || !(hasApp(env) || env.GITHUB_ISSUES_TOKEN)) return { status: 503, body: { error: "not-configured" } };
+  if (!/^application\/json\b/i.test(request.headers.get("content-type") || "")) return { status: 415, body: { error: "bad-request" } };
+  if (Number(request.headers.get("content-length")) > MAX_BODY) return { status: 413, body: { error: "bad-length" } };
+  const text = await request.text().catch(() => "");
+  if (text.length > MAX_BODY) return { status: 413, body: { error: "bad-length" } };
   let body = null;
-  try { body = await request.json(); } catch { /* not JSON */ }
+  try { body = JSON.parse(text); } catch { /* not JSON */ }
   const report = checkReport(body, siteNames);
   if (report.error) return { status: 400, body: { error: report.error } };
-  if (!(await turnstileOk(env, report.token, request.headers.get("cf-connecting-ip")))) return { status: 403, body: { error: "turnstile" } };
-  const key = `reports-${new Date(now).toISOString().slice(0, 10)}`;
-  const count = (await store.getState(key)) ?? 0;
-  if (count >= DAILY_LIMIT) return { status: 429, body: { error: "limit" } };
-  await store.putState(key, count + 1);
+  const ip = request.headers.get("cf-connecting-ip");
+  if (!(await turnstileOk(env, report.token, ip))) return { status: 403, body: { error: "turnstile" } };
+  const day = new Date(now).toISOString().slice(0, 10);
+  const who = await ipKey(ip, await store.reportSalt(day));
+  const reserved = await store.reserveReport(day, who, DAILY_LIMIT, PER_IP_LIMIT);
+  if (reserved !== "ok") return { status: 429, body: { error: "limit" } };
   let issue;
   try {
     issue = await createIssue(env, issueFor(report, now), now);
   } catch (err) {
     console.warn(`report: ${err.message}`);
+    await store.releaseReport(day, who);
     return { status: 502, body: { error: "github" } };
   }
   return { status: 200, body: issue ? { ok: true, issue: issue.number, url: issue.url } : { ok: true } };

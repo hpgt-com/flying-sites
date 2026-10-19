@@ -70,6 +70,42 @@ export class Store extends DurableObject {
     this.sql.exec("INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", key, JSON.stringify(value));
   }
 
+  // «Meld fra» (report.js): the day's random salt for hashing the senders' addresses, made on first use. The salts and
+  // counts of earlier days are deleted, so no address hash outlives its day.
+  reportSalt(day) {
+    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?)", `reports-${day}`, `report-salt-${day}`);
+    let salt = this.getState(`report-salt-${day}`);
+    if (!salt) {
+      salt = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
+      this.putState(`report-salt-${day}`, salt);
+    }
+    return salt;
+  }
+
+  // Counts one report for the day and the sender, if both are under their limits: "ok", "limit" or "ip-limit". One
+  // synchronous method in the Durable Object, so the read and the write cannot be split by another request.
+  reserveReport(day, who, dailyLimit, perIpLimit) {
+    const key = `reports-${day}`;
+    const c = this.getState(key) ?? { n: 0, ips: {} };
+    if (typeof c === "number") return c >= dailyLimit ? "limit" : (this.putState(key, { n: c + 1, ips: who ? { [who]: 1 } : {} }), "ok");
+    if (c.n >= dailyLimit) return "limit";
+    if (who && (c.ips[who] ?? 0) >= perIpLimit) return "ip-limit";
+    c.n += 1;
+    if (who) c.ips[who] = (c.ips[who] ?? 0) + 1;
+    this.putState(key, c);
+    return "ok";
+  }
+
+  // Gives a reservation back (GitHub failed, so no issue was made).
+  releaseReport(day, who) {
+    const key = `reports-${day}`;
+    const c = this.getState(key);
+    if (!c || typeof c !== "object") return;
+    c.n = Math.max(0, c.n - 1);
+    if (who && c.ips[who]) c.ips[who] -= 1;
+    this.putState(key, c);
+  }
+
   // The same measurement can come back on several runs while the station has not reported anew: kept once.
   addMeasurements(rows) {
     for (const r of rows) {

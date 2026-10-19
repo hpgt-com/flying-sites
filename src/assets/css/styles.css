@@ -392,7 +392,9 @@ p { margin: 0; }
 .rose-marker--unknown > * { opacity: 0.6; }
 /* Cluster of launches when zoomed out: white circle with a count. */
 .site-cluster__ring { border-radius: 10px !important; width: 40px; height: 40px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
-.leaflet-cluster-anim .leaflet-marker-icon { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
+/* The cluster's glide while it splits or merges, only on its own markers: on every marker it also slowed the weather
+   stations and the pilots in the air, which then lagged behind the map's zoom and slid into place afterwards. */
+.leaflet-cluster-anim .leaflet-marker-icon:not(.station-marker):not(.live-marker) { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
 .leaflet-cluster-spider-leg { transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in; }
 /* Selected site: larger, with a dark outer ring (white gap between), so the rating colour on the ring is kept.
    Not orange/red, which are reserved for hazard and wind. */
@@ -1040,6 +1042,8 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
    photo, with the same symbol as in «Kan jeg fly her nå?». A link down to that box, 44 px tall as a touch target. */
 .hero__chips .hero__status { --r: var(--wind-no); padding: 0; background: color-mix(in srgb, var(--r) 18%, #FFFFFF); border: 0; }
 .hero__chips .hero__status[hidden] { display: none; }
+/* Room kept for the verdict until site-wind.js has filled it in (or hidden it), so the chips beside it do not jump. */
+.hero__chips .hero__status[data-pending] { visibility: hidden; min-width: 9em; }
 .hero__status[data-rating="ok"] { --r: var(--wind-ok); }
 .hero__status[data-rating="maybe"] { --r: var(--wind-maybe); }
 .hero__status[data-rating="high"] { --r: var(--wind-high); }
