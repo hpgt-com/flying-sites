@@ -135,8 +135,8 @@ the menu and is marked `noindex`. It shows per site:
      Reports» (its own app, not «HPGT Flying Sites», whose key may change the code),
      homepage `https://flysteder.hpgt.com`, Webhook off, permissions **Repository → Issues: Read and write** (nothing
      else), «Only on this account». Create it; note the **App ID**; «Generate a private key» downloads a `.pem` file.
-     Then «Install App» → only the repository `flying-sites`. Add the secrets `GITHUB_APP_ID` (the App ID, or the Client ID) and
-     `GITHUB_APP_PRIVATE_KEY` (the whole `.pem` file, as it is) on the data service as above, and delete the `.pem`.
+     Then «Install App» → only the repository `flying-sites`. Add the secrets `REPORTS_APP_ID` (the App ID, or the Client ID) and
+     `REPORTS_APP_PRIVATE_KEY` (the whole `.pem` file, as it is) on the data service as above, and delete the `.pem`.
      A fine-grained token in `GITHUB_ISSUES_TOKEN` (Issues: read and write, only this repository) is used instead when
      the app's secrets are missing; once the app works it can be deleted, in Cloudflare and on GitHub.
 - Without Turnstile and the app (or the token) the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs

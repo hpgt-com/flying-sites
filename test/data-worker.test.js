@@ -382,7 +382,7 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
   try {
     const store = { getState: async () => 0, putState: async () => {} };
     const req = new Request("https://data.test/v1/report", { method: "POST", body: JSON.stringify({ site: "heia", kind: "other", message: "Test av appen her.", token: "t" }) });
-    const res = await reportMod.handleReport(req, { TURNSTILE_SECRET: "s", GITHUB_APP_ID: "12345", GITHUB_APP_PRIVATE_KEY: pem }, store, { heia: "Heia" }, NOW);
+    const res = await reportMod.handleReport(req, { TURNSTILE_SECRET: "s", REPORTS_APP_ID: "12345", REPORTS_APP_PRIVATE_KEY: pem }, store, { heia: "Heia" }, NOW);
     assert.equal(res.status, 200);
     assert.deepEqual(calls.find(([u]) => u.endsWith("/repos/hpgt-com/flying-sites/issues")), ["https://api.github.com/repos/hpgt-com/flying-sites/issues", "Bearer inst-token"]);
   } finally {

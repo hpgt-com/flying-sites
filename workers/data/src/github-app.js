@@ -1,6 +1,6 @@
 // Signing in as the club's GitHub App, so the issues from «Meld fra om endring» (report.js) come from the app (shown as
-// a bot) and no personal token has to be renewed. The app's ID (or Client ID) and private key are the secrets GITHUB_APP_ID and
-// GITHUB_APP_PRIVATE_KEY (the .pem file GitHub gives, as it is); the installation on the repository is looked up. Each
+// a bot) and no personal token has to be renewed. The app's ID (or Client ID) and private key are the secrets REPORTS_APP_ID and
+// REPORTS_APP_PRIVATE_KEY (the .pem file GitHub gives, as it is); the installation on the repository is looked up. Each
 // call asks GitHub for a token that lasts an hour (a report is rare, so nothing is kept). Tested in
 // test/data-worker.test.js.
 
@@ -40,7 +40,7 @@ export async function appJwt(appId, pem, now = Date.now()) {
 // A token for the app's installation on `repo` ("owner/name"), for one call.
 export async function installationToken(env, repo, now = Date.now()) {
   const api = env.GITHUB_API || API;
-  const jwt = await appJwt(env.GITHUB_APP_ID, env.GITHUB_APP_PRIVATE_KEY, now);
+  const jwt = await appJwt(env.REPORTS_APP_ID, env.REPORTS_APP_PRIVATE_KEY, now);
   const auth = { ...HEADERS, authorization: `Bearer ${jwt}` };
   const inst = await fetch(`${api}/repos/${repo}/installation`, { headers: auth, signal: AbortSignal.timeout(10000) });
   if (!inst.ok) throw new Error(`GitHub (installasjon) svarte ${inst.status}`);

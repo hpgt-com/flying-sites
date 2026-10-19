@@ -1,6 +1,6 @@
 // «Meld fra om endring» on the site pages: POST /v1/report from flysteder.hpgt.com. The browser is checked with
 // Cloudflare Turnstile (the secret TURNSTILE_SECRET), and the report becomes an issue in the site's GitHub repository,
-// made by the club's GitHub App (the secrets GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY, github-app.js), or else with a
+// made by the club's GitHub App (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY, github-app.js), or else with a
 // fine-grained token (the secret GITHUB_ISSUES_TOKEN, only Issues: read and write on hpgt-com/flying-sites).
 // Without Turnstile and one of the two the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
 // src/_data/site.js). At most DAILY_LIMIT reports a day. Nothing is stored here but the day's count. Tested in
@@ -58,7 +58,7 @@ async function turnstileOk(env, token, ip) {
   return !!(d && d.success);
 }
 
-const hasApp = (env) => !!(env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY);
+const hasApp = (env) => !!(env.REPORTS_APP_ID && env.REPORTS_APP_PRIVATE_KEY);
 
 async function createIssue(env, issue, now) {
   const token = hasApp(env) ? await installationToken(env, REPO, now) : env.GITHUB_ISSUES_TOKEN;
