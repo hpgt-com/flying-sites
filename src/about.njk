@@ -69,6 +69,6 @@ eleventyComputed:
 
   <section class="about-part" aria-labelledby="about-changes">
     <h2 id="about-changes">{{ t.about.changesTitle }}</h2>
-    <p>{{ t.about.changes | fmt({ github: '<a href="https://github.com/hpgt-com/flying-sites" target="_blank" rel="noopener">GitHub' ~ ext ~ '</a>' }) | safe }}</p>
+    <p>{{ t.about.changes | fmt({ form: '<a href="' ~ ('/meld-fra/' | localeUrl) ~ '">' ~ t.report.pageTitle ~ '</a>', github: '<a href="https://github.com/hpgt-com/flying-sites" target="_blank" rel="noopener">GitHub' ~ ext ~ '</a>' }) | safe }}</p>
   </section>
 </main>

@@ -74,8 +74,7 @@
     "siteTitle": "HPGT flysteder",
     "aboutLink": "Om siden og personvern",
     "menuPlan": "Planlegg tur",
-    "menuClub": "Klubben og siden",
-    "menuSettings": "Innstillinger"
+    "menuClub": "Klubben og siden"
   },
   "home": {
     "description": "Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.",
@@ -666,7 +665,7 @@
     "privacyNoAccount": "Siden har ingen innlogging og ingen skjema, og lagrer ingen personopplysninger om deg.",
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
-    "changes": "Si fra til noen i klubben. Har du en GitHub-konto, kan du også lage en sak på {github}. Et skjema på siden som ikke krever GitHub-konto, kommer."
+    "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}."
   },
   "report": {
     "title": "Meld fra om endring",
