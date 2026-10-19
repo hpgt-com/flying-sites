@@ -305,8 +305,9 @@ test("verification: the hour's measurements, the pairs for finished hours, and t
   assert.equal(verifyMod.summarize([]), null);
 });
 
-test("verification: the sites with their own station, and its run time", () => {
-  assert.deepEqual(siteLinks(), [{ site: "heia", source: "holfuy", station: "490" }, { site: "saetertinden", source: "met", station: "SN87772" }]);
+test("verification: the sites with their own station or one nearby, and its run time", () => {
+  assert.deepEqual(siteLinks(), [{ site: "heia", source: "holfuy", station: "490" }, { site: "hinnstein", source: "holfuy", station: "490" },
+    { site: "saetertinden", source: "met", station: "SN87772" }]);
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
   assert.deepEqual([9, 39, 10].map((m) => due("verify", minute(m))), [true, true, false]);
 });
@@ -326,6 +327,9 @@ test("report: checked fields, and the issue with the text in a code block", () =
   assert.equal(reportMod.checkReport({ ...ok, token: "" }, names).error, "no-token");
   const issue = reportMod.issueFor({ ...r, message: "Se @noen og ~~~ ![x](http://a)" }, NOW);
   assert.equal(issue.title, "[Meld fra] Heia: Vei, parkering eller adkomst");
+  assert.deepEqual(issue.labels, ["endringsforslag", "site-data"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "hazard" }, NOW).labels, ["endringsforslag", "site-data", "safety"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "other" }, NOW).labels, ["endringsforslag", "site-data"], "«Annet» on a site page concerns the site");
   assert.match(issue.body, /~~~text\nSe @noen og ~ ~ ~ !\[x\]\(http:\/\/a\)\n~~~/, "the text stays inside one code block");
 });
 
@@ -340,13 +344,18 @@ test("report: needs both secrets, Turnstile and stays within the daily limit", a
   const calls = [];
   const realFetch = globalThis.fetch;
   let turnstile = true;
+  let answer = { number: 171, html_url: "https://github.com/hpgt-com/flying-sites/issues/171" };
   globalThis.fetch = async (url, init) => {
     calls.push(String(url));
     if (String(url).includes("siteverify")) return Response.json({ success: turnstile });
-    return new Response("{}", { status: 201 });
+    return Response.json(answer, { status: 201 });
   };
   try {
-    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 200);
+    const sent = await reportMod.handleReport(req(body), env, store, names, NOW);
+    assert.equal(sent.status, 200);
+    assert.deepEqual(sent.body, { ok: true, issue: 171, url: "https://github.com/hpgt-com/flying-sites/issues/171" }, "the issue's number and address for the thanks");
+    answer = { number: 5, html_url: "https://evil.example/issues/5" };
+    assert.deepEqual((await reportMod.handleReport(req(body), env, store, names, NOW)).body, { ok: true }, "only an issue in the repository is passed on");
     assert.ok(calls.some((u) => u.endsWith("/repos/hpgt-com/flying-sites/issues")));
     turnstile = false;
     assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 403);
@@ -400,6 +409,10 @@ test("report: a general report from /meld-fra/ has no site and its own kinds", (
   const issue = reportMod.issueFor(r, NOW);
   assert.equal(issue.title, "[Meld fra] Generelt: Nytt flysted");
   assert.match(issue.body, /gjelder ikke ett bestemt flysted/);
+  assert.deepEqual(issue.labels, ["endringsforslag", "site-data"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "bug" }, NOW).labels, ["bug"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "idea" }, NOW).labels, ["enhancement"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "other" }, NOW).labels, [], "a general «Annet» may be anything");
 });
 
 // --- Piloter i lufta (OGN) ---
@@ -465,6 +478,124 @@ test("live: the track of each aircraft over the last minutes, oldest first, the 
     const store = { mergeLive: async (p, now, keep) => liveMod.mergeTrails(mem, p, now, keep) };
     const res = await (await liveMod.handleLive([{ lat: 68.8, lon: 16.5 }], NOW, null, store)).json();
     assert.deepEqual(res.items[0].trail, [[68.8, 16.5, 1.2]]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+// --- Flyaktivitet per sted (OGN) ---
+const flightsMod = await import("../workers/data/src/sources/flights.js");
+
+test("flights: each flight counted for the site nearest where first seen, a new one after landing, only sums per site", () => {
+  const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }, { id: "elgen", lat: 68.89, lon: 16.28 }];
+  const at = (s) => new Date(NOW - s * 1000).toISOString();
+  const day = { day: "2026-10-18", pilots: {} };
+  const seen = [
+    { key: "a", lat: 68.801, lon: 16.501, alt: 600, speed: 8, climb: 1.5, time: at(10) },
+    { key: "b", lat: 68.80, lon: 16.50, alt: 480, speed: 0, climb: 0, time: at(10) },
+    { key: "c", lat: 69.5, lon: 18.0, alt: 900, speed: 9, climb: 0, time: at(10) },
+    { key: "d", lat: 68.80, lon: 16.50, alt: 700, speed: 9, climb: 0, time: at(400) },
+  ];
+  assert.equal(flightsMod.observe(day, seen, sites, NOW, 2), true);
+  assert.deepEqual(Object.keys(day.pilots).sort(), ["a", "c"], "standing at launch and old positions are not flying");
+  assert.deepEqual(day.pilots.c.flights, {}, "first seen far from every site: counted for none");
+  assert.equal(flightsMod.observe(day, [seen[0]], sites, NOW, 2), false, "the same position is not counted twice");
+  flightsMod.observe(day, [{ ...seen[0], lat: 68.85, lon: 16.40, alt: 1400, time: at(0) }], sites, NOW, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "flying on nearer another site is the same flight");
+  assert.equal(day.pilots.a.minutes.heia, 4);
+
+  // Lands (two runs standing still), walks up and flies again: a second flight. One run slow and level is not a landing.
+  const ground = (s) => ({ key: "a", lat: 68.80, lon: 16.50, alt: 60, speed: 0, climb: 0, time: at(-s) });
+  const air = (s) => ({ key: "a", lat: 68.801, lon: 16.501, alt: 600, speed: 8, climb: 1, time: at(-s) });
+  flightsMod.observe(day, [ground(120)], sites, NOW + 120000, 2);
+  flightsMod.observe(day, [air(240)], sites, NOW + 240000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "one run on the ground is not a landing");
+  flightsMod.observe(day, [ground(360)], sites, NOW + 360000, 2);
+  flightsMod.observe(day, [ground(480)], sites, NOW + 480000, 2);
+  flightsMod.observe(day, [air(1800)], sites, NOW + 1800000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 2 }, "a new flight after landing");
+  flightsMod.observe(day, [air(1800 + 20 * 60)], sites, NOW + (1800 + 20 * 60) * 1000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 3 }, "not heard for 20 minutes: a new flight");
+
+  const rows = flightsMod.dayRows(day);
+  assert.deepEqual(rows, [{ day: "2026-10-18", site: "heia", flights: 3, pilots: 1, minutes: 10, max_dist: 6.9, max_alt: 1400 }]);
+
+  const data = flightsMod.buildFlights([
+    { day: "2026-09-30", site: "heia", flights: 5, pilots: 3, minutes: 90, max_dist: 2, max_alt: 900 },
+    { day: "2026-10-18", site: "heia", flights: 3, pilots: 1, minutes: 10, max_dist: 7.5, max_alt: 1400 },
+  ], "2026-09-01", NOW);
+  assert.deepEqual(data.sites.heia, { flights: 8, days: 2, pilots: 4, minutes: 100, maxDist: 7.5, maxAlt: 1400, last: "2026-10-18",
+    months: { "2026-09": { flights: 5, days: 1, pilots: 3, minutes: 90 }, "2026-10": { flights: 3, days: 1, pilots: 1, minutes: 10 } } });
+  assert.equal(data.since, "2026-09-01");
+  assert.equal(flightsMod.osloDay(Date.parse("2026-10-18T22:30:00Z")), "2026-10-19", "a Norwegian day");
+});
+
+test("flights: high over the ground is still flying, after a gap or standing still in the wind", async () => {
+  const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
+  const at = (s) => new Date(NOW + s * 1000).toISOString();
+  const air = (s, alt = 900) => ({ key: "a", lat: 68.80, lon: 16.50, alt, speed: 8, climb: 1, time: at(s) });
+  const hover = (s) => ({ key: "a", lat: 68.80, lon: 16.50, alt: 900, speed: 0, climb: 0, time: at(s) });
+  const day = { day: "2026-10-18", pilots: {} };
+  flightsMod.observe(day, [air(0)], sites, NOW, 2);
+  // Out of reach for 40 minutes, last seen 900 m up where the ground is 400 m: the same flight.
+  assert.deepEqual(flightsMod.needsGround(day, [air(2400)], NOW + 2400000), [["a", 68.80, 16.50]]);
+  flightsMod.observe(day, [air(2400)], sites, NOW + 2400000, 2, { a: 400 });
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "out of reach high up: the same flight");
+  // Standing still in the wind 500 m over the ground: not landed.
+  flightsMod.observe(day, [hover(2520)], sites, NOW + 2520000, 2);
+  assert.deepEqual(flightsMod.needsGround(day, [hover(2640)], NOW + 2640000), [["a", 68.80, 16.50]]);
+  flightsMod.observe(day, [hover(2640)], sites, NOW + 2640000, 2, { a: 400 });
+  assert.equal(day.pilots.a.flying, true, "hovering high up is not landing");
+  flightsMod.observe(day, [air(2760)], sites, NOW + 2760000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 });
+  // Last seen 50 m over the ground, heard again 30 minutes later in the air: landed and a new flight.
+  flightsMod.observe(day, [air(2880, 450)], sites, NOW + 2880000, 2);
+  flightsMod.observe(day, [air(4680)], sites, NOW + 4680000, 2, { a: 400 });
+  assert.deepEqual(day.pilots.a.flights, { heia: 2 }, "a gap after being low: a new flight");
+  // Without the ground's height a gap means landed, and after MAX_GAP_MINUTES whatever the height.
+  flightsMod.observe(day, [air(4680 + 1200)], sites, NOW + (4680 + 1200) * 1000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 3 });
+  assert.deepEqual(flightsMod.needsGround(day, [air(5880 + 3 * 3600)], NOW + (5880 + 3 * 3600) * 1000), [], "after two hours the height is not asked");
+
+  const realFetch = globalThis.fetch;
+  let asked = null;
+  globalThis.fetch = async (url) => { asked = String(url); return Response.json({ punkter: [{ z: 412.3 }, { z: null }] }); };
+  try {
+    assert.deepEqual(await flightsMod.groundAt([["a", 68.8, 16.5], ["b", 70, 30]]), { a: 412.3 }, "a point without a height is left out");
+    assert.match(decodeURIComponent(asked), /punkter=\[\[16\.5,68\.8\],\[30,70\]\]/);
+    globalThis.fetch = async () => new Response("", { status: 500 });
+    const warn = console.warn; console.warn = () => {};
+    assert.deepEqual(await flightsMod.groundAt([["a", 68.8, 16.5]]), {});
+    console.warn = warn;
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("flights: a run keeps only the day's keys, made with a salt that is thrown away the next day", async () => {
+  const state = {}, days = new Map(), snaps = {};
+  const store = {
+    getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = structuredClone(v); },
+    putFlightDays: async (rows) => { for (const r of rows) days.set(`${r.day}|${r.site}`, r); },
+    flightDays: async () => [...days.values()], putSnapshot: async (d, b) => { snaps[d] = JSON.parse(b); },
+  };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('<markers><m a="68.801,16.501,P,Pilot,900,09:00:00,5,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>');
+  try {
+    const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
+    await flightsMod.run(store, sites, NOW, 2);
+    const today = state["flights-today"];
+    assert.equal(Object.keys(today.pilots).length, 1);
+    assert.ok(!JSON.stringify(today).includes("dd1234ab"), "the device id is not stored, only a key");
+    assert.equal(snaps.flights.sites.heia.flights, 1);
+    await flightsMod.run(store, sites, NOW + 120000, 2);
+    assert.equal(snaps.flights.sites.heia.flights, 1, "still in the air: the same flight");
+    assert.equal(snaps.flights.sites.heia.pilots, 1);
+    assert.equal(snaps.flights.sites.heia.minutes, 4);
+    globalThis.fetch = async () => new Response("<markers></markers>");
+    await flightsMod.run(store, sites, NOW + 86400000, 2);
+    assert.notEqual(state["flights-today"].salt, today.salt, "a new salt each day");
+    assert.equal(snaps.flights.sites.heia.days, 1, "the old day's pilots are gone; a new day with nobody flying adds nothing");
   } finally {
     globalThis.fetch = realFetch;
   }

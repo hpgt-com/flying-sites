@@ -169,3 +169,11 @@ test("how well the forecast hit: collecting at first, then the mean wind, gusts,
     ["30 d, 200 t: 1,4 sterkere (2,1)", "Kast som varslet", "Retning 78 %", "Verst SV ▲ +2,3"]);
   assert.deepEqual(ST.verifyLines(null, 30), []);
 });
+
+test("a station nearby: found by the site and its distance, only in the expected shape", () => {
+  const heia = { id: 490, site: "heia", near: [{ site: "hinnstein", km: 1.3 }] };
+  assert.deepEqual(ST.nearOf(heia, "hinnstein"), { site: "hinnstein", km: 1.3 });
+  assert.equal(ST.nearOf(heia, "elgen"), null);
+  assert.equal(ST.nearOf({ id: 820 }, "hinnstein"), null);
+  assert.equal(ST.nearOf({ near: [{ site: "hinnstein", km: "1,3" }] }, "hinnstein"), null);
+});

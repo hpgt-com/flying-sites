@@ -1836,6 +1836,21 @@ body.sheet-open { overflow: hidden; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
 
+/* «Flyaktivitet» on the site page (flights.js): the sums as in Adkomst (.access-stats), then the pilots per month as
+   bars in one colour with rounded tops and a gap between, the highest labelled; the months under. */
+.flights { display: flex; flex-direction: column; gap: 10px; }
+.flights p { margin: 0; }
+.flights-details { font-size: 15px; }
+.flights-note { font-size: 13px; color: var(--muted); }
+.flights-chart { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.flights-chart__month { display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
+.flights-chart__col { position: relative; height: 72px; margin-top: 16px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--line); }
+.flights-chart__bar { position: relative; display: block; width: 100%; min-height: 0; border-radius: 4px 4px 0 0; background: var(--flights-bar); }
+.flights-chart__value { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); padding-bottom: 2px; font-size: 12px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.flights-chart__label { margin-top: 3px; font-size: 11px; color: var(--muted); text-align: center; overflow: hidden; text-overflow: clip; white-space: nowrap; }
+:root { --flights-bar: #2E6E80; }
+:root[data-theme="dark"] { --flights-bar: #6FB0C2; }
+
 /* «Piloter i lufta» (live.js): the wing seen from above, pointing where it flies, in the site's fjord colour with the
    height and climb beside it (white on it is over 4.5:1). The track is coloured by the climb, blue for sink, grey for
    gliding and red for lift, over a light edge (dark on the dark map) so every colour shows on the map. */

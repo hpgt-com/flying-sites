@@ -126,6 +126,10 @@ the menu and is marked `noindex`. It shows per site:
   <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
   Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
   `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day.
+- The issue gets the labels for its kind (`LABELS` in `report.js`): what concerns a site `endringsforslag` and
+  `site-data`, a hazard also `safety`, an error on the site `bug`, an idea `enhancement`, a general «Annet» none. The
+  labels must exist in the repository (they do); GitHub drops a label the app may not set without saying so. The answer
+  carries the issue's number and address, and the form's thanks link to it.
 - **Turning it on** (once):
   1. Cloudflare → Turnstile → Add widget: name «flysteder», hostname `flysteder.hpgt.com`, mode «Managed». Copy the
      **site key** (public) into `turnstileSiteKey` in `src/_data/site.js`. The form is hidden while it is empty.
@@ -150,6 +154,17 @@ the menu and is marked `noindex`. It shows per site:
   it gets for paragliders (`workers/data/src/live.js`; hang gliders and other aircraft are left out), with each pilot's
   track and climb over the last 10 minutes, kept in the store's memory
   only (never written down; gone when the store is evicted). No key.
+- **Flyaktivitet** (`workers/data/src/sources/flights.js`): every other minute the data service asks OGN the same way and
+  counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s). A flight
+  counts for the site nearest where first seen in the air (within 5 km); a new one begins when the pilot has landed:
+  standing still two runs in a row, or not heard for 15 minutes, and in both cases less than 100 m over the ground
+  where last seen. The ground's height comes from Kartverket's elevation model (`ws.geonorge.no/hoydedata/v1/punkt`,
+  no key), asked only for those few pilots, in one request per run; without an answer a stop or a gap counts as a
+  landing, and a gap of more than two hours always does. The day's state holds each pilot's last position in the air,
+  thrown away with the keys the next day. Only the sums per site and day are kept
+  (`flight_days` in the store: flights, pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
+  salt for the day (state `flights-today`), which is replaced at the first run of a new day, so no device id is kept.
+  Served as `/v1/flights.json`, shown on the site page. Counting began when this was deployed (`flights-since`).
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
   on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
   unidentified a random name, shown here as «Ukjent».
@@ -164,7 +179,10 @@ the menu and is marked `noindex`. It shows per site:
   and the direction. Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
   summed up in `https://data.hpgt.workers.dev/v1/verification.json`.
 - Which sites: those with a station of their own (`site` in `HOLFUY_STATIONS`, and `MET_STATION_SITES`), now Heia and
-  Sætertinden. Shown under «Målt nå» on the site page and in «Målt mot varslet» on /vaer/, once there are 24 hours
+  Sætertinden, and those with one nearby at about the same height (`near` in `HOLFUY_STATIONS`), now Hinnstein against
+  Heia's station. A station nearby is also shown under «Målt nå» on that site's page, with the distance; only a site's
+  own station is used for the assessment of the hour now. Other sites have no station near enough at their height
+  (most stations stand down by the road or the sea), so they are left out rather than compared with a valley station. Shown under «Målt nå» on the site page and in «Målt mot varslet» on /vaer/, once there are 24 hours
   (before that, how far the collecting has come).
 
 ## Winds aloft
