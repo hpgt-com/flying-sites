@@ -132,7 +132,7 @@ the menu and is marked `noindex`. It shows per site:
 ## Weather stations (MET)
 
 - MET's own stations are found by the data service itself: once a day it asks Frost for the stations in the area of the
-  flying sites, and keeps those within 15 km of a launch that measure wind (`workers/data/src/sources/frost.js`). Their
+  flying sites, and keeps those within 50 km of a launch (Lofoten to Bardu) that measure wind (`workers/data/src/sources/frost.js`). Their
   latest observations are fetched every 10 minutes (wind, direction, gust, temperature, humidity, pressure, rain), stored
   and archived like Holfuy's (`met/station=SN…/…` in the archive), and served in `/v1/stations.json` together with
   Holfuy's, each station with its source («MET Norge», licence CC BY).
@@ -140,7 +140,8 @@ the menu and is marked `noindex`. It shows per site:
   Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `FROST_CLIENT_ID` (the client ID
   only; the client secret is not used). Without it the service skips MET.
 - A MET station on a flying site is linked to it in `MET_STATION_SITES` in `workers/data/src/stations.js` (MET's number
-  and the site's folder).
+  and the site's folder). A station that should not be shown goes in `MET_EXCLUDE` there; the stations are then looked up
+  again at the next run.
 
 ## Weather archive (R2)
 

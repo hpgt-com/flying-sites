@@ -476,6 +476,7 @@
       "fullscreenOpen": "Vis kartet i fullskjerm",
       "fullscreenClose": "Lukk fullskjerm",
       "layerTopo": "Topografisk (Kartverket)",
+      "layerSites": "Flysteder",
       "layerOpenTopo": "OpenTopoMap",
       "layerGray": "Gråtone (Kartverket)",
       "layerHillshade": "Terrengskygge",
@@ -557,6 +558,9 @@
     "stations": {
       "layer": "Klubbens værstasjoner",
       "layerMet": "METs værstasjoner",
+      "modeLabel": "Vis på værstasjonene",
+      "mode_wind": "Vind",
+      "mode_temp": "Temp",
       "metTitle": "METs værstasjoner i området",
       "metNote": "Ofte ved sjøen eller på flyplasser, ikke på startene, og måler som regel én gang i timen. Sier noe om været i området, men lite om vinden på starten.",
       "metStation": "Stasjon",

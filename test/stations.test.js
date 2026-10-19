@@ -141,3 +141,22 @@ test("the club's stations first, then MET's, each in the order given", () => {
   assert.deepEqual(g.club.map((i) => i.id), [490, 820]);
   assert.deepEqual(g.met.map((i) => i.id), ["SN2", "SN1"]);
 });
+
+test("the map thins stations zoomed out: the club's always, then MET's with the strongest wind, none overlapping", () => {
+  const e = (id, source, x, speed) => ({ item: item({ id, source, wind: { dir: 200, speed, gust: null } }), latlng: { x, y: 0 } });
+  const entries = [e("SN1", "MET Norge", 0, 3), e("SN2", "MET Norge", 10, 9), e(490, "Holfuy", 5, 1), e("SN3", "MET Norge", 100, 2)];
+  const keep = ST.thinned(entries, 9, (ll) => ll);
+  assert.deepEqual(entries.filter((x) => keep.has(x)).map((x) => x.item.id), [490, "SN3"], "SN1 and SN2 overlap the club's station");
+  assert.equal(ST.thinned(entries, 12, (ll) => ll).size, 4, "all from zoom 12");
+});
+
+test("the marker shows the wind in whole m/s with a notch for the direction, or the temperature", () => {
+  globalThis.FlyingSites.formatNumber = (n, d) => Number(n).toFixed(d || 0).replace(".", ",");
+  const html = ST.markerHtml(item({ source: "Holfuy" }), NOW, "wind");
+  assert.match(html, /rotate\(225deg\)/);
+  assert.match(html, /station-marker__dial">4</);
+  const temp = ST.markerHtml(item({ source: "MET Norge", temperature: -2.4 }), NOW, "temp");
+  assert.match(temp, /station-marker__dial">-2°/);
+  assert.match(temp, />MET</);
+  assert.doesNotMatch(temp, /notch/);
+});

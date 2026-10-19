@@ -161,7 +161,7 @@ const { archiveSource } = await import("../workers/data/src/archive.js");
 
 test("Frost: the area of the sites as a polygon, and MET's capital names", () => {
   assert.equal(frostMod.areaPolygon([{ lat: 68.8, lon: 16.5 }, { lat: 68.6, lon: 16.0 }], 0.1),
-    "POLYGON((15.900 68.500, 16.600 68.500, 16.600 68.900, 15.900 68.900, 15.900 68.500))");
+    "POLYGON((15.800 68.500, 16.700 68.500, 16.700 68.900, 15.800 68.900, 15.800 68.500))", "twice the margin east–west");
   assert.equal(frostMod.stationName("EVENES LUFTHAVN"), "Evenes lufthavn");
 });
 
@@ -228,10 +228,10 @@ test("the archive writes a source's finished days per station and prunes only wh
   await archiveSource(store, {}, "met", [], 7, Date.now());
 });
 
-test("Frost: only stations within 15 km of a launch are kept", () => {
+test("Frost: stations within 50 km of a launch are kept, from Lofoten to Bardu", () => {
   const sites = [{ lat: 68.8, lon: 16.5 }];
-  const kept = frostMod.nearSites([{ id: "SN1", lat: 68.85, lon: 16.6 }, { id: "SN2", lat: 68.4913, lon: 16.6767 }], sites);
-  assert.deepEqual(kept.map((s) => s.id), ["SN1"], "Evenes is about 35 km from this launch");
+  const kept = frostMod.nearSites([{ id: "SN1", lat: 68.85, lon: 16.6 }, { id: "SN2", lat: 68.4913, lon: 16.6767 }, { id: "SN3", lat: 69.06, lon: 18.54 }], sites);
+  assert.deepEqual(kept.map((s) => s.id), ["SN1", "SN2"], "Evenes (about 35 km) is kept; Bardufoss (about 85 km from this launch) is not");
 });
 
 // --- Winds aloft (Open-Meteo) ---

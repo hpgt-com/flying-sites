@@ -277,11 +277,24 @@
     return li;
   }
 
+  // How far (km) a station is from the nearest launch the page knows (sites-data), for the order of MET's table; Infinity
+  // when unknown, so those come last.
+  function nearestKm(item, list) {
+    if (!isNum(item.lat) || !isNum(item.lon)) return Infinity;
+    return list.reduce(function (best, s) {
+      if (!isNum(s.lat) || !isNum(s.lon)) return best;
+      var d = Math.hypot((s.lat - item.lat) * 111.32, (s.lon - item.lon) * 111.32 * Math.cos(item.lat * Math.PI / 180));
+      return Math.min(best, d);
+    }, Infinity);
+  }
+
   // MET's stations as a small folded table under the club's (the Vær tab, the weather page): there are many, and they say
   // little about the wind at the launches, so they get no cards. One row per station: name and height, the wind (gust), the
   // direction and when it was measured. open: whether it was open before the page was redrawn. Null without MET stations.
   function metTable(items, now, open) {
-    var met = groups(items).met;
+    var FS = globalThis.FlyingSites, launches = FS && FS.readJson ? FS.readJson("sites-data") || [] : [];
+    var met = groups(items).met.map(function (i) { return { item: i, km: nearestKm(i, launches) }; })
+      .sort(function (a, b) { return a.km - b.km; }).map(function (e) { return e.item; });
     if (!met.length) return null;
     var box = make("details", "met-stations");
     box.open = !!open;
@@ -631,6 +644,53 @@
   // the mean wind and the gust as measured («4,4 (7,2)»), dimmed when the measurement is old. A tap shows the station's
   // card, with the chart when the map is tall enough for it. Used on the home map and the site page's map. onData(data, now)
   // is called with each new answer, for the page's own use (the list in the Vær tab).
+  // The stations on a map: the club's and MET's in their own layers, as small round markers with the mean wind (or the
+  // temperature, chosen with «Vind | Temp» on the map) and a notch on the edge pointing where the wind blows. Zoomed out,
+  // markers that would overlap are thinned: the club's always stay, then MET's with the strongest wind (thin()). Zoomed
+  // in (LABEL_ZOOM), a label beside each shows the wind and gust as measured, or the temperature.
+  var THIN_ZOOM = 12, LABEL_ZOOM = 11, THIN_PX = 34, MODE_KEY = "fs-station-mode";
+  function readMode() { try { return localStorage.getItem(MODE_KEY) === "temp" ? "temp" : "wind"; } catch (e) { return "wind"; } }
+  function saveMode(m) { try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* private window: not remembered */ } }
+
+  // The marker's HTML, from numbers only. mode: "wind" or "temp".
+  function markerHtml(item, now, mode) {
+    var old = isOld(item, now), w = item.wind || {};
+    var hasW = !old && isNum(w.speed), hasT = !old && isNum(item.temperature);
+    var tag = isHolfuy(item) ? "" : '<span class="station-marker__tag">MET</span>';
+    if (mode === "temp") {
+      return '<span class="station-marker__dial">' + (hasT ? Math.round(item.temperature) + "°" : "–") + "</span>" +
+        '<span class="station-marker__label">' + tag + (hasT ? value(item.temperature) + " °C" : "–") + "</span>";
+    }
+    // The notch: the whole marker turned by the direction, with the notch at the bottom (where a wind from north blows).
+    var notch = hasW && isNum(w.dir) ? '<span class="station-marker__notch" style="transform: rotate(' + Math.round(w.dir) + 'deg)"></span>' : "";
+    return notch + '<span class="station-marker__dial">' + (hasW ? Math.round(w.speed) : "–") + "</span>" +
+      '<span class="station-marker__label">' + tag + (hasW ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–") + "</span>";
+  }
+  function markerClass(item, now, mode) {
+    var cold = mode === "temp" && !isOld(item, now) && isNum(item.temperature) && item.temperature <= 0;
+    return "station-marker" + (isHolfuy(item) ? "" : " station-marker--met") + (isOld(item, now) ? " station-marker--old" : "") +
+      (mode === "temp" ? " station-marker--temp" : "") + (cold ? " station-marker--cold" : "");
+  }
+  // Which markers to show at this zoom: all from THIN_ZOOM; below, greedily from the most important, leaving out those
+  // within THIN_PX of one already shown. entries: [{ item, latlng }]; project: latlng → point. Returns a Set of entries.
+  function thinned(entries, zoom, project) {
+    var keep = new Set();
+    if (zoom >= THIN_ZOOM) { entries.forEach(function (e) { keep.add(e); }); return keep; }
+    var speed = function (e) { return e.item.wind && isNum(e.item.wind.speed) ? e.item.wind.speed : -1; };
+    var order = entries.slice().sort(function (a, b) {
+      return (isHolfuy(b.item) - isHolfuy(a.item)) || speed(b) - speed(a);
+    });
+    var shown = [];
+    order.forEach(function (e) {
+      var p = project(e.latlng);
+      if (isHolfuy(e.item) || shown.every(function (q) { return Math.abs(q.x - p.x) > THIN_PX || Math.abs(q.y - p.y) > THIN_PX; })) {
+        keep.add(e);
+        shown.push(p);
+      }
+    });
+    return keep;
+  }
+
   function addMapLayer(map, url, onData) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !url || !map.layersControl) return null;
@@ -645,39 +705,75 @@
       }
       return metLayer;
     }
+    var mode = readMode(), entries = [], lastNow = Date.now();
     // A station placed at its site's launch (no position of its own) is drawn up and to the right of the point, so it does
     // not cover the launch's own marker.
     function icon(item, now, atLaunch) {
-      var old = isOld(item, now), w = item.wind;
-      var has = w && isNum(w.speed) && !old;
-      // Numbers only in the HTML: the direction as a rotation, the mean wind and the gust as measured.
-      var arrow = has && isNum(w.dir)
-        ? '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(w.dir) + 'deg)"><path d="M12 3v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22l-5-7h10z" fill="currentColor"/></svg>'
-        : "";
-      var nums = has ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–";
-      // MET's stations: grey, and «MET» in the label, so the difference is not told by colour alone.
-      var met = !isHolfuy(item);
-      return L.divIcon({ className: "station-marker" + (met ? " station-marker--met" : "") + (old ? " station-marker--old" : ""),
-        html: '<span class="station-marker__dial">' + arrow + '</span><span class="station-marker__nums">' + (met ? '<span class="station-marker__tag">MET</span>' : "") + nums + "</span>",
-        iconSize: [88, 30], iconAnchor: atLaunch ? [-14, 44] : [15, 15], popupAnchor: atLaunch ? [29, -44] : [0, -14] });
+      var met = !isHolfuy(item), size = met ? 26 : 30;
+      return L.divIcon({ className: markerClass(item, now, mode), html: markerHtml(item, now, mode),
+        iconSize: [size, size], iconAnchor: atLaunch ? [-12, size + 12] : [size / 2, size / 2], popupAnchor: atLaunch ? [12 + size / 2, -size - 12] : [0, -size / 2] });
     }
+    function thin() {
+      var keep = thinned(entries, map.getZoom(), function (ll) { return map.latLngToLayerPoint(ll); });
+      entries.forEach(function (e) {
+        var group = isHolfuy(e.item) ? layer : metGroup();
+        if (keep.has(e)) { if (!group.hasLayer(e.marker)) group.addLayer(e.marker); }
+        else if (group.hasLayer(e.marker)) group.removeLayer(e.marker);
+      });
+    }
+    function labels() { map.getContainer().classList.toggle("map--station-labels", map.getZoom() >= LABEL_ZOOM); }
+    map.on("zoomend", function () { thin(); labels(); });
+    labels();
+
+    // «Vind | Temp»: what the markers show. Added with the first data, remembered in this browser.
+    var modeControl = null;
+    function addModeControl() {
+      var Ctl = L.Control.extend({ options: { position: "topright" }, onAdd: function () {
+        var box = L.DomUtil.create("div", "leaflet-bar station-mode");
+        box.setAttribute("role", "group");
+        box.setAttribute("aria-label", text("stations.modeLabel"));
+        ["wind", "temp"].forEach(function (m) {
+          var b = L.DomUtil.create("button", "station-mode__btn", box);
+          b.type = "button";
+          b.textContent = text("stations.mode_" + m);
+          b.setAttribute("aria-pressed", String(mode === m));
+          b.addEventListener("click", function () {
+            mode = m;
+            saveMode(m);
+            box.querySelectorAll("button").forEach(function (x, k) { x.setAttribute("aria-pressed", String(["wind", "temp"][k] === m)); });
+            entries.forEach(function (e) { e.marker.setIcon(icon(e.item, lastNow, e.atLaunch)); });
+          });
+        });
+        L.DomEvent.disableClickPropagation(box);
+        return box;
+      } });
+      modeControl = new Ctl().addTo(map);
+    }
+
     watch(url, function (data) {
       var now = Date.now();
+      lastNow = now;
       layer.clearLayers();
       if (metLayer) metLayer.clearLayers();
+      entries = [];
       data.items.forEach(function (item) {
         var at = position(item);
         if (!at) return;
         var box = card(item, now, "div", false, map.getSize().y < 600);
         box.classList.add("station-popup");
+        var atLaunch = !(isNum(item.lat) && isNum(item.lon));
         // MET's stations under everything else (the launches, the club's stations), so they never cover them.
-        L.marker(at, { icon: icon(item, now, !(isNum(item.lat) && isNum(item.lon))), keyboard: true, title: item.name, zIndexOffset: isHolfuy(item) ? 500 : -1000 })
-          .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] }).addTo(isHolfuy(item) ? layer : metGroup());
+        var marker = L.marker(at, { icon: icon(item, now, atLaunch), keyboard: true, title: item.name, zIndexOffset: isHolfuy(item) ? 500 : -1000 })
+          .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] });
+        entries.push({ item: item, latlng: L.latLng(at), marker: marker, atLaunch: atLaunch });
       });
+      thin();
+      if (!modeControl && entries.length) addModeControl();
       if (onData) onData(data, now);
     });
     return layer;
   }
+
 
   // Fetches the stations now and every minute while the page is in view, and calls done(data) with each new answer in
   // the right shape. On errors nothing happens, and the page keeps what it has.
@@ -729,6 +825,8 @@
   globalThis.FlyingSitesStations = {
     OLD_MINUTES: OLD_MINUTES,
     OLD_MINUTES_MET: OLD_MINUTES_MET,
+    thinned: thinned,
+    markerHtml: markerHtml,
     groups: groups,
     metTable: metTable,
     isHolfuy: isHolfuy,

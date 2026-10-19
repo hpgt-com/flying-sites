@@ -17,10 +17,11 @@ export const HISTORY_HOURS = 6;
 export const KEEP_DAYS = 7;
 // The stations in the area are looked up again after this long, so new and closed stations follow.
 export const DISCOVER_HOURS = 24;
-// The flying sites' area, widened by this much (degrees) on every side, for the lookup. Of the stations found, those
-// within NEAR_KM of a launch are kept, so a wide area (the sites go from Lofoten to Bardu) does not bring in all of it.
-export const MARGIN = 0.1;
-export const NEAR_KM = 15;
+// The flying sites' area, widened by this much (degrees; more east–west, where a degree is shorter) for the lookup. Of the
+// stations found, those within NEAR_KM of a launch are kept: the weather over the whole region, from Lofoten to Bardu,
+// without the far corners of the box. The map thins them when zoomed out (src/assets/js/stations.js), so all can be kept.
+export const MARGIN = 0.5;
+export const NEAR_KM = 50;
 const API = "https://frost.met.no";
 const USER_AGENT = "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)";
 
@@ -39,7 +40,7 @@ export const ELEMENTS = {
 // The area of the flying sites as a closed polygon in Frost's form, "POLYGON((lon lat, …))".
 export function areaPolygon(sites, margin = MARGIN) {
   const lats = sites.map((s) => s.lat), lons = sites.map((s) => s.lon);
-  const s = Math.min(...lats) - margin, n = Math.max(...lats) + margin, w = Math.min(...lons) - margin, e = Math.max(...lons) + margin;
+  const s = Math.min(...lats) - margin, n = Math.max(...lats) + margin, w = Math.min(...lons) - 2 * margin, e = Math.max(...lons) + 2 * margin;
   const p = (lon, lat) => `${lon.toFixed(3)} ${lat.toFixed(3)}`;
   return `POLYGON((${p(w, s)}, ${p(e, s)}, ${p(e, n)}, ${p(w, n)}, ${p(w, s)}))`;
 }
@@ -132,12 +133,15 @@ async function frost(env, path, params) {
 
 // One run: looks up the stations in the area when DISCOVER_HOURS have passed, fetches their latest observations (in
 // groups, so the address stays short), stores and archives them, and stores the dataset. Without the client ID nothing.
-export async function run(store, env, sites, siteOf = {}, now = Date.now()) {
+// exclude: MET numbers never to show (stations.js MET_EXCLUDE). When the area or the list changes, the stations are
+// looked up again at once instead of after DISCOVER_HOURS.
+export async function run(store, env, sites, siteOf = {}, now = Date.now(), exclude = []) {
   if (!env.FROST_CLIENT_ID || !sites.length) return;
+  const area = `${areaPolygon(sites)} ${NEAR_KM} ${exclude.join(",")}`;
   let state = (await store.getState("met-stations")) ?? { found: null, stations: [] };
-  if (!state.found || now - Date.parse(state.found) > DISCOVER_HOURS * 3600000) {
+  if (!state.found || state.area !== area || now - Date.parse(state.found) > DISCOVER_HOURS * 3600000) {
     const data = await frost(env, "/sources/v0.jsonld", { types: "SensorSystem", geometry: areaPolygon(sites), validtime: "now" });
-    state = { found: new Date(now).toISOString(), stations: nearSites(parseSources(data), sites) };
+    state = { found: new Date(now).toISOString(), area, stations: nearSites(parseSources(data), sites).filter((s) => !exclude.includes(s.id)) };
   }
   const measurements = [];
   for (let i = 0; i < state.stations.length; i += 25) {

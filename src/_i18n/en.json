@@ -476,6 +476,7 @@
       "fullscreenOpen": "Show the map in full screen",
       "fullscreenClose": "Close full screen",
       "layerTopo": "Topographic (Kartverket)",
+      "layerSites": "Flying sites",
       "layerOpenTopo": "OpenTopoMap",
       "layerGray": "Greyscale (Kartverket)",
       "layerHillshade": "Hillshade",
@@ -557,6 +558,9 @@
     "stations": {
       "layer": "Club weather stations",
       "layerMet": "MET weather stations",
+      "modeLabel": "Show on the weather stations",
+      "mode_wind": "Wind",
+      "mode_temp": "Temp",
       "metTitle": "MET weather stations in the area",
       "metNote": "Often by the sea or at airports, not at the launches, and usually measured once an hour. They say something about the weather in the area, but little about the wind at the launch.",
       "metStation": "Station",
