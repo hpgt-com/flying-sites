@@ -3,7 +3,8 @@
 // made by the club's GitHub App (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY, github-app.js), or else with a
 // fine-grained token (the secret GITHUB_ISSUES_TOKEN, only Issues: read and write on hpgt-com/flying-sites).
 // Without Turnstile and one of the two the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
-// src/_data/site.js). At most DAILY_LIMIT reports a day. Nothing is stored here but the day's count. Tested in
+// src/_data/site.js). At most DAILY_LIMIT reports a day. Nothing is stored here but the day's count. The issue gets the
+// labels for its kind (LABELS), and the answer gives its number and address, so the form can link to it. Tested in
 // test/data-worker.test.js.
 
 import { installationToken } from "./github-app.js";
@@ -19,6 +20,14 @@ export const ORIGINS = ["https://flysteder.hpgt.com"];
 const REPO = "hpgt-com/flying-sites";
 const KIND_TITLES = { landing: "Landing", access: "Vei, parkering eller adkomst", hazard: "Fare eller hindring", launch: "Start", other: "Annet",
   newsite: "Nytt flysted", bug: "Feil på siden", idea: "Forslag" };
+// The labels each kind gets (all exist in the repository): what concerns a site's information is site-data, a hazard
+// is also safety; a fault on the page is a bug and an idea an enhancement. «endringsforslag» is the label of the issue
+// form for changes (.github/ISSUE_TEMPLATE/endring.yml), so reports and changes suggested on GitHub are found together.
+const SITE_LABELS = ["endringsforslag", "site-data"];
+export const LABELS = { landing: SITE_LABELS, access: SITE_LABELS, launch: SITE_LABELS, hazard: [...SITE_LABELS, "safety"], newsite: SITE_LABELS,
+  bug: ["bug"], idea: ["enhancement"] };
+// The address of an issue in the repository, the only kind of link passed on to the page.
+const ISSUE_URL = new RegExp(`^https://github\\.com/${REPO}/issues/\\d+$`);
 
 // The report checked and trimmed, or { error } with what is wrong. siteNames: { id: name } for the sites that exist.
 export function checkReport(body, siteNames) {
@@ -49,7 +58,9 @@ export function issueFor(report, now = Date.now()) {
   ];
   if (report.name) lines.push("", "Fra:", fence(report.name));
   lines.push("", "_Sendt inn av en besøkende. Sjekk opplysningene før stedet endres._");
-  return { title: `[Meld fra] ${report.siteName ?? "Generelt"}: ${KIND_TITLES[report.kind]}`, body: lines.join("\n") };
+  // «Annet» on a site page concerns the site; «Annet» from /meld-fra/ may be anything, so it gets no label.
+  const labels = report.kind === "other" ? (report.site ? SITE_LABELS : []) : LABELS[report.kind];
+  return { title: `[Meld fra] ${report.siteName ?? "Generelt"}: ${KIND_TITLES[report.kind]}`, body: lines.join("\n"), labels };
 }
 
 async function turnstileOk(env, token, ip) {
@@ -73,6 +84,9 @@ async function createIssue(env, issue, now) {
     signal: AbortSignal.timeout(10000),
   });
   if (!r.ok) throw new Error(`GitHub svarte ${r.status}`);
+  // The issue's number and address, or null when GitHub's answer does not have them as expected.
+  const d = await r.json().catch(() => null);
+  return d && Number.isInteger(d.number) && ISSUE_URL.test(d.html_url) ? { number: d.number, url: d.html_url } : null;
 }
 
 // The answer to POST /v1/report: { status, body }. store: for the day's count; siteNames as for checkReport.
@@ -87,11 +101,12 @@ export async function handleReport(request, env, store, siteNames, now = Date.no
   const count = (await store.getState(key)) ?? 0;
   if (count >= DAILY_LIMIT) return { status: 429, body: { error: "limit" } };
   await store.putState(key, count + 1);
+  let issue;
   try {
-    await createIssue(env, issueFor(report, now), now);
+    issue = await createIssue(env, issueFor(report, now), now);
   } catch (err) {
     console.warn(`report: ${err.message}`);
     return { status: 502, body: { error: "github" } };
   }
-  return { status: 200, body: { ok: true } };
+  return { status: 200, body: issue ? { ok: true, issue: issue.number, url: issue.url } : { ok: true } };
 }

@@ -1,6 +1,7 @@
 // «Meld fra» on the site page (site.njk, #report, folded) and on /meld-fra/ (general, no site): the form is sent to the
 // data service (/v1/report, workers/data/src/report.js), which checks the Turnstile token and makes an issue for the
-// club. On the site page Cloudflare's Turnstile script is loaded only when the form is opened, so a visit that does not
+// club; when it answers with the issue's address, the thanks link to it, so the sender can follow what happens with
+// it. On the site page Cloudflare's Turnstile script is loaded only when the form is opened, so a visit that does not
 // use it never contacts Cloudflare; on /meld-fra/ the form is the page, so it is loaded at once.
 (function () {
   "use strict";
@@ -17,6 +18,21 @@
   function say(key, kind) {
     statusEl.textContent = key ? FS.t("report." + key) : "";
     statusEl.className = "report__status" + (kind ? " report__status--" + kind : "");
+  }
+  // The thanks with a link to the issue: «Takk! Meldingen er sendt til klubben som sak #171.» Only an issue in the
+  // site's own repository is linked.
+  var ISSUE_URL = /^https:\/\/github\.com\/hpgt-com\/flying-sites\/issues\/\d+$/;
+  function saySent(d) {
+    if (!d || !Number.isInteger(d.issue) || typeof d.url !== "string" || !ISSUE_URL.test(d.url)) { say("sent", "ok"); return; }
+    var parts = FS.t("report.sentIssue").split("{link}");
+    var a = document.createElement("a");
+    a.href = d.url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = FS.t("report.issueLink", { n: d.issue });
+    statusEl.textContent = "";
+    statusEl.append(parts[0], a, parts[1] || "");
+    statusEl.className = "report__status report__status--ok";
   }
 
   function render() {
@@ -61,8 +77,8 @@
     }).then(function (r) {
       if (r.ok) {
         form.reset();
-        say("sent", "ok");
         FS.track("report/sent/" + (box.getAttribute("data-site") || "general"));
+        return r.json().catch(function () { return null; }).then(saySent);
       } else {
         say(r.status === 429 ? "limit" : r.status === 403 ? "checkFailed" : "failed", "error");
       }

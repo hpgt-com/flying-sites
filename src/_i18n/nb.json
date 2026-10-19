@@ -627,6 +627,8 @@
     "report": {
       "sending": "Sender …",
       "sent": "Takk! Meldingen er sendt til klubben.",
+      "sentIssue": "Takk! Meldingen er sendt til klubben som {link}.",
+      "issueLink": "sak #{n}",
       "failed": "Kunne ikke sende. Prøv igjen senere.",
       "limit": "Det er sendt mange meldinger i dag. Prøv igjen i morgen.",
       "checkFailed": "Robotsjekken feilet. Last siden på nytt og prøv igjen.",

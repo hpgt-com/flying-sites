@@ -126,6 +126,10 @@ the menu and is marked `noindex`. It shows per site:
   <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
   Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
   `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day.
+- The issue gets the labels for its kind (`LABELS` in `report.js`): what concerns a site `endringsforslag` and
+  `site-data`, a hazard also `safety`, an error on the site `bug`, an idea `enhancement`, a general «Annet» none. The
+  labels must exist in the repository (they do); GitHub drops a label the app may not set without saying so. The answer
+  carries the issue's number and address, and the form's thanks link to it.
 - **Turning it on** (once):
   1. Cloudflare → Turnstile → Add widget: name «flysteder», hostname `flysteder.hpgt.com`, mode «Managed». Copy the
      **site key** (public) into `turnstileSiteKey` in `src/_data/site.js`. The form is hidden while it is empty.

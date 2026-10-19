@@ -627,6 +627,8 @@
     "report": {
       "sending": "Sending …",
       "sent": "Thank you! The report has been sent to the club.",
+      "sentIssue": "Thank you! The message has been sent to the club as {link}.",
+      "issueLink": "issue #{n}",
       "failed": "Could not send. Try again later.",
       "limit": "Many reports have been sent today. Try again tomorrow.",
       "checkFailed": "The robot check failed. Reload the page and try again.",

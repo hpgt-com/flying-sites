@@ -326,6 +326,9 @@ test("report: checked fields, and the issue with the text in a code block", () =
   assert.equal(reportMod.checkReport({ ...ok, token: "" }, names).error, "no-token");
   const issue = reportMod.issueFor({ ...r, message: "Se @noen og ~~~ ![x](http://a)" }, NOW);
   assert.equal(issue.title, "[Meld fra] Heia: Vei, parkering eller adkomst");
+  assert.deepEqual(issue.labels, ["endringsforslag", "site-data"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "hazard" }, NOW).labels, ["endringsforslag", "site-data", "safety"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "other" }, NOW).labels, ["endringsforslag", "site-data"], "«Annet» on a site page concerns the site");
   assert.match(issue.body, /~~~text\nSe @noen og ~ ~ ~ !\[x\]\(http:\/\/a\)\n~~~/, "the text stays inside one code block");
 });
 
@@ -340,13 +343,18 @@ test("report: needs both secrets, Turnstile and stays within the daily limit", a
   const calls = [];
   const realFetch = globalThis.fetch;
   let turnstile = true;
+  let answer = { number: 171, html_url: "https://github.com/hpgt-com/flying-sites/issues/171" };
   globalThis.fetch = async (url, init) => {
     calls.push(String(url));
     if (String(url).includes("siteverify")) return Response.json({ success: turnstile });
-    return new Response("{}", { status: 201 });
+    return Response.json(answer, { status: 201 });
   };
   try {
-    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 200);
+    const sent = await reportMod.handleReport(req(body), env, store, names, NOW);
+    assert.equal(sent.status, 200);
+    assert.deepEqual(sent.body, { ok: true, issue: 171, url: "https://github.com/hpgt-com/flying-sites/issues/171" }, "the issue's number and address for the thanks");
+    answer = { number: 5, html_url: "https://evil.example/issues/5" };
+    assert.deepEqual((await reportMod.handleReport(req(body), env, store, names, NOW)).body, { ok: true }, "only an issue in the repository is passed on");
     assert.ok(calls.some((u) => u.endsWith("/repos/hpgt-com/flying-sites/issues")));
     turnstile = false;
     assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 403);
@@ -400,6 +408,10 @@ test("report: a general report from /meld-fra/ has no site and its own kinds", (
   const issue = reportMod.issueFor(r, NOW);
   assert.equal(issue.title, "[Meld fra] Generelt: Nytt flysted");
   assert.match(issue.body, /gjelder ikke ett bestemt flysted/);
+  assert.deepEqual(issue.labels, ["endringsforslag", "site-data"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "bug" }, NOW).labels, ["bug"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "idea" }, NOW).labels, ["enhancement"]);
+  assert.deepEqual(reportMod.issueFor({ ...r, kind: "other" }, NOW).labels, [], "a general «Annet» may be anything");
 });
 
 // --- Piloter i lufta (OGN) ---
