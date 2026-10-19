@@ -675,7 +675,7 @@
       "chartLabel": "Flights per month, last 12 months",
       "barTitle": "{month}: flights {flights}, days with flying {days}",
       "none": "No flights from here have been recorded yet.",
-      "note": "Counted from the Open Glider Network since {date}. Only pilots who send their position there, for example with pgpilot or a FANET vario, are included. A flight counts for the site nearest where the pilot was first seen in the air, and a new flight once the pilot has landed or not been heard for 15 minutes."
+      "note": "Counted from the Open Glider Network since {date}. Only pilots who send their position there, for example with pgpilot or a FANET vario, are included. A flight counts for the site nearest where the pilot was first seen in the air, and a new flight once the pilot has landed. If the signal is lost for a while with the pilot high over the ground, it counts as the same flight."
     }
   },
   "about": {

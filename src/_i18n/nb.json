@@ -675,7 +675,7 @@
       "chartLabel": "Turer per måned, siste 12 måneder",
       "barTitle": "{month}: turer {flights}, dager med flyging {days}",
       "none": "Ingen turer herfra er registrert ennå.",
-      "note": "Telt fra Open Glider Network siden {date}. Bare piloter som sender posisjonen dit, for eksempel med pgpilot eller en FANET-vario, kommer med. En tur telles på stedet nærmest der piloten først ble sett i lufta, og en ny tur når piloten har landet eller ikke er hørt på 15 minutter."
+      "note": "Telt fra Open Glider Network siden {date}. Bare piloter som sender posisjonen dit, for eksempel med pgpilot eller en FANET-vario, kommer med. En tur telles på stedet nærmest der piloten først ble sett i lufta, og en ny tur når piloten har landet. Forsvinner signalet en stund mens piloten er høyt over bakken, regnes det som samme tur."
     }
   },
   "about": {

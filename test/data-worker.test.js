@@ -530,6 +530,48 @@ test("flights: each flight counted for the site nearest where first seen, a new 
   assert.equal(flightsMod.osloDay(Date.parse("2026-10-18T22:30:00Z")), "2026-10-19", "a Norwegian day");
 });
 
+test("flights: high over the ground is still flying, after a gap or standing still in the wind", async () => {
+  const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
+  const at = (s) => new Date(NOW + s * 1000).toISOString();
+  const air = (s, alt = 900) => ({ key: "a", lat: 68.80, lon: 16.50, alt, speed: 8, climb: 1, time: at(s) });
+  const hover = (s) => ({ key: "a", lat: 68.80, lon: 16.50, alt: 900, speed: 0, climb: 0, time: at(s) });
+  const day = { day: "2026-10-18", pilots: {} };
+  flightsMod.observe(day, [air(0)], sites, NOW, 2);
+  // Out of reach for 40 minutes, last seen 900 m up where the ground is 400 m: the same flight.
+  assert.deepEqual(flightsMod.needsGround(day, [air(2400)], NOW + 2400000), [["a", 68.80, 16.50]]);
+  flightsMod.observe(day, [air(2400)], sites, NOW + 2400000, 2, { a: 400 });
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "out of reach high up: the same flight");
+  // Standing still in the wind 500 m over the ground: not landed.
+  flightsMod.observe(day, [hover(2520)], sites, NOW + 2520000, 2);
+  assert.deepEqual(flightsMod.needsGround(day, [hover(2640)], NOW + 2640000), [["a", 68.80, 16.50]]);
+  flightsMod.observe(day, [hover(2640)], sites, NOW + 2640000, 2, { a: 400 });
+  assert.equal(day.pilots.a.flying, true, "hovering high up is not landing");
+  flightsMod.observe(day, [air(2760)], sites, NOW + 2760000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 });
+  // Last seen 50 m over the ground, heard again 30 minutes later in the air: landed and a new flight.
+  flightsMod.observe(day, [air(2880, 450)], sites, NOW + 2880000, 2);
+  flightsMod.observe(day, [air(4680)], sites, NOW + 4680000, 2, { a: 400 });
+  assert.deepEqual(day.pilots.a.flights, { heia: 2 }, "a gap after being low: a new flight");
+  // Without the ground's height a gap means landed, and after MAX_GAP_MINUTES whatever the height.
+  flightsMod.observe(day, [air(4680 + 1200)], sites, NOW + (4680 + 1200) * 1000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 3 });
+  assert.deepEqual(flightsMod.needsGround(day, [air(5880 + 3 * 3600)], NOW + (5880 + 3 * 3600) * 1000), [], "after two hours the height is not asked");
+
+  const realFetch = globalThis.fetch;
+  let asked = null;
+  globalThis.fetch = async (url) => { asked = String(url); return Response.json({ punkter: [{ z: 412.3 }, { z: null }] }); };
+  try {
+    assert.deepEqual(await flightsMod.groundAt([["a", 68.8, 16.5], ["b", 70, 30]]), { a: 412.3 }, "a point without a height is left out");
+    assert.match(decodeURIComponent(asked), /punkter=\[\[16\.5,68\.8\],\[30,70\]\]/);
+    globalThis.fetch = async () => new Response("", { status: 500 });
+    const warn = console.warn; console.warn = () => {};
+    assert.deepEqual(await flightsMod.groundAt([["a", 68.8, 16.5]]), {});
+    console.warn = warn;
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
 test("flights: a run keeps only the day's keys, made with a salt that is thrown away the next day", async () => {
   const state = {}, days = new Map(), snaps = {};
   const store = {

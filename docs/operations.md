@@ -156,8 +156,12 @@ the menu and is marked `noindex`. It shows per site:
   only (never written down; gone when the store is evicted). No key.
 - **Flyaktivitet** (`workers/data/src/sources/flights.js`): every other minute the data service asks OGN the same way and
   counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s). A flight
-  counts for the site nearest where first seen in the air (within 5 km); a new one begins when the pilot has landed
-  (standing still two runs in a row) or not been heard for 15 minutes. Only the sums per site and day are kept
+  counts for the site nearest where first seen in the air (within 5 km); a new one begins when the pilot has landed:
+  standing still two runs in a row, or not heard for 15 minutes, and in both cases less than 100 m over the ground
+  where last seen. The ground's height comes from Kartverket's elevation model (`ws.geonorge.no/hoydedata/v1/punkt`,
+  no key), asked only for those few pilots, in one request per run; without an answer a stop or a gap counts as a
+  landing, and a gap of more than two hours always does. The day's state holds each pilot's last position in the air,
+  thrown away with the keys the next day. Only the sums per site and day are kept
   (`flight_days` in the store: flights, pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
   salt for the day (state `flights-today`), which is replaced at the first run of a new day, so no device id is kept.
   Served as `/v1/flights.json`, shown on the site page. Counting began when this was deployed (`flights-since`).
