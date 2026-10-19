@@ -1,0 +1,37 @@
+---
+layout: base.njk
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/flyaktivitet/' | localeUrl(language.code) }}"
+bodyClass: page-activity
+scripts:
+  - /assets/js/flights.js
+  - /assets/js/activity.js
+eleventyComputed:
+  name: "{{ t.activity.title }}"
+  description: "{{ t.activity.description }}"
+---
+{#- The flights from all the flying sites, counted from the Open Glider Network by the data service (/v1/flights.json):
+    today, the last 30 days, per month and since the counting began. Filled by activity.js; the site names and links
+    from #sites-data. -#}
+{%- import "macros.njk" as m with context -%}
+<main class="simple-page activity-page">
+  <header class="topbar">
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
+    {{ m.siteMenu() }}
+  </header>
+
+  <div class="simple-page__intro" id="content" tabindex="-1">
+    <p class="home__eyebrow">{{ t.home.eyebrow }}</p>
+    <h1>{{ t.activity.title }}</h1>
+    <p class="muted">{{ t.activity.intro }}</p>
+  </div>
+
+  <section class="activity" id="activity" data-url="{{ site.flightsUrl }}" aria-live="polite">
+    <p class="muted">{{ t.activity.loading }}</p>
+  </section>
+  <noscript><p>{{ t.activity.noScript }}</p></noscript>
+</main>
+<script type="application/json" id="sites-data">{{ collections.sites | stationSites(lang) | json | safe }}</script>

@@ -67,13 +67,14 @@
     return div;
   }
   // The flights per month as bars, the highest labelled; each bar says its month and numbers to screen readers and on hover.
-  function chart(months) {
+  // titleKey: the words for each bar (default flights.barTitle, with the month, flights and days).
+  function chart(months, titleKey) {
     var max = Math.max.apply(null, months.map(function (m) { return m.flights; }));
     var list = make("ol", "flights-chart");
     list.setAttribute("aria-label", text("flights.chartLabel"));
     months.forEach(function (m) {
       var li = make("li", "flights-chart__month");
-      var words = text("flights.barTitle", { month: monthText(m.key, "long"), flights: m.flights, days: m.days });
+      var words = text(titleKey || "flights.barTitle", { month: monthText(m.key, "long"), flights: m.flights, days: m.days });
       li.title = words;
       var bar = make("span", "flights-chart__bar");
       bar.style.height = (max ? Math.round((m.flights / max) * 100) : 0) + "%";
@@ -129,6 +130,6 @@
       .catch(function () {});
   }
 
-  globalThis.FlyingSitesFlights = { isFlightsData: isFlightsData, lastMonths: lastMonths, detailText: detailText, render: render, useText: useText };
+  globalThis.FlyingSitesFlights = { isFlightsData: isFlightsData, lastMonths: lastMonths, detailText: detailText, chart: chart, render: render, useText: useText };
   if (typeof document !== "undefined" && document.getElementById) init();
 })();

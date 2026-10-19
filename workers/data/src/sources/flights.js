@@ -162,11 +162,16 @@ export function dayRows(day) {
 }
 
 // The dataset from all the stored days: per site the flights, the days with flying, the pilots (a pilot counted once a
-// day), the minutes in the air, the farthest from launch and the highest, the last day, and the same per month (YYYY-MM).
+// day), the minutes in the air, the farthest from launch and the highest, the last day, the same per month (YYYY-MM),
+// and the flights and minutes of each day in the last RECENT_DAYS (recent, by date), so a page can count today and the
+// last 30 days by its own clock.
+export const RECENT_DAYS = 31;
 export function buildFlights(rows, since, now = Date.now()) {
   const sites = {};
+  const from = osloDay(now - (RECENT_DAYS - 1) * 86400000);
   for (const r of rows) {
-    const s = (sites[r.site] ??= { flights: 0, days: 0, pilots: 0, minutes: 0, maxDist: 0, maxAlt: null, last: null, months: {} });
+    const s = (sites[r.site] ??= { flights: 0, days: 0, pilots: 0, minutes: 0, maxDist: 0, maxAlt: null, last: null, months: {}, recent: {} });
+    if (r.day >= from) s.recent[r.day] = { flights: r.flights, minutes: r.minutes };
     const m = (s.months[r.day.slice(0, 7)] ??= { flights: 0, days: 0, pilots: 0, minutes: 0 });
     for (const x of [s, m]) { x.flights += r.flights; x.days++; x.pilots += r.pilots; x.minutes += r.minutes; }
     s.maxDist = Math.max(s.maxDist, r.max_dist ?? 0);

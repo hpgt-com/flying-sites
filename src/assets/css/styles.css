@@ -1861,6 +1861,21 @@ body.sheet-open { overflow: hidden; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
 
+/* The page «Flyaktivitet» (activity.js): the four numbers as .access-stats, then tables that scroll sideways in a box on
+   a phone, numbers right-aligned. */
+.activity { display: flex; flex-direction: column; gap: 14px; }
+.activity h2 { margin: 10px 0 0; font-size: 22px; }
+.activity p { margin: 0; }
+.activity-stats > div { flex-basis: 140px; }
+.activity-today { font-weight: 600; }
+.activity-note { font-size: 13px; color: var(--muted); }
+.activity-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.activity-table { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.activity-table th, .activity-table td { padding: 9px 12px; border-top: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.activity-table thead th { border-top: none; font-size: 13px; color: var(--muted); font-weight: 600; }
+.activity-table th:first-child { text-align: left; }
+.activity-table tbody th { font-weight: 600; }
+
 /* «Flyaktivitet» on the site page (flights.js): the sums as in Adkomst (.access-stats), then the pilots per month as
    bars in one colour with rounded tops and a gap between, the highest labelled; the months under. */
 .flights { display: flex; flex-direction: column; gap: 10px; }
