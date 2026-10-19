@@ -153,7 +153,8 @@ the menu and is marked `noindex`. It shows per site:
   `npm run logbook -- ~/turer [~/turer-fra-andre …]` (`scripts/logbook.mjs`, `lib/igc.js`) writes
   `src/_data/logbook.json`. Look it over, then commit it. The logs, tracks and names never leave the machine.
 - Run it again over all the folders when logs are added: the file is written anew each time, and the same flight in an
-  IGC and a KML file counts once. One folder per pilot (`pilots` in the file is the number of folders).
+  IGC and a KML file counts once. One folder per pilot (`pilots` in the file is the number of folders). A flight that
+  counts wrongly can be left out with `--skip <part of the file name>` (repeatable; run it with the same skips again).
 - A flight is found where the log moves at 4 m/s or more over 20 seconds (takeoff and landing), and counts for the
   nearest launch within 500 m (a site's `launch` and its `launches` with a position). The script prints how many
   flights it found per site, how many were elsewhere, in how many IGC and KML files, and the files without a flight
