@@ -171,6 +171,7 @@ p { margin: 0; }
 }
 .site-menu__panel[hidden] { display: none; }
 .site-menu__label { display: flex; align-items: center; gap: 6px; margin: 0 0 -8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.site-menu__label--settings { padding-top: 12px; border-top: 1px solid var(--line); }
 .site-menu__links { display: grid; margin-top: -4px; }
 .site-menu__links a { min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
 .site-menu__links a + a { border-top: 1px solid var(--line-soft); }

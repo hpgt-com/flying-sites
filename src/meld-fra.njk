@@ -1,0 +1,39 @@
+---
+layout: base.njk
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/meld-fra/' | localeUrl(language.code) }}"
+bodyClass: page-report
+scripts:
+  - /assets/js/report.js
+eleventyComputed:
+  name: "{{ t.report.pageTitle }}"
+  description: "{{ t.report.pageDescription }}"
+---
+{#- «Meld fra» on a general level, from the menu: a new flying site, an error on the site, an idea or anything else. The
+    same form as on the site pages (macros.njk reportForm, report.js); it becomes an issue for the club. A report about
+    one site is better made on that site's page, which the intro says. -#}
+{%- import "macros.njk" as m with context -%}
+<main class="simple-page report-page">
+  <header class="topbar">
+    <a class="back-link" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
+    {{ m.siteMenu() }}
+  </header>
+
+  <div class="simple-page__intro" id="content" tabindex="-1">
+    <p class="home__eyebrow">{{ t.home.eyebrow }}</p>
+    <h1>{{ t.report.pageTitle }}</h1>
+    <p class="muted">{{ t.report.pageIntro }}</p>
+  </div>
+
+  {% if site.turnstileSiteKey %}
+  <section class="block report" id="report" data-url="{{ site.reportUrl }}" data-sitekey="{{ site.turnstileSiteKey }}" data-site="" aria-label="{{ t.report.pageTitle }}">
+    {{ m.reportForm(["newsite", "bug", "idea", "other"], t.report.messageGeneral) }}
+    <noscript><p>{{ t.report.noScript }}</p></noscript>
+  </section>
+  {% else %}
+  <p>{{ t.report.notReady }}</p>
+  {% endif %}
+</main>

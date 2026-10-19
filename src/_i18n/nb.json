@@ -74,7 +74,10 @@
     "notSet": "Ikke satt",
     "notRegistered": "Ikke registrert ennå",
     "siteTitle": "HPGT flysteder",
-    "aboutLink": "Om siden og personvern"
+    "aboutLink": "Om siden og personvern",
+    "menuPlan": "Planlegg tur",
+    "menuClub": "Klubben og siden",
+    "menuSettings": "Innstillinger"
   },
   "home": {
     "description": "Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.",
@@ -692,6 +695,16 @@
     "name": "Navn eller kontakt (valgfritt)",
     "send": "Send",
     "privacy": "Det du skriver blir en offentlig sak på GitHub. Cloudflare Turnstile sjekker at du ikke er en robot.",
-    "noScript": "Skjemaet trenger JavaScript."
+    "noScript": "Skjemaet trenger JavaScript.",
+    "pageTitle": "Meld fra",
+    "pageDescription": "Meld fra om et nytt flysted, en feil på siden, et forslag eller noe annet til HPGT.",
+    "pageIntro": "Kjenner du et flysted som mangler, har du funnet en feil, eller har du et forslag? Skriv kort, så får klubben en sak å følge opp. Gjelder det ett bestemt flysted, er det enklest å melde fra nederst på stedets egen side.",
+    "notReady": "Skjemaet er ikke slått på ennå.",
+    "kind_newsite": "Nytt flysted",
+    "kind_bug": "Feil på siden",
+    "kind_idea": "Forslag",
+    "menuLink": "Meld fra",
+    "menuSub": "nytt sted, feil eller forslag",
+    "messageGeneral": "Hva vil du melde fra om?"
   }
 }

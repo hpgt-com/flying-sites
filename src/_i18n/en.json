@@ -74,7 +74,10 @@
     "notSet": "Not set",
     "notRegistered": "Not registered yet",
     "siteTitle": "HPGT flying sites",
-    "aboutLink": "About the site and privacy"
+    "aboutLink": "About the site and privacy",
+    "menuPlan": "Plan a trip",
+    "menuClub": "The club and the site",
+    "menuSettings": "Settings"
   },
   "home": {
     "description": "Paragliding and speedflying sites in the HPGT area (Harstad, Northern Norway). Filter by wind direction, level and category.",
@@ -692,6 +695,16 @@
     "name": "Name or contact (optional)",
     "send": "Send",
     "privacy": "What you write becomes a public issue on GitHub. Cloudflare Turnstile checks that you are not a robot.",
-    "noScript": "The form needs JavaScript."
+    "noScript": "The form needs JavaScript.",
+    "pageTitle": "Report",
+    "pageDescription": "Tell HPGT about a new flying site, an error on the site, an idea or anything else.",
+    "pageIntro": "Do you know a flying site that is missing, have you found an error, or do you have an idea? Write briefly, and the club gets an issue to follow up. If it concerns one flying site, it is easiest to report at the bottom of that site's page.",
+    "notReady": "The form is not turned on yet.",
+    "kind_newsite": "New flying site",
+    "kind_bug": "Error on the site",
+    "kind_idea": "Idea",
+    "menuLink": "Report",
+    "menuSub": "new site, error or idea",
+    "messageGeneral": "What would you like to report?"
   }
 }

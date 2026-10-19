@@ -400,24 +400,7 @@ scripts:
         <details class="fold report" id="report" data-url="{{ site.reportUrl }}" data-sitekey="{{ site.turnstileSiteKey }}" data-site="{{ id }}">
         <summary><h2 id="h-report">{{ t.report.title }}</h2></summary>
         <p class="muted">{{ t.report.intro }}</p>
-        <form class="report__form" id="report-form" novalidate>
-          <label class="report__field">{{ t.report.kind }}
-            <select name="kind" required>
-              {% for k in ["landing", "access", "hazard", "launch", "other"] %}<option value="{{ k }}">{{ t.report["kind_" + k] }}</option>{% endfor %}
-            </select>
-          </label>
-          <label class="report__field">{{ t.report.message }}
-            <textarea name="message" rows="4" minlength="10" maxlength="1000" required aria-describedby="report-message-hint"></textarea>
-            <span class="muted report__hint" id="report-message-hint">{{ t.report.messageHint }}</span>
-          </label>
-          <label class="report__field">{{ t.report.name }}
-            <input type="text" name="name" maxlength="80" autocomplete="name">
-          </label>
-          <div class="report__check" id="report-check"></div>
-          <button type="submit" class="btn report__send">{{ t.report.send }}</button>
-          <p class="report__status" id="report-status" role="status" aria-live="polite"></p>
-          <p class="muted report__privacy">{{ t.report.privacy }}</p>
-        </form>
+        {{ m.reportForm(["landing", "access", "hazard", "launch", "other"]) }}
         <noscript><p>{{ t.report.noScript }}</p></noscript>
         </details>
       </section>

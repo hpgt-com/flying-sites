@@ -1,6 +1,7 @@
-// «Meld fra om endring» on the site page (site.njk, #report): the form is sent to the data service (/v1/report,
-// workers/data/src/report.js), which checks the Turnstile token and makes an issue for the club. Cloudflare's Turnstile
-// script is loaded only when the form is opened, so a visit that does not use it never contacts Cloudflare.
+// «Meld fra» on the site page (site.njk, #report, folded) and on /meld-fra/ (general, no site): the form is sent to the
+// data service (/v1/report, workers/data/src/report.js), which checks the Turnstile token and makes an issue for the
+// club. On the site page Cloudflare's Turnstile script is loaded only when the form is opened, so a visit that does not
+// use it never contacts Cloudflare; on /meld-fra/ the form is the page, so it is loaded at once.
 (function () {
   "use strict";
 
@@ -39,8 +40,11 @@
     s.onerror = function () { loading = false; say("checkFailed", "error"); };
     document.head.appendChild(s);
   }
-  box.addEventListener("toggle", function () { if (box.open) loadTurnstile(); });
-  if (box.open) loadTurnstile();
+  if (box.tagName !== "DETAILS") loadTurnstile();
+  else {
+    box.addEventListener("toggle", function () { if (box.open) loadTurnstile(); });
+    if (box.open) loadTurnstile();
+  }
 
   form.addEventListener("submit", function (ev) {
     ev.preventDefault();
@@ -58,7 +62,7 @@
       if (r.ok) {
         form.reset();
         say("sent", "ok");
-        FS.track("report/sent/" + box.getAttribute("data-site"));
+        FS.track("report/sent/" + (box.getAttribute("data-site") || "general"));
       } else {
         say(r.status === 429 ? "limit" : r.status === 403 ? "checkFailed" : "failed", "error");
       }
