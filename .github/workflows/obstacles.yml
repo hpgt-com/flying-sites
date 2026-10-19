@@ -1,0 +1,120 @@
+name: Update power lines and obstacles
+
+# Fetches the power lines and other obstacles around the sites once a month, for the map layer «Kraftlinjer og hindre»
+# (scripts/update-obstacles.mjs): NVE's power lines, masts and wind turbines, and from OpenStreetMap the low-voltage
+# lines, lifts and masts. Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing
+# happens. Needs no secrets. The PR is created as in airspace.yml: with the club's GitHub App when it is set up
+# (repository variable APP_CLIENT_ID and secret APP_PRIVATE_KEY), otherwise with GITHUB_TOKEN.
+#
+# Two jobs, so third-party code never runs with write access:
+#   fetch  installs the npm packages and runs the script, with read-only access. The result is handed on as an artifact.
+#   pr     has write access to push the branch and open the PR, but installs and runs nothing from npm.
+
+on:
+  schedule:
+    - cron: "17 6 2 * *" # the 2nd of every month at 06:17 UTC (the day after the airspace)
+  workflow_dispatch:
+
+# No access by default. Each job asks for what it needs.
+permissions: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      - run: npm ci --ignore-scripts
+
+      - name: Hent kraftlinjer og hindre
+        # shell: bash enables pipefail, so a script error stops the job even though output goes through tee.
+        shell: bash
+        run: npm run --silent obstacles | tee hindre.txt
+
+      - name: Sjekk om noe er endret
+        id: diff
+        # The date in the file changes every time, so only the features count as a change.
+        run: |
+          if git diff --quiet HEAD -- src/_data/cache/obstacles 2>/dev/null; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          elif [ "$(git show HEAD:src/_data/cache/obstacles/region.geojson | jq -c '[.sources, .features]')" = "$(jq -c '[.sources, .features]' src/_data/cache/obstacles/region.geojson)" ]; then
+            echo "Ingen endringer i kraftlinjer og hindre."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.diff.outputs.changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: obstacles
+          path: |
+            src/_data/cache/obstacles
+            hindre.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  pr:
+    needs: fetch
+    if: needs.fetch.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Short-lived token from the club's GitHub App, limited to this repository and to the two permissions the
+      # job needs. It is revoked when the job ends. Skipped when the app is not set up.
+      - id: app
+        if: vars.APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # The token is kept because the job pushes a branch for the PR. It uploads no artifacts and runs no npm code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
+        with:
+          token: ${{ steps.app.outputs.token || github.token }}
+
+      - run: rm -rf src/_data/cache/obstacles
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: obstacles
+          path: .
+
+      - name: Lag PR
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+        run: |
+          branch="obstacles/$(date +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add -A src/_data/cache/obstacles
+          git commit -m "Oppdater kraftlinjer og hindre fra NVE og OpenStreetMap"
+          git push -u origin "$branch"
+          {
+            echo "Automatisk henting av kraftlinjer og hindre rundt flystedene, fra NVE og OpenStreetMap. Se over tallene, og slå på laget «Kraftlinjer og hindre» i forhåndsvisningen ved tvil, før du merger."
+            echo
+            echo '```'
+            cat hindre.txt
+            echo '```'
+          } > pr.md
+          gh pr create --title "Kraftlinjer og hindre $(date +%d.%m.%Y)" --body-file pr.md

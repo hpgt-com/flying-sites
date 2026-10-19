@@ -30,6 +30,8 @@ export default function (eleventyConfig) {
   }
   // Airspace from openAIP for the map layer (npm run airspace). Loaded only when someone turns on an airspace layer.
   eleventyConfig.addPassthroughCopy({ "src/_data/cache/airspace/region.geojson": "assets/airspace.geojson" });
+  // Power lines and obstacles for the map layer (npm run obstacles). Loaded only when someone turns the layer on.
+  eleventyConfig.addPassthroughCopy({ "src/_data/cache/obstacles/region.geojson": "assets/obstacles.geojson" });
 
   eleventyConfig.ignores.add("src/_data/cache/**");
   // Translated site texts (index.en.md etc.) are not pages of their own. They are read by lib/translations.js.

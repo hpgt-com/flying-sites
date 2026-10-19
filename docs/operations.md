@@ -285,6 +285,24 @@ the menu and is marked `noindex`. It shows per site:
 - Airspace notes (for example that the approach enters Evenes CTR) go in the site file's `airspace`.
 - The towers' phone numbers are only in `src/_data/towers.json` (with names per language in `names`).
 
+## Power lines and obstacles
+
+- The map layer «Kraftlinjer og hindre» (home page and site pages, off until turned on) comes from
+  `src/_data/cache/obstacles/region.geojson`, fetched by `npm run obstacles` (`scripts/update-obstacles.mjs`,
+  `lib/obstacles.js`) within 1.5 km of every site's launches and landings:
+  - **NVE** (`kart.nve.no/enterprise`, NLOD): the overhead power lines of the transmission, regional and distribution
+    grid (22 kV and up) with voltage and owner, their masts and poles, and wind turbines in operation.
+  - **OpenStreetMap** (Overpass, ODbL): low-voltage lines (`power=minor_line`), ski lifts and other aerial lifts, and
+    communication masts. Only where someone has drawn them.
+- Fetched on the 2nd of each month (`obstacles.yml`); changes arrive as a PR. No secrets are needed. **Fetch now:**
+  Actions → «Update power lines and obstacles» → «Run workflow», or `npm run obstacles` locally.
+  `npm run obstacles -- --no-osm` fetches NVE only (when Overpass cannot be reached); the file then says so, and the
+  map's attribution names only NVE.
+- Not complete: low voltage (230/400 V) is not in NVE's data and only partly in OpenStreetMap, and wires that are not
+  power lines (guy wires, cables for timber) are in neither. Kartverket's register of aviation obstacles (NRL) closed
+  for the public on 1 July 2026 (access by application). What is known locally belongs in the site's hazards.
+- A missing lift, line or mast is best added in OpenStreetMap; it comes with the next monthly fetch.
+
 ## Images
 
 ```bash

@@ -332,6 +332,8 @@
     if (window.FlyingSitesStations && stationNow) window.FlyingSitesStations.addMapLayer(map, stationNow.getAttribute("data-url"));
     // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
     if (window.FlyingSitesLive) window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"));
+    // «Kraftlinjer og hindre» (common.js), off until it is turned on in the layer list.
+    FS.addObstacleLayer(map, mapEl.getAttribute("data-obstacles-url"));
 
     // --- Elevation profile ---
     var profileEl = document.getElementById("elevation-profile");
