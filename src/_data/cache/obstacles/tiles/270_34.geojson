@@ -1,0 +1,4 @@
+{"type":"FeatureCollection","features":[
+{"type":"Feature","id":"osm/node/1850777013","properties":{"kind":"mast","src":"osm"},"geometry":{"type":"Point","coordinates":[17.45662,67.72527]}},
+{"type":"Feature","id":"osm/node/984716285","properties":{"kind":"mast","src":"osm"},"geometry":{"type":"Point","coordinates":[17.49211,67.73283]}}
+]}

@@ -176,7 +176,7 @@ scripts:
           and the landing in words. -#}
       <section class="block block--launch" aria-labelledby="h-launch">
         <h2 id="h-launch">{{ t.site.launchAndLanding }}</h2>
-        <div id="site-map" class="map map--site" data-live-url="{{ site.liveUrl }}" data-obstacles-url="{{ '/assets/obstacles.geojson' | url }}" role="region" aria-label="{{ t.site.mapLabel | fmt({ name: name }) }}"></div>
+        <div id="site-map" class="map map--site" data-live-url="{{ site.liveUrl }}" data-obstacles-url="{{ '/assets/obstacles/index.json' | url }}" role="region" aria-label="{{ t.site.mapLabel | fmt({ name: name }) }}"></div>
         <ul class="map-legend" aria-label="{{ t.site.mapLegend }}">
           <li><span class="map-symbol map-symbol--launch-dot"></span>{{ t.site.launch }}</li>
           {% if landings.length %}<li><span class="map-symbol map-symbol--landing"></span>{{ t.site.landing }}</li>{% endif %}

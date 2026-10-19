@@ -640,8 +640,10 @@
 
   // --- Power lines and obstacles ---
   // One layer in the layer control, off initially: the power lines and their masts from NVE, and from OpenStreetMap the
-  // low-voltage lines, lifts and masts (scripts/update-obstacles.mjs, lib/obstacles.js). Loaded only when switched on.
-  // Not complete, which the attribution says.
+  // low-voltage lines, lifts and masts (scripts/update-obstacles.mjs, lib/obstacles.js). Loaded only when switched on,
+  // and then only the tiles in view from OBSTACLE_MIN_ZOOM (url is the index; the tiles lie next to it). Not complete,
+  // which the attribution says.
+  var OBSTACLE_MIN_ZOOM = 10;
   var OBSTACLE_STYLE = {
     power: { color: "#9B1D73", weight: 3, opacity: 0.9 },
     minor: { color: "#9B1D73", weight: 2, opacity: 0.9, dashArray: "5 5" },
@@ -669,7 +671,20 @@
     if (!url || !map.layersControl) return;
     var group = L.layerGroup();
     map.layersControl.addOverlay(group, layerLabel(map, "obstacles", t("map.layerObstacles")));
-    var loading = null, attribution = null, on = false, statusEl = null;
+    // The points in a pane of their own above the lines, so a mast can be clicked where a line passes it, also when
+    // the line comes from a tile loaded later.
+    map.createPane("obstaclePoints").style.zIndex = 450;
+    var lines = L.geoJSON(null, {
+      style: function (f) { return OBSTACLE_STYLE[f.properties.kind] || OBSTACLE_STYLE.power; },
+      onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
+    }).addTo(group);
+    var points = L.geoJSON(null, {
+      pointToLayer: function (f, latlng) { return L.circleMarker(latlng, Object.assign({ pane: "obstaclePoints" }, OBSTACLE_POINT[f.properties.kind] || OBSTACLE_POINT.mast)); },
+      onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
+    }).addTo(group);
+    // The tiles asked for (a promise each, dropped again if it fails) and the features shown, by id: a line across a
+    // tile edge is in both tiles.
+    var index = null, tiles = {}, shown = {}, attribution = null, on = false, statusEl = null;
     var Status = L.Control.extend({
       options: { position: "topright" },
       onAdd: function () {
@@ -677,7 +692,7 @@
         statusEl.setAttribute("role", "status");
         statusEl.hidden = true;
         L.DomEvent.disableClickPropagation(statusEl);
-        statusEl.addEventListener("click", function (ev) { if (ev.target.closest("[data-retry]")) start(); });
+        statusEl.addEventListener("click", function (ev) { if (ev.target.closest("[data-retry]")) update(); });
         return statusEl;
       },
     });
@@ -687,45 +702,64 @@
       statusEl.hidden = !state;
       statusEl.classList.toggle("airspace-status--error", state === "error");
       statusEl.innerHTML = state === "loading" ? escapeHtml(t("map.obstaclesLoading"))
+        : state === "zoom" ? escapeHtml(t("map.obstaclesZoom"))
         : state === "error" ? escapeHtml(t("map.obstaclesError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>" : "";
     }
-    function load() {
-      if (loading) return loading;
-      loading = fetch(url).then(function (r) {
+    function getJson(u) {
+      return fetch(u).then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
-      }).then(function (data) {
-        if (!data || !Array.isArray(data.features)) throw new Error("ukjent format");
+      });
+    }
+    function loadIndex() {
+      if (index) return index;
+      index = getJson(url).then(function (data) {
+        if (!data || !Array.isArray(data.tiles) || !data.tileLat || !data.tileLon) throw new Error("ukjent format");
         var sources = (data.sources || ["nve"]).map(function (s) { return OBSTACLE_SOURCES[s]; }).filter(Boolean).join(", ");
         attribution = t("map.obstaclesAttribution", { sources: sources, date: (data.fetched || "").split("-").reverse().join(".") });
-        // The lines under the points, so a mast can be clicked where a line passes it.
-        var lines = data.features.filter(function (f) { return f.geometry.type !== "Point"; });
-        var points = data.features.filter(function (f) { return f.geometry.type === "Point"; });
-        L.geoJSON(lines, {
-          style: function (f) { return OBSTACLE_STYLE[f.properties.kind] || OBSTACLE_STYLE.power; },
-          onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
-        }).addTo(group);
-        L.geoJSON(points, {
-          pointToLayer: function (f, latlng) { return L.circleMarker(latlng, OBSTACLE_POINT[f.properties.kind] || OBSTACLE_POINT.mast); },
-          onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
-        }).addTo(group);
+        if (on) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
+        return data;
       });
-      return loading;
+      index.catch(function () { index = null; });
+      return index;
     }
-    function start() {
+    function loadTile(key) {
+      if (tiles[key]) return tiles[key];
+      tiles[key] = getJson(url.replace(/[^/]*$/, "tiles/" + key + ".geojson")).then(function (data) {
+        if (!data || !Array.isArray(data.features)) throw new Error("ukjent format");
+        var fresh = data.features.filter(function (f) { return !shown[f.id] && (shown[f.id] = true); });
+        lines.addData(fresh.filter(function (f) { return f.geometry.type !== "Point"; }));
+        points.addData(fresh.filter(function (f) { return f.geometry.type === "Point"; }));
+      });
+      tiles[key].catch(function () { delete tiles[key]; });
+      return tiles[key];
+    }
+    // The tiles in view and a little around it, the same names as tileKey() in lib/obstacles.js.
+    function update() {
+      if (!on) return;
+      if (map.getZoom() < OBSTACLE_MIN_ZOOM) return setStatus("zoom");
       setStatus("loading");
-      load().then(function () {
-        setStatus(null);
-        if (on && attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
+      loadIndex().then(function (data) {
+        var b = map.getBounds().pad(0.2), have = {}, wanted = [];
+        data.tiles.forEach(function (k) { have[k] = true; });
+        for (var r = Math.floor(b.getSouth() / data.tileLat); r <= Math.floor(b.getNorth() / data.tileLat); r++) {
+          for (var c = Math.floor(b.getWest() / data.tileLon); c <= Math.floor(b.getEast() / data.tileLon); c++) {
+            if (have[r + "_" + c]) wanted.push(loadTile(r + "_" + c));
+          }
+        }
+        return Promise.all(wanted);
+      }).then(function () {
+        if (on && map.getZoom() >= OBSTACLE_MIN_ZOOM) setStatus(null);
       }, function () {
-        loading = null;
         setStatus(on ? "error" : null);
       });
     }
+    map.on("moveend", update);
     map.on("overlayadd", function (ev) {
       if (ev.layer !== group) return;
       on = true;
-      start();
+      if (attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
+      update();
     });
     map.on("overlayremove", function (ev) {
       if (ev.layer !== group) return;

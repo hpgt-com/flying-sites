@@ -1,0 +1,9 @@
+{"type":"FeatureCollection","features":[
+{"type":"Feature","id":"nve/grid/2/106723","properties":{"kind":"power","src":"nve","kv":22,"owner":"LOFOTKRAFT AS"},"geometry":{"type":"LineString","coordinates":[[12.08815,67.51264],[12.0862,67.51213]]}},
+{"type":"Feature","id":"nve/grid/2/132957","properties":{"kind":"power","src":"nve","kv":22,"owner":"LOFOTKRAFT AS"},"geometry":{"type":"LineString","coordinates":[[12.0862,67.51213],[12.08137,67.51063]]}},
+{"type":"Feature","id":"nve/grid/2/15819","properties":{"kind":"power","src":"nve","kv":22,"owner":"LOFOTKRAFT AS"},"geometry":{"type":"LineString","coordinates":[[12.09125,67.5128],[12.08815,67.51264]]}},
+{"type":"Feature","id":"nve/grid/2/60544","properties":{"kind":"power","src":"nve","kv":22,"owner":"LOFOTKRAFT AS"},"geometry":{"type":"LineString","coordinates":[[12.08137,67.51063],[12.08216,67.51014],[12.08373,67.50934],[12.08439,67.50872]]}},
+{"type":"Feature","id":"nve/grid/2/6742","properties":{"kind":"power","src":"nve","kv":22,"owner":"LOFOTKRAFT AS"},"geometry":{"type":"LineString","coordinates":[[12.08439,67.50872],[12.08468,67.50842]]}},
+{"type":"Feature","id":"nve/grid/2/78142","properties":{"kind":"power","src":"nve","kv":22,"owner":"LOFOTKRAFT AS"},"geometry":{"type":"LineString","coordinates":[[12.08137,67.51063],[12.07959,67.51008],[12.07841,67.50947]]}},
+{"type":"Feature","id":"osm/node/5587511499","properties":{"kind":"mast","src":"osm","height":35},"geometry":{"type":"Point","coordinates":[12.06933,67.50612]}}
+]}

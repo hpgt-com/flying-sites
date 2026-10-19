@@ -1,8 +1,8 @@
 name: Update power lines and obstacles
 
-# Fetches the power lines and other obstacles around the sites once a month, for the map layer «Kraftlinjer og hindre»
-# (scripts/update-obstacles.mjs): NVE's power lines, masts and wind turbines, and from OpenStreetMap the low-voltage
-# lines, lifts and masts. Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing
+# Fetches the power lines and other obstacles in the region around the sites once a month, for the map layer
+# «Kraftlinjer og hindre» (scripts/update-obstacles.mjs): NVE's power lines, masts and wind turbines, and from
+# OpenStreetMap the low-voltage lines, lifts and masts, saved as tiles with an index. Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing
 # happens. Needs no secrets. The PR is created as in airspace.yml: with the club's GitHub App when it is set up
 # (repository variable APP_CLIENT_ID and secret APP_PRIVATE_KEY), otherwise with GITHUB_TOKEN.
 #
@@ -46,11 +46,12 @@ jobs:
 
       - name: Sjekk om noe er endret
         id: diff
-        # The date in the file changes every time, so only the features count as a change.
+        # The date in the index changes every time, so only the tiles (added, changed or removed) and the rest of the
+        # index count as a change.
         run: |
-          if git diff --quiet HEAD -- src/_data/cache/obstacles 2>/dev/null; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          elif [ "$(git show HEAD:src/_data/cache/obstacles/region.geojson | jq -c '[.sources, .features]')" = "$(jq -c '[.sources, .features]' src/_data/cache/obstacles/region.geojson)" ]; then
+          dir=src/_data/cache/obstacles
+          if [ -z "$(git status --porcelain -- "$dir" ":(exclude)$dir/index.json")" ] &&
+             [ "$(git show "HEAD:$dir/index.json" 2>/dev/null | jq -c 'del(.fetched)')" = "$(jq -c 'del(.fetched)' "$dir/index.json")" ]; then
             echo "Ingen endringer i kraftlinjer og hindre."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
