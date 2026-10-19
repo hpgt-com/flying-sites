@@ -455,6 +455,7 @@
         e(FS.t("home.windAt", { when: whenLabel(windIndex) })) +
         e(windText(assessment.wind)) + ". <strong>" + e(RATINGS[assessment.rating].label) + "</strong></p>";
       if (assessment.reasons.length) html += '<p class="selected__reasons">' + e(assessment.reasons.join(". ")) + ".</p>";
+      if (assessment.note) html += '<p class="selected__reasons">' + e(assessment.note) + "</p>";
       if (site.maxWind != null && assessment.codes.indexOf("overSiteLimit") === -1) html += '<p class="selected__reasons">' + e(FS.t("home.siteLimit", { limit: site.maxWind })) + "</p>";
     } else if (windOn) {
       html += '<p class="selected__wind muted">' + e(FS.t("home.noForecastNow")) + "</p>";

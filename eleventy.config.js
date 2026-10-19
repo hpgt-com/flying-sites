@@ -116,6 +116,7 @@ export default function (eleventyConfig) {
       primary: s.data.wind_directions?.primary ?? [],
       possible: s.data.wind_directions?.possible ?? [],
       maxWind: s.data.wind_limits?.max_wind ?? null,
+      soarMinWind: s.data.wind_limits?.soar_min_wind ?? null,
     }));
   });
 
@@ -140,6 +141,7 @@ export default function (eleventyConfig) {
         level: d.level ?? null,
         elevation: d.elevation?.launch_masl ?? null,
         maxWind: d.wind_limits?.max_wind ?? null,
+        soarMinWind: d.wind_limits?.soar_min_wind ?? null,
         trainingSite: !!d.training_site,
         text: tr?.intro || d.derived?.intro || "",
         url: url(localeUrl(s.url, lang)),

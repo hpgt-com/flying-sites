@@ -149,9 +149,19 @@
 
   // Rough assessment for one site: { rating: ok|maybe|high|no, reasons: [text, ...], codes: [code, ...] }.
   // If anything is missing (gusts) or uncertain, it is never better than «Usikkert».
-  // site: { primary, possible, maxWind }. maxWind is the site's own limit (wind_limits.max_wind), otherwise null.
+  // site: { primary, possible, maxWind, soarMinWind }. maxWind is the site's own limit (wind_limits.max_wind), otherwise
+  // null. soarMinWind (wind_limits.soar_min_wind): how much wind it takes to stay up (soar) there. It never changes the
+  // rating, since the site can be flown without it (a flight down); below it the result only carries a note saying so.
   // wind: { dir, speed, gust }.
   function rateWind(site, rawWind, rules) {
+    var r = rateWindOnly(site, rawWind, rules);
+    var w = cleanWind(rawWind);
+    if (w && site.soarMinWind != null && w.speed < site.soarMinWind && (r.rating === "ok" || r.rating === "maybe")) {
+      r.note = text("reasons.belowSoar", { limit: site.soarMinWind });
+    }
+    return r;
+  }
+  function rateWindOnly(site, rawWind, rules) {
     // Callers get the wind from windAt, which already leaves out invalid hours. If an invalid hour reaches this
     // point anyway, it is never better than «Passer ikke».
     var wind = cleanWind(rawWind);

@@ -80,6 +80,7 @@ scripts:
       <ol class="hour-cards" id="hour-cards" aria-label="{{ t.site.next12 }}" tabindex="0" hidden></ol>
       <p class="hour-cards__key" id="hour-cards-key" hidden>{{ t.site.hourCardsKey }}</p>
       {% if wind_limits and wind_limits.max_wind %}<p class="now-limit">{{ t.site.siteMaxWind | fmt({ m: wind_limits.max_wind }) }}</p>{% endif %}
+      {% if wind_limits and wind_limits.soar_min_wind %}<p class="now-limit">{{ t.site.siteSoarWind | fmt({ m: wind_limits.soar_min_wind }) }}</p>{% endif %}
       <details class="fold now-48" id="now-48" hidden>
         <summary><h3>{{ t.site.next48 }}</h3></summary>
         <ul class="wind-windows" id="wind-windows"></ul>
@@ -472,6 +473,6 @@ scripts:
   series: forecast.sites[id],
   rules: windRules,
   live: site.forecastUrl,
-  site: { id: id, lat: launch.lat, lon: launch.lon, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null) }
+  site: { id: id, lat: launch.lat, lon: launch.lon, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null), soarMinWind: (wind_limits.soar_min_wind if wind_limits and wind_limits.soar_min_wind else null) }
 } | json | safe }}</script>
 {% endif %}
