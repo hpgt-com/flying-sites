@@ -111,6 +111,8 @@ test("one schedule every minute: the stations every minute, the forecast every f
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
   assert.deepEqual([0, 1, 2, 3, 4, 5].map((m) => due("stations", minute(m))), [true, true, true, true, true, true]);
   assert.deepEqual([0, 1, 2, 3, 4, 5, 10].map((m) => due("forecast", minute(m))), [true, false, false, false, false, true, true]);
+  // The heavier sources never share a minute (one invocation has 10 ms of CPU in all).
+  for (let m = 0; m < 60; m++) assert.ok(["forecast", "met", "windgram"].filter((n) => due(n, minute(m))).length <= 1, `minute ${m}`);
 });
 
 test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {
@@ -239,7 +241,7 @@ const windgramMod = await import("../workers/data/src/sources/windgram.js");
 
 test("windgram: every ten minutes, only fresh launches, as old as the oldest, and a failed launch keeps its grid", async () => {
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
-  assert.deepEqual([0, 1, 9, 10].map((m) => due("windgram", minute(m))), [true, false, false, true]);
+  assert.deepEqual([0, 7, 9, 17].map((m) => due("windgram", minute(m))), [false, true, false, true]);
   const picked = windgramMod.pickSites([{ id: "a" }, { id: "b" }, { id: "c" }], { sites: { a: { fetched: ago(5) }, b: { fetched: ago(40) } } });
   assert.deepEqual(picked.map((s) => s.id), ["c", "b"], "the missing launch first, then the one fetched longest ago");
   const grid = { times: [1], heights: [250], cells: [[[200, 4]]], blh: [800], cloudBase: [900], cape: [0] };

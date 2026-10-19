@@ -257,7 +257,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
   fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
   `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
-  (`src/schedule.js`: Holfuy every minute, forecast every 5, MET's stations and winds aloft every 10). The store is one Durable Object with SQLite
+  (`src/schedule.js`: Holfuy every minute, forecast every 5, MET's stations and winds aloft every 10, on different minutes so the heavier sources never share an invocation's 10 ms of CPU). The store is one Durable Object with SQLite
   (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
   the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
   into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
