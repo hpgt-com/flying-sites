@@ -333,22 +333,42 @@ test("report: checked fields, and the issue with the text in a code block", () =
   assert.match(issue.body, /~~~text\nSe @noen og ~ ~ ~ !\[x\]\(http:\/\/a\)\n~~~/, "the text stays inside one code block");
 });
 
-test("report: needs both secrets, Turnstile and stays within the daily limit", async () => {
-  const state = {};
-  const store = { getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = v; } };
-  const req = (body) => new Request("https://data.test/v1/report", { method: "POST", body: JSON.stringify(body) });
+// The store's «Meld fra» methods (store.js reportSalt, reserveReport, releaseReport) as the Durable Object runs them.
+function reportStore() {
+  const counts = {};
+  return {
+    counts,
+    reportSalt: async (day) => `salt-${day}`,
+    reserveReport: async (day, who, dailyLimit, perIpLimit) => {
+      const c = (counts[day] ??= { n: 0, ips: {} });
+      if (c.n >= dailyLimit) return "limit";
+      if (who && (c.ips[who] ?? 0) >= perIpLimit) return "ip-limit";
+      c.n += 1;
+      if (who) c.ips[who] = (c.ips[who] ?? 0) + 1;
+      return "ok";
+    },
+    releaseReport: async (day, who) => { const c = counts[day]; c.n -= 1; if (who) c.ips[who] -= 1; },
+  };
+}
+
+test("report: needs both secrets, Turnstile for our hostname, JSON, and stays within the limits", async () => {
+  const store = reportStore();
+  const req = (body, ip = "203.0.113.7", headers = {}) => new Request("https://data.test/v1/report", {
+    method: "POST", body: typeof body === "string" ? body : JSON.stringify(body),
+    headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...headers },
+  });
   const body = { site: "heia", kind: "hazard", message: "Ny kraftlinje over landingen.", token: "t" };
   const names = { heia: "Heia" };
   assert.equal((await reportMod.handleReport(req(body), {}, store, names, NOW)).status, 503);
   const env = { TURNSTILE_SECRET: "s", GITHUB_ISSUES_TOKEN: "g" };
   const calls = [];
   const realFetch = globalThis.fetch;
-  let turnstile = true;
+  let turnstile = true, hostname = "flysteder.hpgt.com", github = 201;
   let answer = { number: 171, html_url: "https://github.com/hpgt-com/flying-sites/issues/171" };
   globalThis.fetch = async (url, init) => {
     calls.push(String(url));
-    if (String(url).includes("siteverify")) return Response.json({ success: turnstile });
-    return Response.json(answer, { status: 201 });
+    if (String(url).includes("siteverify")) return Response.json({ success: turnstile, hostname });
+    return Response.json(answer, { status: github });
   };
   try {
     const sent = await reportMod.handleReport(req(body), env, store, names, NOW);
@@ -360,8 +380,23 @@ test("report: needs both secrets, Turnstile and stays within the daily limit", a
     turnstile = false;
     assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 403);
     turnstile = true;
-    state["reports-2026-10-18"] = reportMod.DAILY_LIMIT;
-    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 429);
+    hostname = "evil.example";
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 403, "a token solved on another site is refused");
+    hostname = "flysteder.hpgt.com";
+    assert.equal((await reportMod.handleReport(req(body, "1.2.3.4", { "content-type": "text/plain" }), env, store, names, NOW)).status, 415);
+    assert.equal((await reportMod.handleReport(req(JSON.stringify({ ...body, message: "x".repeat(reportMod.MAX_BODY) })), env, store, names, NOW)).status, 413);
+    // Two sent so far from 203.0.113.7; the address may send PER_IP_LIMIT in all, then it is stopped, others are not.
+    for (let i = 2; i < reportMod.PER_IP_LIMIT; i++) assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 200);
+    assert.equal((await reportMod.handleReport(req(body), env, store, names, NOW)).status, 429, "one address at most PER_IP_LIMIT a day");
+    assert.equal((await reportMod.handleReport(req(body, "198.51.100.9"), env, store, names, NOW)).status, 200);
+    // GitHub fails: the reservation is given back.
+    github = 500;
+    const before = store.counts["2026-10-18"].n;
+    assert.equal((await reportMod.handleReport(req(body, "198.51.100.9"), env, store, names, NOW)).status, 502);
+    assert.equal(store.counts["2026-10-18"].n, before);
+    github = 201;
+    store.counts["2026-10-18"].n = reportMod.DAILY_LIMIT;
+    assert.equal((await reportMod.handleReport(req(body, "192.0.2.1"), env, store, names, NOW)).status, 429, "the daily limit for all");
   } finally {
     globalThis.fetch = realFetch;
   }
@@ -383,14 +418,14 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
   const realFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
     calls.push([String(url), init.headers?.authorization ?? ""]);
-    if (String(url).includes("siteverify")) return Response.json({ success: true });
+    if (String(url).includes("siteverify")) return Response.json({ success: true, hostname: "flysteder.hpgt.com" });
     if (String(url).endsWith("/installation")) return Response.json({ id: 99 });
     if (String(url).endsWith("/app/installations/99/access_tokens")) return Response.json({ token: "inst-token" }, { status: 201 });
     return new Response("{}", { status: 201 });
   };
   try {
-    const store = { getState: async () => 0, putState: async () => {} };
-    const req = new Request("https://data.test/v1/report", { method: "POST", body: JSON.stringify({ site: "heia", kind: "other", message: "Test av appen her.", token: "t" }) });
+    const store = reportStore();
+    const req = new Request("https://data.test/v1/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ site: "heia", kind: "other", message: "Test av appen her.", token: "t" }) });
     const res = await reportMod.handleReport(req, { TURNSTILE_SECRET: "s", REPORTS_APP_ID: "12345", REPORTS_APP_PRIVATE_KEY: pem }, store, { heia: "Heia" }, NOW);
     assert.equal(res.status, 200);
     assert.deepEqual(calls.find(([u]) => u.endsWith("/repos/hpgt-com/flying-sites/issues")), ["https://api.github.com/repos/hpgt-com/flying-sites/issues", "Bearer inst-token"]);

@@ -125,7 +125,9 @@ the menu and is marked `noindex`. It shows per site:
 - A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
   <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
   Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
-  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day.
+  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day, and 5 from one address (kept
+  only as a hash with a salt for the day). Turnstile's answer must be for `flysteder.hpgt.com` (or the hosts in
+  `REPORT_ORIGINS` when testing).
 - The issue gets the labels for its kind (`LABELS` in `report.js`): what concerns a site `endringsforslag` and
   `site-data`, a hazard also `safety`, an error on the site `bug`, an idea `enhancement`, a general «Annet» none. The
   labels must exist in the repository (they do); GitHub drops a label the app may not set without saying so. The answer
@@ -376,5 +378,6 @@ MET and Kartverket require no key. MET requires the client to provide contact de
 | `status er «reviewed», men reviewed …` | Fill in `reviewed.by` and `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Typo in the translation. See [Translation](site-files.md#translation). |
 | The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.workers.dev/v1/forecast.json`, and run «Build and deploy» manually. |
+| An issue «Jobben «…» feilet» | A run failed (the job `alert` opens it, or comments on the open one). Open the run from the link, fix the cause, run the workflow again, and close the issue. |
 | «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Roll it and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
 | The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |

@@ -10,7 +10,13 @@
   var W = window.FlyingSitesWind;
   var el = document.getElementById("site-wind");
   var data = FS && W && el ? FS.readJson("site-wind-data") : null;
-  if (!data || !data.series) return;
+  // The verdict chip in the image keeps its room until it is filled in (site.njk data-pending); without an assessment
+  // it is taken away.
+  var heroStatus = document.getElementById("hero-status");
+  if (!data || !data.series) {
+    if (heroStatus) { heroStatus.hidden = true; heroStatus.removeAttribute("data-pending"); }
+    return;
+  }
 
   var forecast = { fetched: data.fetched, times: data.times, sites: {} };
   forecast.sites[data.site.id] = data.series;
@@ -18,7 +24,6 @@
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×", none: "–" };
   var block = el.closest(".block--now");
   // The same verdict as a chip in the image at the top (site.njk), so it is seen before scrolling. Not without an assessment.
-  var heroStatus = document.getElementById("hero-status");
   // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML. The first part is the verdict:
   // the icon and the rating in large type.
   function show(rating, parts) {
@@ -31,6 +36,7 @@
     el.hidden = false;
     if (heroStatus) {
       heroStatus.hidden = rating === "none";
+      heroStatus.removeAttribute("data-pending");
       heroStatus.setAttribute("data-rating", rating);
       heroStatus.querySelector(".hero__status-icon").textContent = ICONS[rating] || ICONS.none;
       heroStatus.querySelector(".hero__status-text").textContent = parts[0];

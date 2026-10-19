@@ -45,7 +45,7 @@ scripts:
       <h1 id="site-name">{{ name }}</h1>
       <ul class="hero__chips" aria-label="{{ t.site.keyFacts }}">
         {#- The assessment now from «Kan jeg fly her nå?» (site-wind.js), so it is seen first. Links down to the box. -#}
-        <li class="hero__status" id="hero-status" hidden><a href="#vaer"><span class="hero__status-icon" aria-hidden="true"></span><span class="hero__status-text"></span></a></li>
+        <li class="hero__status" id="hero-status" data-pending><a href="#vaer"><span class="hero__status-icon" aria-hidden="true"></span><span class="hero__status-text"></span></a></li>
         {% if elevation and elevation.launch_masl %}<li>{{ elevation.launch_masl }} {{ t.units.masl }}</li>{% endif %}
         {% if elevation and elevation.difference_m %}<li>{{ t.site.heightDown | fmt({ m: elevation.difference_m }) }}</li>{% endif %}
         {% if level %}<li>{{ level }}</li>{% else %}<li class="hero__chip--muted">{{ t.site.levelNotSet }}</li>{% endif %}
@@ -93,7 +93,7 @@ scripts:
         {% if external.yr_id %}
         <figure class="meteogram">
           {#- Yr shows the meteogram in the same language as the page (nb/en in the URL). -#}
-          <a href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener"><span class="visually-hidden">{{ t.site.yrForecast }} {{ t.common.opensNewTab }}</span><img src="{{ t.site.meteogramBase }}{{ external.yr_id }}/meteogram.svg" data-src-dark="{{ t.site.meteogramBase }}{{ external.yr_id }}/meteogram.svg?mode=dark" alt="{{ t.site.meteogramAlt | fmt({ name: name }) }}" loading="lazy"></a>
+          <a href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener"><span class="visually-hidden">{{ t.site.yrForecast }} {{ t.common.opensNewTab }}</span><img src="{{ t.site.meteogramBase }}{{ external.yr_id }}/meteogram.svg" data-src-dark="{{ t.site.meteogramBase }}{{ external.yr_id }}/meteogram.svg?mode=dark" alt="{{ t.site.meteogramAlt | fmt({ name: name }) }}" width="782" height="391" loading="lazy"></a>
           <figcaption>{{ t.site.meteogramCaption }}</figcaption>
         </figure>
         {% else %}

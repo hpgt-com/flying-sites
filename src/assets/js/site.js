@@ -113,7 +113,7 @@
 
     (data.routes || []).forEach(function (route) {
       var line = L.polyline(route.line, { color: INK, weight: 4, dashArray: "2 8", lineCap: "round", opacity: 0.9 }).addTo(map);
-      line.bindTooltip(FS.t("site.route") + (route.name ? " " + route.name : ""), { sticky: true });
+      line.bindTooltip(FS.escapeHtml(FS.t("site.route") + (route.name ? " " + route.name : "")), { sticky: true });
       routeLines.push(line);
       route.line.forEach(function (p) { bounds.push(p); });
     });
@@ -180,7 +180,7 @@
     (data.parking || []).forEach(function (p) {
       var name = p.name || FS.t("site.parking");
       L.marker([p.lat, p.lon], { icon: squareIcon("map-icon--parking", "P"), title: name, alt: name, kind: "parking" })
-        .bindTooltip(name, { direction: "top", offset: [0, -10] })
+        .bindTooltip(FS.escapeHtml(name), { direction: "top", offset: [0, -10] })
         .addTo(pointLayer);
       bounds.push([p.lat, p.lon]);
     });
@@ -191,7 +191,7 @@
       var name = landing.name || (isAlternative ? FS.t("site.altLanding") : FS.t("site.landing"));
       var icon = L.divIcon({ className: "map-symbol map-symbol--landing" + (isAlternative ? " map-symbol--alt" : ""), iconSize: [26, 26], iconAnchor: [13, 13] });
       L.marker([landing.lat, landing.lon], { icon: icon, title: name, alt: name, kind: "landing", alternative: isAlternative })
-        .bindTooltip(name, { direction: "top", offset: [0, -12] })
+        .bindTooltip(FS.escapeHtml(name), { direction: "top", offset: [0, -12] })
         .addTo(pointLayer);
       bounds.push([landing.lat, landing.lon]);
     });
@@ -212,7 +212,7 @@
     }
     FS.launchPoints(data).forEach(function (p) {
       L.marker([p.lat, p.lon], { icon: launchIcon(1), title: p.label, alt: p.label, zIndexOffset: 1000, kind: "launch" })
-        .bindTooltip(p.label, { direction: "top", offset: [0, -10] })
+        .bindTooltip(FS.escapeHtml(p.label), { direction: "top", offset: [0, -10] })
         .addTo(pointLayer);
       bounds.push([p.lat, p.lon]);
     });
