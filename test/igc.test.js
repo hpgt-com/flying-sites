@@ -64,6 +64,17 @@ test("a KML with gx:Track gives the same flight; the same flight in two files ha
   const marks = log.points.map((p) => `<Placemark><TimeStamp><when>${new Date(Date.UTC(2026, 6, 15) + p.t * 1000).toISOString()}</when></TimeStamp><Point><coordinates>${p.lon},${p.lat},${p.alt}</coordinates></Point></Placemark>`).join("");
   const dump = parseKml(`<kml><Placemark><LineString><coordinates>16.4,68.8,500 16.3,68.8,400</coordinates></LineString></Placemark>${marks}</kml>`);
   assert.equal(flightKey(analyzeFlight(dump, launchPoints(sites))), flightKey(a), "the same flight from the fixes");
+  // A GpsDump trip: other placemarks with lines first, then the tracklog with its times in FsInfo.
+  const secs = log.points.map((p) => p.t - log.points[0].t).join(" ");
+  const line = log.points.map((p) => `${p.lon},${p.lat},${p.alt}`).join(" ");
+  const trip = parseKml(`<Document><Placemark><name>Open distance</name><LineString><coordinates>16.4,68.8,500 16.3,68.8,400</coordinates></LineString></Placemark>`
+    + `<Placemark><Metadata src="GpsDump" type="track"><FsInfo time_of_first_point="${new Date(Date.UTC(2026, 6, 15) + log.points[0].t * 1000).toISOString().replace(/\.000Z$/, "Z")}" instrument="Flymaster">`
+    + `<SecondsFromTimeOfFirstPoint>\n${secs}\n</SecondsFromTimeOfFirstPoint><PressureAltitude>1 2</PressureAltitude></FsInfo></Metadata><name>Tracklog</name>`
+    + `<LineString><altitudeMode>absolute</altitudeMode><coordinates>\n${line}\n</coordinates></LineString></Placemark></Document>`);
+  assert.equal(trip.points.length, log.points.length);
+  const t = analyzeFlight(trip, launchPoints(sites));
+  assert.equal(t.site, "sollifjellet");
+  assert.equal(flightKey(t), flightKey(a), "the same flight from FsInfo");
 });
 
 test("the sums per site: months, directions, records, and thermal cells from several flights only", () => {
