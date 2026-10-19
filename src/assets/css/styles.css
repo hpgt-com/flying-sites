@@ -1639,10 +1639,10 @@ body.sheet-open { overflow: hidden; }
 .station-marker--old { opacity: 0.55; }
 /* MET's stations: smaller and grey, with «MET» in the label (stations.js), so they are not taken for the club's. White on
    #56636B is about 6:1. */
-.station-marker--met { font-size: 12px; opacity: 0.6; transition: opacity 0.15s; }
+.station-marker--met { font-size: 12px; opacity: 0.8; transition: opacity 0.15s; }
 /* Translucent, so they do not take over the map; whole again when pointed at or focused. Old ones fainter still. */
 .station-marker--met:hover, .station-marker--met:focus-visible { opacity: 1; }
-.station-marker--met.station-marker--old { opacity: 0.4; }
+.station-marker--met.station-marker--old { opacity: 0.5; }
 .station-marker--met .station-marker__dial { width: 24px; height: 24px; background: #56636B; }
 .station-marker--met .station-marker__dial svg { width: 14px; height: 14px; }
 .station-marker--met .station-marker__nums { background: #56636B; padding: 3px 6px 3px 9px; }
@@ -1728,6 +1728,14 @@ body.sheet-open { overflow: hidden; }
 .weather-row__change { font-size: 12px; font-weight: 600; }
 .weather-row--old .station-compass { opacity: 0.5; }
 .weather-row--old .weather-row__sub { color: var(--hazard-text); }
+/* The Vær tab: about as tall as the site cards beside it (the same rose size, corners and padding), the name on one line. */
+.stations .weather-row { grid-template-columns: 40px minmax(0, 1fr) auto; align-items: start; padding: 10px 12px; border-radius: 14px; }
+.stations .weather-row .station-compass { width: 40px; height: 40px; }
+.stations .weather-row__name { font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stations .weather-row__wind { font-size: 22px; }
+.stations .weather-row__info { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.stations .weather-row__name, .stations .weather-row__sub { flex-basis: 100%; }
+.stations .weather-row .rating-chip { margin: 0; }
 /* MET's stations under the club's (stations.js metTable): a small folded table, no cards. */
 .met-stations { margin-top: 10px; font-size: 13px; }
 .met-stations summary { cursor: pointer; font-weight: 700; font-size: 14px; padding: 4px 0; }

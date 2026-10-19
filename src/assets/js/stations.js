@@ -234,8 +234,9 @@
 
   // One station as a row, a link to `href` (its card): the site's wind rose with the measured arrow, the name, the rating
   // chip, the site, the source, height and age, the direction against the launch directions, and on the right the wind (gust), the
-  // change over `minutes` and how even the wind is.
-  function row(item, now, minutes, href) {
+  // change over `minutes` and how even the wind is. compact (the Vær tab, about as tall as the site cards beside it): the
+  // change without the period on screen (the note under the list gives it), so the right column stays narrow.
+  function row(item, now, minutes, href, compact) {
     var li = make("li");
     var a = make("a", "weather-row" + (hasWind(item, now) ? "" : " weather-row--old"));
     a.href = href;
@@ -246,17 +247,29 @@
     var info = make("span", "weather-row__info");
     info.appendChild(make("strong", "weather-row__name", item.name));
     if (rating) info.appendChild(ratingChip(rating));
-    info.appendChild(make("span", "weather-row__sub", [site && site.name ? text("stations.site", { name: site.name }) : "", item.source || "", altitudeText(item), ageText(item, now)].filter(Boolean).join(" · ")));
+    // Compact: the source and height are left to the weather page, and the direction comes beside the chip (CSS).
+    var sub = make("span", "weather-row__sub", (compact ? [site && site.name ? text("stations.site", { name: site.name }) : "", ageText(item, now)]
+      : [site && site.name ? text("stations.site", { name: site.name }) : "", item.source || "", altitudeText(item), ageText(item, now)]).filter(Boolean).join(" · "));
+    if (!compact) info.appendChild(sub);
     if (hasWind(item, now) && isNum(w.dir)) {
       var where = launchText(w.dir, site);
       info.appendChild(make("span", "weather-row__dir", dirText(w.dir) + (where ? " · " + where : "")));
     }
+    if (compact) info.appendChild(sub);
     a.appendChild(info);
     if (hasWind(item, now)) {
       var ch = change(item, minutes), c = character(ch);
       var nums = make("span", "weather-row__nums");
       nums.appendChild(make("strong", "weather-row__wind", value(w.speed) + (isNum(w.gust) ? " (" + value(w.gust) + ")" : "")));
-      if (ch && isNum(ch.speed)) nums.appendChild(make("span", "weather-row__change", text("stations.change", { v: signed(ch.speed), period: text("stations.period_" + minutes) })));
+      if (ch && isNum(ch.speed)) {
+        var full = text("stations.change", { v: signed(ch.speed), period: text("stations.period_" + minutes) });
+        var changeEl = nums.appendChild(make("span", "weather-row__change", compact ? null : full));
+        if (compact) {
+          var shown = changeEl.appendChild(make("span", null, signed(ch.speed)));
+          shown.setAttribute("aria-hidden", "true");
+          changeEl.appendChild(make("span", "visually-hidden", full));
+        }
+      }
       if (c) nums.appendChild(make("span", "weather-row__char", text("stations.char_" + c.kind) + text("stations.trend_" + c.trend)));
       a.appendChild(nums);
     }
