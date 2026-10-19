@@ -15,6 +15,13 @@ class_name = "Store"
 tag = "v1"
 new_sqlite_classes = ["Store"]
 
+# The archive (src/archive.js, docs/operations.md «Weather archive»). Remove the # on the three lines below once R2 is
+# turned on, the bucket hpgt-data-archive exists and the token has «Workers R2 Storage → Edit»; a deploy with the binding
+# and no bucket fails.
+# [[r2_buckets]]
+# binding = "ARCHIVE"
+# bucket_name = "hpgt-data-archive"
+
 [triggers]
 # Every minute: each source has its own interval in src/index.js (INTERVALS), so one schedule serves them all.
 crons = ["* * * * *"]

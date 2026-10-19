@@ -108,6 +108,10 @@ the menu and is marked `noindex`. It shows per site:
   6 hours per station. The service keeps the last 7 days; older days go to the archive (below), and nothing is deleted
   before it is there. Holfuy has accepted that the club stores the measurements over time.
 
+- **What the forecast said for each hour:** every forecast fetch also stores the forecast for the hour going on then
+  (the latest fetch during the hour wins), kept for 30 days in the store (`forecast_hours`). The last 6 hours are in
+  `/v1/forecast.json` as `past`, which «Målt mot varslet» on the weather page draws over the measurements.
+
 ## Weather archive (R2)
 
 - One CSV per station per day (UTC) in the R2 bucket `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
@@ -125,8 +129,8 @@ the menu and is marked `noindex`. It shows per site:
      limits) and create the bucket `hpgt-data-archive` (private, no public access).
   2. Give the token «GitHub – flying-sites» the permission `Account → Workers R2 Storage → Edit` (My Profile → API
      Tokens → Edit). The token's value stays the same.
-  3. Add the binding to `workers/data/wrangler.toml` in a PR: `[[r2_buckets]]`, `binding = "ARCHIVE"`,
-     `bucket_name = "hpgt-data-archive"`.
+  3. Remove the `#` on the three `[[r2_buckets]]` lines in `workers/data/wrangler.toml` in a PR (binding `ARCHIVE`,
+     bucket `hpgt-data-archive`). Do this only after steps 1 and 2: a deploy with the binding and no bucket fails.
 - Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
   S3 address `https://<account id>.r2.cloudflarestorage.com`.
 - If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), the wind assessment

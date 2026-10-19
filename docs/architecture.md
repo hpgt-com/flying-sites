@@ -244,7 +244,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 - **Shared code:** `lib/site-files.js` reads the front matter of all sites for the scripts.
 - **Data service** (`workers/data`): one Cloudflare Worker with one module per source in `src/sources/`. Each module
   fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
-  `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `license`, `fetched`, then the dataset's own fields),
+  `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
   (`src/schedule.js`: stations every minute, forecast every 5). The store is one Durable Object with SQLite
   (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
