@@ -69,11 +69,12 @@
 {{ content | safe }}
 {#- The strings the scripts need, in the page's language (read by common.js). -#}
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
-{% if map %}<script src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>{% endif %}
-<script src="{{ "/assets/js/common.js" | asset }}"></script>
+{#- defer: the scripts run in this order once the page is parsed, without holding up the first paint. -#}
+{% if map %}<script defer src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>{% endif %}
+<script defer src="{{ "/assets/js/common.js" | asset }}"></script>
 {#- The service worker, for offline use (src/assets/js/pwa.js). The URLs are given here, so they follow the path prefix. -#}
-<script src="{{ "/assets/js/pwa.js" | asset }}" data-sw="{{ '/sw.js' | url }}" data-scope="{{ '/' | url }}"></script>
-{% for script in scripts %}<script src="{{ script | asset }}"></script>
+<script defer src="{{ "/assets/js/pwa.js" | asset }}" data-sw="{{ '/sw.js' | url }}" data-scope="{{ '/' | url }}"></script>
+{% for script in scripts %}<script defer src="{{ script | asset }}"></script>
 {% endfor %}
 </body>
 </html>

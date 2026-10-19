@@ -188,20 +188,27 @@
       className: "base-tiles",
       attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
     });
-    function openTopoLayer() {
+    function openTopoLayer(zIndex) {
       return L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
         maxNativeZoom: 17,
         maxZoom: 18,
         subdomains: "abc",
         className: "base-tiles",
         attribution: t("map.openTopoAttribution"),
+        zIndex: zIndex,
       });
     }
+    // Kartverket's tiles are transparent outside Norway, so OpenTopoMap below fills in the rest of the world. It is
+    // added only once Kartverket's first tiles have loaded, so its tiles (from slower servers) do not compete with the
+    // ones that matter when the page opens; it stays below them (zIndex 0).
+    function withUnderlay(top) {
+      var under = openTopoLayer(0), group = L.layerGroup([top]);
+      showUnderlayAfter(top, under);
+      top.once("load", function () { group.addLayer(under); });
+      return group;
+    }
     var openTopo = openTopoLayer();
-    // Kartverket's tiles are transparent outside Norway, so OpenTopoMap below fills in the rest of the world.
-    var underlay = openTopoLayer();
-    showUnderlayAfter(kartverket, underlay);
-    var topo = L.layerGroup([underlay, kartverket]);
+    var topo = withUnderlay(kartverket);
     // Satellite imagery from Sentinel-2 cloudless (EOX), free for non-commercial use (CC BY-NC-SA 4.0) without a key.
     // 10 m resolution, so tiles exist only up to zoom 14 and are enlarged beyond that. Not inverted in the dark theme.
     var satellite = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {
@@ -216,9 +223,7 @@
       className: "base-tiles",
       attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
     });
-    var grayUnderlay = openTopoLayer();
-    showUnderlayAfter(grayTiles, grayUnderlay);
-    var gray = L.layerGroup([grayUnderlay, grayTiles]);
+    var gray = withUnderlay(grayTiles);
     topo.addTo(map);
     var baseLayers = {};
     baseLayers[layerLabel(map, "topo", t("map.layerTopo"))] = topo;
