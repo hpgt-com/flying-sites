@@ -137,3 +137,19 @@ test("archive: one table for all stations, the station in every row, units in th
   assert.equal(stationsCsv([{ source: "holfuy", id: 490, name: 'HPGT "Heia", topp', model: null, site: "heia", lat: 68.8, lon: 16.5, altitude: 420 }]),
     'source,station,name,model,site,lat,lon,altitude_m\nholfuy,490,"HPGT ""Heia"", topp",,heia,68.8,16.5,420\n');
 });
+
+test("the forecast archive: the hour going on, grouped by site, and past in the dataset", async () => {
+  const { hourNow, groupPast } = await import("../workers/data/src/sources/forecast.js");
+  const rows = [["2026-10-18T14:00:00Z", 200, 4, 7, 0], ["2026-10-18T15:00:00Z", 210, 5, 8, 0], ["2026-10-18T16:00:00Z", 220, 6, 9, 0]];
+  assert.deepEqual(hourNow(rows, NOW), rows[1], "15.20 is in the hour from 15.00");
+  assert.equal(hourNow(rows, Date.parse("2026-10-18T18:00:00Z")), null);
+  const past = groupPast([
+    { site: "b", time: "2026-10-18T15:00:00Z", dir: 1, speed: 2, gust: 3 },
+    { site: "a", time: "2026-10-18T15:00:00Z", dir: 5, speed: 6, gust: 7 },
+    { site: "a", time: "2026-10-18T14:00:00Z", dir: 4, speed: 5, gust: 6 },
+  ]);
+  assert.deepEqual(past, { a: [["2026-10-18T14:00:00Z", 4, 5, 6], ["2026-10-18T15:00:00Z", 5, 6, 7]], b: [["2026-10-18T15:00:00Z", 1, 2, 3]] });
+  const state = { sites: { a: { fetched: ago(10), updated: null, rows: rows.map(([t, ...v]) => [t, ...v]) } } };
+  assert.deepEqual(buildForecast(state, NOW, past).past, past);
+  assert.equal(buildForecast(state, NOW, {}).past, undefined, "no past field when there is nothing stored yet");
+});

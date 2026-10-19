@@ -597,7 +597,7 @@
       "charText": "Kast i snitt {v} m/s over middelvinden siste {period}.",
       "vsTitle": "Målt mot varslet (MET)",
       "vsRow": "målt {m} · varslet {f}",
-      "vsNote": "Varselet for flystedet vises fra nå og fremover. Varsler bakover lagres ikke ennå, så grafen viser varselet som stiplet linje etter siste måling.",
+      "vsNote": "Stiplet linje: varselet for flystedet. Før streken for siste måling viser den hva varselet sa for hver time, etter streken varselet videre.",
       "legendFc": "Varslet (MET)",
       "nextTitle": "Neste timer (varsel)",
       "noForecast": "Ingen varsel for flystedet akkurat nå.",

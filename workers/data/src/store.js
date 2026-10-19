@@ -1,5 +1,6 @@
 // The data service's store: one Durable Object with SQLite (free plan), which allows far more writes per day than KV.
-// Holds the datasets as they are served (snapshots), each source's own state, and the station measurements.
+// Holds the datasets as they are served (snapshots), each source's own state, the station measurements, and the forecast for
+// each hour as it stood during that hour (forecast_hours, sources/forecast.js).
 // Reached through env.STORE (wrangler.toml); the methods are called over RPC from index.js and the sources.
 
 import { DurableObject } from "cloudflare:workers";
@@ -18,6 +19,7 @@ export class Store extends DurableObject {
     this.sql = ctx.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (site, time))");
     let have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
     // The first version (18.10.2026) had no source, and the station and time as the key. Rebuilt once with (source,
     // station, time) as the key; the rows already there were all Holfuy's and keep their values.
@@ -73,6 +75,23 @@ export class Store extends DurableObject {
   oldestMeasurement(source) {
     const rows = this.sql.exec("SELECT MIN(time) AS time FROM measurements WHERE source = ?", source).toArray();
     return rows[0]?.time ?? null;
+  }
+
+  // The latest fetch during an hour replaces what an earlier one said for it.
+  putForecastHours(hours) {
+    for (const h of hours) {
+      this.sql.exec(`INSERT INTO forecast_hours (site, time, dir, speed, gust, rain, fetched) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT (site, time) DO UPDATE SET dir = excluded.dir, speed = excluded.speed, gust = excluded.gust, rain = excluded.rain, fetched = excluded.fetched`,
+        h.site, h.time, h.dir ?? null, h.speed ?? null, h.gust ?? null, h.rain ?? null, h.fetched);
+    }
+  }
+
+  forecastHoursSince(since) {
+    return this.sql.exec("SELECT site, time, dir, speed, gust, rain FROM forecast_hours WHERE time >= ? ORDER BY time", since).toArray();
+  }
+
+  pruneForecastHours(before) {
+    this.sql.exec("DELETE FROM forecast_hours WHERE time < ?", before);
   }
 
   prune(source, before) {

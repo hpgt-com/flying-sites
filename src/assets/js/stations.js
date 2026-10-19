@@ -148,7 +148,8 @@
   }
 
   // The forecast for a flying site from the hour now: { now: { dir, speed, gust }, next: [{ time, dir, speed, gust }] } for
-  // `hours` hours after this one, or null without a forecast for the site.
+  // `hours` hours after this one, and past: what the forecast said for the hours before (when the data service has them).
+  // Null without a forecast for the site.
   function forecastFrom(forecast, siteId, now, hours) {
     var Wn = W();
     if (!forecast || !siteId || !forecast.sites || !forecast.sites[siteId] || !Wn) return null;
@@ -157,7 +158,12 @@
     var at = function (k) { var w = Wn.windAt(forecast, siteId, k); return w ? { time: Date.parse(forecast.times[k]), dir: w.dir, speed: w.speed, gust: w.gust } : null; };
     var next = [];
     for (var k = i + 1; k < forecast.times.length && next.length < hours; k++) { var w = at(k); if (w) next.push(w); }
-    return { now: at(i), next: next };
+    // The forecast as it stood during the hours before this one (the data service's past), in the same shape.
+    var start = Date.parse(forecast.times[i]);
+    var past = ((forecast.past && forecast.past[siteId]) || []).filter(function (r) {
+      return Array.isArray(r) && typeof r[0] === "string" && Date.parse(r[0]) < start && isNum(r[2]) && okNum(r[1]) && okNum(r[3]);
+    }).map(function (r) { return { time: Date.parse(r[0]), dir: r[1], speed: r[2], gust: r[3] }; });
+    return { now: at(i), next: next, past: past };
   }
 
   // A station's latest measurement for the assessment of the hour now (wind.js rateNow), while it is at most FRESH_MINUTES
@@ -368,8 +374,8 @@
   // The last hours as a chart: the span from the lowest wind to the gusts as a light band, the mean wind as a line on it,
   // where the wind came from as arrows along the top, and the hours along the bottom. Pointer and arrow keys show each
   // measurement with its numbers. Gaps of more than 20 minutes without measurements are left open.
-  // fc (optional, the weather page's «Målt mot varslet»): the forecast from this hour, [{ time, speed, gust }], drawn dashed
-  // after the measurements, with a line at the latest measurement. The forecast is hourly and holds from its time.
+  // fc (optional, the weather page's «Målt mot varslet»): the forecast, [{ time, speed, gust }], drawn dashed, with a line at
+  // the latest measurement; hours before it are what the forecast said then. The forecast is hourly and holds from its time.
   function chart(item, periodMinutes, fc) {
     var rows = chartRows(item);
     if (rows.length < 2) return null;
@@ -440,11 +446,12 @@
         if (run.length > 1) svgEl("polyline", { class: "station-graph__temp", points: run.map(function (r) { return f(x(r[0])) + "," + f(ty(r[5])); }).join(" ") }, svg);
       });
     }
-    // The forecast as steps (each hour holds for the hour), dashed: the mean wind and, lighter, the gusts.
+    // The forecast as steps (each hour holds for the hour), dashed: the mean wind and, lighter, the gusts. Hours before the
+    // latest measurement (what the forecast said then) lie over the measurements, for comparison.
     if (fc.length) {
       var steps = function (key) {
         return fc.filter(function (p) { return isNum(p[key]); }).map(function (p) {
-          var a = Math.max(p.time, tLast), b = p.time + 3600000;
+          var a = Math.max(p.time, t0), b = p.time + 3600000;
           return b <= a ? "" : f(x(a)) + "," + f(y(p[key])) + " " + f(x(b)) + "," + f(y(p[key]));
         }).filter(Boolean).join(" ");
       };

@@ -64,7 +64,7 @@
       line(t("stations.dirTile"), ST.dirText(w.dir), ST.dirText(f.dir), (turn > 0 ? "+" : turn < 0 ? "−" : "") + Math.abs(turn) + "°");
     }
     box.appendChild(grid);
-    var graph = ST.chart(item, null, [f].concat(fc.next));
+    var graph = ST.chart(item, null, fc.past.concat([f], fc.next));
     if (graph) {
       graph.querySelector(".station-graph__legend").appendChild(make("span", "station-graph__key station-graph__key--fc", t("stations.legendFc")));
       box.appendChild(graph);

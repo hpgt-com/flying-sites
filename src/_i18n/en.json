@@ -597,7 +597,7 @@
       "charText": "Gusts on average {v} m/s above the mean wind over the last {period}.",
       "vsTitle": "Measured against forecast (MET)",
       "vsRow": "measured {m} · forecast {f}",
-      "vsNote": "The forecast for the flying site is shown from now on. Past forecasts are not stored yet, so the chart shows the forecast as a dashed line after the latest measurement.",
+      "vsNote": "Dashed line: the forecast for the flying site. Before the line for the latest measurement it shows what the forecast said for each hour, after it the forecast ahead.",
       "legendFc": "Forecast (MET)",
       "nextTitle": "Next hours (forecast)",
       "noForecast": "No forecast for the flying site right now.",
