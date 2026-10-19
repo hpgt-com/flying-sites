@@ -132,7 +132,7 @@ the menu and is marked `noindex`. It shows per site:
      add the secret `TURNSTILE_SECRET`.
   3. The issues are made by the club's **GitHub App**, so they show as from the app and nothing expires:
      organisation `hpgt-com` → Settings → Developer settings → GitHub Apps → New GitHub App. Name «HPGT Flying Sites
-     Feedback» (its own app, not «HPGT Flying Sites», whose key may change the code),
+     Reports» (its own app, not «HPGT Flying Sites», whose key may change the code),
      homepage `https://flysteder.hpgt.com`, Webhook off, permissions **Repository → Issues: Read and write** (nothing
      else), «Only on this account». Create it; note the **App ID**; «Generate a private key» downloads a `.pem` file.
      Then «Install App» → only the repository `flying-sites`. Add the secrets `GITHUB_APP_ID` (the App ID, or the Client ID) and
