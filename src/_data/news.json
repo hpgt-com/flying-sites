@@ -24,8 +24,8 @@
         "en": "The wind at heights above the launch hour by hour, now with gusts, thermals, clouds and rain under it. For now on Sollifjellet, Sætertinden, Heia, Kilhusåsen and Elgen."
       },
       "where": {
-        "nb": "Stedssiden, under «Kan jeg fly her nå?» → «Detaljer: Yr time for time og høydevind».",
-        "en": "The site page, under «Can I fly here now?» → «Details: Yr hour by hour and winds aloft»."
+        "nb": "Stedssiden, under «Vinden nå – kan det passe?» → «Detaljer: Yr time for time og høydevind».",
+        "en": "The site page, under «The wind now – may it work?» → «Details: Yr hour by hour and winds aloft»."
       },
       "read": {
         "nb": "Hver rute er vinden i den høyden: grønt passer, gult er i kanten, rødt er for sterkt, og pila viser dit vinden blåser. Den oransje linjen er omtrent hvor høyt termikken går: heltrukket opp til skybasen, stiplet der den går inn i sky. Raden «Topp moh» gir det samme som tall, i meter over havet som høydeaksen. Sveip sideveis for flere timer.",

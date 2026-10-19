@@ -38,13 +38,13 @@ scripts:
     <a class="hero__back" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
     {% if heroImage %}<img class="hero__img" src="{{ heroImage.fullUrl }}" srcset="{{ heroImage.srcsetWebp }}" sizes="(min-width: 1100px) 1120px, (min-width: 800px) 760px, 100vw" alt="" fetchpriority="high">{% endif %}
     {#- The directions the site suits, on the image, so they are seen first. Only the site's own directions: the wind now
-        is in «Kan jeg fly her nå?» right below. -#}
+        is in «Vinden nå – kan det passe?» right below. -#}
     {% if wind_directions.primary.length %}<div class="hero__rose">{{ m.rose(wind_directions, 104) }}</div>{% endif %}
     <div class="hero__text">
       {% if region %}<span class="hero__eyebrow">{{ region }}</span>{% endif %}
       <h1 id="site-name">{{ name }}</h1>
       <ul class="hero__chips" aria-label="{{ t.site.keyFacts }}">
-        {#- The assessment now from «Kan jeg fly her nå?» (site-wind.js), so it is seen first. Links down to the box. -#}
+        {#- The assessment now from «Vinden nå – kan det passe?» (site-wind.js), so it is seen first. Links down to the box. -#}
         <li class="hero__status" id="hero-status" data-pending><a href="#vaer"><span class="hero__status-icon" aria-hidden="true"></span><span class="hero__status-text">{{ t.site.canIFly }}</span></a></li>
         {#- The local hazards, counted, as a link down to «Før du starter»: on a phone that box comes after the weather, and
             what to watch out for should be seen before it. -#}
@@ -69,14 +69,14 @@ scripts:
     <a href="#h-images">{{ t.site.images }}</a>
     <a href="#h-log">{{ t.site.linksTitle }}</a>
   </nav>
-  {#- Desktop: two columns under the image. Left: the introduction and «Kan jeg fly her nå?», then Start og landing and
+  {#- Desktop: two columns under the image. Left: the introduction and «Vinden nå – kan det passe?», then Start og landing and
       Adkomst. Right: «Før du starter» (hazards and airspace) beside them, then Bilder and Lenker. The HTML order is the mobile order,
       so screen readers and the keyboard follow what is seen. -#}
   <main class="site-page__body" id="content" tabindex="-1">
     <div class="site-page__top">
     {% if untranslated %}<p class="translation-note" lang="{{ lang }}">{{ t.site.notTranslated }}</p>{% endif %}
     {% if intro %}<div class="lead"{% if untranslated %} lang="nb"{% endif %}>{{ intro | safe }}</div>{% endif %}
-    {#- «Kan jeg fly her nå?»: the assessment now in large type, the next 12 hours as cards, and folded below the periods that
+    {#- «Vinden nå – kan det passe?»: the assessment now in large type, the next 12 hours as cards, and folded below the periods that
         may work and the next 48 hours as bars (site-wind.js). The details (Yr meteogram and winds aloft) are folded too. -#}
     <section class="block block--now{% if (forecast and forecast.sites and forecast.sites[id]) or site.forecastUrl %} block--now-wait{% endif %}" id="vaer" aria-labelledby="h-weather">
       <h2 id="h-weather" class="now-eyebrow">{{ t.site.canIFly }}</h2>
@@ -114,7 +114,7 @@ scripts:
     </section>
     </div>
     {#- The weather station on this flying site, when it has one: the wind measured now, with a link to the station
-        (stations.js; the stations and their sites are in workers/data/src/stations.js). Right after «Kan jeg fly her nå?»
+        (stations.js; the stations and their sites are in workers/data/src/stations.js). Right after «Vinden nå – kan det passe?»
         on mobile; on desktop site.js moves it to the top of the right column (under «Før du starter»), where the chart is
         not too big. -#}
     <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-verify-url="{{ site.verificationUrl }}" data-site="{{ id }}" hidden></section>
@@ -459,6 +459,8 @@ scripts:
       {#- The source names on one line, and what each field comes from folded below, for those who want to check. -#}
       <dd>{{ derived.sourcesShort }}{% if derived.sources %} <details class="sources-details"><summary>{{ t.site.sourcesDetails }}</summary>{{ derived.sources }}</details>{% endif %}</dd>
     </dl>
+    {#- When the page was last stored for offline use (pwa.js), when it is. -#}
+    <p class="offline-saved muted" id="offline-saved" hidden></p>
     <p class="disclaimer">{{ t.site.footerDisclaimer }} <a href="{{ '/om/' | localeUrl }}">{{ t.common.aboutLink }}</a></p>
   </footer>
   </main>

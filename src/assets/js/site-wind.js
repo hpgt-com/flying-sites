@@ -1,4 +1,4 @@
-// «Kan jeg fly her nå?» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as
+// «Vinden nå – kan det passe?» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as
 // the home page (wind.js). The verdict in large type, the next 12 hours as cards, and folded below the periods that may
 // work and 48 hours as bars. The data is in #site-wind-data (site.njk). Without a forecast, or when it is too old or does
 // not cover the current hour, the box says so instead of assessing. When the site has a weather station with a fresh

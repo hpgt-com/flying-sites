@@ -235,7 +235,7 @@
     "windgramTitle": "Vind over starten",
     "windgramIntro": "Vinden i høydene over starten time for time, og under det kast, termikk, skyer og regn. Sveip sideveis for flere timer.",
     "windgramSource": "Modelldata fra <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Grovt: modellen ser ikke det lokale terrenget, og skybasen er anslått fra temperatur og duggpunkt ved bakken.",
-    "canIFly": "Kan jeg fly her nå?",
+    "canIFly": "Vinden nå – kan det passe?",
     "next12": "Vinden de neste 12 timene",
     "hourCardsKey": "Søyle: vind, strek: kast. Pil: hvor vinden blåser. Tall: vind (kast) i m/s.",
     "siteMaxWind": "Stedet har egen vindgrense: {m} m/s.",
@@ -615,7 +615,12 @@
       "windTitle": "{dir} {speed} m/s, kast opptil {gust}"
     },
     "offline": {
-      "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok."
+      "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok.",
+      "noticeSaved": "Du er offline. Siden ble lagret på enheten {when}, så den kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok.",
+      "saved": "Lagret på enheten {when}, så siden virker uten nett. Den oppdateres hver gang du åpner den med dekning.",
+      "today": "i dag kl. {time}",
+      "yesterday": "i går kl. {time}",
+      "date": "{date} kl. {time}"
     },
     "stations": {
       "layer": "Klubbens værstasjoner",

@@ -822,7 +822,7 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
   font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);
 }
 .site-page h2[id], .site-page h3[id], .site-page section[id], .map--site { scroll-margin-top: 72px; }
-/* Parts that can be folded (the points in the map, the details in «Kan jeg fly her nå?», the elevation profile). The heading is the button. */
+/* Parts that can be folded (the points in the map, the details in «Vinden nå – kan det passe?», the elevation profile). The heading is the button. */
 .fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
 .fold > summary::-webkit-details-marker { display: none; }
 .fold > summary::after { content: "+"; font: 600 24px/1 var(--font-body); color: var(--muted); }
@@ -1001,8 +1001,10 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 .sources-details summary { display: inline-block; padding: 12px 0; margin: -12px 0; cursor: pointer; color: var(--link); text-decoration: underline; }
 .sources-details[open] { display: block; margin-top: 4px; }
 .page-footer .disclaimer { font-size: 13px; }
+.page-footer .offline-saved { margin: 0; font-size: 13px; }
+.page-footer .offline-saved[hidden] { display: none; }
 
-/* ---------- Site page v2: hero, «Kan jeg fly her nå?», cards in one column, action bar at the bottom ---------- */
+/* ---------- Site page v2: hero, «Vinden nå – kan det passe?», cards in one column, action bar at the bottom ---------- */
 .site-v2 { max-width: 760px; gap: 16px; padding-bottom: 96px; }
 .site-page__body { display: flex; flex-direction: column; gap: 16px; }
 /* The column wrappers only matter on desktop. On mobile the parts follow each other, and the links row can stay at the
@@ -1039,7 +1041,7 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 .hero__chips .hero__chip--warn { background: #8A2C0D; border-color: #8A2C0D; }
 .hero__chips .hero__chip--muted { border-style: dashed; font-weight: 400; }
 /* The assessment now as the first chip (site-wind.js), light like the rating chips on the home page so it reads on any
-   photo, with the same symbol as in «Kan jeg fly her nå?». A link down to that box, 44 px tall as a touch target. */
+   photo, with the same symbol as in «Vinden nå – kan det passe?». A link down to that box, 44 px tall as a touch target. */
 .hero__chips .hero__status { --r: var(--wind-no); padding: 0; background: color-mix(in srgb, var(--r) 18%, #FFFFFF); border: 0; }
 .hero__chips .hero__status[hidden] { display: none; }
 /* Room kept for the verdict until site-wind.js has filled it in (or hidden it), so the chips beside it do not jump. */
@@ -1069,10 +1071,10 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 }
 .hero__rose .rose { display: block; }
 
-/* «Kan jeg fly her nå?»: the colours follow the rating now (data-rating, set by site-wind.js). --r is the rating colour,
+/* «Vinden nå – kan det passe?»: the colours follow the rating now (data-rating, set by site-wind.js). --r is the rating colour,
    --rs a light tint of it for backgrounds and --rt a darker (lighter in the dark theme) shade for text. Mixed from the
    wind colours, so they follow the dark theme and the colour-blind-friendly colours. */
-/* Space for «Kan jeg fly her nå?» while site-wind.js fills it in, so the boxes below do not jump down (layout shift).
+/* Space for «Vinden nå – kan det passe?» while site-wind.js fills it in, so the boxes below do not jump down (layout shift).
    Only with a forecast (site.njk) and JavaScript on (data-theme is set by theme-init.js); site-wind.js removes the
    class after the first render. The heights are a little below the smallest filled box (measured on all sites). */
 [data-theme] .block--now-wait { min-height: 540px; }
@@ -1179,7 +1181,7 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
   .site-v2 { padding-bottom: 48px; }
 }
 @media (min-width: 1100px) {
-  /* Two columns under the image. «Før du starter» sits at the top right beside the introduction and «Kan jeg fly her nå?»,
+  /* Two columns under the image. «Før du starter» sits at the top right beside the introduction and «Vinden nå – kan det passe?»,
      and Luftrom, Bilder and Lenker follow right below it. The left top part spans two rows, so each column
      continues right below its own parts. */
   .site-v2 { max-width: 1200px; padding: 16px 40px 48px; }
@@ -1729,7 +1731,7 @@ body.sheet-open { overflow: hidden; }
 .station-graph__key--band::before { height: 10px; background: color-mix(in srgb, var(--fjord) 20%, transparent); border-radius: 2px; }
 [data-theme="dark"] .station-graph__key--mean::before { background: var(--link); }
 [data-theme="dark"] .station-graph__key--band::before { background: color-mix(in srgb, var(--link) 20%, transparent); }
-/* The site page: the station on the flying site, in «Kan jeg fly her nå?». */
+/* The site page: the station on the flying site, in «Vinden nå – kan det passe?». */
 .station-now { margin: 0; }
 .block--station[hidden] { display: none; }
 .station-now > .station { background: none; padding: 0; border: 0; border-radius: 0; }
