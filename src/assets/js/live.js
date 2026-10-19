@@ -1,9 +1,9 @@
 // «Piloter i lufta» on the maps: the aircraft the Open Glider Network hears in the area right now (FANET from
 // paragliders' varios, FLARM and others), from the data service (/v1/live.json, workers/data/src/live.js). A layer that
 // is off by default; while it is on and the page is in view, it asks every POLL_MS and moves the markers. Each marker is
-// an arrow pointing where the aircraft flies, with the height and the climb, and a line for its track over the last
-// minutes (from the data service, so it shows at once), where circling in a thermal is easy to see; paragliders and
-// hang gliders stand out.
+// the aircraft seen from above (a paraglider's wing, a hang glider's delta, else an arrow) pointing where it flies,
+// with the height and the climb, and a line for its track over the last minutes (from the data service, so it shows
+// at once), where circling in a thermal is easy to see; paragliders and hang gliders stand out.
 // Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only; numbers only in the HTML.
 // Exposed as window.FlyingSitesLive; tested in test/live.test.js.
 (function () {
@@ -12,6 +12,15 @@
   var POLL_MS = 5000;
   // OGN's aircraft types (0 unknown … 13 drone); 6 and 7 are hang gliders and paragliders.
   var TYPES = { 1: "glider", 2: "tow", 3: "heli", 4: "parachute", 5: "dropPlane", 6: "hangGlider", 7: "paraglider", 8: "plane", 9: "jet", 11: "balloon", 13: "drone" };
+  // The marker seen from above, nose up (north) before it is turned to the track: a paraglider's curved wing with the
+  // lines down to the pilot, a hang glider's delta, and an arrow for all other aircraft.
+  var SHAPES = {
+    7: '<path d="M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z" fill="currentColor"/>' +
+      '<path d="M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
+      '<circle cx="12" cy="17.8" r="2" fill="currentColor"/>',
+    6: '<path d="M12 4L23 17.5L12 14.5L1 17.5Z" fill="currentColor"/><circle cx="12" cy="13" r="2" fill="currentColor"/>',
+    other: '<path d="M12 2l7 18-7-4-7 4z" fill="currentColor"/>'
+  };
   var text = function (key, vars) { var FS = globalThis.FlyingSites; return FS && FS.t ? FS.t(key, vars) : key; };
   function useText(fn) { text = fn; }
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
@@ -71,11 +80,11 @@
     var markers = {}, trails = {}, timer = null, on = false;
 
     function icon(item) {
-      var arrow = isNum(item.track)
-        ? '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)"><path d="M12 2l7 18-7-4-7 4z" fill="currentColor"/></svg>'
+      var shape = isNum(item.track)
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + (SHAPES[item.type] || SHAPES.other) + '</svg>'
         : '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
       return L.divIcon({ className: "live-marker" + (isFlyer(item) ? " live-marker--flyer" : ""),
-        html: '<span class="live-marker__arrow">' + arrow + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
+        html: '<span class="live-marker__arrow">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
     }
     function draw(data) {
       var now = Date.now(), seen = {};

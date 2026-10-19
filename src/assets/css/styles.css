@@ -1836,7 +1836,7 @@ body.sheet-open { overflow: hidden; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
 
-/* «Piloter i lufta» (live.js): an arrow pointing where the aircraft flies, with the height and climb beside it. Paragliders
+/* «Piloter i lufta» (live.js): the aircraft seen from above, pointing where it flies, with the height and climb beside it. Paragliders
    and hang gliders in the site's fjord colour, other aircraft dark grey. White on both is over 4.5:1. */
 .live-marker { position: relative; --live: #3C4A52; color: var(--live); }
 .live-marker--flyer { --live: #1F5A6B; }
