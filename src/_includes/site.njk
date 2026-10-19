@@ -46,6 +46,9 @@ scripts:
       <ul class="hero__chips" aria-label="{{ t.site.keyFacts }}">
         {#- The assessment now from «Kan jeg fly her nå?» (site-wind.js), so it is seen first. Links down to the box. -#}
         <li class="hero__status" id="hero-status" data-pending><a href="#vaer"><span class="hero__status-icon" aria-hidden="true"></span><span class="hero__status-text">{{ t.site.canIFly }}</span></a></li>
+        {#- The local hazards, counted, as a link down to «Før du starter»: on a phone that box comes after the weather, and
+            what to watch out for should be seen before it. -#}
+        {% if local.hazards.length %}<li class="hero__hazards"><a href="#h-hazards"><span class="hero__hazards-icon" aria-hidden="true">!</span>{{ (t.site.hazardsChipOne if local.hazards.length == 1 else t.site.hazardsChip) | fmt({ n: local.hazards.length }) }}</a></li>{% endif %}
         {% if elevation and elevation.launch_masl %}<li>{{ elevation.launch_masl }} {{ t.units.masl }}</li>{% endif %}
         {% if elevation and elevation.difference_m %}<li>{{ t.site.heightDown | fmt({ m: elevation.difference_m }) }}</li>{% endif %}
         {% if level %}<li>{{ level }}</li>{% else %}<li class="hero__chip--muted">{{ t.site.levelNotSet }}</li>{% endif %}

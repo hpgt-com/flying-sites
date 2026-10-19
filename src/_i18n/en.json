@@ -131,6 +131,8 @@
     "now": "Now"
   },
   "site": {
+    "hazardsChipOne": "1 local hazard – read before launch",
+    "hazardsChip": "{n} local hazards – read before launch",
     "hazardsTitle": "Before you launch",
     "hazardsNotReviewed": "<strong>Hazards have not been reviewed yet.</strong> That none are listed does not mean the site has none. Ask the club or local pilots before flying here.",
     "hazardsNone": "No particular hazards registered for this site.",
