@@ -29,12 +29,14 @@
   // The gusts near the ground: plain, near the limit (over the site's max wind) or over the max gust.
   function gustClass(gust, rules) { return gust > rules.maxGust ? "high" : gust > rules.maxWind ? "maybe" : "calm"; }
   // How high the thermals go that a pilot can use: to the boundary layer, or to the cloud base when it is lower. { top
-  // (m a.s.l.), over (m over the launch, rounded to 50), capped (the clouds are the ceiling) }, or null without a top.
+  // (m a.s.l.), masl (the top rounded to 50, as shown), over (m over the launch, rounded to 50), capped (the clouds are
+  // the ceiling) }, or null without a top. The row shows the top in metres above sea level, as the height axis and other
+  // tools (RASP, Windy, soundings) do; less than 100 m over the launch shows as «–».
   function usableThermal(blh, cloudBase, launch) {
     if (blh == null) return null;
     var capped = cloudBase != null && cloudBase < blh;
     var top = capped ? cloudBase : blh;
-    return { top: top, over: launch == null ? null : Math.round((top - launch) / 50) * 50, capped: capped };
+    return { top: top, masl: Math.round(top / 50) * 50, over: launch == null ? null : Math.round((top - launch) / 50) * 50, capped: capped };
   }
 
   function svg(tag, attrs, parent) {
@@ -150,7 +152,7 @@
         var sw = data.sun && data.sun[i];
         if (sw) svg("rect", { x: x + 2, y: Y.thermal, width: CW - 4, height: 22, rx: 6, class: "windgram__sun", "fill-opacity": Math.min(1, sw / 250).toFixed(2) }, g);
         var over = th && th.over != null && th.over >= 100;
-        text(g, mid, Y.thermal + 15, over ? "+" + th.over : "–", "windgram__small windgram__strong", "middle");
+        text(g, mid, Y.thermal + 15, over ? th.masl : "–", "windgram__small windgram__strong", "middle");
         if (over && th.capped) svg("path", { d: CLOUD, transform: "translate(" + (x + 27) + "," + (Y.thermal + 3) + ") scale(0.4)", class: "windgram__cloudbase" }, g);
         // The clouds in three layers, darker for more.
         var cl = (data.clouds && data.clouds[i]) || [];
@@ -171,7 +173,7 @@
           hour: parts.hour,
           launch: lw ? FS.DIRECTION_LABELS[W.directionCode(Number(lw[0]))] + " " + Math.round(lw[1]) : "–",
           gust: gust == null ? "–" : Math.round(gust),
-          thermal: over ? "+" + th.over + (th.capped ? " " + t("toCloudBase") : "") : "–",
+          thermal: over ? th.masl + (th.capped ? " " + t("toCloudBase") : "") : "–",
           rain: mm == null ? "–" : num(mm, 1),
         });
       });

@@ -580,7 +580,7 @@
       "launchShort": "Launch",
       "atLaunch": "At launch",
       "gust": "Gusts",
-      "thermal": "Thermals",
+      "thermal": "Top m asl",
       "cloudsHigh": "high clouds",
       "cloudsMid": "mid clouds",
       "cloudsLow": "low clouds",
@@ -588,7 +588,7 @@
       "chartLabel": "Wind at heights above the launch hour by hour, with thermals, cloud base, gusts, clouds and rain",
       "region": "Wind above the launch, swipe sideways for more hours",
       "toCloudBase": "to the cloud base",
-      "hourTitle": "{hour}:00: at launch {launch} m/s · gusts {gust} m/s · thermals {thermal} m · rain {rain} mm",
+      "hourTitle": "{hour}:00: at launch {launch} m/s · gusts {gust} m/s · thermal top {thermal} m asl · rain {rain} mm",
       "scaleCalm": "Below {min} m/s",
       "scaleOk": "{min}–{ok} suitable",
       "scaleMaybe": "{ok}–{max} borderline",
@@ -599,7 +599,7 @@
       "legendCloudBase": "Cloud base (estimated)",
       "legendLaunch": "Launch height",
       "legendArrow": "Where the wind blows",
-      "notes": "Gusts: near the ground, m/s, yellow over {max} and red over {gust}. Thermals: roughly how many metres above the launch you have, to the top of the thermals or to the cloud base when lower (small cloud). Yellow is sun, stronger yellow more sun. Clouds: darker is denser, in three layers. Rain: mm in the hour, «·» is dry. How strong the thermals will be cannot be read from the forecast."
+      "notes": "Gusts: near the ground, m/s, yellow over {max} and red over {gust}. Top m asl: roughly how high above sea level the thermals go, to the top of the thermals or to the cloud base when lower (small cloud). «–» is less than 100 m above the launch. Yellow is sun, stronger yellow more sun. Clouds: darker is denser, in three layers. Rain: mm in the hour, «·» is dry. How strong the thermals will be cannot be read from the forecast."
     },
     "dayPlan": {
       "today": "Today",

@@ -76,9 +76,9 @@ test("rain, cloud cover in three layers, sun and gusts per hour for the rows und
 test("the page: the thermals a pilot can use stop at the cloud base, and the gusts are marked by the site's rules", async () => {
   await import("../src/assets/js/windgram.js");
   const WG = globalThis.FlyingSitesWindgram;
-  assert.deepEqual(WG.usableThermal(1361, 836, 563), { top: 836, over: 250, capped: true }, "the clouds are the ceiling");
-  assert.deepEqual(WG.usableThermal(1361, 1500, 563), { top: 1361, over: 800, capped: false });
-  assert.deepEqual(WG.usableThermal(1361, null, 563), { top: 1361, over: 800, capped: false });
+  assert.deepEqual(WG.usableThermal(1361, 836, 563), { top: 836, masl: 850, over: 250, capped: true }, "the clouds are the ceiling");
+  assert.deepEqual(WG.usableThermal(1361, 1500, 563), { top: 1361, masl: 1350, over: 800, capped: false });
+  assert.deepEqual(WG.usableThermal(1361, null, 563), { top: 1361, masl: 1350, over: 800, capped: false });
   assert.equal(WG.usableThermal(null, 800, 563), null);
   const rules = { minWind: 2, maxWind: 7, maxGust: 10 };
   assert.deepEqual([6, 8, 11].map((g) => WG.gustClass(g, rules)), ["calm", "maybe", "high"]);

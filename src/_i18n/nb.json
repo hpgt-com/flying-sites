@@ -580,7 +580,7 @@
       "launchShort": "Start",
       "atLaunch": "Ved start",
       "gust": "Kast",
-      "thermal": "Termikk",
+      "thermal": "Topp moh",
       "cloudsHigh": "høye skyer",
       "cloudsMid": "midl. skyer",
       "cloudsLow": "lave skyer",
@@ -588,7 +588,7 @@
       "chartLabel": "Vind i høyden over starten time for time, med termikk, skybase, kast, skyer og regn",
       "region": "Vind over starten, sveip sideveis for flere timer",
       "toCloudBase": "til skybasen",
-      "hourTitle": "Kl. {hour}: ved start {launch} m/s · kast {gust} m/s · termikk {thermal} m · regn {rain} mm",
+      "hourTitle": "Kl. {hour}: ved start {launch} m/s · kast {gust} m/s · termikktopp {thermal} moh · regn {rain} mm",
       "scaleCalm": "Under {min} m/s",
       "scaleOk": "{min}–{ok} passer",
       "scaleMaybe": "{ok}–{max} i kanten",
@@ -599,7 +599,7 @@
       "legendCloudBase": "Skybase (anslått)",
       "legendLaunch": "Starthøyde",
       "legendArrow": "Dit vinden blåser",
-      "notes": "Kast: ved bakken, m/s, gult over {max} og rødt over {gust}. Termikk: omtrent hvor mange meter over start du har å gå på, til termikktoppen eller til skybasen når den er lavere (liten sky). Gul bakgrunn er sol, sterkere gul mer sol. Skyer: mørkere er tettere, i tre lag. Regn: mm i timen, «·» er tørt. Hvor sterk termikken blir, kan ikke leses av varselet."
+      "notes": "Kast: ved bakken, m/s, gult over {max} og rødt over {gust}. Topp moh: omtrent hvor høyt over havet termikken går, til termikktoppen eller til skybasen når den er lavere (liten sky). «–» er mindre enn 100 m over start. Gul bakgrunn er sol, sterkere gul mer sol. Skyer: mørkere er tettere, i tre lag. Regn: mm i timen, «·» er tørt. Hvor sterk termikken blir, kan ikke leses av varselet."
     },
     "dayPlan": {
       "today": "I dag",
