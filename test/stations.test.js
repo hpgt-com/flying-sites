@@ -111,3 +111,10 @@ test("the lowest and highest temperature over the last hours", () => {
   assert.deepEqual(ST.temperatureRange(it), { min: 3, max: 6, hours: 1 });
   assert.equal(ST.temperatureRange(item({ history: hist(13, () => [200, 4, 6, 2]) })), null, "older rows without temperature");
 });
+
+test("the forecast's past hours for «Målt mot varslet», only those before this hour and in the right shape", () => {
+  const times = [0, 1].map((h) => new Date(Date.parse("2026-10-18T15:00:00Z") + h * 3600000).toISOString());
+  const past = { heia: [["2026-10-18T13:00:00Z", 30, 3, 6], ["2026-10-18T14:00:00Z", 35, "x", 6], ["2026-10-18T15:00:00Z", 40, 4, 7]] };
+  const fc = ST.forecastFrom({ times, sites: { heia: [[40, 4, 7, 0], [45, 5, 8, 0]] }, past }, "heia", NOW, 6);
+  assert.deepEqual(fc.past, [{ time: Date.parse("2026-10-18T13:00:00Z"), dir: 30, speed: 3, gust: 6 }]);
+});

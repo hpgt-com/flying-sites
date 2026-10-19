@@ -101,7 +101,7 @@
     "resultsNote": "A rough guide: each pilot decides whether the site and the conditions are OK.",
     "weatherIntro": "More weather stations and forecasts:",
     "stationsTitle": "Measured wind now",
-    "stationsNote": "Measured by the Holfuy stations, the numbers as the station sends them. The chart shows the last 6 hours in m/s, with arrows for where the wind blows. Tap or use the arrow keys to see each measurement.",
+    "stationsNote": "Measured by the Holfuy stations, the numbers as the station sends them, with the change over the last 30 minutes. Tap a station for the chart, the forecast and more.",
     "weatherLabel": "Weather",
     "flybart": "Weather stations in the area in one place",
     "xcc": "Egil Fonn's weather stations",
@@ -469,7 +469,8 @@
       "allDirections": "All directions",
       "directionsChosen": "Direction: {list}",
       "removeFilter": "Remove the filter {name}",
-      "suggestChip": "May work"
+      "suggestChip": "May work",
+      "measured": "measured"
     },
     "map": {
       "fullscreenOpen": "Show the map in full screen",
@@ -596,7 +597,7 @@
       "charText": "Gusts on average {v} m/s above the mean wind over the last {period}.",
       "vsTitle": "Measured against forecast (MET)",
       "vsRow": "measured {m} · forecast {f}",
-      "vsNote": "The forecast for the flying site is shown from now on. Past forecasts are not stored yet, so the chart shows the forecast as a dashed line after the latest measurement.",
+      "vsNote": "Dashed line: the forecast for the flying site. Before the line for the latest measurement it shows what the forecast said for each hour, after it the forecast ahead.",
       "legendFc": "Forecast (MET)",
       "nextTitle": "Next hours (forecast)",
       "noForecast": "No forecast for the flying site right now.",
@@ -628,6 +629,7 @@
     "metName": "Norwegian Meteorological Institute (MET)",
     "sourceMet": "the wind forecast for each launch (CC BY 4.0), and the meteograms from Yr (delivered by NRK and MET).",
     "sourceOpenMeteo": "winds aloft (CC BY 4.0).",
+    "sourceHolfuy": "measured wind, temperature and pressure from the weather stations, on the weather page and the site pages.",
     "sourceFlightlog": "launch coordinates and directions for many sites, and links to the sites there.",
     "sourceMaps": "Map layers: OpenTopoMap and OpenStreetMap contributors (CC BY-SA), satellite imagery from Sentinel-2 cloudless by EOX (CC BY-NC-SA 4.0), thermals from thermal.kk7.ch (CC BY-NC-SA 4.0) and precipitation radar from RainViewer.",
     "sourceLocal": "Local knowledge from the club's members, and walking routes logged with GPS on the way up.",
@@ -638,6 +640,7 @@
     "privacySearch": "What you type in the search field is never sent anywhere. Searches without hits are only counted as a number.",
     "privacyStorage": "Your choices for colour mode and colour-blind-friendly colours are only stored in your browser. Once you have visited a page, the browser may store it and the map tiles you have seen, so it works offline.",
     "privacyThirdParty": "Maps, satellite imagery, thermals, radar and the Yr meteogram are loaded from the services that make them, and they see your IP address, as with any website. The fonts are served from the site itself.",
+    "privacyData": "The forecast and the measurements are fetched from the club's own data service on Cloudflare, which sees your IP address like other websites. It stores only weather data (the measurements for 7 days, older ones in an archive), nothing about you.",
     "privacyNoAccount": "The site has no login and no forms, and stores no personal data about you.",
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",

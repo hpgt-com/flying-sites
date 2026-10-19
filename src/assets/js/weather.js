@@ -14,36 +14,12 @@
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
 
   var period = 30, sort = "name", data = null, forecast = null;
-  var rules = FS.readJson("weather-rules");
-  // The symbol in each rating chip, so the rating does not rest on colour alone (as on the home page).
-  var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
-
-  // A rough assessment of the measured wind, with the same rules as the forecast (wind.js): for a station on a flying site
-  // against the site's launch directions and limits; for a station that is not, only the strength (too much wind or too
-  // strong gusts), since without launch directions it cannot say that it may work. { rating, reasons } or null.
-  function assess(item, now) {
-    if (!rules || !hasWind(item, now)) return null;
-    var w = item.wind, site = ST.siteInfo(item.site);
-    var wind = { dir: w.dir, speed: w.speed, gust: isNum(w.gust) ? w.gust : null };
-    if (site) return W.rateWind({ primary: site.primary || [], possible: site.possible || [], maxWind: site.maxWind }, wind, rules);
-    if (!isNum(w.dir)) return null;
-    var all = { primary: FS.DIRECTIONS, possible: [], maxWind: null };
-    var r = W.rateWind(all, wind, rules);
-    return r.rating === "high" ? r : null;
-  }
-  function chip(r) {
-    var el = make("span", "rating-chip rating-chip--" + r.rating);
-    var icon = make("span", null, ICONS[r.rating]);
-    icon.setAttribute("aria-hidden", "true");
-    el.append(icon, document.createTextNode(W.RATINGS[r.rating].label));
-    return el;
-  }
+  ST.useRules(FS.readJson("weather-rules"));
+  var assess = ST.assess, chip = ST.ratingChip, anchor = ST.anchor, hasWind = ST.hasWind;
   // The «Målt mot varslet» parts that are open, so they stay open when the page is redrawn.
   var openVs = {};
 
   function periodText() { return t("stations.period_" + period); }
-  function anchor(item) { return "stasjon-" + String(item.id).replace(/[^\w-]/g, ""); }
-  function hasWind(item, now) { return !ST.isOld(item, now) && item.wind && isNum(item.wind.speed); }
 
   // «▲ +0,8 siste 30 min», or nothing without a change.
   function changeText(v) { return isNum(v) ? t("stations.change", { v: ST.signed(v), period: periodText() }) : ""; }
@@ -52,36 +28,8 @@
     return c ? t("stations.char_" + c.kind) + t("stations.trend_" + c.trend) : "";
   }
 
-  // --- The table: one row per station, a link to its card below ---
-  function row(item, now) {
-    var li = make("li");
-    var a = make("a", "weather-row" + (hasWind(item, now) ? "" : " weather-row--old"));
-    a.href = "#" + anchor(item);
-    var site = ST.siteInfo(item.site), w = item.wind || {};
-    a.appendChild(ST.compass(hasWind(item, now) ? w.dir : null, site));
-    var rating = assess(item, now);
-    if (rating) a.setAttribute("data-rating", rating.rating);
-    var info = make("span", "weather-row__info");
-    info.appendChild(make("strong", "weather-row__name", item.name));
-    if (rating) info.appendChild(chip(rating));
-    info.appendChild(make("span", "weather-row__sub", [site && site.name ? t("stations.site", { name: site.name }) : "", ST.altitudeText(item), ST.ageText(item, now)].filter(Boolean).join(" · ")));
-    if (hasWind(item, now) && isNum(w.dir)) {
-      var where = ST.launchText(w.dir, site);
-      info.appendChild(make("span", "weather-row__dir", ST.dirText(w.dir) + (where ? " · " + where : "")));
-    }
-    a.appendChild(info);
-    if (hasWind(item, now)) {
-      var ch = ST.change(item, period);
-      var nums = make("span", "weather-row__nums");
-      nums.appendChild(make("strong", "weather-row__wind", value(w.speed) + (isNum(w.gust) ? " (" + value(w.gust) + ")" : "")));
-      if (ch && isNum(ch.speed)) nums.appendChild(make("span", "weather-row__change", changeText(ch.speed)));
-      var c = characterText(ch);
-      if (c) nums.appendChild(make("span", "weather-row__char", c));
-      a.appendChild(nums);
-    }
-    li.appendChild(a);
-    return li;
-  }
+  // --- The table: one row per station (stations.js), a link to its card below ---
+  function row(item, now) { return ST.row(item, now, period, "#" + anchor(item)); }
 
   // --- The card ---
   function tile(label, big, lines) {
@@ -116,7 +64,7 @@
       line(t("stations.dirTile"), ST.dirText(w.dir), ST.dirText(f.dir), (turn > 0 ? "+" : turn < 0 ? "−" : "") + Math.abs(turn) + "°");
     }
     box.appendChild(grid);
-    var graph = ST.chart(item, null, [f].concat(fc.next));
+    var graph = ST.chart(item, null, fc.past.concat([f], fc.next));
     if (graph) {
       graph.querySelector(".station-graph__legend").appendChild(make("span", "station-graph__key station-graph__key--fc", t("stations.legendFc")));
       box.appendChild(graph);

@@ -101,7 +101,7 @@
     "resultsNote": "En grov guide: hver pilot vurderer selv om stedet og forholdene er OK.",
     "weatherIntro": "Flere værstasjoner og varsler:",
     "stationsTitle": "Målt vind nå",
-    "stationsNote": "Målt på Holfuy-stasjonene, tallene slik stasjonen sender dem. Grafen viser de siste 6 timene i m/s, med piler for hvor vinden blåser. Trykk eller bruk piltastene for å se hver måling.",
+    "stationsNote": "Målt på Holfuy-stasjonene, tallene slik stasjonen sender dem, med endringen siste 30 minutter. Trykk på en stasjon for grafen, varselet og mer.",
     "weatherLabel": "Vær",
     "flybart": "Værstasjoner i området samlet på ett sted",
     "xcc": "Værstasjonene til Egil Fonn",
@@ -469,7 +469,8 @@
       "allDirections": "Alle retninger",
       "directionsChosen": "Retning: {list}",
       "removeFilter": "Fjern filteret {name}",
-      "suggestChip": "Kan passe"
+      "suggestChip": "Kan passe",
+      "measured": "målt"
     },
     "map": {
       "fullscreenOpen": "Vis kartet i fullskjerm",
@@ -596,7 +597,7 @@
       "charText": "Kast i snitt {v} m/s over middelvinden siste {period}.",
       "vsTitle": "Målt mot varslet (MET)",
       "vsRow": "målt {m} · varslet {f}",
-      "vsNote": "Varselet for flystedet vises fra nå og fremover. Varsler bakover lagres ikke ennå, så grafen viser varselet som stiplet linje etter siste måling.",
+      "vsNote": "Stiplet linje: varselet for flystedet. Før streken for siste måling viser den hva varselet sa for hver time, etter streken varselet videre.",
       "legendFc": "Varslet (MET)",
       "nextTitle": "Neste timer (varsel)",
       "noForecast": "Ingen varsel for flystedet akkurat nå.",
@@ -628,6 +629,7 @@
     "metName": "Meteorologisk institutt (MET)",
     "sourceMet": "vindvarselet for hver start (CC BY 4.0), og meteogrammene fra Yr (levert av NRK og MET).",
     "sourceOpenMeteo": "vind i høyden (CC BY 4.0).",
+    "sourceHolfuy": "målt vind, temperatur og trykk fra værstasjonene, på værsiden og stedssidene.",
     "sourceFlightlog": "startkoordinater og retninger for mange steder, og lenker til stedene der.",
     "sourceMaps": "Kartlag: OpenTopoMap og OpenStreetMap-bidragsytere (CC BY-SA), satellittbilder fra Sentinel-2 cloudless av EOX (CC BY-NC-SA 4.0), termikk fra thermal.kk7.ch (CC BY-NC-SA 4.0) og nedbørsradar fra RainViewer.",
     "sourceLocal": "Lokalkunnskap fra klubbens medlemmer, og gangruter logget med GPS på tur.",
@@ -638,6 +640,7 @@
     "privacySearch": "Det du skriver i søkefeltet, blir aldri sendt noe sted. Søk uten treff telles bare som et antall.",
     "privacyStorage": "Valgene for fargemodus og fargeblindvennlige farger lagres bare i nettleseren din. Når du har besøkt en side, kan nettleseren lagre den, og kartflisene du har sett, så den virker uten nett.",
     "privacyThirdParty": "Kart, satellittbilder, termikk, radar og Yr-meteogrammet hentes fra tjenestene som lager dem, og de ser da IP-adressen din, slik alle nettsider gjør. Skriftene ligger på siden selv.",
+    "privacyData": "Varselet og målingene hentes fra klubbens egen datatjeneste på Cloudflare, som ser IP-adressen din som andre nettsider. Den lagrer bare værdata (målingene i 7 dager, eldre i et arkiv), ingen opplysninger om deg.",
     "privacyNoAccount": "Siden har ingen innlogging og ingen skjema, og lagrer ingen personopplysninger om deg.",
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",

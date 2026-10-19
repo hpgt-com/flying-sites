@@ -126,6 +126,9 @@ flowchart LR
   home["home.js<br/>home page: search, filters,<br/>card, summary"]
   site["site.js<br/>site map, direction arcs,<br/>elevation profile"]
   sitewind["site-wind.js<br/>«Kan jeg fly her nå?» on the site page"]
+  stations["stations.js<br/>weather stations: map layer, rows,<br/>cards, charts, rating"]
+  weather["weather.js<br/>the weather page /vaer/"]
+  data["data service<br/>data.hpgt.workers.dev<br/>/v1/stations.json, /v1/forecast.json"]
   lightbox["lightbox.js<br/>image viewer"]
   goat["goatcounter.js<br/>(copy, CSP allows only own scripts)"]
   pwa["pwa.js<br/>registers the service worker,<br/>«Du er offline» notice"]
@@ -135,6 +138,7 @@ flowchart LR
   common --> home & site & sitewind & lightbox
   j2 --> home & site
   j3 --> wind --> home & sitewind
+  data -- "fetch every minute" --> stations --> home & site & sitewind & weather
   common -- "FS.track()" --> goat
   common --> pwa --> sw
 ```
@@ -144,6 +148,11 @@ flowchart LR
   page can count reasons independently of language. The ratings are «Kan passe» ("May work"), «Usikkert»
   ("Uncertain"), «For mye vind» ("Too much wind") and «Passer ikke» ("Not suitable"). It never says «OK å fly»
   ("OK to fly").
+- **Weather stations** (`stations.js`): the checks, texts and calculations (change over a period, how even the wind
+  is, the forecast for a site from this hour, the temperature range) are plain functions tested in
+  `test/stations.test.js`; the drawing uses DOM methods only, so nothing from the data is read as HTML. One fetch loop per
+  address is shared by everything on a page. The assessment for the hour now with a measurement (`rateNow` in wind.js)
+  is tested in `test/wind.test.js`.
 - **Category and direction are linked:** with SPG selected, the directions of the launches marked SPG are used
   (`categoryDirections` in `lib/format.js`), in the filter, the rose and the assessment.
 - **Offline and app:** the site can be installed from the browser (`/manifest.webmanifest`, one per language). The
@@ -230,8 +239,8 @@ it fetches (a workflow today, a backend later) without the site noticing.
 |---|---|---|---|---|---|
 | Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
-| Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json` | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`) |
-| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, once R2 is on) | `stations.js` on the home page (map layer, Vær tab) and the station's site page, refetched every minute |
+| Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, after the page has loaded (`fetchNewerForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
+| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Kan jeg fly her nå?» on the station's site), refetched every minute |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
 
@@ -244,7 +253,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 - **Shared code:** `lib/site-files.js` reads the front matter of all sites for the scripts.
 - **Data service** (`workers/data`): one Cloudflare Worker with one module per source in `src/sources/`. Each module
   fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
-  `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `license`, `fetched`, then the dataset's own fields),
+  `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
   and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
   (`src/schedule.js`: stations every minute, forecast every 5). The store is one Durable Object with SQLite
   (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
@@ -256,7 +265,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
   covers every launch the page has (`isNewerForecast` in `wind.js`); otherwise they keep their own. It also brings the
   assessment back when the page's forecast has become too old. The free plan gives 10 ms of CPU per run, so each run
   fetches the 6 launches fetched longest ago, and the whole forecast is renewed about every half hour.
-- **Next steps:** the stations on the map and in the Vær tab; the winds aloft (Open-Meteo) to the same service. Then the `weather` job and the schedule in
+- **Next steps:** the winds aloft (Open-Meteo) to the same service. Then the `weather` job and the schedule in
   `deploy.yml` can go, and the site is only built when the content changes.
 
 ## What has been built
@@ -282,6 +291,10 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
 - **Sharing and statistics:** previews on Facebook/Messenger, sitemap and hreflang, anonymous statistics with
   GoatCounter (pages and clicks, no cookies).
 - **Languages:** Norwegian and English, with English text for all sites, and a structure for more languages.
+- **Data service and weather stations:** the MET forecast and the club's Holfuy stations on Cloudflare (Durable Object,
+  archive in R2). The stations on the maps, in the Vær tab and on the weather page `/vaer/` (change over a period, how
+  even the wind is, charts with temperature, «Målt mot varslet»), the «Målt nå» block on the station's site page, and the
+  assessment for the hour now from a fresh measurement.
 
 ## Planned
 
@@ -292,7 +305,7 @@ flowchart LR
   issue --> agent["Agent (GitHub Action)<br/>summarises and labels"]
   agent -- "approved" --> pr["PR with the change"]
   pr --> review["Review and merge"]
-  worker -. "later" .-> live["Live weather data and NOTAM<br/>(cache)"]
+  worker -. "later" .-> live["NOTAM<br/>(cache)"]
   data["Data service (built)<br/>data.hpgt.workers.dev: forecast, stations"] -. "same account" .- worker
 ```
 
@@ -300,6 +313,6 @@ flowchart LR
   The Cloudflare account «HPGT» is the club's; the form, more stations, winds aloft and OGN/FANET go in the same service.
 - **Change form** without a GitHub account, via a Cloudflare Worker that creates the issue and replies with a link
   to it. An agent summarises the issue, and creates the change as a PR once it is labelled `approved`.
-- **Live weather data** from the club's and the model aircraft club's (Modellflyklubben) stations, and **NOTAM** as a
-  separate map layer. Both need a server-side intermediary (the same Worker, or Cloudflare Pages Functions if the site
-  moves there).
+- **NOTAM** as a separate map layer, once there is a safe and permitted way to fetch from IPPC. It needs a server-side
+  intermediary (the data service). The weather stations (Holfuy) are built, see above; more stations and OGN/FANET go in
+  the same service.

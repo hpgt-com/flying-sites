@@ -136,10 +136,10 @@ scripts:
     </div>
 
     <div class="home-pane" id="pane-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
-      {#- Measured wind from the weather stations (stations.js, data service): the latest measurement and the last hours. -#}
+      {#- Measured wind from the weather stations (stations.js, data service): a short row per station, linking to the weather page. -#}
       <section class="stations" id="stations" aria-labelledby="stations-title" data-url="{{ site.stationsUrl }}" hidden>
         <h2 id="stations-title">{{ t.home.stationsTitle }}</h2>
-        <ul class="station-list" id="station-list"></ul>
+        <ul class="weather-rows" id="station-list"></ul>
         <p class="muted stations__note">{{ t.home.stationsNote }}</p>
         <a class="stations__more" href="{{ '/vaer/' | localeUrl }}">{{ t.weather.homeLink }} ›</a>
       </section>
