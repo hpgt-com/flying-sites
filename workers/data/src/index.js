@@ -10,6 +10,8 @@
 //   the area (sources/frost.js), served together; each station carries its own source.
 // - windgram: winds aloft from Open-Meteo for the launches in WINDGRAM_SITES (sources/windgram.js), used by the site
 //   page when newer than the one built into it (src/assets/js/windgram.js).
+// - verification: how well the forecast hit at each flying site with its own station (sources/verify.js), on the weather
+//   page and the site page.
 //
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
 
@@ -17,14 +19,15 @@ import * as forecast from "./sources/forecast.js";
 import * as holfuy from "./sources/holfuy.js";
 import * as frost from "./sources/frost.js";
 import * as windgram from "./sources/windgram.js";
-import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE } from "./stations.js";
+import * as verify from "./sources/verify.js";
+import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE, siteLinks } from "./stations.js";
 import { due } from "./schedule.js";
 import { mergeStations } from "./merge.js";
 import SITES from "./sites.json";
 
 export { Store } from "./store.js";
 
-const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET, "/v1/windgram.json": windgram.DATASET };
+const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET, "/v1/windgram.json": windgram.DATASET, "/v1/verification.json": verify.DATASET };
 
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 
@@ -45,6 +48,7 @@ export default {
     if (due("stations", now)) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
     if (due("met", now)) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE);
     if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
+    if (due("verify", now)) runs.verify = verify.run(s, siteLinks(), now);
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then((results) => {
       Object.keys(runs).forEach((name, i) => { if (results[i].status === "rejected") console.warn(`${name}: ${results[i].reason?.message}`); });
     }));

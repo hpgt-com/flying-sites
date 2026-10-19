@@ -20,6 +20,9 @@ export class Store extends DurableObject {
     this.sql.exec("CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (site, time))");
+    // Forecast against measured, per site and finished hour (sources/verify.js), kept for a year.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS verify_hours (site TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
+      f_dir REAL, f_speed REAL, f_gust REAL, m_dir REAL, m_speed REAL, m_gust REAL, n INTEGER, PRIMARY KEY (site, station, time))`);
     let have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
     // The first version (18.10.2026) had no source, and the station and time as the key. Rebuilt once with (source,
     // station, time) as the key; the rows already there were all Holfuy's and keep their values.
@@ -92,6 +95,24 @@ export class Store extends DurableObject {
 
   pruneForecastHours(before) {
     this.sql.exec("DELETE FROM forecast_hours WHERE time < ?", before);
+  }
+
+  // An hour paired again (a late measurement) replaces what was stored for it.
+  putVerifyHours(rows) {
+    for (const r of rows) {
+      this.sql.exec(`INSERT INTO verify_hours (site, station, time, f_dir, f_speed, f_gust, m_dir, m_speed, m_gust, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT (site, station, time) DO UPDATE SET f_dir = excluded.f_dir, f_speed = excluded.f_speed, f_gust = excluded.f_gust,
+        m_dir = excluded.m_dir, m_speed = excluded.m_speed, m_gust = excluded.m_gust, n = excluded.n`,
+        r.site, r.station, r.time, r.f_dir, r.f_speed, r.f_gust, r.m_dir, r.m_speed, r.m_gust, r.n);
+    }
+  }
+
+  verifyHoursSince(since) {
+    return this.sql.exec("SELECT site, station, time, f_dir, f_speed, f_gust, m_dir, m_speed, m_gust, n FROM verify_hours WHERE time >= ? ORDER BY time", since).toArray();
+  }
+
+  pruneVerifyHours(before) {
+    this.sql.exec("DELETE FROM verify_hours WHERE time < ?", before);
   }
 
   prune(source, before) {

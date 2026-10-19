@@ -13,6 +13,7 @@ export default {
   forecastUrl: "https://data.hpgt.workers.dev/v1/forecast.json",
   stationsUrl: "https://data.hpgt.workers.dev/v1/stations.json",
   windgramUrl: "https://data.hpgt.workers.dev/v1/windgram.json",
+  verificationUrl: "https://data.hpgt.workers.dev/v1/verification.json",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };

@@ -1660,6 +1660,9 @@ body.sheet-open { overflow: hidden; }
 .station-mode__btn + .station-mode__btn { border-left: 1px solid var(--line); }
 .station-mode__btn[aria-pressed="true"] { background: var(--fjord); color: #FFFFFF; }
 .station-mode__btn:focus-visible { outline: 3px solid var(--fjord); outline-offset: 2px; }
+/* How well the forecast hits (stations.js verifyBlock), under the station card and in «Målt mot varslet». */
+.station-verify { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.station-verify__title { font-size: 14px; color: var(--text); }
 .leaflet-popup-content .station-popup { width: min(300px, 64vw); padding: 0; border: 0; background: none; }
 /* «Målt vind nå» in the Vær tab, and the station on its site page: a card with the wind now and the last hours. */
 .stations { display: flex; flex-direction: column; gap: 10px; }

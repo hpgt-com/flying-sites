@@ -20,3 +20,12 @@ export const MET_STATION_SITES = {
 // MET's stations that are found in the area but should not be shown (MET's number, "SN…"), e.g. one that says nothing
 // useful for flying.
 export const MET_EXCLUDE = [];
+
+// The flying sites with their own station, for how well the forecast hit there (sources/verify.js): { site, source,
+// station }, with the source's key as in the store (measurements.js).
+export function siteLinks() {
+  return [
+    ...HOLFUY_STATIONS.filter((s) => s.site).map((s) => ({ site: s.site, source: "holfuy", station: String(s.id) })),
+    ...Object.entries(MET_STATION_SITES).map(([station, site]) => ({ site, source: "met", station })),
+  ];
+}

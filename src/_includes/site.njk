@@ -110,7 +110,7 @@ scripts:
         (stations.js; the stations and their sites are in workers/data/src/stations.js). Right after «Kan jeg fly her nå?»
         on mobile; on desktop site.js moves it to the top of the right column (under «Før du starter»), where the chart is
         not too big. -#}
-    <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-site="{{ id }}" hidden></section>
+    <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-verify-url="{{ site.verificationUrl }}" data-site="{{ id }}" hidden></section>
     <section class="block block--notice{% if not local.hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
       <h2 id="h-hazards"><span class="notice-icon" aria-hidden="true">!</span>{{ t.site.hazardsTitle }}</h2>
       {% for hazard in local.hazards %}

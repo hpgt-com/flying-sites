@@ -120,6 +120,16 @@ the menu and is marked `noindex`. It shows per site:
   (the latest fetch during the hour wins), kept for 30 days in the store (`forecast_hours`). The last 6 hours are in
   `/v1/forecast.json` as `past`, which «Målt mot varslet» on the weather page draws over the measurements.
 
+## How well the forecast hits
+
+- The data service pairs the forecast for each finished hour (as it stood during the hour, `forecast_hours`) with what
+  the flying site's own station measured in it (`workers/data/src/sources/verify.js`): the mean wind, the highest gust
+  and the direction. Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
+  summed up in `https://data.hpgt.workers.dev/v1/verification.json`.
+- Which sites: those with a station of their own (`site` in `HOLFUY_STATIONS`, and `MET_STATION_SITES`), now Heia and
+  Sætertinden. Shown under «Målt nå» on the site page and in «Målt mot varslet» on /vaer/, once there are 24 hours
+  (before that, how far the collecting has come).
+
 ## Winds aloft
 
 - Fetched by the data service from Open-Meteo, two launches every 10 minutes (each about every half hour), for the launches in `WINDGRAM_SITES` in

@@ -160,3 +160,12 @@ test("the marker shows the wind in whole m/s with a notch for the direction, or 
   assert.match(temp, />MET</);
   assert.doesNotMatch(temp, /notch/);
 });
+
+test("how well the forecast hit: collecting at first, then the mean wind, gusts, direction and worst sector", () => {
+  Object.assign(texts, { "stations.vCollecting": "Samler {n}/{min}", "stations.vMean": "{days} d, {hours} t: {strength} ({mae})", "stations.vGust": "Kast {strength}",
+    "stations.vDir": "Retning {pct} %", "stations.vSector": "Verst {dir} {v}", "stations.vStronger": "{v} sterkere", "stations.vWeaker": "{v} svakere", "stations.vAbout": "som varslet" });
+  assert.deepEqual(ST.verifyLines({ hours: 5 }, 30), ["Samler 5/24"]);
+  assert.deepEqual(ST.verifyLines({ hours: 200, bias: 1.4, mae: 2.1, gustBias: -0.2, dirHit: 0.78, sectors: { SW: { hours: 40, bias: 2.3 }, N: { hours: 9, bias: -0.5 } } }, 30),
+    ["30 d, 200 t: 1,4 sterkere (2,1)", "Kast som varslet", "Retning 78 %", "Verst SV ▲ +2,3"]);
+  assert.deepEqual(ST.verifyLines(null, 30), []);
+});

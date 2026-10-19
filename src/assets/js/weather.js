@@ -13,7 +13,7 @@
   var t = FS.t, make = ST.make, value = ST.value;
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
 
-  var period = 30, sort = "club", data = null, forecast = null;
+  var period = 30, sort = "club", data = null, forecast = null, verification = null;
   ST.useRules(FS.readJson("weather-rules"));
   var assess = ST.assess, chip = ST.ratingChip, anchor = ST.anchor, hasWind = ST.hasWind;
   // The «Målt mot varslet» parts that are open, so they stay open when the page is redrawn.
@@ -64,6 +64,8 @@
       line(t("stations.dirTile"), ST.dirText(w.dir), ST.dirText(f.dir), (turn > 0 ? "+" : turn < 0 ? "−" : "") + Math.abs(turn) + "°");
     }
     box.appendChild(grid);
+    var hit = ST.verifyBlock(verification, item.site);
+    if (hit) box.appendChild(hit);
     var graph = ST.chart(item, null, fc.past.concat([f], fc.next));
     if (graph) {
       graph.querySelector(".station-graph__legend").appendChild(make("span", "station-graph__key station-graph__key--fc", t("stations.legendFc")));
@@ -191,6 +193,7 @@
 
   var forecastUrl = cardsEl.getAttribute("data-forecast-url");
   function loadForecast() { W.fetchNewerForecast(forecastUrl, forecast, function (f) { forecast = f; render(); }); }
+  ST.loadVerification(cardsEl.getAttribute("data-verify-url"), function (v) { verification = v; render(); });
   loadForecast();
   setInterval(loadForecast, 10 * 60 * 1000);
 })();
