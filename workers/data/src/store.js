@@ -56,6 +56,16 @@ export class Store extends DurableObject {
     return rows.length ? rows[0].body : null;
   }
 
+  // The datasets with when each was last written (for the status, health.js).
+  snapshotsFor(datasets) {
+    const out = {};
+    for (const d of datasets) {
+      const rows = this.sql.exec("SELECT body, updated FROM snapshots WHERE dataset = ?", d).toArray();
+      if (rows.length) out[d] = { updated: rows[0].updated, body: rows[0].body };
+    }
+    return out;
+  }
+
   putSnapshot(dataset, body) {
     this.sql.exec("INSERT INTO snapshots (dataset, body, updated) VALUES (?, ?, ?) ON CONFLICT (dataset) DO UPDATE SET body = excluded.body, updated = excluded.updated",
       dataset, body, new Date().toISOString());

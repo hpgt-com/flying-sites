@@ -96,6 +96,25 @@ the menu and is marked `noindex`. It shows per site:
   and `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (then open `/__scheduled` to run
   the schedule, and `/v1/forecast.json`). For Holfuy locally, put `HOLFUY_KEY=…` in `workers/data/.dev.vars` (ignored by Git).
 
+## Data service health
+
+- `https://data.hpgt.workers.dev/v1/status.json` (`workers/data/src/health.js`) says for each source when it last
+  ran, last succeeded and its last error, for each dataset when it was last written and whether that is within its
+  limit (forecast 60 min, stations 15, winds aloft 90, verification 90), which launches the forecast and the winds aloft
+  lack, and the last day archived per station source. `"ok": false` when a dataset is too old.
+- «Data service health» (`health.yml`) checks it from outside every hour: when something is wrong it opens an issue
+  «Datatjenesten: data mangler eller er for gamle» (or comments on the open one), and closes it when all is well again.
+  GitHub may run it late, so a problem can take an hour or two to show. Run it now: Actions → «Data service health» →
+  «Run workflow».
+- When it reports a problem: the logs are in Cloudflare (Workers → data → Observability), and a source that fails keeps
+  its error in the status until it succeeds again. The usual causes are a source down (MET, Holfuy, Frost, Open-Meteo),
+  an expired secret, or the free plan's daily limit (100 000 requests, reset at 00:00 UTC).
+- Restoring: the code is in Git (redeploy with Actions → «Data service» → «Run workflow»). The store (the Durable
+  Object) holds only data that comes back by itself: the forecast and winds aloft within half an hour, the last 7 days
+  of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses
+  the days not yet archived), the verification from then on. The flying activity per day (`flight_days`) and the
+  verification history exist only there; the archive in R2 has the measurements of every finished day.
+
 ## Weather stations (Holfuy)
 
 - The stations are listed in `workers/data/src/stations.js`: `id` (the number in holfuy.com/en/weather/<id>), and
@@ -381,6 +400,7 @@ MET and Kartverket require no key. MET requires the client to provide contact de
 | `status er «reviewed», men reviewed …` | Fill in `reviewed.by` and `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Typo in the translation. See [Translation](site-files.md#translation). |
 | The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.workers.dev/v1/forecast.json`, and run «Build and deploy» manually. |
+| An issue «Datatjenesten: data mangler eller er for gamle» | See [Data service health](#data-service-health). It closes by itself when the status is in order again. |
 | An issue «Jobben «…» feilet» | A run failed (the job `alert` opens it, or comments on the open one). Open the run from the link, fix the cause, run the workflow again, and close the issue. |
 | «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Roll it and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
 | The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |

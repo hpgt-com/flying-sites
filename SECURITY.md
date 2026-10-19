@@ -71,6 +71,9 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   opens an issue labelled `bug` (or comments on the open one), from the job `alert`, which only has `issues: write`
   and runs no project code. Scheduled runs on GitHub can be hours late, and GitHub turns off the schedule of a public
   repository after 60 days without activity, so a missing monthly PR is a sign to check Actions.
+- «Data service health» (`health.yml`) checks `/v1/status.json` every hour and opens an issue when a dataset is too
+  old or the service does not answer. The status has no secrets and nothing about visitors: run times, ages, error
+  messages from the sources, the launch ids missing and the last archived day.
 - OpenSSF Scorecard (`scorecard.yml`) checks the repository against supply-chain good practice on every push to
   `main` and weekly. The results are in Code scanning and behind the badge in README.
 - Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. Planned: move

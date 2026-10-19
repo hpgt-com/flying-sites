@@ -1,0 +1,56 @@
+name: Data service health
+
+# Checks the data service from outside once an hour (/v1/status.json, workers/data/src/health.js): that it answers, and
+# that every dataset is within its age limit. Opens an issue when something is wrong (a comment on the open one if it
+# still is), and closes it when all is well again. GitHub may run it late, which is fine for a check like this.
+# Runs no project code and needs no secrets.
+
+on:
+  schedule:
+    - cron: "41 * * * *" # every hour at :41
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Sjekk datatjenesten
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          STATUS_URL: https://data.hpgt.workers.dev/v1/status.json
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Datatjenesten: data mangler eller er for gamle"
+          if body=$(curl -fsS --max-time 30 --retry 2 "$STATUS_URL") && echo "$body" | jq -e . > /dev/null; then
+            problems=$(echo "$body" | jq -r '
+              [.datasets | to_entries[] | select(.value.ok | not) | "- \(.key): sist skrevet \(.value.updated // "aldri") (\(.value.ageMinutes // "?") min, grense \(.value.maxAgeMinutes) min)"]
+              + [.datasets | to_entries[] | select((.value.missing // []) | length > 0) | "- \(.key): mangler \(.value.missing | join(", "))"]
+              + [.sources | to_entries[] | select(.value.errorAt and (.value.ok == null or .value.errorAt > .value.ok)) | "- kilden \(.key) feilet sist: \(.value.error)"]
+              | join("\n")')
+          else
+            problems="- $STATUS_URL svarte ikke, eller ikke med JSON."
+          fi
+          n=$(gh issue list --state open --label bug --search "in:title \"$title\"" --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -z "$problems" ]; then
+            echo "Alt i orden."
+            if [ -n "$n" ]; then gh issue close "$n" --comment "I orden igjen: $RUN_URL"; fi
+            exit 0
+          fi
+          echo "$problems"
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "Fortsatt: $RUN_URL
+
+          $problems"
+          else
+            gh issue create --title "$title" --label bug --body "Den timevise sjekken av datatjenesten fant dette ($RUN_URL):
+
+          $problems
+
+          Se loggene i Cloudflare (Workers → data → Observability) og docs/operations.md. Saken lukkes av seg selv når alt er i orden igjen."
+          fi

@@ -18,6 +18,7 @@
 // - live: the aircraft the Open Glider Network hears in the area now (live.js), fetched on demand and cached a few
 //   seconds, for the map layer «Piloter i lufta» (src/assets/js/live.js).
 // - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
+// - status: how the sources and datasets are doing (health.js), for the hourly check in .github/workflows/health.yml.
 //
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
 
@@ -32,6 +33,8 @@ import { due, INTERVALS } from "./schedule.js";
 import { mergeStations } from "./merge.js";
 import { handleReport, ORIGINS } from "./report.js";
 import { handleLive } from "./live.js";
+import { recordRuns, buildStatus, MAX_AGE } from "./health.js";
+import { WINDGRAM_SITES } from "../../../lib/weather/open-meteo.js";
 import SITES from "./sites.json";
 
 export { Store } from "./store.js";
@@ -60,8 +63,15 @@ export default {
     if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
     if (due("verify", now)) runs.verify = verify.run(s, siteLinks(), now);
     if (due("flights", now)) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
-    ctx.waitUntil(Promise.allSettled(Object.values(runs)).then((results) => {
-      Object.keys(runs).forEach((name, i) => { if (results[i].status === "rejected") console.warn(`${name}: ${results[i].reason?.message}`); });
+    ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
+      const outcome = {};
+      Object.keys(runs).forEach((name, i) => {
+        const failed = results[i].status === "rejected";
+        if (failed) console.warn(`${name}: ${results[i].reason?.message}`);
+        outcome[name] = failed ? results[i].reason?.message || "feil" : null;
+      });
+      // When each source last ran and last succeeded, for /v1/status.json.
+      if (Object.keys(outcome).length) await s.putState("health", recordRuns(await s.getState("health"), outcome, now));
     }));
   },
 
@@ -86,6 +96,20 @@ export default {
       const headers = new Headers(res.headers);
       for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
       return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
+    }
+    if (pathname === "/v1/status.json") {
+      const s = store(env);
+      const [runs, snapshots, holfuyArchive, metArchive] = await Promise.all([
+        s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
+        s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`),
+      ]);
+      // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
+      const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
+      if (st) snapshots[holfuy.DATASET] = st;
+      const body = buildStatus({ runs, snapshots, now: Date.now(),
+        expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
+        archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null } });
+      return Response.json(body, { headers: { ...HEADERS, "cache-control": "public, max-age=60" } });
     }
     const dataset = DATASETS[pathname];
     if (!dataset) return new Response("Not found", { status: 404, headers: HEADERS });
