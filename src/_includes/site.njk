@@ -368,6 +368,44 @@ scripts:
         <h2 id="h-flights">{{ t.site.flightsTitle }}</h2>
         <div class="flights"></div>
       </section>
+      {#- «Fra turlogger»: sums from the flight logs the club's pilots have added (scripts/logbook.mjs, lib/igc.js,
+          src/_data/logbook.json): flights and years, the records, the directions flown just after takeoff (about into
+          the wind) and the flights per calendar month. Only when the logs have flights from this site. -#}
+      {%- set lb = logbook.sites[id] if logbook and logbook.sites and logbook.sites[id] else null -%}
+      {% if lb %}
+      <section class="block block--logbook" aria-labelledby="h-logbook">
+        <h2 id="h-logbook">{{ t.logbook.title }}</h2>
+        <p class="muted">{{ t.logbook.summary | fmt({ n: lb.flights, from: lb.first | truncate(4, true, ""), to: lb.last | truncate(4, true, "") }) }}</p>
+        <div class="access-stats" role="group" aria-label="{{ t.logbook.recordsLabel }}">
+          {% if lb.longest %}{% set mm = lb.longest.value % 60 %}<div><strong>{{ (lb.longest.value / 60) | round(0, "floor") }}:{{ ("0" if mm < 10 else "") ~ mm }}</strong> <span>{{ t.logbook.hm }}</span><small>{{ t.logbook.longest }}</small></div>{% endif %}
+          {% if lb.highest %}<div><strong>{{ lb.highest.value }}</strong> <span>{{ t.logbook.masl }}</span><small>{{ t.logbook.highest }}</small></div>{% endif %}
+          {% if lb.farthest %}<div><strong>{{ lb.farthest.value | formatNumber(1) }}</strong> <span>km</span><small>{{ t.logbook.farthest }}</small></div>{% endif %}
+          <div><strong>{{ (lb.minutes / lb.flights) | round }}</strong> <span>{{ t.units.minutes }}</span><small>{{ t.logbook.typical }}</small></div>
+        </div>
+        {%- set dmax = 0 -%}{%- for c in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}{% if (lb.directions[c] or 0) > dmax %}{% set dmax = lb.directions[c] %}{% endif %}{% endfor %}
+        <h3>{{ t.logbook.directions }}</h3>
+        <ul class="logbook-dirs" aria-label="{{ t.logbook.directions }}">
+          {% for c in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}{% set n = lb.directions[c] or 0 %}
+          <li><span class="logbook-dirs__code">{{ t.directions.labels[c] }}</span><span class="logbook-dirs__track"><span class="logbook-dirs__bar" style="width: {{ ((n / dmax) * 100) | round if dmax else 0 }}%"></span></span><span class="logbook-dirs__n">{{ n }}</span></li>
+          {% endfor %}
+        </ul>
+        {%- set mmax = 0 -%}{%- for k in ["01","02","03","04","05","06","07","08","09","10","11","12"] %}{% if (lb.months[k] or 0) > mmax %}{% set mmax = lb.months[k] %}{% endif %}{% endfor %}
+        <h3>{{ t.logbook.months }}</h3>
+        <ol class="flights-chart" aria-label="{{ t.logbook.months }}">
+          {% for k in ["01","02","03","04","05","06","07","08","09","10","11","12"] %}{% set n = lb.months[k] or 0 %}
+          <li class="flights-chart__month" title="{{ t.meta.months[loop.index0] }}: {{ n }}">
+            <span class="flights-chart__col" aria-hidden="true"><span class="flights-chart__bar" style="height: {{ ((n / mmax) * 100) | round if mmax else 0 }}%">{% if n == mmax and n > 0 %}<span class="flights-chart__value">{{ n }}</span>{% endif %}</span></span>
+            <span class="flights-chart__label" aria-hidden="true">{{ t.meta.months[loop.index0] | replace(".", "") | truncate(3, true, "") }}</span>
+            <span class="visually-hidden">{{ t.meta.months[loop.index0] }}: {{ n }}</span>
+          </li>
+          {% endfor %}
+        </ol>
+        <details class="help-fold">
+          <summary>{{ t.logbook.howToRead }}</summary>
+          <p>{{ t.logbook.explain }}</p>
+        </details>
+      </section>
+      {% endif %}
       {# 9. Log and more #}
       {#- Links: the weather for this launch (Yr and Windy; Flybart covers only a few stations and is on the home page), the flight log and the site's own links (links in the site file, for
           example the ski resort with lift opening hours). In the right column on desktop. -#}

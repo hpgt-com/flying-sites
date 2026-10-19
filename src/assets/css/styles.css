@@ -1851,6 +1851,16 @@ body.sheet-open { overflow: hidden; }
 .help-fold[open] > summary { margin-bottom: 4px; }
 .help-fold p { margin: 0; }
 
+/* «Fra turlogger» on the site page (site.njk, src/_data/logbook.json): the records as .access-stats, the directions
+   flown just after takeoff as horizontal bars, and the flights per month as the flight activity's bars. */
+.block--logbook h3 { margin: 6px 0 0; font-size: 16px; }
+.logbook-dirs { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.logbook-dirs li { display: grid; grid-template-columns: 28px minmax(0, 1fr) 32px; align-items: center; gap: 8px; }
+.logbook-dirs__code { font-weight: 700; }
+.logbook-dirs__track { height: 12px; border-radius: 6px; background: var(--surface); overflow: hidden; }
+.logbook-dirs__bar { display: block; height: 100%; border-radius: 6px; background: var(--flights-bar); }
+.logbook-dirs__n { text-align: right; color: var(--muted); }
+
 /* The page «Nytt på siden» (nytt.njk, src/_data/news.json): each entry a card with what it is, then «Hvor» and «Slik
    leser du det» as short labelled lines; the plan as a plain list with links to the issues. */
 .news-day, .news-plan { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }

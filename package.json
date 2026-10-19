@@ -11,6 +11,7 @@
     "images": "node scripts/optimize-images.mjs",
     "airspace": "node scripts/update-airspace.mjs",
     "weather": "node scripts/fetch-weather.mjs",
+    "logbook": "node scripts/logbook.mjs",
     "test": "node --test",
     "check:links": "node scripts/check-links.mjs",
     "check:html": "html-validate \"_site/**/*.html\"",
