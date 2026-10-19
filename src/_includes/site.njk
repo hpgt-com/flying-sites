@@ -459,6 +459,8 @@ scripts:
       {#- The source names on one line, and what each field comes from folded below, for those who want to check. -#}
       <dd>{{ derived.sourcesShort }}{% if derived.sources %} <details class="sources-details"><summary>{{ t.site.sourcesDetails }}</summary>{{ derived.sources }}</details>{% endif %}</dd>
     </dl>
+    {#- When the page was last stored for offline use (pwa.js), when it is. -#}
+    <p class="offline-saved muted" id="offline-saved" hidden></p>
     <p class="disclaimer">{{ t.site.footerDisclaimer }} <a href="{{ '/om/' | localeUrl }}">{{ t.common.aboutLink }}</a></p>
   </footer>
   </main>

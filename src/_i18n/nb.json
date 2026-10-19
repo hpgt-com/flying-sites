@@ -615,7 +615,12 @@
       "windTitle": "{dir} {speed} m/s, kast opptil {gust}"
     },
     "offline": {
-      "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok."
+      "notice": "Du er offline. Siden kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok.",
+      "noticeSaved": "Du er offline. Siden ble lagret på enheten {when}, så den kan være utdatert, og vindvurderingen vises bare når varselet er ferskt nok.",
+      "saved": "Lagret på enheten {when}, så siden virker uten nett. Den oppdateres hver gang du åpner den med dekning.",
+      "today": "i dag kl. {time}",
+      "yesterday": "i går kl. {time}",
+      "date": "{date} kl. {time}"
     },
     "stations": {
       "layer": "Klubbens værstasjoner",
