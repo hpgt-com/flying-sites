@@ -525,7 +525,10 @@ test("flights: each flight counted for the site nearest where first seen, a new 
     { day: "2026-10-18", site: "heia", flights: 3, pilots: 1, minutes: 10, max_dist: 7.5, max_alt: 1400 },
   ], "2026-09-01", NOW);
   assert.deepEqual(data.sites.heia, { flights: 8, days: 2, pilots: 4, minutes: 100, maxDist: 7.5, maxAlt: 1400, last: "2026-10-18",
-    months: { "2026-09": { flights: 5, days: 1, pilots: 3, minutes: 90 }, "2026-10": { flights: 3, days: 1, pilots: 1, minutes: 10 } } });
+    months: { "2026-09": { flights: 5, days: 1, pilots: 3, minutes: 90 }, "2026-10": { flights: 3, days: 1, pilots: 1, minutes: 10 } },
+    recent: { "2026-09-30": { flights: 5, minutes: 90 }, "2026-10-18": { flights: 3, minutes: 10 } } });
+  const old = flightsMod.buildFlights([{ day: "2026-08-01", site: "heia", flights: 1, pilots: 1, minutes: 2, max_dist: 0, max_alt: null }], "2026-08-01", NOW);
+  assert.deepEqual(old.sites.heia.recent, {}, "only the last 31 days per day");
   assert.equal(data.since, "2026-09-01");
   assert.equal(flightsMod.osloDay(Date.parse("2026-10-18T22:30:00Z")), "2026-10-19", "a Norwegian day");
 });

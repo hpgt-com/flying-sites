@@ -325,6 +325,15 @@
     "menuSub": "værstasjoner",
     "homeLink": "Alle værstasjoner, med endring og varsel"
   },
+  "activity": {
+    "title": "Flyaktivitet",
+    "description": "Hvor mange turer som er fløyet fra flystedene i HPGTs område, i dag, siste 30 dager og per måned, telt fra Open Glider Network.",
+    "intro": "Turer fra flystedene, telt fra Open Glider Network. Tallene oppdateres underveis gjennom dagen.",
+    "menuLink": "Flyaktivitet",
+    "menuSub": "Turer per sted",
+    "loading": "Henter tallene …",
+    "noScript": "Tallene hentes med JavaScript. Slå det på for å se dem."
+  },
   "pwa": {
     "shortName": "Flysteder",
     "description": "Flysteder for paragliding og speedflying rundt Harstad, med kart, startplasser, landinger og vindvurdering.",
@@ -696,6 +705,29 @@
       "barTitle": "{month}: turer {flights}, dager med flyging {days}",
       "none": "Ingen turer herfra er registrert ennå.",
       "note": "Telt siden {date} fra Open Glider Network (OGN), et åpent nettverk som samler posisjoner fra flyutstyr. Vi henter bare data fra OGN: bruker du en app som pgpilot, XCTrack eller Flyskyhy, eller en vario, kommer du bare med hvis den deler posisjonen med OGN mens du flyr. En tur telles på stedet nærmest der du startet, og en ny tur når du har landet."
+    },
+    "activity": {
+      "statsLabel": "Flyaktivitet i tall",
+      "today": "turer i dag",
+      "recent": "turer siste 30 dager",
+      "recentSites": "steder brukt siste 30 dager",
+      "recentHours": "timer i lufta siste 30 dager",
+      "todayList": "I lufta i dag: {list}",
+      "recentTitle": "Mest brukte steder siste 30 dager",
+      "monthsTitle": "Turer per måned",
+      "allTitle": "Alle steder siden {date}",
+      "colSite": "Sted",
+      "colFlights": "Turer",
+      "colDays": "Dager",
+      "colHours": "Timer",
+      "colLast": "Sist",
+      "colFarthest": "Lengst fra start",
+      "colHighest": "Høyest",
+      "masl": "{m} moh",
+      "barTitle": "{month}: turer {flights}",
+      "none": "Ingen turer er registrert ennå.",
+      "noneRecent": "Ingen turer de siste 30 dagene.",
+      "failed": "Fikk ikke hentet tallene. Prøv igjen senere."
     }
   },
   "about": {

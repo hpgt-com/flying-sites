@@ -325,6 +325,15 @@
     "menuSub": "weather stations",
     "homeLink": "All weather stations, with change and forecast"
   },
+  "activity": {
+    "title": "Flying activity",
+    "description": "How many flights have been flown from the flying sites in HPGT's area, today, in the last 30 days and per month, counted from the Open Glider Network.",
+    "intro": "Flights from the flying sites, counted from the Open Glider Network. The numbers are updated through the day.",
+    "menuLink": "Flying activity",
+    "menuSub": "Flights per site",
+    "loading": "Fetching the numbers …",
+    "noScript": "The numbers are fetched with JavaScript. Turn it on to see them."
+  },
   "pwa": {
     "shortName": "Flying sites",
     "description": "Paragliding and speedflying sites around Harstad, with maps, launches, landings and wind assessment.",
@@ -696,6 +705,29 @@
       "barTitle": "{month}: flights {flights}, days with flying {days}",
       "none": "No flights from here have been recorded yet.",
       "note": "Counted since {date} from the Open Glider Network (OGN), an open network that collects positions from flying equipment. We only fetch data from OGN: if you use an app such as pgpilot, XCTrack or Flyskyhy, or a vario, you are only included if it shares your position with OGN while you fly. A flight counts for the site nearest where you took off, and a new flight once you have landed."
+    },
+    "activity": {
+      "statsLabel": "Flying activity in numbers",
+      "today": "flights today",
+      "recent": "flights in the last 30 days",
+      "recentSites": "sites used in the last 30 days",
+      "recentHours": "hours in the air in the last 30 days",
+      "todayList": "In the air today: {list}",
+      "recentTitle": "Most used sites in the last 30 days",
+      "monthsTitle": "Flights per month",
+      "allTitle": "All sites since {date}",
+      "colSite": "Site",
+      "colFlights": "Flights",
+      "colDays": "Days",
+      "colHours": "Hours",
+      "colLast": "Last",
+      "colFarthest": "Farthest from launch",
+      "colHighest": "Highest",
+      "masl": "{m} m asl",
+      "barTitle": "{month}: flights {flights}",
+      "none": "No flights have been recorded yet.",
+      "noneRecent": "No flights in the last 30 days.",
+      "failed": "Could not fetch the numbers. Try again later."
     }
   },
   "about": {
