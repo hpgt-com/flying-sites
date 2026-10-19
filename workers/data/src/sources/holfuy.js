@@ -14,7 +14,6 @@ export const DATASET = "stations";
 export const SOURCE = "Holfuy";
 // The source's key in the store and the archive (measurements.js).
 export const KEY = "holfuy";
-export const LICENSE = "Holfuy, med tillatelse";
 export const HISTORY_HOURS = 6;
 // Measurements older than this are deleted from the store once they are in the archive, so the store stays small.
 export const KEEP_DAYS = 7;
@@ -89,7 +88,7 @@ export function buildStations(stations, rows, meta, now = Date.now()) {
       history: own.map((r) => [r.time, r.dir, r.speed, r.gust, r.min, r.temperature]),
     };
   });
-  return { dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), items };
+  return { dataset: DATASET, source: SOURCE, fetched: new Date(now).toISOString(), items };
 }
 
 // One run. Does nothing without stations or without the key. A failed request leaves the previous dataset as it is.

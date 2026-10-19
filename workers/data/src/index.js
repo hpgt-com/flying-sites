@@ -1,8 +1,8 @@
 // The data service for flysteder.hpgt.com on Cloudflare Workers (deployed by .github/workflows/data-worker.yml).
 //
 // One module per source in sources/ fetches, checks and converts its data, and stores the dataset in the store
-// (store.js). Every dataset is served the same way, as /v1/<dataset>.json, with the same frame: dataset, source,
-// license and fetched, then the dataset's own fields. A source that fails does not stop the others.
+// (store.js). Every dataset is served the same way, as /v1/<dataset>.json, with the same frame: dataset, source and
+// fetched (and license where the source's terms ask for one, as MET's do), then the dataset's own fields. A source that fails does not stop the others.
 //
 // - forecast: the MET forecast for each launch (sources/forecast.js), used by the pages when it is newer than the one
 //   built into the page (fetchNewerForecast in src/assets/js/wind.js).
