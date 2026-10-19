@@ -838,6 +838,11 @@
     var box = make("div", "station-verify");
     box.appendChild(make("strong", "station-verify__title", text("stations.vTitle")));
     lines.forEach(function (l) { box.appendChild(make("span", null, l)); });
+    // What the numbers mean, folded.
+    var help = make("details", "help-fold");
+    help.appendChild(make("summary", null, text("help.howToRead")));
+    help.appendChild(make("p", null, text("stations.vExplain")));
+    box.appendChild(help);
     return box;
   }
   // Fetches the verification once (it changes twice an hour), and calls done(data) when it is in the right shape.

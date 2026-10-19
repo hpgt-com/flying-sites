@@ -96,8 +96,8 @@
       <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
     </button>
     {#- Below the settings, the links in two groups: planning a trip (the weather stations, the flying activity, NOTAM,
-        towers), then the club
-        and the site («Meld fra», about and privacy, hpgt.com). Each link has an icon, so the list is quick to read.
+        towers), then the club and the site («Nytt på siden», «Meld fra», about and privacy,
+        hpgt.com). Each link has an icon, so the list is quick to read.
         «Alle flysteder» is not here: it is at the top left of every page, and the home page is the list. -#}
     <p class="site-menu__label site-menu__label--links" id="plan-label">{{ t.common.menuPlan }}</p>
     <nav class="site-menu__links" aria-labelledby="plan-label">
@@ -108,6 +108,7 @@
     </nav>
     <p class="site-menu__label" id="club-label">{{ t.common.menuClub }}</p>
     <nav class="site-menu__links" aria-labelledby="club-label">
+      <a href="{{ '/nytt/' | localeUrl }}"><svg class="site-menu__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>{{ t.news.menuLink }} <span class="site-menu__sub">{{ t.news.menuSub }}</span></a>
       <a href="{{ '/meld-fra/' | localeUrl }}"><svg class="site-menu__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4M12 14v.5"/></svg>{{ t.report.menuLink }} <span class="site-menu__sub">{{ t.report.menuSub }}</span></a>
       <a href="{{ '/om/' | localeUrl }}"><svg class="site-menu__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>{{ t.common.aboutLink }}</a>
       <a href="{{ site.hpgtUrl }}"><svg class="site-menu__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>{{ t.common.toHpgt }}</a>

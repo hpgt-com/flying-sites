@@ -1,0 +1,122 @@
+{
+  "entries": [
+    {
+      "date": "2026-10-19",
+      "title": { "nb": "Vind over starten har fått nytt utseende", "en": "Wind above the launch has a new look" },
+      "what": {
+        "nb": "Vinden i høyden over starten time for time, nå med kast, termikk, skyer og regn under. Foreløpig på Sollifjellet, Sætertinden, Heia, Kilhusåsen og Elgen.",
+        "en": "The wind at heights above the launch hour by hour, now with gusts, thermals, clouds and rain under it. For now on Sollifjellet, Sætertinden, Heia, Kilhusåsen and Elgen."
+      },
+      "where": {
+        "nb": "Stedssiden, under «Kan jeg fly her nå?» → «Detaljer: Yr time for time og høydevind».",
+        "en": "The site page, under «Can I fly here now?» → «Details: Yr hour by hour and winds aloft»."
+      },
+      "read": {
+        "nb": "Hver rute er vinden i den høyden: grønt passer, gult er i kanten, rødt er for sterkt, og pila viser dit vinden blåser. Den oransje linjen er omtrent hvor høyt termikken går: heltrukket opp til skybasen, stiplet der den går inn i sky. Sveip sideveis for flere timer.",
+        "en": "Each box is the wind at that height: green is suitable, yellow borderline, red too strong, and the arrow shows where the wind blows. The orange line is roughly how high the thermals go: solid up to the cloud base, dashed where they go into cloud. Swipe sideways for more hours."
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "title": { "nb": "Piloter i lufta på kartet", "en": "Pilots in the air on the map" },
+      "what": {
+        "nb": "Paraglidere som er i lufta akkurat nå, med sporet de siste 10 minuttene.",
+        "en": "Paragliders in the air right now, with their track over the last 10 minutes."
+      },
+      "where": {
+        "nb": "Kartet på forsiden og stedssidene → lagknappen → «Piloter i lufta».",
+        "en": "The map on the home page and the site pages → the layer button → «Pilots in the air»."
+      },
+      "read": {
+        "nb": "Vingen peker dit piloten flyr, og tallene er høyde og stig eller synk. Sporet er farget: oransje og rødt er løft, grått er glid, blått er synk. Bare piloter som deler posisjonen med Open Glider Network vises.",
+        "en": "The wing points where the pilot flies, and the numbers are height and climb or sink. The track is coloured: orange and red is lift, grey is gliding, blue is sink. Only pilots who share their position with the Open Glider Network are shown."
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "title": { "nb": "Flyaktivitet: turer per sted", "en": "Flying activity: flights per site" },
+      "what": {
+        "nb": "Hvor mange turer som flys fra hvert sted, i dag, siste 30 dager og per måned.",
+        "en": "How many flights are flown from each site, today, in the last 30 days and per month."
+      },
+      "where": {
+        "nb": "Menyen → «Flyaktivitet», og på hver stedsside over «Lenker».",
+        "en": "The menu → «Flying activity», and on each site page above «Links»."
+      },
+      "read": {
+        "nb": "En tur telles på stedet nærmest der piloten startet. Bare de som deler posisjonen med Open Glider Network kommer med, så tallene er lavere enn virkeligheten. Tellingen startet 19. oktober 2026.",
+        "en": "A flight counts for the site nearest where the pilot took off. Only those who share their position with the Open Glider Network are included, so the numbers are lower than reality. Counting began on 19 October 2026."
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "title": { "nb": "Værstasjonene til MET", "en": "MET's weather stations" },
+      "what": {
+        "nb": "MET sine værstasjoner i området vises nå sammen med klubbens Holfuy-stasjoner.",
+        "en": "MET's weather stations in the area are now shown together with the club's Holfuy stations."
+      },
+      "where": {
+        "nb": "Kartet → lagknappen → «METs værstasjoner», og menyen → «Målt vind».",
+        "en": "The map → the layer button → «MET weather stations», and the menu → «Measured wind»."
+      },
+      "read": {
+        "nb": "MET-stasjonene måler ofte bare én gang i timen og står gjerne lavt, så de er tonet ned på kartet. Bytt mellom «Vind» og «Temp» oppe på kartet.",
+        "en": "MET's stations often measure only once an hour and often stand low, so they are dimmed on the map. Switch between «Wind» and «Temp» at the top of the map."
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "title": { "nb": "Hvor godt treffer varselet her?", "en": "How well does the forecast hit here?" },
+      "what": {
+        "nb": "Varselet sammenlignet med det som faktisk ble målt de siste 30 dagene.",
+        "en": "The forecast compared with what was actually measured over the last 30 days."
+      },
+      "where": {
+        "nb": "Stedssiden under «Målt nå», på Heia, Sætertinden og Hinnstein.",
+        "en": "The site page under «Measured now», on Heia, Sætertinden and Hinnstein."
+      },
+      "read": {
+        "nb": "«Sterkere enn varslet» betyr at det blåste mer enn MET varslet. Tallene vises når det er samlet minst et døgn med målinger.",
+        "en": "«Stronger than forecast» means it blew more than MET forecast. The numbers show once at least a day of measurements is collected."
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "title": { "nb": "Meld fra om endringer", "en": "Report a change" },
+      "what": {
+        "nb": "Et skjema for å melde fra om endringer eller feil, uten GitHub-konto.",
+        "en": "A form to report changes or errors, without a GitHub account."
+      },
+      "where": {
+        "nb": "Nederst på hver stedsside, og menyen → «Meld fra».",
+        "en": "At the bottom of each site page, and the menu → «Report»."
+      },
+      "read": {
+        "nb": "Meldingen blir en sak for klubben, og du får en lenke til saken når den er sendt.",
+        "en": "The report becomes an issue for the club, and you get a link to it once it is sent."
+      }
+    }
+  ],
+  "roadmap": [
+    {
+      "title": { "nb": "Mer i «Vind over starten»", "en": "More in «Wind above the launch»" },
+      "text": { "nb": "Flere steder, og terrenget som silhuett.", "en": "More sites, and the terrain as a silhouette." },
+      "issue": 100
+    },
+    {
+      "title": { "nb": "Statistikk fra turloggene", "en": "Statistics from the flight logs" },
+      "text": { "nb": "Lengste turer og hvilke startretninger som brukes, fra Flightlog eller pgpilot. Venter på en datakilde.", "en": "Longest flights and which launch directions are used, from Flightlog or pgpilot. Waiting for a data source." },
+      "issue": 105
+    },
+    {
+      "title": { "nb": "NOTAM i kartet", "en": "NOTAM in the map" },
+      "text": { "nb": "Venter på en åpen og trygg kilde.", "en": "Waiting for an open and safe source." },
+      "issue": 107
+    },
+    {
+      "title": { "nb": "Det som mangler på noen steder", "en": "What is missing on some sites" },
+      "text": { "nb": "Parkering, tekster og regler. Trenger lokal kunnskap: meld gjerne fra om du kjenner stedene.", "en": "Parking, texts and rules. Needs local knowledge: please report if you know the sites." },
+      "issue": 103
+    }
+  ]
+}

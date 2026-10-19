@@ -164,7 +164,7 @@ the menu and is marked `noindex`. It shows per site:
   thrown away with the keys the next day. Only the sums per site and day are kept
   (`flight_days` in the store: flights, pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
   salt for the day (state `flights-today`), which is replaced at the first run of a new day, so no device id is kept.
-  Served as `/v1/flights.json`, shown on the site page. Counting began when this was deployed (`flights-since`).
+  Served as `/v1/flights.json`, shown on the site page and on /flyaktivitet/ (`activity.js`). Counting began when this was deployed (`flights-since`).
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
   on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
   unidentified a random name, shown here as «Ukjent».
@@ -311,9 +311,11 @@ set in `src/_data/photoCredit.json`.
 |---|---|---|
 | `OPENAIP_API_KEY` | GitHub → Settings → Secrets | Monthly airspace fetch |
 | GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
-| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.workers.dev`), later the change form |
+| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.workers.dev`) and «Meld fra» |
 | `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | The Holfuy stations |
 | `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
+| `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: the robot check (the site key is public, in `src/_data/site.js`) |
+| GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites», Workers, KV and R2 Storage in HPGT only) expires 18.10.2027: make a new one under My Profile → API Tokens → Roll, and update the secret. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |

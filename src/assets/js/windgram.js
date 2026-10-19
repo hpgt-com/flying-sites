@@ -193,7 +193,8 @@
       return true;
     }
 
-    // What the colours, lines and rows mean, under the drawing (once).
+    // What the colours, lines and rows mean, under the drawing (once): the colour scale always shown, the lines and the
+    // notes on the rows folded under «Slik leser du dette», so they are there for those who wonder.
     function legend() {
       if (!box || box.querySelector(".windgram__legend")) return;
       var r = rules, wrap = node("div", "windgram__legend");
@@ -209,8 +210,10 @@
         li.appendChild(node("span", "windgram__key windgram__key--" + k[0])).setAttribute("aria-hidden", "true");
         li.appendChild(document.createTextNode(t(k[1])));
       });
-      wrap.appendChild(keys);
-      wrap.appendChild(node("p", "windgram__notes", t("notes", { gust: r.maxGust, max: r.maxWind })));
+      var help = wrap.appendChild(node("details", "help-fold"));
+      help.appendChild(node("summary", null, FS.t("help.howToRead")));
+      help.appendChild(keys);
+      help.appendChild(node("p", "windgram__notes", t("notes", { gust: r.maxGust, max: r.maxWind })));
       el.insertAdjacentElement("afterend", wrap);
     }
 

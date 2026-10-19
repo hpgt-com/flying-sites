@@ -112,7 +112,11 @@
       var months = lastMonths(site, now);
       if (months.filter(function (m) { return m.flights > 0; }).length > 1) out.push(chart(months));
     }
-    out.push(make("p", "flights-note", text("flights.note", { date: dateText(data.since) })));
+    // How the flights are counted, folded.
+    var help = make("details", "help-fold");
+    help.appendChild(make("summary", null, text("help.howCounted")));
+    help.appendChild(make("p", "flights-note", text("flights.note", { date: dateText(data.since) })));
+    out.push(help);
     return out;
   }
 
