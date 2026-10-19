@@ -349,10 +349,9 @@
     "highest": "høyest",
     "farthest": "lengst fra start",
     "typical": "gjennomsnittlig tur",
-    "directions": "Retning rett etter start",
     "months": "Turer per måned, alle år",
     "howToRead": "Slik leser du dette",
-    "explain": "Tallene kommer fra turlogger (IGC) som piloter i klubben har lagt inn, ikke fra alle som flyr her. Retningen er den piloten fløy de første sekundene etter start, som er omtrent mot vinden, og viser hvilke startretninger som faktisk brukes. Turer per måned er summen for alle år, så den viser sesongen. Bare summene vises, aldri sporene."
+    "explain": "Tallene kommer fra turlogger (IGC) som piloter i klubben har lagt inn, ikke fra alle som flyr her. Turer per måned er summen for alle år, så den viser sesongen. Bare summene vises, aldri sporene."
   },
   "pwa": {
     "shortName": "Flysteder",

@@ -1851,22 +1851,15 @@ body.sheet-open { overflow: hidden; }
 .help-fold[open] > summary { margin-bottom: 4px; }
 .help-fold p { margin: 0; }
 
-/* «Fra turlogger» on the site page (site.njk, src/_data/logbook.json): the records as .access-stats, the directions
-   flown just after takeoff as horizontal bars, and the flights per month as the flight activity's bars. */
+/* «Fra turlogger» on the site page (site.njk, src/_data/logbook.json): the records as .access-stats and the
+   flights per month as the flight activity's bars. */
 .block--logbook h3 { margin: 6px 0 0; font-size: 16px; }
-.logbook-dirs { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; font-variant-numeric: tabular-nums; }
-.logbook-dirs li { display: grid; grid-template-columns: 28px minmax(0, 1fr) 32px; align-items: center; gap: 8px; }
-.logbook-dirs__code { font-weight: 700; }
-.logbook-dirs__track { height: 12px; border-radius: 6px; background: var(--surface); overflow: hidden; }
-.logbook-dirs__bar { display: block; height: 100%; border-radius: 6px; background: var(--flights-bar); }
-.logbook-dirs__n { text-align: right; color: var(--muted); }
 /* The bar lengths in steps of 5 % (data-pct from site.njk; no inline styles in the built pages). */
 [data-pct="5"] { --pct: 5%; } [data-pct="10"] { --pct: 10%; } [data-pct="15"] { --pct: 15%; } [data-pct="20"] { --pct: 20%; }
 [data-pct="25"] { --pct: 25%; } [data-pct="30"] { --pct: 30%; } [data-pct="35"] { --pct: 35%; } [data-pct="40"] { --pct: 40%; }
 [data-pct="45"] { --pct: 45%; } [data-pct="50"] { --pct: 50%; } [data-pct="55"] { --pct: 55%; } [data-pct="60"] { --pct: 60%; }
 [data-pct="65"] { --pct: 65%; } [data-pct="70"] { --pct: 70%; } [data-pct="75"] { --pct: 75%; } [data-pct="80"] { --pct: 80%; }
 [data-pct="85"] { --pct: 85%; } [data-pct="90"] { --pct: 90%; } [data-pct="95"] { --pct: 95%; } [data-pct="100"] { --pct: 100%; }
-.logbook-dirs__bar[data-pct] { width: var(--pct, 0); }
 .block--logbook .flights-chart__bar[data-pct] { height: var(--pct, 0); }
 
 /* The page «Nytt på siden» (nytt.njk, src/_data/news.json): each entry a card with what it is, then «Hvor» and «Slik
