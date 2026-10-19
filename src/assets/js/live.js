@@ -1,26 +1,27 @@
-// «Piloter i lufta» on the maps: the aircraft the Open Glider Network hears in the area right now (FANET from
-// paragliders' varios, FLARM and others), from the data service (/v1/live.json, workers/data/src/live.js). A layer that
-// is off by default; while it is on and the page is in view, it asks every POLL_MS and moves the markers. Each marker is
-// the aircraft seen from above (a paraglider's wing, a hang glider's delta, else an arrow) pointing where it flies,
-// with the height and the climb, and a line for its track over the last minutes (from the data service, so it shows
-// at once), where circling in a thermal is easy to see; paragliders and hang gliders stand out.
+// «Piloter i lufta» on the maps: the paragliders and hang gliders the Open Glider Network hears in the area right now
+// (FANET from varios and phone apps, FLARM), from the data service (/v1/live.json, workers/data/src/live.js). A layer
+// that is off by default; while it is on and the page is in view, it asks every POLL_MS and moves the markers. Each
+// marker is the wing seen from above (a paraglider's curved wing, a hang glider's delta) pointing where it flies, with
+// the height and the climb, and a line for its track over the last minutes (from the data service, so it shows at once),
+// coloured by the climb at each point, so where the lift and the sink were is easy to see; a small legend explains the
+// colours while the layer is on.
 // Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only; numbers only in the HTML.
 // Exposed as window.FlyingSitesLive; tested in test/live.test.js.
 (function () {
   "use strict";
 
   var POLL_MS = 5000;
-  // OGN's aircraft types (0 unknown … 13 drone); 6 and 7 are hang gliders and paragliders.
-  var TYPES = { 1: "glider", 2: "tow", 3: "heli", 4: "parachute", 5: "dropPlane", 6: "hangGlider", 7: "paraglider", 8: "plane", 9: "jet", 11: "balloon", 13: "drone" };
-  // The marker seen from above, nose up (north) before it is turned to the track: a paraglider's curved wing with the
-  // lines down to the pilot, a hang glider's delta, and an arrow for all other aircraft.
+  // The wing seen from above, nose up (north) before it is turned to the track: OGN's type 7, a paraglider's curved wing
+  // with the lines down to the pilot, and 6, a hang glider's delta. The data service sends only these two.
   var SHAPES = {
     7: '<path d="M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z" fill="currentColor"/>' +
       '<path d="M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
       '<circle cx="12" cy="17.8" r="2" fill="currentColor"/>',
-    6: '<path d="M12 4L23 17.5L12 14.5L1 17.5Z" fill="currentColor"/><circle cx="12" cy="13" r="2" fill="currentColor"/>',
-    other: '<path d="M12 2l7 18-7-4-7 4z" fill="currentColor"/>'
+    6: '<path d="M12 4L23 17.5L12 14.5L1 17.5Z" fill="currentColor"/><circle cx="12" cy="13" r="2" fill="currentColor"/>'
   };
+  // The track's colours, by the climb in m/s, from sink to lift (CSS .live-trail--…). A paraglider sinks about 1 m/s in
+  // still air, so plain gliding is the grey middle, not sink.
+  var CLIMB = [{ key: "sink2", below: -3 }, { key: "sink1", below: -1.5 }, { key: "glide", below: 0.5 }, { key: "lift1", below: 2 }, { key: "lift2", below: Infinity }];
   var text = function (key, vars) { var FS = globalThis.FlyingSites; return FS && FS.t ? FS.t(key, vars) : key; };
   function useText(fn) { text = fn; }
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
@@ -32,11 +33,30 @@
       return i && typeof i.id === "string" && /^[0-9a-f]{6,16}$/.test(i.id) && isNum(i.lat) && isNum(i.lon) &&
         (i.name === null || typeof i.name === "string") && typeof i.time === "string" && Number.isFinite(Date.parse(i.time)) &&
         ["alt", "track", "speed", "climb", "type"].every(function (k) { return i[k] === null || isNum(i[k]); }) &&
-        (i.trail === undefined || (Array.isArray(i.trail) && i.trail.every(function (p) { return Array.isArray(p) && isNum(p[0]) && isNum(p[1]); })));
+        (i.trail === undefined || (Array.isArray(i.trail) && i.trail.every(function (p) {
+          return Array.isArray(p) && isNum(p[0]) && isNum(p[1]) && (p[2] === undefined || p[2] === null || isNum(p[2]));
+        })));
     });
   }
-  function isFlyer(item) { return item.type === 6 || item.type === 7; }
-  function typeText(item) { return text("live.type_" + (TYPES[item.type] || "other")); }
+  function typeText(item) { return text(item.type === 6 ? "live.type_hangGlider" : "live.type_paraglider"); }
+  // The colour of a climb (m/s): sink2 … lift2; glide when it is not known.
+  function climbKey(v) {
+    if (!isNum(v)) return "glide";
+    for (var k = 0; k < CLIMB.length; k++) if (v < CLIMB[k].below) return CLIMB[k].key;
+    return "lift2";
+  }
+  // The track ([[lat, lon, climb], ...], oldest first) as runs of one colour, [{ key, points }]: each piece takes the
+  // colour of the climb where it ends, and the runs share their end points so the line is unbroken.
+  function trailRuns(points) {
+    var runs = [];
+    for (var k = 1; k < points.length; k++) {
+      var key = climbKey(points[k][2]), last = runs[runs.length - 1];
+      var to = [points[k][0], points[k][1]];
+      if (last && last.key === key) last.points.push(to);
+      else runs.push({ key: key, points: [[points[k - 1][0], points[k - 1][1]], to] });
+    }
+    return runs;
+  }
   // «+1,2» / «−0,8» / «0», the climb in m/s with a sign.
   function climbText(v) {
     var FS = globalThis.FlyingSites;
@@ -44,7 +64,7 @@
     var r = Math.round(v * 10) / 10;
     return r === 0 ? "0" : (r > 0 ? "+" : "−") + FS.formatNumber(Math.abs(r), 1);
   }
-  // The label beside the arrow: «1240 m · +1,2».
+  // The label beside the wing: «1240 m · +1,2».
   function labelText(item) {
     return [isNum(item.alt) ? text("live.alt", { m: Math.round(item.alt) }) : "", climbText(item.climb)].filter(Boolean).join(" · ");
   }
@@ -72,29 +92,63 @@
     return box;
   }
 
+  // The legend for the track's colours, from sink to lift, under the layer button while the layer is on. Each colour has
+  // its words for screen readers and as a tooltip, and the limits between them are written under the bar.
+  function legendControl(L) {
+    var control = L.control({ position: "topright" });
+    control.onAdd = function () {
+      var box = make("div", "live-legend");
+      box.appendChild(make("span", "live-legend__title", text("live.legend")));
+      var bar = make("ul", "live-legend__bar");
+      CLIMB.forEach(function (c) {
+        var li = make("li", "live-legend__step live-trail-swatch--" + c.key);
+        li.title = text("live.climb_" + c.key);
+        li.appendChild(make("span", "visually-hidden", text("live.climb_" + c.key)));
+        bar.appendChild(li);
+      });
+      box.appendChild(bar);
+      var ticks = make("div", "live-legend__ticks");
+      ticks.setAttribute("aria-hidden", "true");
+      CLIMB.slice(0, -1).forEach(function (c) { ticks.appendChild(make("span", null, (c.below > 0 ? "+" : "−") + globalThis.FlyingSites.formatNumber(Math.abs(c.below), c.below % 1 ? 1 : 0))); });
+      box.appendChild(ticks);
+      var ends = make("div", "live-legend__ends");
+      ends.setAttribute("aria-hidden", "true");
+      ends.appendChild(make("span", null, text("live.legendSink")));
+      ends.appendChild(make("span", null, text("live.legendLift")));
+      box.appendChild(ends);
+      return box;
+    };
+    return control;
+  }
+
   function addMapLayer(map, url) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !url || !map.layersControl) return null;
     var layer = L.layerGroup([], { attribution: text("live.credit") });
     map.layersControl.addOverlay(layer, FS.layerLabel(map, "live", text("live.layer")));
-    var markers = {}, trails = {}, timer = null, on = false;
+    var markers = {}, trails = {}, timer = null, on = false, legend = legendControl(L);
 
     function icon(item) {
       var shape = isNum(item.track)
-        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + (SHAPES[item.type] || SHAPES.other) + '</svg>'
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + (SHAPES[item.type] || SHAPES[7]) + '</svg>'
         : '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
-      return L.divIcon({ className: "live-marker" + (isFlyer(item) ? " live-marker--flyer" : ""),
-        html: '<span class="live-marker__arrow">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
+      return L.divIcon({ className: "live-marker",
+        html: '<span class="live-marker__wing">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
     }
     function draw(data) {
       var now = Date.now(), seen = {};
       data.items.forEach(function (item) {
         seen[item.id] = true;
-        // The track, ending at the marker, under it.
-        var points = (item.trail || []).concat([[item.lat, item.lon]]);
+        // The track, ending at the marker, under it: a light edge under the whole line so every colour shows on the map,
+        // then the runs of one colour.
+        var points = (item.trail || []).concat([[item.lat, item.lon, item.climb]]);
+        var group = trails[item.id] || (trails[item.id] = L.layerGroup().addTo(layer));
+        group.clearLayers();
         if (points.length > 1) {
-          if (trails[item.id]) trails[item.id].setLatLngs(points);
-          else trails[item.id] = L.polyline(points, { className: "live-trail" + (isFlyer(item) ? " live-trail--flyer" : ""), weight: 3, interactive: false }).addTo(layer);
+          group.addLayer(L.polyline(points.map(function (p) { return [p[0], p[1]]; }), { className: "live-trail-edge", weight: 8, interactive: false }));
+          trailRuns(points).forEach(function (run) {
+            group.addLayer(L.polyline(run.points, { className: "live-trail live-trail--" + run.key, weight: 4, interactive: false }));
+          });
         }
         var m = markers[item.id];
         if (!m) {
@@ -118,13 +172,13 @@
         .then(function (d) { if (on && isLiveData(d)) draw(d); })
         .catch(function () {});
     }
-    function start() { if (on) return; on = true; load(); timer = setInterval(load, POLL_MS); }
-    function stop() { on = false; clearInterval(timer); timer = null; }
+    function start() { if (on) return; on = true; legend.addTo(map); load(); timer = setInterval(load, POLL_MS); }
+    function stop() { on = false; legend.remove(); clearInterval(timer); timer = null; }
     map.on("overlayadd", function (ev) { if (ev.layer === layer) { start(); FS.track("map-layer/live"); } });
     map.on("overlayremove", function (ev) { if (ev.layer === layer) stop(); });
     document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
     return layer;
   }
 
-  globalThis.FlyingSitesLive = { addMapLayer: addMapLayer, isLiveData: isLiveData, labelText: labelText, climbText: climbText, typeText: typeText, useText: useText };
+  globalThis.FlyingSitesLive = { addMapLayer: addMapLayer, isLiveData: isLiveData, labelText: labelText, climbKey: climbKey, trailRuns: trailRuns, climbText: climbText, typeText: typeText, useText: useText };
 })();

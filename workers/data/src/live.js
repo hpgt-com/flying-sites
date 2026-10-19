@@ -1,11 +1,12 @@
-// «Piloter i lufta»: the aircraft the Open Glider Network hears in the area right now (FANET from paragliders' varios,
-// FLARM and others), as /v1/live.json. Fetched on demand, not on the schedule: the map asks every few seconds while the
-// layer is on, and the answer is kept CACHE_SECONDS in Cloudflare's cache, so OGN gets at most one request per few
-// seconds however many look. Each aircraft's track over the last TRAIL_MINUTES is kept in memory in the store (never
-// written down) and sent along as trail, so the map can draw it at once. OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners'
-// privacy choices are followed (OGN's live data already leaves out devices that must not be tracked, and gives those that
-// must not be identified a random short name, which is shown as unknown here), and nothing older than 24 hours is passed
-// on (positions older than MAX_AGE_SECONDS are left out). Tested in test/data-worker.test.js.
+// «Piloter i lufta»: the paragliders and hang gliders the Open Glider Network hears in the area right now (FANET from
+// varios and phone apps, FLARM), as /v1/live.json. Fetched on demand, not on the schedule: the map asks every few seconds
+// while the layer is on, and the answer is kept CACHE_SECONDS in Cloudflare's cache, so OGN gets at most one request per
+// few seconds however many look. Each pilot's track over the last TRAIL_MINUTES, with the climb at each point, is kept in
+// memory in the store (never written down) and sent along as trail, so the map can draw it at once.
+// OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners' privacy choices are followed (OGN's live data
+// already leaves out devices that must not be tracked, and gives those that must not be identified a random short name,
+// which is shown as unknown here), and nothing older than 24 hours is passed on (positions older than MAX_AGE_SECONDS are
+// left out). Tested in test/data-worker.test.js.
 
 export const DATASET = "live";
 export const SOURCE = "Open Glider Network";
@@ -14,9 +15,9 @@ export const CACHE_SECONDS = 5;
 export const MAX_AGE_SECONDS = 600;
 export const TRAIL_MINUTES = 10;
 const API = "https://live.glidernet.org/lxml.php";
-// OGN's aircraft types: 6 hang glider, 7 paraglider; the others are kept with their type (planes, gliders and helicopters
-// are worth seeing too), except 15, a static object.
-const STATIC = 15;
+// OGN's aircraft types: only 6 hang gliders and 7 paragliders are kept, the pilots this is for (planes, gliders and the
+// rest would need their own symbols, and fill the map without telling a free-flight pilot much).
+export const FREE_FLYERS = new Set([6, 7]);
 
 // The area: the flying sites (sites.json) with a margin, as OGN's bounds (north, south, east, west).
 export function bounds(sites, margin = 0.5) {
@@ -34,7 +35,7 @@ export function parseLive(xml, now = Date.now()) {
     const f = m[1].split(",");
     if (f.length < 14) continue;
     const lat = num(f[0]), lon = num(f[1]), age = num(f[6]), type = num(f[10]);
-    if (lat === null || lon === null || age === null || age > MAX_AGE_SECONDS || type === STATIC) continue;
+    if (lat === null || lon === null || age === null || age > MAX_AGE_SECONDS || !FREE_FLYERS.has(type)) continue;
     const id = /^[0-9a-f]{6,16}$/i.test(f[13]) ? f[13].toLowerCase() : null;
     if (!id) continue;
     // A short name starting with «_» (and the id as the name) is OGN's way of showing a device that must not be identified,
@@ -44,19 +45,20 @@ export function parseLive(xml, now = Date.now()) {
     const speed = num(f[8]);
     items.push({
       id, name, lat, lon, alt: num(f[4]), track: num(f[7]), speed: speed === null ? null : Math.round((speed / 3.6) * 10) / 10,
-      climb: num(f[9]), type: type ?? 0, time: new Date(now - age * 1000).toISOString(),
+      climb: num(f[9]), type, time: new Date(now - age * 1000).toISOString(),
     });
   }
   return items.sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
 }
 
-// Adds the positions ([{ id, time, lat, lon }]) to the tracks (a Map id → [[ms, lat, lon], ...]), drops what is older than
-// keepMs before now, and returns { id: [[lat, lon], ...] } oldest first for the ids given.
+// Adds the positions ([{ id, time, lat, lon, climb }]) to the tracks (a Map id → [[ms, lat, lon, climb], ...]), drops what
+// is older than keepMs before now, and returns { id: [[lat, lon, climb], ...] } oldest first for the ids given, so the map
+// can colour the track by climb and sink (climb in m/s, or null when OGN did not give it).
 export function mergeTrails(tracks, positions, now, keepMs) {
   for (const p of positions) {
     const t = Date.parse(p.time);
     const track = tracks.get(p.id) ?? [];
-    if (!track.length || track[track.length - 1][0] < t) track.push([t, p.lat, p.lon]);
+    if (!track.length || track[track.length - 1][0] < t) track.push([t, p.lat, p.lon, p.climb ?? null]);
     tracks.set(p.id, track);
   }
   for (const [id, track] of tracks) {
@@ -64,7 +66,7 @@ export function mergeTrails(tracks, positions, now, keepMs) {
     if (kept.length) tracks.set(id, kept);
     else tracks.delete(id);
   }
-  return Object.fromEntries(positions.map((p) => [p.id, (tracks.get(p.id) ?? []).map((x) => [x[1], x[2]])]));
+  return Object.fromEntries(positions.map((p) => [p.id, (tracks.get(p.id) ?? []).map((x) => [x[1], x[2], x[3]])]));
 }
 
 // The answer to GET /v1/live.json, from OGN, or from the cache when it is fresh. store: for the tracks (mergeLive).
@@ -80,7 +82,7 @@ export async function handleLive(sites, now = Date.now(), cache = globalThis.cac
     if (!r.ok) throw new Error(`OGN svarte ${r.status}`);
     const items = parseLive(await r.text(), now);
     if (store && items.length) {
-      const trails = await store.mergeLive(items.map(({ id, time, lat, lon }) => ({ id, time, lat, lon })), now, TRAIL_MINUTES * 60000);
+      const trails = await store.mergeLive(items.map(({ id, time, lat, lon, climb }) => ({ id, time, lat, lon, climb })), now, TRAIL_MINUTES * 60000);
       for (const item of items) item.trail = trails[item.id] ?? [];
     }
     body = JSON.stringify({ dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), items });

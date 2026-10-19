@@ -1836,17 +1836,41 @@ body.sheet-open { overflow: hidden; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
 
-/* «Piloter i lufta» (live.js): the aircraft seen from above, pointing where it flies, with the height and climb beside it. Paragliders
-   and hang gliders in the site's fjord colour, other aircraft dark grey. White on both is over 4.5:1. */
-.live-marker { position: relative; --live: #3C4A52; color: var(--live); }
-.live-marker--flyer { --live: #1F5A6B; }
-.live-marker__arrow { display: grid; place-items: center; width: 26px; height: 26px; filter: drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 1px 2px rgba(28, 43, 51, 0.5)); }
+/* «Piloter i lufta» (live.js): the wing seen from above, pointing where it flies, in the site's fjord colour with the
+   height and climb beside it (white on it is over 4.5:1). The track is coloured by the climb, blue for sink, grey for
+   gliding and red for lift, over a light edge (dark on the dark map) so every colour shows on the map. */
+.live-marker { position: relative; --live: #1F5A6B; color: var(--live); }
+.live-marker__wing { display: grid; place-items: center; width: 26px; height: 26px; filter: drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 1px 2px rgba(28, 43, 51, 0.5)); }
 .live-marker__label:empty { display: none; }
 .live-marker__label {
   position: absolute; left: 24px; top: 50%; transform: translateY(-50%); padding: 2px 6px; white-space: nowrap; border-radius: 6px;
   background: var(--live); color: #FFFFFF; font: 700 12px/1.2 var(--font-body); font-variant-numeric: tabular-nums; box-shadow: 0 1px 3px rgba(28, 43, 51, 0.4);
 }
-.live-trail { stroke: #3C4A52; stroke-opacity: 0.7; stroke-linecap: round; stroke-linejoin: round; }
-.live-trail--flyer { stroke: #1F5A6B; stroke-opacity: 0.85; }
+:root { --climb-sink2: #1F4E9C; --climb-sink1: #5B8FD1; --climb-glide: #9AA3A8; --climb-lift1: #E8743B; --climb-lift2: #B42318; --trail-edge: #FFFFFF; }
+:root[data-theme="dark"] { --trail-edge: #1C2B33; }
+.live-trail-edge { stroke: var(--trail-edge); stroke-opacity: 0.8; stroke-linecap: round; stroke-linejoin: round; }
+.live-trail { stroke-linecap: round; stroke-linejoin: round; }
+.live-trail--sink2 { stroke: var(--climb-sink2); }
+.live-trail--sink1 { stroke: var(--climb-sink1); }
+.live-trail--glide { stroke: var(--climb-glide); }
+.live-trail--lift1 { stroke: var(--climb-lift1); }
+.live-trail--lift2 { stroke: var(--climb-lift2); }
+.live-trail-swatch--sink2 { background: var(--climb-sink2); }
+.live-trail-swatch--sink1 { background: var(--climb-sink1); }
+.live-trail-swatch--glide { background: var(--climb-glide); }
+.live-trail-swatch--lift1 { background: var(--climb-lift1); }
+.live-trail-swatch--lift2 { background: var(--climb-lift2); }
+.live-legend {
+  padding: 6px 8px; border-radius: 8px; background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.35);
+  font: 12px/1.3 var(--font-body); font-variant-numeric: tabular-nums;
+}
+.live-legend__title { display: block; font-weight: 700; margin-bottom: 4px; }
+.live-legend__bar { display: grid; grid-template-columns: repeat(5, 28px); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.live-legend__step { height: 8px; border-radius: 2px; }
+.live-legend__step:first-child { border-radius: 4px 2px 2px 4px; }
+.live-legend__step:last-child { border-radius: 2px 4px 4px 2px; }
+.live-legend__ticks { display: flex; padding: 0 15px; color: var(--muted); }
+.live-legend__ticks span { flex: 1; text-align: center; }
+.live-legend__ends { display: flex; justify-content: space-between; color: var(--muted); }
 .live-popup { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .live-popup__age { color: var(--muted); font-size: 13px; }

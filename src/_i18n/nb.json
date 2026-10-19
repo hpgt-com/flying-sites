@@ -643,18 +643,16 @@
       "climb": "Stiger/synker {v} m/s",
       "secondsAgo": "Hørt for {n} s siden",
       "minutesAgo": "Hørt for {n} min siden",
-      "type_glider": "Seilfly",
-      "type_tow": "Slepefly",
-      "type_heli": "Helikopter",
-      "type_parachute": "Fallskjerm",
-      "type_dropPlane": "Fallskjermfly",
       "type_hangGlider": "Hangglider",
       "type_paraglider": "Paraglider",
-      "type_plane": "Motorfly",
-      "type_jet": "Jetfly",
-      "type_balloon": "Ballong",
-      "type_drone": "Drone",
-      "type_other": "Luftfartøy"
+      "legend": "Stiger/synker (m/s)",
+      "legendSink": "Synk",
+      "legendLift": "Løft",
+      "climb_sink2": "Sterk synk, under −3 m/s",
+      "climb_sink1": "Synk, −3 til −1,5 m/s",
+      "climb_glide": "Glid, −1,5 til +0,5 m/s",
+      "climb_lift1": "Løft, +0,5 til +2 m/s",
+      "climb_lift2": "Sterk løft, over +2 m/s"
     }
   },
   "about": {
@@ -689,7 +687,7 @@
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
     "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}.",
-    "sourceOgn": "piloter og fly i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet, og ingenting lagres."
+    "sourceOgn": "paraglidere og hangglidere i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet, og ingenting lagres."
   },
   "report": {
     "title": "Meld fra om endring",
