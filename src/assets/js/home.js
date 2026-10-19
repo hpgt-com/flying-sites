@@ -328,6 +328,7 @@
   var mapEl = document.getElementById("home-map");
   var map = FS.createMap(mapEl);
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
+  FS.addObstacleLayer(map, mapEl.getAttribute("data-obstacles-url"));
   FS.addRadarLayer(map);
   addStations();
   // On desktop the map fills its column and nothing scrolls, so the wheel zooms. Elsewhere the wheel scrolls the page,

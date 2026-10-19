@@ -638,6 +638,103 @@
     });
   }
 
+  // --- Power lines and obstacles ---
+  // One layer in the layer control, off initially: the power lines and their masts from NVE, and from OpenStreetMap the
+  // low-voltage lines, lifts and masts (scripts/update-obstacles.mjs, lib/obstacles.js). Loaded only when switched on.
+  // Not complete, which the attribution says.
+  var OBSTACLE_STYLE = {
+    power: { color: "#9B1D73", weight: 3, opacity: 0.9 },
+    minor: { color: "#9B1D73", weight: 2, opacity: 0.9, dashArray: "5 5" },
+    aerialway: { color: "#1F2937", weight: 3, opacity: 0.9, dashArray: "12 4" },
+  };
+  var OBSTACLE_POINT = {
+    pylon: { radius: 3, color: "#FFFFFF", weight: 1, fillColor: "#9B1D73", fillOpacity: 1 },
+    mast: { radius: 5, color: "#FFFFFF", weight: 1.5, fillColor: "#1F2937", fillOpacity: 1 },
+    wind: { radius: 6, color: "#FFFFFF", weight: 1.5, fillColor: "#0F766E", fillOpacity: 1 },
+  };
+  var OBSTACLE_SOURCES = { nve: "NVE (NLOD)", osm: "© OpenStreetMap (ODbL)" };
+
+  function obstaclePopup(p) {
+    var e = escapeHtml, title;
+    if (p.kind === "power") title = p.kv ? t("map.obstacle.power", { kv: formatNumber(p.kv) }) : t("map.obstacle.powerNoKv");
+    else if (p.kind === "aerialway") title = lookup("map.obstacle.lifts." + p.sub) || t("map.obstacle.aerialway");
+    else title = t("map.obstacle." + p.kind);
+    var lines = [p.name, p.owner, p.height ? t("map.obstacle.height", { m: formatNumber(p.height) }) : null,
+      t("map.obstacle.source", { source: p.src === "osm" ? "OpenStreetMap" : "NVE" })];
+    return '<div class="airspace-popup"><strong>' + e(title) + "</strong>" +
+      lines.filter(Boolean).map(function (l) { return "<br>" + e(l); }).join("") + "</div>";
+  }
+
+  function addObstacleLayer(map, url) {
+    if (!url || !map.layersControl) return;
+    var group = L.layerGroup();
+    map.layersControl.addOverlay(group, layerLabel(map, "obstacles", t("map.layerObstacles")));
+    var loading = null, attribution = null, on = false, statusEl = null;
+    var Status = L.Control.extend({
+      options: { position: "topright" },
+      onAdd: function () {
+        statusEl = L.DomUtil.create("div", "airspace-status");
+        statusEl.setAttribute("role", "status");
+        statusEl.hidden = true;
+        L.DomEvent.disableClickPropagation(statusEl);
+        statusEl.addEventListener("click", function (ev) { if (ev.target.closest("[data-retry]")) start(); });
+        return statusEl;
+      },
+    });
+    new Status().addTo(map);
+    function setStatus(state) {
+      if (!statusEl) return;
+      statusEl.hidden = !state;
+      statusEl.classList.toggle("airspace-status--error", state === "error");
+      statusEl.innerHTML = state === "loading" ? escapeHtml(t("map.obstaclesLoading"))
+        : state === "error" ? escapeHtml(t("map.obstaclesError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>" : "";
+    }
+    function load() {
+      if (loading) return loading;
+      loading = fetch(url).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (data) {
+        if (!data || !Array.isArray(data.features)) throw new Error("ukjent format");
+        var sources = (data.sources || ["nve"]).map(function (s) { return OBSTACLE_SOURCES[s]; }).filter(Boolean).join(", ");
+        attribution = t("map.obstaclesAttribution", { sources: sources, date: (data.fetched || "").split("-").reverse().join(".") });
+        // The lines under the points, so a mast can be clicked where a line passes it.
+        var lines = data.features.filter(function (f) { return f.geometry.type !== "Point"; });
+        var points = data.features.filter(function (f) { return f.geometry.type === "Point"; });
+        L.geoJSON(lines, {
+          style: function (f) { return OBSTACLE_STYLE[f.properties.kind] || OBSTACLE_STYLE.power; },
+          onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
+        }).addTo(group);
+        L.geoJSON(points, {
+          pointToLayer: function (f, latlng) { return L.circleMarker(latlng, OBSTACLE_POINT[f.properties.kind] || OBSTACLE_POINT.mast); },
+          onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
+        }).addTo(group);
+      });
+      return loading;
+    }
+    function start() {
+      setStatus("loading");
+      load().then(function () {
+        setStatus(null);
+        if (on && attribution) map.attributionControl.removeAttribution(attribution).addAttribution(attribution);
+      }, function () {
+        loading = null;
+        setStatus(on ? "error" : null);
+      });
+    }
+    map.on("overlayadd", function (ev) {
+      if (ev.layer !== group) return;
+      on = true;
+      start();
+    });
+    map.on("overlayremove", function (ev) {
+      if (ev.layer !== group) return;
+      on = false;
+      setStatus(null);
+      if (attribution) map.attributionControl.removeAttribution(attribution);
+    });
+  }
+
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -788,6 +885,7 @@
     createMap: createMap,
     wheelNeedsCtrl: wheelNeedsCtrl,
     addAirspaceLayers: addAirspaceLayers,
+    addObstacleLayer: addObstacleLayer,
     addRadarLayer: addRadarLayer,
     layerLabel: layerLabel,
     fitWhenVisible: fitWhenVisible,

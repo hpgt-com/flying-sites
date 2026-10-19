@@ -10,6 +10,7 @@
     "clean": "node -e \"require('fs').rmSync('_site',{recursive:true,force:true})\"",
     "images": "node scripts/optimize-images.mjs",
     "airspace": "node scripts/update-airspace.mjs",
+    "obstacles": "node scripts/update-obstacles.mjs",
     "weather": "node scripts/fetch-weather.mjs",
     "logbook": "node scripts/logbook.mjs",
     "test": "node --test",

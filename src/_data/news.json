@@ -2,6 +2,22 @@
   "entries": [
     {
       "date": "2026-10-19",
+      "title": { "nb": "Kraftlinjer og hindre i kartet", "en": "Power lines and obstacles on the map" },
+      "what": {
+        "nb": "Kraftlinjer med master rundt flystedene, fra NVE. Etter hvert også lavspent, skiheiser og taubaner og master fra OpenStreetMap. Oppdateres hver måned.",
+        "en": "Power lines with their masts around the sites, from NVE. In time also low-voltage lines, ski lifts, cable cars and masts from OpenStreetMap. Updated every month."
+      },
+      "where": {
+        "nb": "Kartet på forsiden og stedssidene → lagknappen → «Kraftlinjer og hindre».",
+        "en": "The map on the home page and the site pages → the layer button → «Power lines and obstacles»."
+      },
+      "read": {
+        "nb": "Heltrukken lilla linje er kraftlinje (22 kV og mer), prikkene er mastene. Stiplet lilla er lavspent, mørk stiplet er heis eller taubane. Trykk på en linje for spenning og eier. Laget er ikke komplett: lavspent mangler mange steder, og vaiere som ikke er kraftlinjer er ikke med. Kjenner du til en linje eller vaier som mangler, meld fra på stedet.",
+        "en": "A solid purple line is a power line (22 kV and up), the dots are its masts. Dashed purple is low voltage, dark dashed is a lift or cable car. Tap a line for voltage and owner. The layer is not complete: low voltage is missing in many places, and wires that are not power lines are not included. If you know of a line or wire that is missing, report it on the site."
+      }
+    },
+    {
+      "date": "2026-10-19",
       "title": { "nb": "Vind over starten har fått nytt utseende", "en": "Wind above the launch has a new look" },
       "what": {
         "nb": "Vinden i høyden over starten time for time, nå med kast, termikk, skyer og regn under. Foreløpig på Sollifjellet, Sætertinden, Heia, Kilhusåsen og Elgen.",
@@ -115,8 +131,7 @@
     },
     {
       "title": { "nb": "Det som mangler på noen steder", "en": "What is missing on some sites" },
-      "text": { "nb": "Parkering, tekster og regler. Trenger lokal kunnskap: meld gjerne fra om du kjenner stedene.", "en": "Parking, texts and rules. Needs local knowledge: please report if you know the sites." },
-      "issue": 103
+      "text": { "nb": "Parkering, tekster og regler. Trenger lokal kunnskap: meld gjerne fra om du kjenner stedene.", "en": "Parking, texts and rules. Needs local knowledge: please report if you know the sites." }
     }
   ]
 }

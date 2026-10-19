@@ -169,7 +169,7 @@ scripts:
   </main>
 
   <section class="home__map" id="home-map-wrap" aria-label="{{ t.home.mapLabel }}">
-    <div id="home-map" class="map map--home" data-live-url="{{ site.liveUrl }}" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}"></div>
+    <div id="home-map" class="map map--home" data-live-url="{{ site.liveUrl }}" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" data-obstacles-url="{{ '/assets/obstacles.geojson' | url }}"></div>
     {#- Status on the map (home.js): a small pill with how many sites may work at the chosen time and the most common
         direction. It opens the details: the wind in the area, the count per rating, when the forecast was fetched,
         the legend and how the assessment works. -#}
