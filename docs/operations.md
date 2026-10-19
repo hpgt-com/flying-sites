@@ -147,6 +147,18 @@ the menu and is marked `noindex`. It shows per site:
 - Without Turnstile and the app (or the token) the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
   (Observability), as `report: GitHub svarte …`.
 
+## Flight logs («Fra turlogger»)
+
+- Flight logs (IGC, and KML with times) are read on the pilot's own machine and only the sums are committed:
+  `npm run logbook -- ~/turer [~/turer-fra-andre …]` (`scripts/logbook.mjs`, `lib/igc.js`) writes
+  `src/_data/logbook.json`. Look it over, then commit it. The logs, tracks and names never leave the machine.
+- Run it again over all the folders when logs are added: the file is written anew each time, and the same flight in an
+  IGC and a KML file counts once. One folder per pilot (`pilots` in the file is the number of folders).
+- A flight is found where the log moves at 4 m/s or more over 20 seconds (takeoff and landing), and counts for the
+  nearest launch within 3 km (a site's `launch` and its `launches` with a position). The script prints how many
+  flights it found per site, how many were elsewhere, and the files without a flight or that could not be read.
+- Shown on the site page as «Fra turlogger» when the site has flights in the file.
+
 ## Pilots in the air (OGN)
 
 - The map layer «Piloter i lufta» asks the data service every 5 seconds while it is on; the data service asks OGN's live

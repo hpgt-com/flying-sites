@@ -339,6 +339,21 @@
     "issue": "sak #{n}",
     "wish": "Har du et ønske, eller ser du noe som mangler? Bruk {link}."
   },
+  "logbook": {
+    "title": "Fra turlogger",
+    "summary": "{n} turer herfra i turloggene som er lagt inn, {from}–{to}.",
+    "recordsLabel": "Rekorder fra turloggene",
+    "hm": "t:min",
+    "longest": "lengste tur",
+    "masl": "moh",
+    "highest": "høyest",
+    "farthest": "lengst fra start",
+    "typical": "gjennomsnittlig tur",
+    "directions": "Retning rett etter start",
+    "months": "Turer per måned, alle år",
+    "howToRead": "Slik leser du dette",
+    "explain": "Tallene kommer fra turlogger (IGC) som piloter i klubben har lagt inn, ikke fra alle som flyr her. Retningen er den piloten fløy de første sekundene etter start, som er omtrent mot vinden, og viser hvilke startretninger som faktisk brukes. Turer per måned er summen for alle år, så den viser sesongen. Bare summene vises, aldri sporene."
+  },
   "pwa": {
     "shortName": "Flysteder",
     "description": "Flysteder for paragliding og speedflying rundt Harstad, med kart, startplasser, landinger og vindvurdering.",

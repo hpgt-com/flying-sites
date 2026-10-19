@@ -339,6 +339,21 @@
     "issue": "issue #{n}",
     "wish": "Have a wish, or see something missing? Use {link}."
   },
+  "logbook": {
+    "title": "From flight logs",
+    "summary": "{n} flights from here in the flight logs added, {from}–{to}.",
+    "recordsLabel": "Records from the flight logs",
+    "hm": "h:min",
+    "longest": "longest flight",
+    "masl": "m asl",
+    "highest": "highest",
+    "farthest": "farthest from launch",
+    "typical": "average flight",
+    "directions": "Direction just after takeoff",
+    "months": "Flights per month, all years",
+    "howToRead": "How to read this",
+    "explain": "The numbers come from flight logs (IGC) that pilots in the club have added, not from everyone who flies here. The direction is the one the pilot flew in the first seconds after takeoff, roughly into the wind, and shows which launch directions are actually used. Flights per month is the sum for all years, so it shows the season. Only the sums are shown, never the tracks."
+  },
   "pwa": {
     "shortName": "Flying sites",
     "description": "Paragliding and speedflying sites around Harstad, with maps, launches, landings and wind assessment.",
