@@ -125,3 +125,19 @@ test("the station's page at its source: the data service's address, Holfuy's for
   assert.equal(ST.stationUrl(item({ id: "SN84970", source: "MET Norge", url: null })), null);
   assert.equal(ST.stationUrl(item({ url: "javascript:alert(1)", source: "MET Norge" })), null, "only https addresses");
 });
+
+test("MET's stations, which mostly measure once an hour, are old only after 90 minutes; the club's after 30", () => {
+  const at = (min) => new Date(NOW - min * 60000).toISOString();
+  assert.equal(ST.isOld(item({ time: at(45) }), NOW), true, "Holfuy (no source given) after 45 min");
+  assert.equal(ST.isOld(item({ time: at(45), source: "Holfuy" }), NOW), true);
+  assert.equal(ST.isOld(item({ time: at(45), source: "MET Norge", id: "SN84970" }), NOW), false);
+  assert.equal(ST.isOld(item({ time: at(95), source: "MET Norge", id: "SN84970" }), NOW), true);
+  assert.equal(ST.ageText(item({ time: at(45), source: "MET Norge" }), NOW), "for 45 min siden");
+});
+
+test("the club's stations first, then MET's, each in the order given", () => {
+  const items = [item({ id: "SN2", source: "MET Norge" }), item({ id: 490, source: "Holfuy" }), item({ id: "SN1", source: "MET Norge" }), item({ id: 820 })];
+  const g = ST.groups(items);
+  assert.deepEqual(g.club.map((i) => i.id), [490, 820]);
+  assert.deepEqual(g.met.map((i) => i.id), ["SN2", "SN1"]);
+});

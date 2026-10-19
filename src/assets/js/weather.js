@@ -13,7 +13,7 @@
   var t = FS.t, make = ST.make, value = ST.value;
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
 
-  var period = 30, sort = "name", data = null, forecast = null;
+  var period = 30, sort = "club", data = null, forecast = null;
   ST.useRules(FS.readJson("weather-rules"));
   var assess = ST.assess, chip = ST.ratingChip, anchor = ST.anchor, hasWind = ST.hasWind;
   // The «Målt mot varslet» parts that are open, so they stay open when the page is redrawn.
@@ -148,13 +148,12 @@
     return el;
   }
 
+  // The club's own order (Heia first, as in workers/data/src/stations.js), or the strongest wind first.
   function sorted(items, now) {
     var list = items.slice();
     if (sort === "wind") {
       var speed = function (i) { return hasWind(i, now) ? i.wind.speed : -1; };
       list.sort(function (a, b) { return speed(b) - speed(a); });
-    } else {
-      list.sort(function (a, b) { return a.name.localeCompare(b.name, FS.lang); });
     }
     return list;
   }
@@ -163,8 +162,13 @@
     if (!data) return;
     var now = Date.now(), items = sorted(data.items, now);
     statusEl.hidden = true;
-    rowsEl.replaceChildren.apply(rowsEl, items.map(function (i) { return row(i, now); }));
-    cardsEl.replaceChildren.apply(cardsEl, items.map(function (i) { return card(i, now); }));
+    // The club's stations as rows and cards; MET's only as a small folded table under the rows (stations.js metTable).
+    var club = ST.groups(items).club;
+    rowsEl.replaceChildren.apply(rowsEl, club.map(function (i) { return row(i, now); }));
+    var oldMet = rowsEl.parentNode.querySelector(".met-stations"), met = ST.metTable(items, now, oldMet && oldMet.open);
+    if (oldMet) oldMet.remove();
+    if (met) rowsEl.after(met);
+    cardsEl.replaceChildren.apply(cardsEl, club.map(function (i) { return card(i, now); }));
   }
 
   function choose(groupId, attr, apply) {
