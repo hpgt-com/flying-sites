@@ -24,6 +24,9 @@ export class Store extends DurableObject {
     // Forecast against measured, per site and finished hour (sources/verify.js), kept for a year.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS verify_hours (site TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
       f_dir REAL, f_speed REAL, f_gust REAL, m_dir REAL, m_speed REAL, m_gust REAL, n INTEGER, PRIMARY KEY (site, station, time))`);
+    // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, pilots INTEGER NOT NULL,
+      minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
     let have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
     // The first version (18.10.2026) had no source, and the station and time as the key. Rebuilt once with (source,
     // station, time) as the key; the rows already there were all Holfuy's and keep their values.
@@ -121,6 +124,19 @@ export class Store extends DurableObject {
 
   pruneVerifyHours(before) {
     this.sql.exec("DELETE FROM verify_hours WHERE time < ?", before);
+  }
+
+  // The day's sums replace what an earlier run stored for the same day and site.
+  putFlightDays(rows) {
+    for (const r of rows) {
+      this.sql.exec(`INSERT INTO flight_days (day, site, pilots, minutes, max_dist, max_alt) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT (day, site) DO UPDATE SET pilots = excluded.pilots, minutes = excluded.minutes, max_dist = excluded.max_dist, max_alt = excluded.max_alt`,
+        r.day, r.site, r.pilots, r.minutes, r.max_dist ?? null, r.max_alt ?? null);
+    }
+  }
+
+  flightDays() {
+    return this.sql.exec("SELECT day, site, pilots, minutes, max_dist, max_alt FROM flight_days ORDER BY day").toArray();
   }
 
   prune(source, before) {

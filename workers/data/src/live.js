@@ -69,18 +69,24 @@ export function mergeTrails(tracks, positions, now, keepMs) {
   return Object.fromEntries(positions.map((p) => [p.id, (tracks.get(p.id) ?? []).map((x) => [x[1], x[2], x[3]])]));
 }
 
+// The paragliders OGN hears in the area of the sites now, as parseLive gives them. Also used for the flying activity
+// (sources/flights.js).
+export async function fetchLive(sites, now = Date.now()) {
+  const b = bounds(sites);
+  const url = `${API}?a=0&b=${b.n.toFixed(2)}&c=${b.s.toFixed(2)}&d=${b.e.toFixed(2)}&e=${b.w.toFixed(2)}`;
+  const r = await fetch(url, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`OGN svarte ${r.status}`);
+  return parseLive(await r.text(), now);
+}
+
 // The answer to GET /v1/live.json, from OGN, or from the cache when it is fresh. store: for the tracks (mergeLive).
 export async function handleLive(sites, now = Date.now(), cache = globalThis.caches?.default, store = null) {
   const key = new Request("https://data.hpgt.workers.dev/v1/live.json");
   const hit = cache && (await cache.match(key));
   if (hit) return hit;
-  const b = bounds(sites);
-  const url = `${API}?a=0&b=${b.n.toFixed(2)}&c=${b.s.toFixed(2)}&d=${b.e.toFixed(2)}&e=${b.w.toFixed(2)}`;
   let body;
   try {
-    const r = await fetch(url, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(8000) });
-    if (!r.ok) throw new Error(`OGN svarte ${r.status}`);
-    const items = parseLive(await r.text(), now);
+    const items = await fetchLive(sites, now);
     if (store && items.length) {
       const trails = await store.mergeLive(items.map(({ id, time, lat, lon, climb }) => ({ id, time, lat, lon, climb })), now, TRAIL_MINUTES * 60000);
       for (const item of items) item.trail = trails[item.id] ?? [];

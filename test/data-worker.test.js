@@ -481,3 +481,65 @@ test("live: the track of each aircraft over the last minutes, oldest first, the 
     globalThis.fetch = realFetch;
   }
 });
+
+// --- Flyaktivitet per sted (OGN) ---
+const flightsMod = await import("../workers/data/src/sources/flights.js");
+
+test("flights: a pilot counted once a day for the site nearest where first seen flying, only sums per site", () => {
+  const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }, { id: "elgen", lat: 68.89, lon: 16.28 }];
+  const at = (s) => new Date(NOW - s * 1000).toISOString();
+  const day = { day: "2026-10-18", pilots: {} };
+  const seen = [
+    { key: "a", lat: 68.801, lon: 16.501, alt: 600, speed: 8, climb: 1.5, time: at(10) },
+    { key: "b", lat: 68.80, lon: 16.50, alt: 480, speed: 0, climb: 0, time: at(10) },
+    { key: "c", lat: 69.5, lon: 18.0, alt: 900, speed: 9, climb: 0, time: at(10) },
+    { key: "d", lat: 68.80, lon: 16.50, alt: 700, speed: 9, climb: 0, time: at(400) },
+  ];
+  assert.equal(flightsMod.observe(day, seen, sites, NOW, 2), true);
+  assert.deepEqual(Object.keys(day.pilots).sort(), ["a", "c"], "standing at launch and old positions are not flying");
+  assert.equal(day.pilots.c.site, null, "first seen far from every site: counted for none");
+  assert.equal(flightsMod.observe(day, [seen[0]], sites, NOW, 2), false, "the same position is not counted twice");
+  flightsMod.observe(day, [{ ...seen[0], lat: 68.85, lon: 16.40, alt: 1400, time: at(0) }], sites, NOW, 2);
+  assert.equal(day.pilots.a.site, "heia", "the site stays the one where first seen, even when flying nearer another");
+  assert.equal(day.pilots.a.minutes, 4);
+  const rows = flightsMod.dayRows(day);
+  assert.deepEqual(rows, [{ day: "2026-10-18", site: "heia", pilots: 1, minutes: 4, max_dist: rows[0].max_dist, max_alt: 1400 }]);
+  assert.equal(rows[0].max_dist, 6.9, "the farthest from launch in km");
+
+  const data = flightsMod.buildFlights([
+    { day: "2026-09-30", site: "heia", pilots: 3, minutes: 90, max_dist: 2, max_alt: 900 },
+    { day: "2026-10-18", site: "heia", pilots: 1, minutes: 4, max_dist: 7.5, max_alt: 1400 },
+  ], "2026-09-01", NOW);
+  assert.deepEqual(data.sites.heia, { days: 2, pilots: 4, minutes: 94, maxDist: 7.5, maxAlt: 1400, last: "2026-10-18",
+    months: { "2026-09": { days: 1, pilots: 3, minutes: 90 }, "2026-10": { days: 1, pilots: 1, minutes: 4 } } });
+  assert.equal(data.since, "2026-09-01");
+  assert.equal(flightsMod.osloDay(Date.parse("2026-10-18T22:30:00Z")), "2026-10-19", "a Norwegian day");
+});
+
+test("flights: a run keeps only the day's keys, made with a salt that is thrown away the next day", async () => {
+  const state = {}, days = new Map(), snaps = {};
+  const store = {
+    getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = structuredClone(v); },
+    putFlightDays: async (rows) => { for (const r of rows) days.set(`${r.day}|${r.site}`, r); },
+    flightDays: async () => [...days.values()], putSnapshot: async (d, b) => { snaps[d] = JSON.parse(b); },
+  };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('<markers><m a="68.801,16.501,P,Pilot,900,09:00:00,5,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>');
+  try {
+    const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
+    await flightsMod.run(store, sites, NOW, 2);
+    const today = state["flights-today"];
+    assert.equal(Object.keys(today.pilots).length, 1);
+    assert.ok(!JSON.stringify(today).includes("dd1234ab"), "the device id is not stored, only a key");
+    assert.equal(snaps.flights.sites.heia.pilots, 1);
+    await flightsMod.run(store, sites, NOW + 120000, 2);
+    assert.equal(snaps.flights.sites.heia.pilots, 1, "the same pilot later the same day counts once");
+    assert.equal(snaps.flights.sites.heia.minutes, 4);
+    globalThis.fetch = async () => new Response("<markers></markers>");
+    await flightsMod.run(store, sites, NOW + 86400000, 2);
+    assert.notEqual(state["flights-today"].salt, today.salt, "a new salt each day");
+    assert.equal(snaps.flights.sites.heia.days, 1, "the old day's pilots are gone; a new day with nobody flying adds nothing");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
