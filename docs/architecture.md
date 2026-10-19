@@ -7,7 +7,7 @@ In short: **a static site with no server and no database.** All content lives as
 Actions builds the site with Eleventy and publishes it to GitHub Pages on every change. Data that must be fresh (the
 wind forecast, winds aloft, weather stations) comes from the data service on Cloudflare, which the pages read after
 loading; each build also starts from a forecast fetched in its own job just before it. Data that is slow to fetch
-(airspace, heights) is cached in the repository. Each kind of external data is a module, see
+(airspace, heights, power lines) is cached in the repository. Each kind of external data is a module, see
 [Data modules](#data-modules).
 
 ## Overview
@@ -17,7 +17,7 @@ flowchart LR
   subgraph repo["GitHub repository (hpgt-com/flying-sites)"]
     sites["Site files<br/>src/sites/&lt;id&gt;/index.md<br/>+ index.en.md, images, GPX, drawing"]
     data["Shared data<br/>src/_data/ and src/_i18n/"]
-    cache["Cache<br/>src/_data/cache/<br/>(airspace, heights)"]
+    cache["Cache<br/>src/_data/cache/<br/>(airspace, heights,<br/>power lines)"]
     code["Templates, scripts, CSS<br/>src/_includes/, src/assets/, lib/"]
   end
 
@@ -25,6 +25,8 @@ flowchart LR
     prcheck["PR check<br/>tests + build,<br/>links, HTML, axe"]
     deploy["Build and deploy<br/>on merge<br/>(weather → build → deploy)"]
     airspace["Update airspace<br/>1st of each month → PR"]
+    obstacles["Update power lines<br/>and obstacles<br/>2nd of each month → PR"]
+    dataworker["Data service deploy<br/>(workers/data)"]
     scan["Code scanning<br/>CodeQL"]
   end
 
@@ -32,6 +34,12 @@ flowchart LR
     met["MET Locationforecast<br/>(wind forecast)"]
     kv["Kartverket elevation data<br/>(walking routes)"]
     oaip["openAIP<br/>(airspace)"]
+    nve["NVE<br/>(power lines, masts,<br/>wind turbines)"]
+    osm["OpenStreetMap / Overpass<br/>(low voltage, lifts, masts)"]
+  end
+
+  subgraph cf["Cloudflare (data.hpgt.workers.dev)"]
+    worker["Data service<br/>forecast, stations, winds aloft,<br/>verification, flights, live,<br/>«Meld fra» → GitHub issues"]
   end
 
   pages["GitHub Pages<br/>flysteder.hpgt.com"]
@@ -51,14 +59,19 @@ flowchart LR
   met --> deploy
   kv -. "new GPX" .-> cache
   oaip --> airspace --> cache
+  nve & osm --> obstacles --> cache
+  code --> dataworker --> worker
   deploy --> pages --> ui
   ui --> tiles & yr & gc
+  ui <--> worker
 ```
 
 - **Content is files.** Each site is one folder. Changes go through a pull request, and the PR check stops invalid
   site files before they go live.
 - **Automatic imports never write to the site files**, only to `src/_data/cache/`. Airspace arrives as a separate PR
   that is reviewed.
+- **Fresh data from the data service.** The pages read the forecast, stations, winds aloft, flying activity and
+  pilots in the air from the Cloudflare Worker after loading, and post «Meld fra» to it. See [Data modules](#data-modules).
 - **No secrets in the browser.** `OPENAIP_API_KEY` is used only in the workflow; the data service's keys (`HOLFUY_KEY`,
   `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`) are Cloudflare secrets, never in the repository or the pages.
 
@@ -104,6 +117,9 @@ flowchart TB
 | Walking routes | `lib/gpx.js` | Length, elevation gain, moving time and elevation profile. Heights from Kartverket, cached per file in `src/_data/cache/elevations/`. |
 | Images | `lib/images.js`, `lib/site-images.js` | WebP/JPEG at 400–2400 px without metadata, with photographer and licence embedded. Images are found by file name. |
 | Airspace | `lib/airspace.js`, `lib/airspace-profile.js`, `scripts/update-airspace.mjs` | openAIP per launch, the "ceiling" above the launch and its height profile, notes from the site file. The map layer uses `region.geojson`. |
+| Power lines and obstacles | `lib/obstacles.js`, `scripts/update-obstacles.mjs` | NVE's overhead power lines, masts and wind turbines, and OpenStreetMap's low-voltage lines, lifts and masts, within 1.5 km of each site. Copied as `/assets/obstacles.geojson` for the map layer; nothing is computed at build time. |
+| Winds aloft | `lib/windgram.js`, `lib/weather/open-meteo.js` | The grid for «Vind over starten»: wind every 250 m, boundary layer, cloud base, clouds, rain, sun and gusts per hour. |
+| What's new | `src/_data/news.json`, `src/nytt.njk` | «Nytt på siden» (`/nytt/`): new features in both languages, and the plan with links to the issues. |
 | Weather | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | 48 hours of wind, gusts and precipitation per launch from MET, and winds aloft from Open-Meteo. Read from `.cache/weather/`, see [Data modules](#data-modules). If one site fails, only that site is missing. |
 | Languages | `lib/i18n.js`, `lib/translations.js` | Dictionaries, URLs per language and translated site text. See below. |
 | Status | `lib/status.js` | What is missing per site, for `/status/`. |
@@ -123,7 +139,8 @@ flowchart LR
     j3["#forecast-data / #site-wind-data<br/>forecast and rules"]
   end
 
-  common["common.js<br/>FS.t(), maps and map layers,<br/>wind roses, airspace,<br/>colour mode, statistics"]
+  common["common.js<br/>FS.t(), maps and map layers,<br/>wind roses, airspace, power lines,<br/>radar, colour mode, statistics"]
+  assets["/assets/airspace.geojson<br/>/assets/obstacles.geojson<br/>(loaded when a layer is turned on)"]
   wind["wind.js<br/>rateWind(): Kan passe / Usikkert /<br/>For mye vind / Passer ikke"]
   home["home.js<br/>home page: search, filters,<br/>card, summary"]
   site["site.js<br/>site map, direction arcs,<br/>elevation profile"]
@@ -141,6 +158,7 @@ flowchart LR
   sw["sw.js (service worker)<br/>pages, files, GPX and<br/>Kartverket tiles offline"]
 
   j1 --> common
+  assets --> common
   common --> home & site & sitewind & lightbox
   j2 --> home & site
   j3 --> wind --> home & sitewind
@@ -233,6 +251,7 @@ sequenceDiagram
 | `deploy.yml` | Push to `main`, manually | Four jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `deploy` publishes, and `attest` signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
 | `data-worker.yml` | Push to `main` when the data service, the MET code or the sites change, manually | Publishes the data service (`workers/data`) to Cloudflare Workers, with the token in the environment `cloudflare` (only `main`). |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
+| `obstacles.yml` | The 2nd of each month, manually | Fetches power lines and obstacles from NVE and OpenStreetMap and opens a PR if anything has changed. No secrets. |
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
 | `scorecard.yml` | Push to `main`, Mondays, branch protection changes | OpenSSF Scorecard (supply-chain good practice). Results in Code scanning and behind the README badge. |
 | Dependabot | Monthly | PRs with updated packages and Actions. |
@@ -254,10 +273,11 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Data service: pilots in the air | Open Glider Network (live positions of paragliders, ODbL) | `workers/data/src/live.js` | On demand, when someone has «Piloter i lufta» on; cached 5 seconds | The last 10 minutes of each track, with the climb, in the store's memory only, never written down; served as `https://data.hpgt.workers.dev/v1/live.json` | `live.js` on the home and site maps |
 | Data service: flying activity | Open Glider Network (as above) | `workers/data/src/sources/flights.js` | Every 2 minutes | Per site and day the flights, pilots, minutes in the air, farthest and highest (`flight_days`, kept); the day's pilots by a salted key that is thrown away the next day; served as `https://data.hpgt.workers.dev/v1/flights.json` | `flights.js` on the site page, `activity.js` on /flyaktivitet/ |
 | Data service: MET stations | MET Frost (client ID `FROST_CLIENT_ID` in Cloudflare): the stations within 50 km of a launch (Lofoten to Bardu), found once a day | `workers/data/src/sources/frost.js` | Every 10 minutes | As the Holfuy stations (source `met`), served in `/v1/stations.json` together with them (`merge.js`) | As the Holfuy stations |
+| Power lines and obstacles | NVE Nettanlegg and Vindkraft (`kart.nve.no`, NLOD), OpenStreetMap via Overpass (ODbL) | `lib/obstacles.js`, `scripts/update-obstacles.mjs` (`npm run obstacles`) | `obstacles.yml`, the 2nd of each month, as a PR | `src/_data/cache/obstacles/region.geojson` (committed, one feature per line) | The map layer «Kraftlinjer og hindre» (`addObstacleLayer` in `common.js`) |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
 
-- **Committed or not:** data that changes rarely and should be reviewed (airspace) is committed and arrives as a PR.
+- **Committed or not:** data that changes rarely and should be reviewed (airspace, power lines) is committed and arrives as a PR.
   Data that is only valid for a few hours (weather) is never committed.
 - **Failure:** a module that fails leaves out its own part, not the whole site. A weather source that fails is
   written as `null`, and the site builds without the wind assessment or winds aloft.
@@ -310,7 +330,19 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
 - **Data service and weather stations:** the MET forecast and the club's Holfuy stations on Cloudflare (Durable Object,
   archive in R2). The stations on the maps, in the Vær tab and on the weather page `/vaer/` (change over a period, how
   even the wind is, charts with temperature, «Målt mot varslet»), the «Målt nå» block on the station's site page, and the
-  assessment for the hour now from a fresh measurement.
+  assessment for the hour now from a fresh measurement. MET's own stations (Frost) on the same maps, and «Hvor godt
+  treffer varselet her?» from the forecast hours against the measurements.
+- **Winds aloft:** «Vind over starten», a windgram with wind every 250 m, the thermals as a line and the top of the
+  thermals in m asl, cloud base, gusts, clouds and rain, from Open-Meteo, in the build and in the data service.
+- **Open Glider Network (beta):** «Piloter i lufta», paragliders live on the maps with a track coloured by climb and
+  sink, and flying activity per site (the site page and `/flyaktivitet/`), counted from the same data.
+- **«Meld fra»:** a form on the site pages and `/meld-fra/` that becomes a labelled GitHub issue, with Turnstile and
+  no account.
+- **Power lines and obstacles:** a map layer with NVE's power lines and masts and OpenStreetMap's low-voltage lines,
+  lifts and masts, updated monthly via PR.
+- **«Nytt på siden»** (`/nytt/`): what is new and the plan, for the pilots.
+- **Flight logs:** `npm run logbook` sums IGC/KML logs per site (`lib/igc.js`); the box on the site page is hidden
+  until more pilots have added logs.
 
 ## Planned
 
@@ -320,5 +352,8 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
 - **«Meld fra»** (built): reports become GitHub issues labelled by what they concern (`endringsforslag`, `site-data`,
   `safety`, `bug`, `enhancement`), see `workers/data/src/report.js`. Still planned: an agent that summarises the issue
   and makes the change as a PR once it is labelled `approved`.
+- **Distances to obstacles** on the site page, such as «Kraftlinje 63 m fra landing», computed at build time from
+  the power line file.
+- **Statistics from flight logs** (#105), once more pilots add logs or Flightlog/pgpilot get an API.
 - **NOTAM** as a separate map layer, once there is a safe and permitted way to fetch from IPPC. It needs a server-side
   intermediary (the data service), the same way as the other sources.

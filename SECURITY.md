@@ -53,7 +53,8 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
   runs the script with read-only access and the openAIP key; `pr` has write access to push the branch and open the
   PR, but runs no npm code. The fetched files go from one to the other as an artifact. When the club's GitHub App
   is set up, `pr` uses a short-lived app token limited to this repository (contents and pull requests), so the PR
-  check runs on the airspace PRs too.
+  check runs on the airspace PRs too. The power line workflow (`obstacles.yml`) is built the same way, without any
+  key.
 - Every publish is signed. The `attest` job in «Build and deploy» makes a build provenance attestation (which
   workflow, commit and run built the site) and an SBOM attestation (SPDX from `package-lock.json`, made with
   `npm sbom`), both for the SHA-256 of the archive that is published to Pages. The job has `id-token` and
