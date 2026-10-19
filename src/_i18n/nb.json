@@ -393,6 +393,7 @@
       "fetched": "Varsel fra MET hentet {when}.",
       "fetchedUpdated": "Varsel fra MET oppdatert {updated}, hentet {when}.",
       "notCovered": "Varselet dekker ikke dette tidspunktet.",
+      "loading": "Henter varselet …",
       "staleSite": "Varselet er for gammelt",
       "staleSiteText": "Vindvurderingen er slått av til siden er oppdatert. Sjekk Yr eller Windy.",
       "noneNow": "Ingen vindvurdering nå",

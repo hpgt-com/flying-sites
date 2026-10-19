@@ -14,11 +14,13 @@ const DAY = 86400000;
 export const dateOf = (ms) => new Date(ms).toISOString().slice(0, 10);
 
 // The whole days (UTC) to archive: from the day of the oldest measurement, or the day after the last archived one,
-// up to yesterday. At most `limit`, so one run stays short; the rest follow on the next runs.
+// up to the last day that ended LATE_HOURS ago (measurements can come in late: MET's stations report up to two hours
+// after, and an archived day is not written again). At most `limit`, so one run stays short; the rest follow later.
+export const LATE_HOURS = 3;
 export function daysToArchive(oldest, archivedThrough, now, limit = 2) {
   if (!oldest) return [];
   let day = archivedThrough ? Date.parse(archivedThrough + "T00:00:00Z") + DAY : Date.parse(dateOf(Date.parse(oldest)) + "T00:00:00Z");
-  const today = Date.parse(dateOf(now) + "T00:00:00Z");
+  const today = Date.parse(dateOf(now - LATE_HOURS * 3600000) + "T00:00:00Z");
   const days = [];
   while (day < today && days.length < limit) { days.push(dateOf(day)); day += DAY; }
   return days;

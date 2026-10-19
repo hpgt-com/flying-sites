@@ -107,6 +107,11 @@ test("a forecast older than maxForecastAgeHours is too old", () => {
   assert.equal(W.isStale(fetched(1), rules, now), false);
   assert.equal(W.isStale(fetched(rules.maxForecastAgeHours + 0.1), rules, now), true);
   assert.equal(W.isStale({ fetched: "tull" }, rules, now), true);
+  assert.equal(W.isStale({ fetched: "2099-01-01T00:00:00Z" }, rules, now), true, "fetched in the future");
+  const model = (h) => ({ ...fetched(0.2), updated: new Date(now - h * 3600000).toISOString() });
+  assert.equal(W.isStale(model(2), rules, now), false);
+  assert.equal(W.isStale(model(48), rules, now), true, "fetched lately, but from a model run two days old");
+  assert.equal(W.isStale(model(-1), rules, now), true, "a model run in the future");
 });
 
 test("«nå» finds the current hour, and +3/+6 hours from it", () => {
@@ -116,6 +121,10 @@ test("«nå» finds the current hour, and +3/+6 hours from it", () => {
   assert.equal(W.slotIndex(times, "3", now), 5);
   assert.equal(W.slotIndex(times, "6", now), 8);
   assert.equal(W.slotIndex(times, "off", now), -1);
+  // A missing hour (12, 13, 15, 16): +3 from 12 is 15, and +1 from 13 is not there, so no later hour is shown instead.
+  const gap = ["2026-10-04T12:00:00Z", "2026-10-04T13:00:00Z", "2026-10-04T15:00:00Z", "2026-10-04T16:00:00Z"];
+  assert.equal(W.slotIndex(gap, "3", Date.parse("2026-10-04T12:10:00Z")), 2);
+  assert.equal(W.slotIndex(gap, "1", Date.parse("2026-10-04T13:10:00Z")), -1);
 });
 
 test("the timeline on the home page: any number of hours from now, as far as the forecast goes", () => {
@@ -242,13 +251,17 @@ test("the day plan merges hours with the same assessment and skips dark hours", 
   assert.equal(days["2026-10-09"][1].gust, null); // gusts missing from the forecast
 });
 
-test("a forecast from the data service is used only when it is newer, well formed and has every launch", () => {
+test("a forecast from the data service is used when it is newer and well formed; a missing launch only has none", () => {
   const page = { fetched: "2026-10-18T12:00:00Z", times: ["2026-10-18T12:00:00Z"], sites: { a: [[200, 5, 9, 0]], b: [null] } };
   const live = { fetched: "2026-10-18T15:00:00Z", times: ["2026-10-18T15:00:00Z", "2026-10-18T16:00:00Z"], sites: { a: [[200, 5, 9, 0], null], b: [[180, 3, null, null], [180, 3, 6, 0.2]] } };
   assert.equal(W.isNewerForecast(live, page), true);
   assert.equal(W.isNewerForecast(live, null), true);
   assert.equal(W.isNewerForecast({ ...live, fetched: "2026-10-18T11:00:00Z" }, page), false, "older");
-  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page), false, "a launch missing");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page), true, "a launch missing does not stop the others");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page, "b"), false, "the site page needs its own launch");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, null, "b"), true, "unless it has no forecast to keep");
+  assert.equal(W.isNewerForecast({ ...live, times: [live.times[1], live.times[0]] }, page), false, "hours out of order");
+  assert.equal(W.isNewerForecast({ ...live, times: [live.times[0], live.times[0]] }, page), false, "an hour twice");
   assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [[180, 3, 6, 0]] } }, page), false, "wrong length");
   assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [["<b>", 3, 6, 0], null] } }, page), false, "text in a row");
   assert.equal(W.isNewerForecast({ error: "no forecast yet" }, page), false);

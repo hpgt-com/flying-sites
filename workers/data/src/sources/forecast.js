@@ -37,9 +37,10 @@ export function groupPast(hours) {
   return past;
 }
 
-// The launches to fetch now: those missing from the state first, then those fetched longest ago.
+// The launches to fetch now: those missing from the state first, then those tried longest ago. A failed try counts
+// (tried), so launches that keep failing go to the back of the queue instead of taking every run's places.
 export function pickSites(sites, state, count = PER_RUN) {
-  const age = (id) => Date.parse(state.sites[id]?.fetched) || 0;
+  const age = (id) => Math.max(Date.parse(state.sites[id]?.fetched) || 0, Date.parse(state.sites[id]?.tried) || 0);
   return [...sites].sort((a, b) => age(a.id) - age(b.id)).slice(0, count);
 }
 
@@ -77,6 +78,7 @@ export async function run(store, sites, now = Date.now()) {
       const h = hourNow(rows, now);
       if (h) hours.push({ site: site.id, time: h[0], dir: h[1], speed: h[2], gust: h[3], rain: h[4], fetched: new Date(now).toISOString() });
     } catch (err) {
+      state.sites[site.id] = { ...state.sites[site.id], tried: new Date(now).toISOString() };
       console.warn(`MET: ${site.id}: ${err.message}`);
     }
   }

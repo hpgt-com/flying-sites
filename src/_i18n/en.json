@@ -393,6 +393,7 @@
       "fetched": "MET forecast fetched {when}.",
       "fetchedUpdated": "MET forecast updated {updated}, fetched {when}.",
       "notCovered": "The forecast does not cover this time.",
+      "loading": "Loading the forecast …",
       "staleSite": "The forecast is too old",
       "staleSiteText": "The wind assessment is turned off until the site is updated. Check Yr or Windy.",
       "noneNow": "No wind assessment now",

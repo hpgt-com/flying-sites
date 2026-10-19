@@ -1183,14 +1183,14 @@
 
   readHash();
 
-  // A newer forecast from the data service (workers/data), when the one built into the page is older. It also
-  // brings the assessment back if the page's forecast had become too old. Only when the page has a forecast at all,
-  // since the parts that show it are left out of the page without one.
-  if (forecast) {
-    W.fetchNewerForecast(fc.live, forecast, function (newer) {
-      forecast = newer;
-      if (stale) { stale = false; windSlot = "0"; setSuggest(false); }
-      update();
-    });
-  }
+  // A newer forecast from the data service (workers/data), at once, every ten minutes while the page is in view, and when
+  // it comes back into view or online (wind.js watchForecast). It brings the assessment back when the page's forecast
+  // had become too old, and gives one to a page built without a forecast (the parts that show it are in the page as long
+  // as there is a data service, index.njk).
+  W.watchForecast(fc.live, function () { return forecast; }, function (newer) {
+    var first = !forecast || stale;
+    forecast = newer;
+    if (first) { stale = false; windSlot = "0"; setSuggest(false); }
+    update();
+  });
 })();

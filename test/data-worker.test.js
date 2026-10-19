@@ -116,7 +116,8 @@ test("one schedule every minute: the stations every minute, the forecast every f
 });
 
 test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {
-  const now = Date.parse("2026-10-18T00:10:00Z");
+  const now = Date.parse("2026-10-18T03:10:00Z");
+  assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", "2026-10-16", Date.parse("2026-10-18T00:10:00Z")), [], "yesterday waits a few hours for late measurements");
   assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", null, now), ["2026-10-15", "2026-10-16"]);
   assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", "2026-10-16", now), ["2026-10-17"]);
   assert.deepEqual(daysToArchive("2026-10-15T13:00:00.000Z", "2026-10-17", now), []);
@@ -636,5 +637,59 @@ test("flights: a run keeps only the day's keys, made with a salt that is thrown 
     assert.equal(snaps.flights.sites.heia.days, 1, "the old day's pilots are gone; a new day with nobody flying adds nothing");
   } finally {
     globalThis.fetch = realFetch;
+  }
+});
+
+test("the queue: a failed try sends a launch to the back, so launches that keep failing do not take every run", () => {
+  const state = { sites: { a: { fetched: ago(60), tried: ago(1) }, b: { fetched: ago(25) }, c: { tried: ago(2) } } };
+  assert.deepEqual(pickSites(sites, state, 2).map((s) => s.id), ["d", "b"]);
+  assert.deepEqual(pickSites(sites, state, 4).map((s) => s.id), ["d", "b", "c", "a"]);
+  assert.equal(windgramMod.pickSites(sites, state, 1)[0].id, "d");
+});
+
+test("MET: launches that fail are marked as tried, and the next run fetches the others", async () => {
+  const { run } = await import("../workers/data/src/sources/forecast.js");
+  const many = Array.from({ length: 8 }, (_, i) => ({ id: "s" + i, lat: 68 + i / 10, lon: 16, altitude: 500 }));
+  let state = { sites: {} };
+  const store = { getState: async () => structuredClone(state), putState: async (k, v) => { state = v; }, putSnapshot: async () => {},
+    putForecastHours: async () => {}, forecastHoursSince: async () => [], pruneForecastHours: async () => {} };
+  const realFetch = globalThis.fetch, asked = [];
+  globalThis.fetch = async (url) => { asked.push(String(url)); return new Response("down", { status: 500 }); };
+  const realWarn = console.warn;
+  console.warn = () => {};
+  try {
+    await run(store, many, NOW);
+    const first = Object.keys(state.sites);
+    assert.equal(first.length, 6, "six tried");
+    assert.ok(first.every((id) => state.sites[id].tried && !state.sites[id].fetched));
+    await run(store, many, NOW + 5 * 60000);
+    assert.ok(["s6", "s7"].every((id) => state.sites[id]?.tried), "the two not tried yet come next");
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
+  }
+});
+
+test("Holfuy: the fresh measurements are published even when the archive fails", async () => {
+  const holfuy = await import("../workers/data/src/sources/holfuy.js");
+  const one = { stationId: 101, stationName: "Heia", dateTime: "2026-10-18 15:10:00", location: { latitude: 68.8, longitude: 16.5, altitude: 420 },
+    wind: { speed: 4.2, gust: 7.1, min: 2.0, unit: "m/s", direction: 230 }, temperature: 6.3 };
+  const saved = {}, state = {};
+  const store = {
+    addMeasurements: async () => {}, getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = v; },
+    measurementsSince: async () => [], putSnapshot: async (k, v) => { saved[k] = v; },
+    oldestMeasurement: async () => "2026-10-10T10:00:00.000Z", measurementsBetween: async () => [], prune: async () => {},
+  };
+  const env = { HOLFUY_KEY: "k", ARCHIVE: { put: async () => { throw new Error("R2 nede"); } } };
+  const realFetch = globalThis.fetch, realWarn = console.warn, warned = [];
+  globalThis.fetch = async () => Response.json(one);
+  console.warn = (m) => warned.push(m);
+  try {
+    await holfuy.run(store, env, [{ id: 101, site: "heia" }], NOW);
+    assert.ok(saved[holfuy.DATASET], "the snapshot is written");
+    assert.ok(warned.some((m) => /arkivet: R2 nede/.test(m)));
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
   }
 });
