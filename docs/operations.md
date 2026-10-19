@@ -155,9 +155,10 @@ the menu and is marked `noindex`. It shows per site:
   track and climb over the last 10 minutes, kept in the store's memory
   only (never written down; gone when the store is evicted). No key.
 - **Flyaktivitet** (`workers/data/src/sources/flights.js`): every other minute the data service asks OGN the same way and
-  counts the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s), each once a day, for the
-  site nearest where first seen that day (within 5 km). Only the sums per site and day are kept (`flight_days` in the
-  store: pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
+  counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s). A flight
+  counts for the site nearest where first seen in the air (within 5 km); a new one begins when the pilot has landed
+  (standing still two runs in a row) or not been heard for 15 minutes. Only the sums per site and day are kept
+  (`flight_days` in the store: flights, pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
   salt for the day (state `flights-today`), which is replaced at the first run of a new day, so no device id is kept.
   Served as `/v1/flights.json`, shown on the site page. Counting began when this was deployed (`flights-since`).
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass

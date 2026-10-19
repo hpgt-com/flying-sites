@@ -1,12 +1,14 @@
-// Flying activity per site (dataset «flights»): how many paragliders are seen in the air from each flying site, from the
-// Open Glider Network's live data (live.js fetchLive), every few minutes on the schedule. A pilot seen flying counts once
-// a day, for the site nearest where they were first seen that day (where they took off, as near as the data shows),
-// if one is within RADIUS_KM; a pilot first seen far from every site (passing through) counts for none. Per site and
-// day only sums are kept (store.js flight_days): pilots, minutes in the air, the farthest from launch and the highest.
-// To count a pilot once, the day's pilots are kept by a key made from their device id and a random salt for the day
-// (state «flights-today»); at the first run of a new day the old keys and the salt are thrown away, so no device id
-// or track is ever kept. OGN's rules (glidernet.org/ogn-data-usage) are followed as in live.js. Only pilots whose app
-// or vario sends to OGN are counted (pgpilot, FANET varios, FLARM). Tested in test/data-worker.test.js.
+// Flying activity per site (dataset «flights»): how many flights paragliders make from each flying site, from the Open
+// Glider Network's live data (live.js fetchLive), every few minutes on the schedule. A flight begins when a pilot is
+// seen flying after being on the ground (seen standing still LANDED_RUNS runs in a row) or not heard for GAP_MINUTES, so
+// several flights a day by the same pilot count each (the lift on Sollifjellet, a new try after landing early). Each
+// flight counts for the site nearest where it was first seen (where it took off, as near as the data shows), if one is
+// within RADIUS_KM; a flight first seen far from every site (passing through) counts for none. Per site and day only
+// sums are kept (store.js flight_days): flights, pilots (each counted once a day), minutes in the air, the farthest from
+// launch and the highest. To tell the day's pilots apart, they are kept by a key made from their device id and a random
+// salt for the day (state «flights-today»); at the first run of a new day the old keys and the salt are thrown away, so
+// no device id or track is ever kept. OGN's rules (glidernet.org/ogn-data-usage) are followed as in live.js. Only
+// pilots whose app or vario sends to OGN are counted (pgpilot, FANET varios, FLARM). Tested in test/data-worker.test.js.
 
 import { fetchLive, SOURCE, LICENSE } from "../live.js";
 
@@ -18,6 +20,11 @@ export const MIN_SPEED = 3;
 export const MIN_CLIMB = 0.5;
 // Positions older than this are left out, so a pilot who landed is not counted on as flying.
 export const FRESH_SECONDS = 180;
+// Landed: seen on the ground this many runs in a row (one could be a moment of slow, level flight), or not heard for
+// GAP_MINUTES (out of the receivers' reach, or the app turned off after landing). A flight that leaves the receivers'
+// reach for longer is counted twice; near the sites the coverage is good enough for that to be rare.
+export const LANDED_RUNS = 2;
+export const GAP_MINUTES = 15;
 const STATE = "flights-today";
 const rad = Math.PI / 180;
 const round1 = (v) => Math.round(v * 10) / 10;
@@ -50,50 +57,66 @@ export async function pilotKey(salt, id) {
   return [...new Uint8Array(hash).slice(0, 8)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Adds what is seen now (items with key, from parseLive) to the day ({ pilots: { key: { site, last, minutes, dist, alt } } }):
-// each new position of a flying pilot counts `minutes` (the time between runs). Returns whether anything changed.
+// Adds what is seen now (items with key, from parseLive) to the day ({ pilots: { key: { last, flying, still, site,
+// minutes, dist, alt, flights } } }): a pilot seen flying after landing begins a new flight, for the site nearest where it
+// is first seen; each new position in the air counts `minutes` (the time between runs) to that flight's site, with the
+// farthest from it and the highest. flights: { site: n }, minutes/dist/alt: { site: … }. Returns whether anything changed.
 export function observe(day, items, sites, now, minutes) {
   let changed = false;
   for (const item of items) {
     const t = Date.parse(item.time);
-    if (!isFlying(item) || now - t > FRESH_SECONDS * 1000) continue;
+    if (now - t > FRESH_SECONDS * 1000) continue;
     let p = day.pilots[item.key];
-    if (!p) p = day.pilots[item.key] = { site: nearestSite(sites, item)?.id ?? null, last: 0, minutes: 0, dist: 0, alt: null };
-    if (t <= p.last) continue;
+    if (p && t <= p.last) continue;
+    if (!isFlying(item)) {
+      // On the ground: only those who have flown today are followed, until they are seen landed.
+      if (p && p.flying && ++p.still >= LANDED_RUNS) p.flying = false;
+      if (p) { p.last = t; changed = true; }
+      continue;
+    }
+    if (!p) p = day.pilots[item.key] = { last: 0, flying: false, still: 0, site: null, flights: {}, minutes: {}, dist: {}, alt: {} };
+    if (!p.flying || t - p.last > GAP_MINUTES * 60000) {
+      p.site = nearestSite(sites, item)?.id ?? null;
+      if (p.site) p.flights[p.site] = (p.flights[p.site] ?? 0) + 1;
+    }
+    p.flying = true;
+    p.still = 0;
     p.last = t;
-    p.minutes += minutes;
     const site = p.site && sites.find((s) => s.id === p.site);
     if (site) {
-      p.dist = Math.max(p.dist, round1(distanceKm(site, item)));
-      if (isNum(item.alt)) p.alt = Math.max(p.alt ?? 0, Math.round(item.alt));
+      p.minutes[site.id] = (p.minutes[site.id] ?? 0) + minutes;
+      p.dist[site.id] = Math.max(p.dist[site.id] ?? 0, round1(distanceKm(site, item)));
+      if (isNum(item.alt)) p.alt[site.id] = Math.max(p.alt[site.id] ?? 0, Math.round(item.alt));
     }
     changed = true;
   }
   return changed;
 }
 
-// The day summed up per site: [{ day, site, pilots, minutes, max_dist, max_alt }].
+// The day summed up per site: [{ day, site, flights, pilots, minutes, max_dist, max_alt }].
 export function dayRows(day) {
   const sites = {};
   for (const p of Object.values(day.pilots)) {
-    if (!p.site) continue;
-    const s = (sites[p.site] ??= { day: day.day, site: p.site, pilots: 0, minutes: 0, max_dist: 0, max_alt: null });
-    s.pilots++;
-    s.minutes += p.minutes;
-    s.max_dist = Math.max(s.max_dist, p.dist);
-    if (p.alt !== null) s.max_alt = Math.max(s.max_alt ?? 0, p.alt);
+    for (const [id, n] of Object.entries(p.flights)) {
+      const s = (sites[id] ??= { day: day.day, site: id, flights: 0, pilots: 0, minutes: 0, max_dist: 0, max_alt: null });
+      s.flights += n;
+      s.pilots++;
+      s.minutes += p.minutes[id] ?? 0;
+      s.max_dist = Math.max(s.max_dist, p.dist[id] ?? 0);
+      if (isNum(p.alt[id])) s.max_alt = Math.max(s.max_alt ?? 0, p.alt[id]);
+    }
   }
   return Object.values(sites);
 }
 
-// The dataset from all the stored days: per site the days with flying, the pilots (a pilot counted once a day), the
-// minutes in the air, the farthest from launch and the highest, the last day, and the same per month (YYYY-MM).
+// The dataset from all the stored days: per site the flights, the days with flying, the pilots (a pilot counted once a
+// day), the minutes in the air, the farthest from launch and the highest, the last day, and the same per month (YYYY-MM).
 export function buildFlights(rows, since, now = Date.now()) {
   const sites = {};
   for (const r of rows) {
-    const s = (sites[r.site] ??= { days: 0, pilots: 0, minutes: 0, maxDist: 0, maxAlt: null, last: null, months: {} });
-    const m = (s.months[r.day.slice(0, 7)] ??= { days: 0, pilots: 0, minutes: 0 });
-    for (const x of [s, m]) { x.days++; x.pilots += r.pilots; x.minutes += r.minutes; }
+    const s = (sites[r.site] ??= { flights: 0, days: 0, pilots: 0, minutes: 0, maxDist: 0, maxAlt: null, last: null, months: {} });
+    const m = (s.months[r.day.slice(0, 7)] ??= { flights: 0, days: 0, pilots: 0, minutes: 0 });
+    for (const x of [s, m]) { x.flights += r.flights; x.days++; x.pilots += r.pilots; x.minutes += r.minutes; }
     s.maxDist = Math.max(s.maxDist, r.max_dist ?? 0);
     if (isNum(r.max_alt)) s.maxAlt = Math.max(s.maxAlt ?? 0, r.max_alt);
     if (!s.last || r.day > s.last) s.last = r.day;

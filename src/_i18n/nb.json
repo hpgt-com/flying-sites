@@ -657,9 +657,9 @@
     },
     "flights": {
       "statsLabel": "Flyaktivitet i tall",
-      "pilots": {
-        "one": "pilot i lufta",
-        "other": "piloter i lufta"
+      "flights": {
+        "one": "tur",
+        "other": "turer"
       },
       "days": {
         "one": "dag med flyging",
@@ -670,10 +670,10 @@
       "farthest": "Lengst fra start {km} km",
       "highest": "høyest {m} moh",
       "last": "sist {date}",
-      "chartLabel": "Piloter i lufta per måned, siste 12 måneder",
-      "barTitle": "{month}: piloter i lufta {pilots}, dager med flyging {days}",
-      "none": "Ingen paraglidere er sett i lufta her ennå.",
-      "note": "Telt fra Open Glider Network siden {date}. Bare piloter som sender posisjonen dit, for eksempel med pgpilot eller en FANET-vario, kommer med. En pilot telles én gang per dag, på stedet nærmest der hen først ble sett i lufta."
+      "chartLabel": "Turer per måned, siste 12 måneder",
+      "barTitle": "{month}: turer {flights}, dager med flyging {days}",
+      "none": "Ingen turer herfra er registrert ennå.",
+      "note": "Telt fra Open Glider Network siden {date}. Bare piloter som sender posisjonen dit, for eksempel med pgpilot eller en FANET-vario, kommer med. En tur telles på stedet nærmest der piloten først ble sett i lufta, og en ny tur når piloten har landet eller ikke er hørt på 15 minutter."
     }
   },
   "about": {
@@ -708,7 +708,7 @@
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
     "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}.",
-    "sourceOgn": "paraglider- og speedflypiloter i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet. For «Flyaktivitet» på stedssidene telles hvor mange som er i lufta fra hvert sted; bare summene per sted og dag lagres, aldri hvem eller hvor de fløy."
+    "sourceOgn": "paraglider- og speedflypiloter i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Sporet de siste 10 minuttene holdes bare i minnet. For «Flyaktivitet» på stedssidene telles turene fra hvert sted; bare summene per sted og dag lagres, aldri hvem eller hvor de fløy."
   },
   "report": {
     "title": "Meld fra om endring",

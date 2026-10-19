@@ -1,8 +1,8 @@
-// «Flyaktivitet» on the site page (site.njk, #flights): how many paragliders the Open Glider Network has seen in the air
-// from this site, from the data service (/v1/flights.json, workers/data/src/sources/flights.js). The sums as three
-// numbers (pilots, days with flying, hours in the air), the farthest from launch and the highest, and the pilots per
-// month for the last 12 months as bars once there is more than one month. A pilot counts once a day, and only those who
-// send their position to OGN are counted, which the note under says. The section stays hidden when the data service
+// «Flyaktivitet» on the site page (site.njk, #flights): how many flights the Open Glider Network has seen paragliders
+// make from this site, from the data service (/v1/flights.json, workers/data/src/sources/flights.js). The sums as three
+// numbers (flights, days with flying, hours in the air), the farthest from launch and the highest, and the flights per
+// month for the last 12 months as bars once there is more than one month. Only pilots who send their position to OGN
+// are counted, which the note under says. The section stays hidden when the data service
 // cannot be reached. Built with DOM methods only. Exposed as window.FlyingSitesFlights; tested in test/flights.test.js.
 (function () {
   "use strict";
@@ -20,12 +20,12 @@
     if (!d || d.dataset !== "flights" || typeof d.since !== "string" || !d.sites || typeof d.sites !== "object") return false;
     return Object.keys(d.sites).every(function (k) {
       var s = d.sites[k];
-      return s && isNum(s.days) && isNum(s.pilots) && isNum(s.minutes) && s.months && typeof s.months === "object" &&
-        Object.keys(s.months).every(function (m) { return /^\d{4}-\d{2}$/.test(m) && isNum(s.months[m].pilots) && isNum(s.months[m].days); });
+      return s && isNum(s.flights) && isNum(s.days) && isNum(s.pilots) && isNum(s.minutes) && s.months && typeof s.months === "object" &&
+        Object.keys(s.months).every(function (m) { return /^\d{4}-\d{2}$/.test(m) && isNum(s.months[m].flights) && isNum(s.months[m].days); });
     });
   }
 
-  // The last MONTHS months up to the month of `now` (YYYY-MM, oldest first), with the pilots and days of each.
+  // The last MONTHS months up to the month of `now` (YYYY-MM, oldest first), with the flights and days of each.
   function lastMonths(site, now) {
     var d = new Date(now), out = [];
     var y = d.getUTCFullYear(), m = d.getUTCMonth();
@@ -33,8 +33,8 @@
       var mm = m - k, yy = y;
       while (mm < 0) { mm += 12; yy--; }
       var key = yy + "-" + String(mm + 1).padStart(2, "0");
-      var v = (site && site.months[key]) || { pilots: 0, days: 0 };
-      out.push({ key: key, pilots: v.pilots, days: v.days });
+      var v = (site && site.months[key]) || { flights: 0, days: 0 };
+      out.push({ key: key, flights: v.flights, days: v.days });
     }
     return out;
   }
@@ -66,19 +66,19 @@
     div.appendChild(make("small", null, label));
     return div;
   }
-  // The pilots per month as bars, the highest labelled; each bar says its month and numbers to screen readers and on hover.
+  // The flights per month as bars, the highest labelled; each bar says its month and numbers to screen readers and on hover.
   function chart(months) {
-    var max = Math.max.apply(null, months.map(function (m) { return m.pilots; }));
+    var max = Math.max.apply(null, months.map(function (m) { return m.flights; }));
     var list = make("ol", "flights-chart");
     list.setAttribute("aria-label", text("flights.chartLabel"));
     months.forEach(function (m) {
       var li = make("li", "flights-chart__month");
-      var words = text("flights.barTitle", { month: monthText(m.key, "long"), pilots: m.pilots, days: m.days });
+      var words = text("flights.barTitle", { month: monthText(m.key, "long"), flights: m.flights, days: m.days });
       li.title = words;
       var bar = make("span", "flights-chart__bar");
-      bar.style.height = (max ? Math.round((m.pilots / max) * 100) : 0) + "%";
+      bar.style.height = (max ? Math.round((m.flights / max) * 100) : 0) + "%";
       bar.setAttribute("aria-hidden", "true");
-      if (m.pilots === max && max > 0) bar.appendChild(make("span", "flights-chart__value", String(m.pilots)));
+      if (m.flights === max && max > 0) bar.appendChild(make("span", "flights-chart__value", String(m.flights)));
       var col = make("span", "flights-chart__col");
       col.setAttribute("aria-hidden", "true");
       col.appendChild(bar);
@@ -95,13 +95,13 @@
   function render(data, siteId, now) {
     var site = data.sites[siteId];
     var out = [];
-    if (!site || !site.pilots) {
+    if (!site || !site.flights) {
       out.push(make("p", null, text("flights.none")));
     } else {
       var stats = make("div", "access-stats flights-stats");
       stats.setAttribute("role", "group");
       stats.setAttribute("aria-label", text("flights.statsLabel"));
-      stats.appendChild(stat(site.pilots, null, plural("flights.pilots", site.pilots)));
+      stats.appendChild(stat(site.flights, null, plural("flights.flights", site.flights)));
       stats.appendChild(stat(site.days, null, plural("flights.days", site.days)));
       var hours = site.minutes / 60;
       stats.appendChild(stat(hours < 10 ? number(Math.round(hours * 10) / 10, 1) : Math.round(hours), text("flights.hoursUnit"), text("flights.airtime")));
@@ -109,7 +109,7 @@
       var details = detailText(site);
       if (details) out.push(make("p", "flights-details", details));
       var months = lastMonths(site, now);
-      if (months.filter(function (m) { return m.pilots > 0; }).length > 1) out.push(chart(months));
+      if (months.filter(function (m) { return m.flights > 0; }).length > 1) out.push(chart(months));
     }
     out.push(make("p", "flights-note", text("flights.note", { date: dateText(data.since) })));
     return out;

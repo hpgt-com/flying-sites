@@ -485,7 +485,7 @@ test("live: the track of each aircraft over the last minutes, oldest first, the 
 // --- Flyaktivitet per sted (OGN) ---
 const flightsMod = await import("../workers/data/src/sources/flights.js");
 
-test("flights: a pilot counted once a day for the site nearest where first seen flying, only sums per site", () => {
+test("flights: each flight counted for the site nearest where first seen, a new one after landing, only sums per site", () => {
   const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }, { id: "elgen", lat: 68.89, lon: 16.28 }];
   const at = (s) => new Date(NOW - s * 1000).toISOString();
   const day = { day: "2026-10-18", pilots: {} };
@@ -497,21 +497,34 @@ test("flights: a pilot counted once a day for the site nearest where first seen 
   ];
   assert.equal(flightsMod.observe(day, seen, sites, NOW, 2), true);
   assert.deepEqual(Object.keys(day.pilots).sort(), ["a", "c"], "standing at launch and old positions are not flying");
-  assert.equal(day.pilots.c.site, null, "first seen far from every site: counted for none");
+  assert.deepEqual(day.pilots.c.flights, {}, "first seen far from every site: counted for none");
   assert.equal(flightsMod.observe(day, [seen[0]], sites, NOW, 2), false, "the same position is not counted twice");
   flightsMod.observe(day, [{ ...seen[0], lat: 68.85, lon: 16.40, alt: 1400, time: at(0) }], sites, NOW, 2);
-  assert.equal(day.pilots.a.site, "heia", "the site stays the one where first seen, even when flying nearer another");
-  assert.equal(day.pilots.a.minutes, 4);
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "flying on nearer another site is the same flight");
+  assert.equal(day.pilots.a.minutes.heia, 4);
+
+  // Lands (two runs standing still), walks up and flies again: a second flight. One run slow and level is not a landing.
+  const ground = (s) => ({ key: "a", lat: 68.80, lon: 16.50, alt: 60, speed: 0, climb: 0, time: at(-s) });
+  const air = (s) => ({ key: "a", lat: 68.801, lon: 16.501, alt: 600, speed: 8, climb: 1, time: at(-s) });
+  flightsMod.observe(day, [ground(120)], sites, NOW + 120000, 2);
+  flightsMod.observe(day, [air(240)], sites, NOW + 240000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "one run on the ground is not a landing");
+  flightsMod.observe(day, [ground(360)], sites, NOW + 360000, 2);
+  flightsMod.observe(day, [ground(480)], sites, NOW + 480000, 2);
+  flightsMod.observe(day, [air(1800)], sites, NOW + 1800000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 2 }, "a new flight after landing");
+  flightsMod.observe(day, [air(1800 + 20 * 60)], sites, NOW + (1800 + 20 * 60) * 1000, 2);
+  assert.deepEqual(day.pilots.a.flights, { heia: 3 }, "not heard for 20 minutes: a new flight");
+
   const rows = flightsMod.dayRows(day);
-  assert.deepEqual(rows, [{ day: "2026-10-18", site: "heia", pilots: 1, minutes: 4, max_dist: rows[0].max_dist, max_alt: 1400 }]);
-  assert.equal(rows[0].max_dist, 6.9, "the farthest from launch in km");
+  assert.deepEqual(rows, [{ day: "2026-10-18", site: "heia", flights: 3, pilots: 1, minutes: 10, max_dist: 6.9, max_alt: 1400 }]);
 
   const data = flightsMod.buildFlights([
-    { day: "2026-09-30", site: "heia", pilots: 3, minutes: 90, max_dist: 2, max_alt: 900 },
-    { day: "2026-10-18", site: "heia", pilots: 1, minutes: 4, max_dist: 7.5, max_alt: 1400 },
+    { day: "2026-09-30", site: "heia", flights: 5, pilots: 3, minutes: 90, max_dist: 2, max_alt: 900 },
+    { day: "2026-10-18", site: "heia", flights: 3, pilots: 1, minutes: 10, max_dist: 7.5, max_alt: 1400 },
   ], "2026-09-01", NOW);
-  assert.deepEqual(data.sites.heia, { days: 2, pilots: 4, minutes: 94, maxDist: 7.5, maxAlt: 1400, last: "2026-10-18",
-    months: { "2026-09": { days: 1, pilots: 3, minutes: 90 }, "2026-10": { days: 1, pilots: 1, minutes: 4 } } });
+  assert.deepEqual(data.sites.heia, { flights: 8, days: 2, pilots: 4, minutes: 100, maxDist: 7.5, maxAlt: 1400, last: "2026-10-18",
+    months: { "2026-09": { flights: 5, days: 1, pilots: 3, minutes: 90 }, "2026-10": { flights: 3, days: 1, pilots: 1, minutes: 10 } } });
   assert.equal(data.since, "2026-09-01");
   assert.equal(flightsMod.osloDay(Date.parse("2026-10-18T22:30:00Z")), "2026-10-19", "a Norwegian day");
 });
@@ -531,9 +544,10 @@ test("flights: a run keeps only the day's keys, made with a salt that is thrown 
     const today = state["flights-today"];
     assert.equal(Object.keys(today.pilots).length, 1);
     assert.ok(!JSON.stringify(today).includes("dd1234ab"), "the device id is not stored, only a key");
-    assert.equal(snaps.flights.sites.heia.pilots, 1);
+    assert.equal(snaps.flights.sites.heia.flights, 1);
     await flightsMod.run(store, sites, NOW + 120000, 2);
-    assert.equal(snaps.flights.sites.heia.pilots, 1, "the same pilot later the same day counts once");
+    assert.equal(snaps.flights.sites.heia.flights, 1, "still in the air: the same flight");
+    assert.equal(snaps.flights.sites.heia.pilots, 1);
     assert.equal(snaps.flights.sites.heia.minutes, 4);
     globalThis.fetch = async () => new Response("<markers></markers>");
     await flightsMod.run(store, sites, NOW + 86400000, 2);
