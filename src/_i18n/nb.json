@@ -251,6 +251,7 @@
     "next12": "Vinden de neste 12 timene",
     "hourCardsKey": "Søyle: vind, strek: kast. Pil: hvor vinden blåser. Tall: vind (kast) i m/s.",
     "siteMaxWind": "Stedet har egen vindgrense: {m} m/s.",
+    "siteSoarWind": "Det trengs rundt {m} m/s for å henge her. Med mindre vind blir det en tur ned.",
     "next48": "Når kan det passe? Neste 48 timer",
     "levelNotSet": "Nivå ikke satt",
     "linksTitle": "Lenker",
@@ -353,6 +354,7 @@
       "edge": "Nær kanten av retningene stedet passer for",
       "someRain": "Litt nedbør meldt ({rain})",
       "weak": "Svak vind, retningen er usikker",
+      "belowSoar": "Under {limit} m/s: nok til en tur ned, men trolig for lite til å henge her.",
       "noGust": "Varselet mangler kast",
       "gustSpread": "Kast mer enn {spread} m/s over middelvinden",
       "noData": "Mangler gyldige vinddata"

@@ -43,3 +43,13 @@ test("an unknown source stops the build, so the values stay consistent", () => {
   const errors = validateSite(data, inputPath, { name: "Teststed" });
   assert.ok(errors.some((e) => e.includes("ukjent source «manuell»")), errors.join("\n"));
 });
+
+test("wind to stay up (wind_limits.soar_min_wind): a number below the site's or the shared wind limit", () => {
+  const errs = (wl) => validateSite({ name: "Teststed", id: "teststed", status: "draft", municipality: "Harstad", launch: { lat: 68.85, lon: 16.25 }, wind_limits: wl }, inputPath, { name: "Teststed" })
+    .filter((e) => e.includes("soar_min_wind")).length;
+  assert.equal(errs({ soar_min_wind: 4 }), 0);
+  assert.equal(errs({ soar_min_wind: 4, max_wind: 6 }), 0);
+  assert.equal(errs({ soar_min_wind: 6, max_wind: 5 }), 1, "not above the site's limit");
+  assert.equal(errs({ soar_min_wind: 8 }), 1, "not above the shared limit");
+  assert.equal(errs({ soar_min_wind: "4" }), 1);
+});

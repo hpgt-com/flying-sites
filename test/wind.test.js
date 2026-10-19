@@ -275,3 +275,13 @@ test("the hour now with a measurement keeps the forecast's rain, and works witho
   assert.equal(W.rateNow(site, fc, { dir: 247, speed: 4, gust: 6 }, rules, true).result.rating, "no", "rain the station does not see");
   assert.equal(W.rateNow(site, fc, null, rules, true).basis, "forecast");
 });
+
+test("wind to stay up (soar_min_wind) is only a note: the rating stays the same, and nothing when too strong", () => {
+  const soar = { ...site, soarMinWind: 4 };
+  const light = { dir: 247, speed: 3, gust: 4 };
+  assert.equal(rate(light, soar).rating, rate(light).rating, "the site can still be flown (a flight down)");
+  assert.equal(rate(light, soar).note, "Under 4 m/s: nok til en tur ned, men trolig for lite til å henge her.");
+  assert.equal(rate({ dir: 247, speed: 5, gust: 6 }, soar).note, undefined);
+  assert.equal(rate(light).note, undefined, "no note without the field");
+  assert.equal(rate({ dir: 90, speed: 3, gust: 4 }, soar).note, undefined, "no note when the direction does not work anyway");
+});

@@ -219,7 +219,7 @@
     if (!rules || !hasWind(item, now)) return null;
     var w = item.wind, site = siteInfo(item.site);
     var wind = { dir: w.dir, speed: w.speed, gust: isNum(w.gust) ? w.gust : null };
-    if (site) return W().rateWind({ primary: site.primary || [], possible: site.possible || [], maxWind: site.maxWind == null ? null : site.maxWind }, wind, rules);
+    if (site) return W().rateWind({ primary: site.primary || [], possible: site.possible || [], maxWind: site.maxWind == null ? null : site.maxWind, soarMinWind: site.soarMinWind == null ? null : site.soarMinWind }, wind, rules);
     if (!isNum(w.dir)) return null;
     var r = W().rateWind({ primary: globalThis.FlyingSites.DIRECTIONS, possible: [], maxWind: null }, wind, rules);
     return r.rating === "high" ? r : null;
@@ -367,7 +367,7 @@
     if (!siteId || !FS || !FS.readJson) return null;
     if (!sites) {
       sites = {};
-      (FS.readJson("sites-data") || []).forEach(function (s) { sites[s.id] = { primary: s.primary, possible: s.possible, lat: s.lat, lon: s.lon, name: s.name, url: s.url, maxWind: s.maxWind == null ? null : s.maxWind }; });
+      (FS.readJson("sites-data") || []).forEach(function (s) { sites[s.id] = { primary: s.primary, possible: s.possible, lat: s.lat, lon: s.lon, name: s.name, url: s.url, maxWind: s.maxWind == null ? null : s.maxWind, soarMinWind: s.soarMinWind == null ? null : s.soarMinWind }; });
       var one = FS.readJson("site-data"), page = document.getElementById("station-now");
       if (one && page) {
         var dirs = one.wind_directions || {}, launch = one.launch || {};

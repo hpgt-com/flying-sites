@@ -64,7 +64,7 @@
     renderWindows();
     var text = windText(wind, Math.round);
     var fcLine = FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }) + ": " + text;
-    var reasons = rating.reasons.length ? rating.reasons.join(". ") + ". " : "";
+    var reasons = (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + (rating.note ? rating.note + " " : "");
     if (assessed.basis === "measured") {
       // Assessed from the station: what it measured first, then the forecast for the hour for comparison.
       show(rating.rating, [
