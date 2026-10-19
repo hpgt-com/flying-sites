@@ -185,8 +185,10 @@ flowchart LR
   service worker (`/sw.js`, made by `src/sw.11ty.js` from `lib/service-worker.js` and `lib/pwa.js`) stores the pages
   the visitor opens, the site's own files, GPX files and the Kartverket map tiles that have been shown (at most 300),
   so a site checked at home also works on the mountain. Pages are fetched from the network first, so the forecast is
-  fresh when there is coverage. The static cache follows the content of the stored files, and the pages and tiles are
-  kept across deploys. Nothing is downloaded in advance beyond the front pages, the offline pages and the scripts.
+  fresh when there is coverage. The pages, files and tiles are kept across deploys: CSS and JS carry their content hash
+  in the URL, and when a new service worker takes over it keeps the old versions a stored page still uses and removes
+  the rest (`referencedAssets` and `staticToKeep` in `lib/pwa.js`), so a site stored before a deploy still works
+  offline after it. Nothing is downloaded in advance beyond the front pages, the offline pages and the scripts.
 - **Speed:** Leaflet is loaded only on the pages with a map (`map: true` in the front matter: the home page and the
   site pages). On the site page the map and the elevation profile are set up when they come near the screen
   (`IntersectionObserver` in `site.js`), so the map tiles are only fetched when they are needed. The map's first view is
