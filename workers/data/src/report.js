@@ -1,9 +1,12 @@
 // «Meld fra om endring» on the site pages: POST /v1/report from flysteder.hpgt.com. The browser is checked with
-// Cloudflare Turnstile (the secret TURNSTILE_SECRET), and the report becomes an issue in the site's GitHub repository
-// (the secret GITHUB_ISSUES_TOKEN: a fine-grained token for hpgt-com/flying-sites with only Issues: read and write).
-// Without both secrets the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
+// Cloudflare Turnstile (the secret TURNSTILE_SECRET), and the report becomes an issue in the site's GitHub repository,
+// made by the club's GitHub App (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY, github-app.js), or else with a
+// fine-grained token (the secret GITHUB_ISSUES_TOKEN, only Issues: read and write on hpgt-com/flying-sites).
+// Without Turnstile and one of the two the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
 // src/_data/site.js). At most DAILY_LIMIT reports a day. Nothing is stored here but the day's count. Tested in
 // test/data-worker.test.js.
+
+import { installationToken } from "./github-app.js";
 
 export const KINDS = ["landing", "access", "hazard", "launch", "other"];
 export const MAX_MESSAGE = 1000;
@@ -55,10 +58,13 @@ async function turnstileOk(env, token, ip) {
   return !!(d && d.success);
 }
 
-async function createIssue(env, issue) {
+const hasApp = (env) => !!(env.REPORTS_APP_ID && env.REPORTS_APP_PRIVATE_KEY);
+
+async function createIssue(env, issue, now) {
+  const token = hasApp(env) ? await installationToken(env, REPO, now) : env.GITHUB_ISSUES_TOKEN;
   const r = await fetch(`${env.GITHUB_API || "https://api.github.com"}/repos/${REPO}/issues`, {
     method: "POST",
-    headers: { authorization: `Bearer ${env.GITHUB_ISSUES_TOKEN}`, accept: "application/vnd.github+json", "user-agent": "hpgt-flysteder", "content-type": "application/json" },
+    headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github+json", "user-agent": "hpgt-flysteder", "content-type": "application/json" },
     body: JSON.stringify(issue),
     signal: AbortSignal.timeout(10000),
   });
@@ -67,7 +73,7 @@ async function createIssue(env, issue) {
 
 // The answer to POST /v1/report: { status, body }. store: for the day's count; siteNames as for checkReport.
 export async function handleReport(request, env, store, siteNames, now = Date.now()) {
-  if (!env.TURNSTILE_SECRET || !env.GITHUB_ISSUES_TOKEN) return { status: 503, body: { error: "not-configured" } };
+  if (!env.TURNSTILE_SECRET || !(hasApp(env) || env.GITHUB_ISSUES_TOKEN)) return { status: 503, body: { error: "not-configured" } };
   let body = null;
   try { body = await request.json(); } catch { /* not JSON */ }
   const report = checkReport(body, siteNames);
@@ -78,7 +84,7 @@ export async function handleReport(request, env, store, siteNames, now = Date.no
   if (count >= DAILY_LIMIT) return { status: 429, body: { error: "limit" } };
   await store.putState(key, count + 1);
   try {
-    await createIssue(env, issueFor(report, now));
+    await createIssue(env, issueFor(report, now), now);
   } catch (err) {
     console.warn(`report: ${err.message}`);
     return { status: 502, body: { error: "github" } };

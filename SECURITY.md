@@ -25,8 +25,9 @@ The site is static (Eleventy on GitHub Pages), with no login, forms or database.
 - «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
   `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000
   characters, and makes at most 20 issues a day. The text goes into the issue inside a code block, so it cannot add
-  links, images or @mentions. The GitHub token is fine-grained, for this repository only, with only Issues: read and
-  write, and is a Cloudflare secret.
+  links, images or @mentions. The issues are made by the club's GitHub App, installed only on this repository with
+  only Issues: read and write; its private key is a Cloudflare secret, and each report gets a token that lasts an hour
+  (`workers/data/src/github-app.js`).
 - The forecast from the data service is only used when it has the expected shape (times as strings, rows of numbers
   or null; `isNewerForecast` in `wind.js`), and it is never parsed as HTML.
 - The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles
