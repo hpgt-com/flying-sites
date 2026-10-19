@@ -189,7 +189,8 @@ the menu and is marked `noindex`. It shows per site:
 
 - Fetched by the data service from Open-Meteo, two launches every 10 minutes (each about every half hour), for the launches in `WINDGRAM_SITES` in
   `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), served as
-  `https://data.hpgt.workers.dev/v1/windgram.json`. No key. A launch that fails keeps its previous grid for up to 6
+  `https://data.hpgt.workers.dev/v1/windgram.json`, with the rain, cloud cover, sun and gusts per hour for the rows under
+  the grid. No key. A launch that fails keeps its previous grid for up to 6
   hours. The site page uses it when it is newer than the grid built into the page; the section stays hidden when
   neither has hours left.
 - A new launch: add its folder to `WINDGRAM_SITES` and deploy both the site and the data service.

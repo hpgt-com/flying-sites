@@ -1565,36 +1565,61 @@ body.sheet-open { overflow: hidden; }
   .results__list { gap: 6px; }
 }
 
-/* Wind above the launch (windgram.js): hours across, heights upward. Scrolls sideways on mobile. */
-.windgram { display: grid; gap: 8px; margin-top: 4px; }
+/* «Vind over starten» (windgram.js): an SVG with the heights to scale and the rows under it. The axis stays at the left
+   while the hours scroll sideways. Cell colours as the wind rules elsewhere, mixed with the card so they work in both
+   modes; all text in the text colours. */
+.windgram { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 4px; }
 .windgram[hidden] { display: none; }
 .windgram h3 { margin: 0; font-size: 18px; }
 .windgram p { margin: 0; font-size: 14px; }
-.windgram__scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
-.windgram__table { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
-.windgram__table th, .windgram__table td { padding: 3px 4px; text-align: center; white-space: nowrap; min-width: 30px; }
-.windgram__table thead th { position: sticky; top: 0; background: var(--card); font-weight: 600; color: var(--muted); }
-.windgram__table tbody th { position: sticky; left: 0; z-index: 1; background: var(--card); text-align: right; font-weight: 600; color: var(--muted); }
-.windgram__corner { position: sticky; left: 0; z-index: 2; }
-.windgram__day { text-align: left !important; border-left: 1px solid var(--line); }
-.windgram__info td { color: var(--muted); }
-.windgram__info:last-child td, .windgram__info + tr:not(.windgram__info) td { border-bottom: 1px solid var(--line); }
-.windgram__warn { color: var(--wind-high) !important; font-weight: 700; }
-.windgram__launch th { color: var(--text) !important; }
-.windgram__launch td { outline: 2px solid var(--text); outline-offset: -1px; }
-.windgram__arrow { display: inline-block; margin-right: 2px; font-weight: 700; }
-.windgram--calm { background: color-mix(in srgb, var(--line) 35%, transparent); }
-.windgram--ok { background: color-mix(in srgb, var(--wind-ok) 35%, transparent); }
-.windgram--maybe { background: color-mix(in srgb, var(--wind-maybe) 40%, transparent); }
-.windgram--high { background: color-mix(in srgb, var(--wind-high) 40%, transparent); }
-/* Solid colour behind white text, so the numbers keep enough contrast (a see-through red was too light). */
-.windgram--storm { background: var(--wind-high); color: #fff; }
-.windgram--above { opacity: 0.7; }
-.windgram--cloud { box-shadow: inset 0 0 0 40px color-mix(in srgb, var(--muted) 15%, transparent); }
-.windgram--cloudbase { border-bottom: 2px dashed var(--muted); }
-.windgram__cloud { margin-right: 1px; font-size: 11px; color: var(--muted); }
-.windgram--night { filter: grayscale(0.6) brightness(0.9); }
-.windgram__hour.windgram--night { color: var(--muted); font-weight: 400; }
+.windgram__frame { display: flex; border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 6px 0 4px; }
+.windgram__frame[hidden] { display: none; }
+.windgram__axis { flex: 0 0 auto; display: block; }
+.windgram__scroll { flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+.windgram__svg { display: block; font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+.windgram__axis text, .windgram__svg text { font-size: 11px; fill: var(--muted); }
+.windgram__svg .windgram__value { font-size: 10px; font-weight: 600; fill: var(--text); }
+.windgram__axis .windgram__strong, .windgram__svg .windgram__strong { fill: var(--text); font-weight: 700; }
+.windgram__axis .windgram__label { fill: var(--text); }
+.windgram__axis .windgram__small, .windgram__svg .windgram__small { font-size: 10px; }
+.windgram__svg .windgram__onbar { fill: #FFFFFF; }
+.windgram__grid { stroke: var(--grid); stroke-width: 1; }
+.windgram__arrow { fill: var(--text); }
+.windgram__cell.windgram--calm { fill: color-mix(in srgb, var(--line) 45%, var(--card)); }
+.windgram__cell.windgram--ok { fill: color-mix(in srgb, var(--wind-ok) 35%, var(--card)); }
+.windgram__cell.windgram--maybe { fill: color-mix(in srgb, var(--wind-maybe) 40%, var(--card)); }
+.windgram__cell.windgram--high { fill: color-mix(in srgb, var(--wind-high) 35%, var(--card)); }
+.windgram__cell.windgram--storm { fill: color-mix(in srgb, var(--wind-high) 60%, var(--card)); }
+.windgram__night { fill: var(--text); fill-opacity: 0.06; pointer-events: none; }
+.windgram__ground { fill: color-mix(in srgb, var(--line) 70%, var(--card)); }
+.windgram__launch { stroke: var(--text); stroke-width: 2; stroke-dasharray: 6 4; }
+.windgram__thermal { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; }
+.windgram__incloud { fill: none; stroke: color-mix(in srgb, var(--accent) 45%, var(--card)); stroke-width: 2; stroke-dasharray: 4 3; stroke-linejoin: round; }
+.windgram__cloudbase { fill: var(--card); stroke: var(--muted); stroke-width: 1.2; }
+.windgram__midnight { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.windgram__pill { fill: var(--surface); }
+.windgram__pill--maybe { fill: color-mix(in srgb, var(--wind-maybe) 40%, var(--card)); }
+.windgram__pill--high { fill: color-mix(in srgb, var(--wind-high) 35%, var(--card)); }
+.windgram__sun { fill: #F2C14E; }
+.windgram__cloudcover { fill: var(--muted); }
+.windgram__rainbar { fill: var(--parking); }
+.windgram__hit { fill: transparent; }
+.windgram__legend { display: grid; gap: 8px; font-size: 13px; color: var(--muted); }
+.windgram__scale, .windgram__keys { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
+.windgram__swatch { padding: 2px 8px; border-radius: 6px; color: var(--text); font-size: 12px; }
+.windgram__swatch.windgram--calm { background: color-mix(in srgb, var(--line) 45%, var(--card)); }
+.windgram__swatch.windgram--ok { background: color-mix(in srgb, var(--wind-ok) 35%, var(--card)); }
+.windgram__swatch.windgram--maybe { background: color-mix(in srgb, var(--wind-maybe) 40%, var(--card)); }
+.windgram__swatch.windgram--high { background: color-mix(in srgb, var(--wind-high) 35%, var(--card)); }
+.windgram__swatch.windgram--storm { background: color-mix(in srgb, var(--wind-high) 60%, var(--card)); }
+.windgram__keys li { display: flex; align-items: center; gap: 6px; }
+.windgram__key { display: inline-block; width: 18px; height: 0; }
+.windgram__key--thermal { border-top: 3px solid var(--accent); }
+.windgram__key--incloud { border-top: 2px dashed color-mix(in srgb, var(--accent) 45%, var(--card)); }
+.windgram__key--launch { border-top: 2px dashed var(--text); }
+.windgram__key--cloud { width: 16px; height: 10px; border: 1.5px solid var(--muted); border-radius: 6px 6px 3px 3px; background: var(--card); }
+.windgram__key--arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 11px solid var(--text); }
+.windgram__notes { font-size: 13px !important; color: var(--muted); }
 .windgram__source { font-size: 12px !important; color: var(--muted); }
 
 /* Day plan («Når kan det passe?», home.js): days stacked, periods as small badges in the rating colours. */

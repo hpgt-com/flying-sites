@@ -103,7 +103,7 @@ scripts:
         <div class="windgram" id="windgram" hidden>
           <h3>{{ t.site.windgramTitle }}</h3>
           <p class="muted">{{ t.site.windgramIntro }}</p>
-          <div class="windgram__scroll" id="windgram-grid" tabindex="0" role="region" aria-label="{{ t.site.windgramTitle }}" hidden></div>
+          <div class="windgram__frame" id="windgram-grid" hidden></div>
           <p class="windgram__source">{{ t.site.windgramSource | safe }}</p>
         </div>
         {% endif %}
@@ -453,6 +453,7 @@ scripts:
   site: id, live: site.windgramUrl,
   fetched: (windgram.fetched if wg.times else null), lat: launch.lat, lon: launch.lon,
   times: wg.times, heights: wg.heights, launch: wg.launch, cells: wg.cells, blh: wg.blh, cloudBase: wg.cloudBase,
+  rain: wg.rain, clouds: wg.clouds, sun: wg.sun, gust: wg.gust,
   rules: { minWind: windRules.minWind, maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else windRules.maxWind), maxGust: windRules.maxGust }
 } | json | safe }}</script>
 {% endif %}
