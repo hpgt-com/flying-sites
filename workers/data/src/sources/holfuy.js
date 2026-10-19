@@ -7,7 +7,7 @@
 // one CSV per station per day (holfuy/station=<id>/year=<year>/<date>.csv) and the stations in holfuy/stations.csv, and
 // deleted from the store only after that.
 
-import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../archive.js";
+import { archiveSource } from "../archive.js";
 import { extraValues, num } from "../measurements.js";
 
 export const DATASET = "stations";
@@ -77,6 +77,8 @@ export function buildStations(stations, rows, meta, now = Date.now()) {
       name: s.name ?? m.name ?? String(s.id),
       model: s.model ?? null,
       site: s.site ?? null,
+      source: SOURCE,
+      url: `https://holfuy.com/en/weather/${encodeURIComponent(String(s.id))}`,
       lat: m.lat ?? null, lon: m.lon ?? null, altitude: m.altitude ?? null,
       time: last?.time ?? null,
       wind: last ? { dir: last.dir, speed: last.speed, gust: last.gust, min: last.min } : null,
@@ -110,28 +112,9 @@ export async function run(store, env, stations, now = Date.now()) {
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(stations, rows, meta, now)));
 }
 
-// Writes the finished days not yet in the archive (at most two per run), then deletes from the store what is both in the
-// archive and older than KEEP_DAYS. Without R2 (env.ARCHIVE) nothing is written or deleted.
+// The archive (archive.js): the finished days per station, and the station list from Holfuy's names and positions.
 async function archive(store, env, stations, now) {
-  if (!env.ARCHIVE) return;
-  const state = (await store.getState("holfuy-archive")) ?? { through: null };
-  const days = daysToArchive(await store.oldestMeasurement(KEY), state.through, now);
-  if (days.length) {
-    const meta = (await store.getState("holfuy-meta")) ?? {};
-    const list = stations.map((s) => ({ source: KEY, id: s.id, name: s.name ?? meta[s.id]?.name ?? null, model: s.model ?? null, site: s.site ?? null, lat: meta[s.id]?.lat ?? null, lon: meta[s.id]?.lon ?? null, altitude: meta[s.id]?.altitude ?? null }));
-    await env.ARCHIVE.put(`${KEY}/stations.csv`, stationsCsv(list), { httpMetadata: { contentType: "text/csv; charset=utf-8" } });
-  }
-  for (const day of days) {
-    const rows = await store.measurementsBetween(KEY, day + "T00:00:00.000Z", day + "T23:59:59.999Z");
-    for (const s of stations) {
-      const own = rows.filter((r) => String(r.station) === String(s.id));
-      if (own.length) {
-        await env.ARCHIVE.put(dayPath(KEY, s.id, day), measurementsCsv(own), { httpMetadata: { contentType: "text/csv; charset=utf-8" } });
-      }
-    }
-    state.through = day;
-    await store.putState("holfuy-archive", state);
-  }
-  const before = pruneBefore(now, KEEP_DAYS, state.through);
-  if (before) await store.prune(KEY, before);
+  const meta = (await store.getState("holfuy-meta")) ?? {};
+  const list = stations.map((s) => ({ source: KEY, id: s.id, name: s.name ?? meta[s.id]?.name ?? null, model: s.model ?? null, site: s.site ?? null, lat: meta[s.id]?.lat ?? null, lon: meta[s.id]?.lon ?? null, altitude: meta[s.id]?.altitude ?? null }));
+  await archiveSource(store, env, KEY, list, KEEP_DAYS, now);
 }

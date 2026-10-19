@@ -12,6 +12,7 @@ export default {
   // The pages use the forecast when it is newer than the one from the build. Must also be in connect-src in base.njk.
   forecastUrl: "https://data.hpgt.workers.dev/v1/forecast.json",
   stationsUrl: "https://data.hpgt.workers.dev/v1/stations.json",
+  windgramUrl: "https://data.hpgt.workers.dev/v1/windgram.json",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",
 };

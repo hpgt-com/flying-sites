@@ -95,8 +95,8 @@ scripts:
         {% else %}
         <div class="placeholder placeholder--short">{{ t.site.noYr | fmt({ name: name }) }}</div>
         {% endif %}
-        {% if windgram and windgram.sites and windgram.sites[id] %}
-        <div class="windgram">
+        {% if windgram and (id in windgram.enabled or (windgram.sites and windgram.sites[id])) %}
+        <div class="windgram" id="windgram" hidden>
           <h3>{{ t.site.windgramTitle }}</h3>
           <p class="muted">{{ t.site.windgramIntro }}</p>
           <div class="windgram__scroll" id="windgram-grid" tabindex="0" role="region" aria-label="{{ t.site.windgramTitle }}" hidden></div>
@@ -424,10 +424,12 @@ scripts:
   routes: derived.routes,
   drawing: derived.drawing
 } | json | safe }}</script>
-{% if windgram and windgram.sites and windgram.sites[id] %}
-{%- set wg = windgram.sites[id] -%}
+{#- The winds aloft built into the page (empty when the build has none), and where newer ones are (windgram.js). -#}
+{% if windgram and (id in windgram.enabled or (windgram.sites and windgram.sites[id])) %}
+{%- set wg = windgram.sites[id] if windgram.sites and windgram.sites[id] else {} -%}
 <script type="application/json" id="windgram-data">{{ {
-  fetched: windgram.fetched, lat: launch.lat, lon: launch.lon,
+  site: id, live: site.windgramUrl,
+  fetched: (windgram.fetched if wg.times else null), lat: launch.lat, lon: launch.lon,
   times: wg.times, heights: wg.heights, launch: wg.launch, cells: wg.cells, blh: wg.blh, cloudBase: wg.cloudBase,
   rules: { minWind: windRules.minWind, maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else windRules.maxWind), maxGust: windRules.maxGust }
 } | json | safe }}</script>

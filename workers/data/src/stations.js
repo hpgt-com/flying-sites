@@ -9,3 +9,8 @@ export const HOLFUY_STATIONS = [
   { id: 490, site: "heia" },
   { id: 820 },
 ];
+
+// MET's stations (sources/frost.js) are found by MET itself within the area of the flying sites, so they are not listed
+// here. A MET station that belongs to a flying site is linked to it here, by MET's number (SN…) and the site's folder,
+// as `site` above: that site page then shows it and uses it for the assessment of the hour now.
+export const MET_STATION_SITES = {};

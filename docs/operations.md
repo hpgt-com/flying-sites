@@ -120,6 +120,28 @@ the menu and is marked `noindex`. It shows per site:
   (the latest fetch during the hour wins), kept for 30 days in the store (`forecast_hours`). The last 6 hours are in
   `/v1/forecast.json` as `past`, which «Målt mot varslet» on the weather page draws over the measurements.
 
+## Winds aloft
+
+- Fetched by the data service every 30 minutes from Open-Meteo for the launches in `WINDGRAM_SITES` in
+  `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), served as
+  `https://data.hpgt.workers.dev/v1/windgram.json`. No key. A launch that fails keeps its previous grid for up to 6
+  hours. The site page uses it when it is newer than the grid built into the page; the section stays hidden when
+  neither has hours left.
+- A new launch: add its folder to `WINDGRAM_SITES` and deploy both the site and the data service.
+
+## Weather stations (MET)
+
+- MET's own stations are found by the data service itself: once a day it asks Frost for the stations in the area of the
+  flying sites, and keeps those within 15 km of a launch that measure wind (`workers/data/src/sources/frost.js`). Their
+  latest observations are fetched every 10 minutes (wind, direction, gust, temperature, humidity, pressure, rain), stored
+  and archived like Holfuy's (`met/station=SN…/…` in the archive), and served in `/v1/stations.json` together with
+  Holfuy's, each station with its source («MET Norge», licence CC BY).
+- The client ID: register (free) at `https://frost.met.no/auth/requestCredentials.html` with the club's e-mail, then
+  Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `FROST_CLIENT_ID` (the client ID
+  only; the client secret is not used). Without it the service skips MET.
+- A MET station on a flying site is linked to it in `MET_STATION_SITES` in `workers/data/src/stations.js` (MET's number
+  and the site's folder).
+
 ## Weather archive (R2)
 
 - One CSV per station per day (UTC) in the R2 bucket `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
@@ -224,6 +246,7 @@ set in `src/_data/photoCredit.json`.
 | GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
 | Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.workers.dev`), later the change form |
 | `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | The Holfuy stations |
+| `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites», Workers, KV and R2 Storage in HPGT only) expires 18.10.2027: make a new one under My Profile → API Tokens → Roll, and update the secret. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
