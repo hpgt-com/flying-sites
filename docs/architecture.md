@@ -117,7 +117,7 @@ flowchart TB
 | Walking routes | `lib/gpx.js` | Length, elevation gain, moving time and elevation profile. Heights from Kartverket, cached per file in `src/_data/cache/elevations/`. |
 | Images | `lib/images.js`, `lib/site-images.js` | WebP/JPEG at 400–2400 px without metadata, with photographer and licence embedded. Images are found by file name. |
 | Airspace | `lib/airspace.js`, `lib/airspace-profile.js`, `scripts/update-airspace.mjs` | openAIP per launch, the "ceiling" above the launch and its height profile, notes from the site file. The map layer uses `region.geojson`. |
-| Power lines and obstacles | `lib/obstacles.js`, `scripts/update-obstacles.mjs` | NVE's overhead power lines, masts and wind turbines, and OpenStreetMap's low-voltage lines, lifts and masts, within 1.5 km of each site. Copied as `/assets/obstacles.geojson` for the map layer; nothing is computed at build time. |
+| Power lines and obstacles | `lib/obstacles.js`, `scripts/update-obstacles.mjs` | NVE's overhead power lines and wind turbines, and OpenStreetMap's low-voltage lines, lifts and masts, in the region 25 km around the sites (NVE's masts only within 1.5 km of each site), as tiles of 0.25° × 0.5° with an index. Copied to `/assets/obstacles/` for the map layer; nothing is computed at build time. |
 | Winds aloft | `lib/windgram.js`, `lib/weather/open-meteo.js` | The grid for «Vind over starten»: wind every 250 m, boundary layer, cloud base, clouds, rain, sun and gusts per hour. |
 | What's new | `src/_data/news.json`, `src/nytt.njk` | «Nytt på siden» (`/nytt/`): new features in both languages, and the plan with links to the issues. |
 | Weather | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | 48 hours of wind, gusts and precipitation per launch from MET, and winds aloft from Open-Meteo. Read from `.cache/weather/`, see [Data modules](#data-modules). If one site fails, only that site is missing. |
@@ -140,7 +140,7 @@ flowchart LR
   end
 
   common["common.js<br/>FS.t(), maps and map layers,<br/>wind roses, airspace, power lines,<br/>radar, colour mode, statistics"]
-  assets["/assets/airspace.geojson<br/>/assets/obstacles.geojson<br/>(loaded when a layer is turned on)"]
+  assets["/assets/airspace.geojson<br/>/assets/obstacles/ (tiles)<br/>(loaded when a layer is turned on;<br/>the tiles in view from zoom 10)"]
   wind["wind.js<br/>rateWind(): Kan passe / Usikkert /<br/>For mye vind / Passer ikke"]
   home["home.js<br/>home page: search, filters,<br/>card, summary"]
   site["site.js<br/>site map, direction arcs,<br/>elevation profile"]
@@ -273,7 +273,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Data service: pilots in the air | Open Glider Network (live positions of paragliders, ODbL) | `workers/data/src/live.js` | On demand, when someone has «Piloter i lufta» on; cached 5 seconds | The last 10 minutes of each track, with the climb, in the store's memory only, never written down; served as `https://data.hpgt.workers.dev/v1/live.json` | `live.js` on the home and site maps |
 | Data service: flying activity | Open Glider Network (as above) | `workers/data/src/sources/flights.js` | Every 2 minutes | Per site and day the flights, pilots, minutes in the air, farthest and highest (`flight_days`, kept); the day's pilots by a salted key that is thrown away the next day; served as `https://data.hpgt.workers.dev/v1/flights.json` | `flights.js` on the site page, `activity.js` on /flyaktivitet/ |
 | Data service: MET stations | MET Frost (client ID `FROST_CLIENT_ID` in Cloudflare): the stations within 50 km of a launch (Lofoten to Bardu), found once a day | `workers/data/src/sources/frost.js` | Every 10 minutes | As the Holfuy stations (source `met`), served in `/v1/stations.json` together with them (`merge.js`) | As the Holfuy stations |
-| Power lines and obstacles | NVE Nettanlegg and Vindkraft (`kart.nve.no`, NLOD), OpenStreetMap via Overpass (ODbL) | `lib/obstacles.js`, `scripts/update-obstacles.mjs` (`npm run obstacles`) | `obstacles.yml`, the 2nd of each month, as a PR | `src/_data/cache/obstacles/region.geojson` (committed, one feature per line) | The map layer «Kraftlinjer og hindre» (`addObstacleLayer` in `common.js`) |
+| Power lines and obstacles | NVE Nettanlegg and Vindkraft (`kart.nve.no`, NLOD), OpenStreetMap via Overpass (ODbL) | `lib/obstacles.js`, `scripts/update-obstacles.mjs` (`npm run obstacles`) | `obstacles.yml`, the 2nd of each month, as a PR | `src/_data/cache/obstacles/` (`index.json` and `tiles/<row>_<column>.geojson`, committed, one feature per line) | The map layer «Kraftlinjer og hindre» (`addObstacleLayer` in `common.js`) |
 | Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
 | Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
 
@@ -339,7 +339,7 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
 - **«Meld fra»:** a form on the site pages and `/meld-fra/` that becomes a labelled GitHub issue, with Turnstile and
   no account.
 - **Power lines and obstacles:** a map layer with NVE's power lines and masts and OpenStreetMap's low-voltage lines,
-  lifts and masts, updated monthly via PR.
+  lifts and masts for the whole region around the sites, as tiles loaded for the view, updated monthly via PR.
 - **«Nytt på siden»** (`/nytt/`): what is new and the plan, for the pilots.
 - **Flight logs:** `npm run logbook` sums IGC/KML logs per site (`lib/igc.js`); the box on the site page is hidden
   until more pilots have added logs.
@@ -353,7 +353,7 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
   `safety`, `bug`, `enhancement`), see `workers/data/src/report.js`. Still planned: an agent that summarises the issue
   and makes the change as a PR once it is labelled `approved`.
 - **Distances to obstacles** on the site page, such as «Kraftlinje 63 m fra landing», computed at build time from
-  the power line file.
+  the power line tiles.
 - **Statistics from flight logs** (#105), once more pilots add logs or Flightlog/pgpilot get an API.
 - **NOTAM** as a separate map layer, once there is a safe and permitted way to fetch from IPPC. It needs a server-side
   intermediary (the data service), the same way as the other sources.
