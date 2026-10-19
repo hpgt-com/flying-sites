@@ -28,8 +28,8 @@
         "en": "The site page, under «Can I fly here now?» → «Details: Yr hour by hour and winds aloft»."
       },
       "read": {
-        "nb": "Hver rute er vinden i den høyden: grønt passer, gult er i kanten, rødt er for sterkt, og pila viser dit vinden blåser. Den oransje linjen er omtrent hvor høyt termikken går: heltrukket opp til skybasen, stiplet der den går inn i sky. Sveip sideveis for flere timer.",
-        "en": "Each box is the wind at that height: green is suitable, yellow borderline, red too strong, and the arrow shows where the wind blows. The orange line is roughly how high the thermals go: solid up to the cloud base, dashed where they go into cloud. Swipe sideways for more hours."
+        "nb": "Hver rute er vinden i den høyden: grønt passer, gult er i kanten, rødt er for sterkt, og pila viser dit vinden blåser. Den oransje linjen er omtrent hvor høyt termikken går: heltrukket opp til skybasen, stiplet der den går inn i sky. Raden «Topp moh» gir det samme som tall, i meter over havet som høydeaksen. Sveip sideveis for flere timer.",
+        "en": "Each box is the wind at that height: green is suitable, yellow borderline, red too strong, and the arrow shows where the wind blows. The orange line is roughly how high the thermals go: solid up to the cloud base, dashed where they go into cloud. The row «Top m asl» gives the same as a number, in metres above sea level like the height axis. Swipe sideways for more hours."
       }
     },
     {

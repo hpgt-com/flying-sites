@@ -38,10 +38,10 @@ Do you have corrections, photos or new information about a site?
 | `src/sites/<id>/index.md` | One site: structured data at the top (front matter), text below. |
 | `src/sites/<id>/index.en.md` | English text for the site (optional, see `lib/translations.js`). If missing, the Norwegian text is shown with a notice. |
 | `src/sites/<id>/` | Images (`<id>-overview-1.jpg`, `<id>-takeoff-se-1.jpg`, `<id>-landing-1.jpg`, `<id>-landing-spg-1.jpg`), walking routes (`<id>-route.gpx`) and the map drawing (`<id>-drawing.geojson`: points, lines and areas, see `lib/drawing.js`). |
-| `src/_data/` | Towers (`towers.json`), shared wind limits (`windRules.json`), the weather (`forecast.js`, `windgram.js`, read from `lib/weather/`) and cached airspace. |
+| `src/_data/` | Towers (`towers.json`), shared wind limits (`windRules.json`), the weather (`forecast.js`, `windgram.js`, read from `lib/weather/`), cached airspace and power lines (`cache/`), and «Nytt på siden» (`news.json`). |
 | `src/_includes/` | Page templates for the home page and the site pages. |
 | `src/assets/` | CSS, JavaScript and images. |
-| `lib/`, `scripts/` | Validation, GPX, images, airspace, weather and maintenance scripts. See [Data modules](docs/architecture.md#data-modules). |
+| `lib/`, `scripts/` | Validation, GPX, images, airspace, power lines, weather and maintenance scripts. See [Data modules](docs/architecture.md#data-modules). |
 | `workers/data/` | The data service on Cloudflare Workers: the MET forecast, the weather stations (Holfuy and MET's Frost), winds aloft, how well the forecast hit, pilots in the air and flying activity (Open Glider Network), and «Meld fra» as GitHub issues, with the archive in R2. See [operations](docs/operations.md#weather-stations-holfuy). |
 | `src/_i18n/` | Dictionaries for Norwegian and English (all fixed text in templates and scripts). |
 | `docs/` | Documentation, see above. |
@@ -71,11 +71,12 @@ Other commands:
 | Command | What |
 |---|---|
 | `npm run build` | Builds the site into `_site/`. |
-| `npm test` | Tests the wind assessment, validation, drawings, images, status page, language support and export. |
+| `npm test` | Tests the wind assessment, validation, drawings, images, status page, language support, export, the weather stations, winds aloft, OGN, flight logs and power lines. |
 | `npm run images` | Checks all images (size, GPS data) and shrinks them if needed. |
 | `npm run images -- <files or folder>` | Imports images named by the convention, e.g. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (see [SPEC.md](SPEC.md#content)). All images are imported, and the build finds them by file name. |
 | `npm run images -- <id> <field> <file>` | Imports one image for a site with the correct name and size. |
 | `npm run airspace` | Fetches airspace from openAIP (requires `OPENAIP_API_KEY`). |
+| `npm run obstacles` | Fetches power lines and obstacles from NVE and OpenStreetMap (`-- --no-osm` for NVE only). |
 | `npm run check:links` | After the build: checks that every internal link and image in `_site/` points to a file that exists. |
 | `npm run check:html` | After the build: validates the HTML of every page (`.htmlvalidate.mjs`). |
 | `npm run check:output` | After the build: fails if a page has «[object Object]», «undefined», «NaN» or a placeholder that was not filled in. Also runs in the deploy build. |
@@ -110,6 +111,7 @@ Other commands:
 - Pilots in the air and flying activity: [Open Glider Network](https://www.glidernet.org/) (ODbL)
 - Precipitation radar: [Rain Viewer](https://www.rainviewer.com/) (free for non-commercial use, with attribution)
 - Airspace: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
+- Power lines, masts and wind turbines: [NVE](https://www.nve.no/) (NLOD); low-voltage lines, lifts and masts: [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
 - Thermals: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)
 - Site descriptions: Lars Sletten's old flying site guide, Flightlog and local knowledge in the club
 
