@@ -60,6 +60,10 @@ test("a KML with gx:Track gives the same flight; the same flight in two files ha
   assert.equal(k.site, "sollifjellet");
   assert.equal(flightKey(a), flightKey(k));
   assert.deepEqual(parseKml("<kml><LineString><coordinates>16.4,68.8,500</coordinates></LineString></kml>").points, [], "no times, no flight");
+  // One placemark per fix with its own time (GpsDump's track points), beside a plain line.
+  const marks = log.points.map((p) => `<Placemark><TimeStamp><when>${new Date(Date.UTC(2026, 6, 15) + p.t * 1000).toISOString()}</when></TimeStamp><Point><coordinates>${p.lon},${p.lat},${p.alt}</coordinates></Point></Placemark>`).join("");
+  const dump = parseKml(`<kml><Placemark><LineString><coordinates>16.4,68.8,500 16.3,68.8,400</coordinates></LineString></Placemark>${marks}</kml>`);
+  assert.equal(flightKey(analyzeFlight(dump, launchPoints(sites))), flightKey(a), "the same flight from the fixes");
 });
 
 test("the sums per site: months, directions, records, and thermal cells from several flights only", () => {

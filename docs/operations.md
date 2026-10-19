@@ -156,7 +156,9 @@ the menu and is marked `noindex`. It shows per site:
   IGC and a KML file counts once. One folder per pilot (`pilots` in the file is the number of folders).
 - A flight is found where the log moves at 4 m/s or more over 20 seconds (takeoff and landing), and counts for the
   nearest launch within 3 km (a site's `launch` and its `launches` with a position). The script prints how many
-  flights it found per site, how many were elsewhere, and the files without a flight or that could not be read.
+  flights it found per site, how many were elsewhere, in how many IGC and KML files, and the files without a flight
+  or that could not be read (`--list` names them). KML works with times: a gx:Track, or one placemark per fix with
+  its time (GpsDump); a KML with only a line has no times and gives no flight (export IGC from GpsDump instead).
 - Shown on the site page as «Fra turlogger» when the site has flights in the file.
 
 ## Pilots in the air (OGN)
