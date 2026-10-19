@@ -693,3 +693,24 @@ test("Holfuy: the fresh measurements are published even when the archive fails",
     console.warn = realWarn;
   }
 });
+
+test("status: when each source ran and succeeded, and which datasets are too old or miss launches", async () => {
+  const health = await import("../workers/data/src/health.js");
+  let runs = health.recordRuns(null, { forecast: null, stations: null }, NOW - 60000);
+  runs = health.recordRuns(runs, { forecast: "MET svarte 500" }, NOW);
+  assert.deepEqual(runs.forecast, { tried: new Date(NOW).toISOString(), ok: new Date(NOW - 60000).toISOString(), error: "MET svarte 500", errorAt: new Date(NOW).toISOString() });
+  assert.equal(runs.stations.ok, new Date(NOW - 60000).toISOString());
+  assert.equal(health.cleanError("fetch failed: https://api.holfuy.com/live/?s=101&pw=hemmelig&m=JSON"), "fetch failed: [adresse]", "never a key from an address");
+  const snapshots = {
+    forecast: { updated: ago(10), body: JSON.stringify({ sites: { a: [], b: [] } }) },
+    stations: { updated: ago(30), body: "{}" },
+    windgram: { updated: ago(20), body: JSON.stringify({ sites: { a: {} } }) },
+  };
+  const s = health.buildStatus({ runs, snapshots, expected: { forecast: ["a", "b", "c"], windgram: ["a"] }, archive: { holfuy: "2026-10-17" }, now: NOW });
+  assert.equal(s.ok, false);
+  assert.deepEqual(s.datasets.forecast, { updated: ago(10), ageMinutes: 10, maxAgeMinutes: 60, ok: true, missing: ["c"] });
+  assert.equal(s.datasets.stations.ok, false, "30 minutes without measurements is too old");
+  assert.deepEqual(s.datasets.windgram.missing, []);
+  assert.equal(s.datasets.verification.ok, false, "never written");
+  assert.equal(s.archive.holfuy, "2026-10-17");
+});
