@@ -175,7 +175,10 @@ the menu and is marked `noindex`. It shows per site:
   and the direction. Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
   summed up in `https://data.hpgt.workers.dev/v1/verification.json`.
 - Which sites: those with a station of their own (`site` in `HOLFUY_STATIONS`, and `MET_STATION_SITES`), now Heia and
-  Sætertinden. Shown under «Målt nå» on the site page and in «Målt mot varslet» on /vaer/, once there are 24 hours
+  Sætertinden, and those with one nearby at about the same height (`near` in `HOLFUY_STATIONS`), now Hinnstein against
+  Heia's station. A station nearby is also shown under «Målt nå» on that site's page, with the distance; only a site's
+  own station is used for the assessment of the hour now. Other sites have no station near enough at their height
+  (most stations stand down by the road or the sea), so they are left out rather than compared with a valley station. Shown under «Målt nå» on the site page and in «Målt mot varslet» on /vaer/, once there are 24 hours
   (before that, how far the collecting has come).
 
 ## Winds aloft

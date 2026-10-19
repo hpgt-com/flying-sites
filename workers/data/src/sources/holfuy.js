@@ -77,6 +77,7 @@ export function buildStations(stations, rows, meta, now = Date.now()) {
       name: s.name ?? m.name ?? String(s.id),
       model: s.model ?? null,
       site: s.site ?? null,
+      ...(s.near ? { near: s.near } : {}),
       source: SOURCE,
       url: `https://holfuy.com/en/weather/${encodeURIComponent(String(s.id))}`,
       lat: m.lat ?? null, lon: m.lon ?? null, altitude: m.altitude ?? null,

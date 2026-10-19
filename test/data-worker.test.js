@@ -305,8 +305,9 @@ test("verification: the hour's measurements, the pairs for finished hours, and t
   assert.equal(verifyMod.summarize([]), null);
 });
 
-test("verification: the sites with their own station, and its run time", () => {
-  assert.deepEqual(siteLinks(), [{ site: "heia", source: "holfuy", station: "490" }, { site: "saetertinden", source: "met", station: "SN87772" }]);
+test("verification: the sites with their own station or one nearby, and its run time", () => {
+  assert.deepEqual(siteLinks(), [{ site: "heia", source: "holfuy", station: "490" }, { site: "hinnstein", source: "holfuy", station: "490" },
+    { site: "saetertinden", source: "met", station: "SN87772" }]);
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
   assert.deepEqual([9, 39, 10].map((m) => due("verify", minute(m))), [true, true, false]);
 });

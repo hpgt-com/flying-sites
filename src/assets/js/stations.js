@@ -611,12 +611,17 @@
   // A station as a card: the name (to Holfuy) and how old the measurement is, the wind now with the compass, the rest,
   // and the chart of the last hours. An old measurement shows only its age and the chart. On the site page (with «Målt nå
   // på» before the name), and in the map's popup (without the chart on small maps).
+  // sitePage: true on the site page («Målt nå på …»), or the distance in km for a station nearby («Målt nå 1,3 km unna,
+  // på …»).
   function card(item, nowMs, tag, sitePage, noChart) {
     var old = isOld(item, nowMs);
     var el = make(tag, "station" + (old ? " station--old" : ""));
     var head = make("div", "station__head");
     var name = make("span", "station__title");
-    if (sitePage) name.appendChild(document.createTextNode(text("stations.siteNow", { name: "" }).trim() + " "));
+    if (sitePage) {
+      var lead = isNum(sitePage) ? text("stations.nearNow", { km: value(sitePage), name: "" }) : text("stations.siteNow", { name: "" });
+      name.appendChild(document.createTextNode(lead.trim() + " "));
+    }
     name.appendChild(stationLink(item, "station__name"));
     head.append(name, make("span", "station__age", [altitudeText(item), ageText(item, nowMs)].filter(Boolean).join(" · ")));
     el.appendChild(head);
@@ -823,11 +828,13 @@
     if (worst && Math.abs(s.sectors[worst].bias) >= 1) lines.push(text("stations.vSector", { dir: globalThis.FlyingSites.DIRECTION_LABELS[worst], v: signed(s.sectors[worst].bias) }));
     return lines;
   }
-  // A block with the heading and the lines for `siteId`, or null when the data service has nothing for it.
-  function verifyBlock(data, siteId) {
+  // A block with the heading and the lines for `siteId`, or null when the data service has nothing for it. nearName: the
+  // station's name when it stands nearby and not on the site, said under the heading.
+  function verifyBlock(data, siteId, nearName) {
     var s = data && data.sites && data.sites[siteId];
     var lines = verifyLines(s, data && data.days);
     if (!lines.length) return null;
+    if (nearName) lines.unshift(text("stations.vNear", { name: nearName }));
     var box = make("div", "station-verify");
     box.appendChild(make("strong", "station-verify__title", text("stations.vTitle")));
     lines.forEach(function (l) { box.appendChild(make("span", null, l)); });
@@ -845,23 +852,36 @@
     verifyCache[url].then(function (d) { if (d) done(d); });
   }
 
-  // The site page: the station on this flying site (item.site), as a line in «Kan jeg fly her nå?» with the station's name
-  // as a link to Holfuy, and the Holfuy button among the weather links. Nothing when the site has no station.
+  // The station's entry for a flying site nearby ({ site, km }), or null.
+  function nearOf(item, siteId) {
+    var list = Array.isArray(item.near) ? item.near : [];
+    for (var k = 0; k < list.length; k++) if (list[k] && list[k].site === siteId && isNum(list[k].km)) return list[k];
+    return null;
+  }
+
+  // The site page: the station on this flying site (item.site), or else one nearby (item.near), as a card with the
+  // station's name as a link to Holfuy, and the Holfuy button among the weather links. Nothing when the site has neither.
+  // A station nearby is shown with the site's own wind rose and how far away it is.
   var siteEl = typeof document !== "undefined" && document.getElementById("station-now");
   if (siteEl) {
     var linkEl = document.getElementById("station-link");
     watch(siteEl.getAttribute("data-url"), function (data) {
       var now = Date.now(), site = siteEl.getAttribute("data-site");
       var item = data.items.filter(function (i) { return i.site === site; })[0];
+      var near = null;
+      if (!item) {
+        item = data.items.filter(function (i) { return nearOf(i, site); })[0];
+        near = item ? nearOf(item, site) : null;
+      }
       siteEl.hidden = !item;
       // The «Holfuy» button among the weather links, only for a Holfuy station.
       if (linkEl) linkEl.hidden = !item || !isHolfuy(item);
       if (!item) return;
       if (linkEl && isHolfuy(item)) linkEl.href = stationUrl(item);
-      siteEl.replaceChildren(card(item, now, "div", true));
+      siteEl.replaceChildren(near ? card(Object.assign({}, item, { site: site }), now, "div", near.km) : card(item, now, "div", true));
       // How well the forecast has hit here, under the card.
       loadVerification(siteEl.getAttribute("data-verify-url"), function (v) {
-        var block = verifyBlock(v, site);
+        var block = verifyBlock(v, site, near ? item.name : null);
         var old = siteEl.querySelector(".station-verify");
         if (old) old.remove();
         if (block) siteEl.appendChild(block);
@@ -878,6 +898,7 @@
     metTable: metTable,
     verifyLines: verifyLines,
     verifyBlock: verifyBlock,
+    nearOf: nearOf,
     loadVerification: loadVerification,
     isHolfuy: isHolfuy,
     isStationsData: isStationsData,
