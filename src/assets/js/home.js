@@ -429,6 +429,8 @@
   FS.fitWhenVisible(map, mapEl, fitAllSites);
   // «Vis flysteder i Harstad og Kvæfjord» and full screen below the zoom buttons, as on the site page.
   FS.addViewControls(map, mapEl, fitAllSites, FS.t("home.showSitesIn", { region: homeRegion }));
+  // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
+  if (window.FlyingSitesLive) window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"));
 
   // --- Card for the selected site ---
   var cardEl = document.getElementById("selected");

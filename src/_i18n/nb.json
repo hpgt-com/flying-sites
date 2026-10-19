@@ -632,6 +632,29 @@
       "checkFailed": "Robotsjekken feilet. Last siden på nytt og prøv igjen.",
       "waitCheck": "Vent til robotsjekken er ferdig.",
       "tooShort": "Skriv minst 10 tegn."
+    },
+    "live": {
+      "layer": "Piloter i lufta",
+      "credit": "Piloter: <a href=\"https://www.glidernet.org\" target=\"_blank\" rel=\"noopener\">Open Glider Network</a> (ODbL)",
+      "unknown": "Ukjent",
+      "alt": "{m} m",
+      "altLine": "Høyde {m} moh",
+      "speed": "Fart {kmh} km/t",
+      "climb": "Stiger/synker {v} m/s",
+      "secondsAgo": "Hørt for {n} s siden",
+      "minutesAgo": "Hørt for {n} min siden",
+      "type_glider": "Seilfly",
+      "type_tow": "Slepefly",
+      "type_heli": "Helikopter",
+      "type_parachute": "Fallskjerm",
+      "type_dropPlane": "Fallskjermfly",
+      "type_hangGlider": "Hangglider",
+      "type_paraglider": "Paraglider",
+      "type_plane": "Motorfly",
+      "type_jet": "Jetfly",
+      "type_balloon": "Ballong",
+      "type_drone": "Drone",
+      "type_other": "Luftfartøy"
     }
   },
   "about": {
@@ -665,7 +688,8 @@
     "privacyNoAccount": "Siden har ingen innlogging og ingen skjema, og lagrer ingen personopplysninger om deg.",
     "dataTitle": "Åpne data",
     "changesTitle": "Feil eller nye opplysninger?",
-    "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}."
+    "changes": "Bruk skjemaet nederst på stedets side, eller {form} i menyen for det som ikke gjelder ett sted. Det blir en sak for klubben, uten at du trenger noen konto. Du kan også si fra til noen i klubben, eller lage en sak selv på {github}.",
+    "sourceOgn": "piloter og fly i lufta i kartlaget «Piloter i lufta», fra FANET- og FLARM-enheter (ODbL). Piloter som har reservert seg i OGN, vises ikke, og de som ikke vil bli gjenkjent, vises som «Ukjent». Ingenting lagres."
   },
   "report": {
     "title": "Meld fra om endring",

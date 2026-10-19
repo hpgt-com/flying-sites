@@ -330,6 +330,8 @@
     // The weather stations as a layer, as on the home map (stations.js), from the same data as «Målt nå» on the page.
     var stationNow = document.getElementById("station-now");
     if (window.FlyingSitesStations && stationNow) window.FlyingSitesStations.addMapLayer(map, stationNow.getAttribute("data-url"));
+    // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
+    if (window.FlyingSitesLive) window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"));
 
     // --- Elevation profile ---
     var profileEl = document.getElementById("elevation-profile");

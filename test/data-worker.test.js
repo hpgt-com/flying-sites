@@ -401,3 +401,46 @@ test("report: a general report from /meld-fra/ has no site and its own kinds", (
   assert.equal(issue.title, "[Meld fra] Generelt: Nytt flysted");
   assert.match(issue.body, /gjelder ikke ett bestemt flysted/);
 });
+
+// --- Piloter i lufta (OGN) ---
+const liveMod = await import("../workers/data/src/live.js");
+
+test("live: OGN's answer as items, unknown names hidden, old and static left out, newest first", () => {
+  const xml = `<?xml version="1.0"?><markers>
+<m a="68.625748,15.306080,_e6,c37e55e6,807,09:01:35,40,240,36,-1.4,7,AVX1058,0,c37e55e6"/>
+<m a="69.483269,18.693029,FS,LN-WFS,3613,09:09:04,10,216,198,4.9,9,AVX1004,4780BA,e42e25c5"/>
+<m a="68.8,16.5,X,Old,500,08:00:00,900,0,0,0,7,AVX970,0,aaaaaaaa"/>
+<m a="68.8,16.5,X,Mast,500,08:00:00,5,0,0,0,15,AVX970,0,bbbbbbbb"/>
+<m a="bad"/></markers>`;
+  const items = liveMod.parseLive(xml, NOW);
+  assert.deepEqual(items.map((i) => i.id), ["e42e25c5", "c37e55e6"]);
+  assert.equal(items[1].name, null, "OGN's random name is not shown");
+  assert.equal(items[0].name, "LN-WFS");
+  assert.equal(items[1].speed, 10, "km/h to m/s");
+  assert.equal(items[1].type, 7);
+  assert.equal(items[1].time, new Date(NOW - 40000).toISOString());
+  const b = liveMod.bounds([{ lat: 68, lon: 16 }, { lat: 69, lon: 17 }]);
+  assert.deepEqual(b, { n: 69.5, s: 67.5, e: 18, w: 15 });
+});
+
+test("live: answered from the cache when fresh, OGN asked otherwise, 503 when OGN fails", async () => {
+  const store = new Map();
+  const cache = { match: async (k) => store.get(k.url)?.clone(), put: async (k, r) => { store.set(k.url, r); } };
+  const realFetch = globalThis.fetch;
+  let calls = 0, fail = false;
+  globalThis.fetch = async () => { calls++; if (fail) throw new Error("nede"); return new Response('<markers><m a="68.8,16.5,P,Pilot,900,09:00:00,3,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>'); };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const sites = [{ lat: 68.8, lon: 16.5 }];
+    const first = await (await liveMod.handleLive(sites, NOW, cache)).json();
+    assert.equal(first.items[0].name, "Pilot");
+    await liveMod.handleLive(sites, NOW, cache);
+    assert.equal(calls, 1, "the second answer came from the cache");
+    fail = true;
+    assert.equal((await liveMod.handleLive(sites, NOW, null)).status, 503);
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = warn;
+  }
+});

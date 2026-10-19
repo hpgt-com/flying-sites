@@ -143,6 +143,18 @@ the menu and is marked `noindex`. It shows per site:
 - Without Turnstile and the app (or the token) the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
   (Observability), as `report: GitHub svarte …`.
 
+## Pilots in the air (OGN)
+
+- The map layer «Piloter i lufta» asks the data service every 5 seconds while it is on; the data service asks OGN's live
+  map (`live.glidernet.org/lxml.php`, the area of the sites with a margin) at most once per 5 seconds and passes on what
+  it gets (`workers/data/src/live.js`). Nothing is stored. No key.
+- OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
+  on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
+  unidentified a random name, shown here as «Ukjent».
+- The address is OGN's own live map's and is not documented; if OGN changes it, the layer shows nothing and the data
+  service logs `live: …`. Receivers near Harstad (October 2026): AVX970 north of Evenes, AVX1058 Hadsel/Sortland,
+  AVX1004 Tromsø (`live.glidernet.org/rec.php`).
+
 ## How well the forecast hits
 
 - The data service pairs the forecast for each finished hour (as it stood during the hour, `forecast_hours`) with what

@@ -13,6 +13,8 @@
 // - verification: how well the forecast hit at each flying site with its own station (sources/verify.js), on the weather
 //   page and the site page.
 //
+// - live: the aircraft the Open Glider Network hears in the area now (live.js), fetched on demand and cached a few
+//   seconds, for the map layer «Piloter i lufta» (src/assets/js/live.js).
 // - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
 //
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
@@ -26,6 +28,7 @@ import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE, siteLinks } from "./st
 import { due } from "./schedule.js";
 import { mergeStations } from "./merge.js";
 import { handleReport, ORIGINS } from "./report.js";
+import { handleLive } from "./live.js";
 import SITES from "./sites.json";
 
 export { Store } from "./store.js";
@@ -73,6 +76,12 @@ export default {
     }
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
     if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
+    if (pathname === "/v1/live.json") {
+      const res = await handleLive(SITES);
+      const headers = new Headers(res.headers);
+      for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
+      return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
+    }
     const dataset = DATASETS[pathname];
     if (!dataset) return new Response("Not found", { status: 404, headers: HEADERS });
     const body = dataset === holfuy.DATASET
