@@ -643,18 +643,14 @@
       "climb": "Climb {v} m/s",
       "secondsAgo": "Heard {n} s ago",
       "minutesAgo": "Heard {n} min ago",
-      "type_glider": "Glider",
-      "type_tow": "Tow plane",
-      "type_heli": "Helicopter",
-      "type_parachute": "Parachute",
-      "type_dropPlane": "Drop plane",
-      "type_hangGlider": "Hang glider",
-      "type_paraglider": "Paraglider",
-      "type_plane": "Powered aircraft",
-      "type_jet": "Jet",
-      "type_balloon": "Balloon",
-      "type_drone": "Drone",
-      "type_other": "Aircraft"
+      "legend": "Climb/sink (m/s)",
+      "legendSink": "Sink",
+      "legendLift": "Lift",
+      "climb_sink2": "Strong sink, below −3 m/s",
+      "climb_sink1": "Sink, −3 to −1.5 m/s",
+      "climb_glide": "Glide, −1.5 to +0.5 m/s",
+      "climb_lift1": "Lift, +0.5 to +2 m/s",
+      "climb_lift2": "Strong lift, above +2 m/s"
     }
   },
   "about": {
@@ -689,7 +685,7 @@
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",
     "changes": "Use the form at the bottom of the site's page, or {form} in the menu for what does not concern one site. It becomes an issue for the club, without you needing an account. You can also tell someone in the club, or open an issue yourself on {github}.",
-    "sourceOgn": "pilots and aircraft in the air in the map layer «Pilots in the air», from FANET and FLARM devices (ODbL). Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». Nothing is stored."
+    "sourceOgn": "paraglider and speed-flying pilots in the air in the map layer «Pilots in the air», from FANET and FLARM devices (ODbL). Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory, and nothing is stored."
   },
   "report": {
     "title": "Report a change",

@@ -77,7 +77,7 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
     if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
     if (pathname === "/v1/live.json") {
-      const res = await handleLive(SITES);
+      const res = await handleLive(SITES, Date.now(), globalThis.caches?.default, store(env));
       const headers = new Headers(res.headers);
       for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
       return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
