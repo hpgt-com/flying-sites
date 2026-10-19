@@ -356,6 +356,10 @@ p { margin: 0; }
 .leaflet-container .leaflet-control-attribution a { color: var(--link); text-decoration: underline; }
 .leaflet-container img { max-width: none !important; }
 .leaflet-control-layers-toggle { width: 44px !important; height: 44px !important; }
+/* While the layer list is open, what lies over the home map (the status, the line about the selected site, the timeline,
+   the card on desktop) is hidden, so the list has the whole map and can scroll to its last layer. The map is its own
+   stacking context, so the list cannot be lifted above them. */
+.home__map:has(.leaflet-control-layers-expanded) :is(.map-status, .map-note, .timeline, .selected) { visibility: hidden; }
 .leaflet-touch .leaflet-bar a { width: 44px; height: 44px; line-height: 44px; }
 
 /* Wind roses on the map */
