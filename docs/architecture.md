@@ -193,8 +193,10 @@ flowchart LR
   site pages). On the site page the map and the elevation profile are set up when they come near the screen
   (`IntersectionObserver` in `site.js`), so the map tiles are only fetched when they are needed. The map's first view is
   the fitted one (`fitWhenVisible` in `common.js`), not a temporary view first. On mobile the home page map keeps its
-  size while the page scrolls, and only its frame gets lower, so Leaflet does not redraw it. Three font files, all
-  preloaded. The home page opens the connections to the tile servers early (`preconnect` in the front matter). The
+  size while the page scrolls, and only its frame gets lower, so Leaflet does not redraw it. The scripts are loaded with
+  `defer` (in order, after the page is parsed), and OpenTopoMap below Kartverket's map (for the world outside Norway) is
+  added only once Kartverket's first tiles have loaded, so its slower tiles do not hold up the first view (`withUnderlay`
+  in `common.js`). Three font files, all preloaded. The home page opens the connections to the tile servers early (`preconnect` in the front matter). The
   site page keeps space for «Kan jeg fly her nå?» until `site-wind.js` has filled it in, so the boxes below do not jump.
 - **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself (and Cloudflare
   Turnstile for «Meld fra om endring»), and images and

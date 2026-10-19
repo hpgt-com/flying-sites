@@ -396,7 +396,9 @@
     });
   }
   var cluster = L.markerClusterGroup({
-    maxClusterRadius: 40,
+    // At least the size of a site marker (46 px), so a marker and a cluster never overlap without being merged (which
+    // left a cluster with only a sliver to tap).
+    maxClusterRadius: 48,
     showCoverageOnHover: false,
     spiderfyDistanceMultiplier: 1.6,
     iconCreateFunction: clusterIcon,
