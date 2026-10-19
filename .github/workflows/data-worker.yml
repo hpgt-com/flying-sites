@@ -8,6 +8,8 @@ on:
     paths:
       - "workers/data/**"
       - "lib/weather/met.js"
+      - "lib/weather/open-meteo.js"
+      - "lib/windgram.js"
       - "lib/site-files.js"
       - "scripts/data-sites.mjs"
       - "src/sites/*/index.md"

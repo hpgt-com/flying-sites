@@ -233,3 +233,35 @@ test("Frost: only stations within 15 km of a launch are kept", () => {
   const kept = frostMod.nearSites([{ id: "SN1", lat: 68.85, lon: 16.6 }, { id: "SN2", lat: 68.4913, lon: 16.6767 }], sites);
   assert.deepEqual(kept.map((s) => s.id), ["SN1"], "Evenes is about 35 km from this launch");
 });
+
+// --- Winds aloft (Open-Meteo) ---
+const windgramMod = await import("../workers/data/src/sources/windgram.js");
+
+test("windgram: every half hour, only fresh launches, as old as the oldest, and a failed launch keeps its grid", async () => {
+  const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
+  assert.deepEqual([0, 1, 29, 30].map((m) => due("windgram", minute(m))), [true, false, false, true]);
+  const grid = { times: [1], heights: [250], cells: [[[200, 4]]], blh: [800], cloudBase: [900], cape: [0] };
+  const state = { sites: { a: { fetched: ago(10), grid }, b: { fetched: ago(30), grid }, old: { fetched: ago(7 * 60), grid } } };
+  const body = windgramMod.buildWindgram(state, NOW);
+  assert.deepEqual(Object.keys(body.sites), ["a", "b"]);
+  assert.equal(body.fetched, ago(30));
+  assert.equal(body.dataset, "windgram");
+  assert.equal(body.source, "Open-Meteo");
+  assert.equal(windgramMod.buildWindgram({ sites: {} }, NOW), null);
+
+  const saved = {};
+  const store = { getState: async () => state, putState: async (k, v) => { saved.state = v; }, putSnapshot: async (k, v) => { saved[k] = JSON.parse(v); } };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error("nede"); };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    await windgramMod.run(store, [{ id: "a", lat: 68, lon: 16, altitude: 500 }], NOW, ["a"]);
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = warn;
+  }
+  assert.deepEqual(Object.keys(saved.state.sites), ["a"], "sites no longer in the list are dropped");
+  assert.equal(saved.state.sites.a.fetched, ago(10), "the failed launch keeps its previous grid");
+  assert.deepEqual(saved.windgram.sites.a, grid);
+});

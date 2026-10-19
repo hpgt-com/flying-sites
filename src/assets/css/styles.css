@@ -1563,6 +1563,7 @@ body.sheet-open { overflow: hidden; }
 
 /* Wind above the launch (windgram.js): hours across, heights upward. Scrolls sideways on mobile. */
 .windgram { display: grid; gap: 8px; margin-top: 4px; }
+.windgram[hidden] { display: none; }
 .windgram h3 { margin: 0; font-size: 18px; }
 .windgram p { margin: 0; font-size: 14px; }
 .windgram__scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }

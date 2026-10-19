@@ -8,12 +8,15 @@
 //   built into the page (fetchNewerForecast in src/assets/js/wind.js).
 // - stations: measured wind from Holfuy's stations (sources/holfuy.js, stations in stations.js) and MET's stations in
 //   the area (sources/frost.js), served together; each station carries its own source.
+// - windgram: winds aloft from Open-Meteo for the launches in WINDGRAM_SITES (sources/windgram.js), used by the site
+//   page when newer than the one built into it (src/assets/js/windgram.js).
 //
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
 
 import * as forecast from "./sources/forecast.js";
 import * as holfuy from "./sources/holfuy.js";
 import * as frost from "./sources/frost.js";
+import * as windgram from "./sources/windgram.js";
 import { HOLFUY_STATIONS, MET_STATION_SITES } from "./stations.js";
 import { due } from "./schedule.js";
 import { mergeStations } from "./merge.js";
@@ -21,9 +24,7 @@ import SITES from "./sites.json";
 
 export { Store } from "./store.js";
 
-const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET };
-
-
+const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET, "/v1/windgram.json": windgram.DATASET };
 
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 
@@ -43,6 +44,7 @@ export default {
     if (due("forecast", now)) runs.forecast = forecast.run(s, SITES, now);
     if (due("stations", now)) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
     if (due("met", now)) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now);
+    if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then((results) => {
       Object.keys(runs).forEach((name, i) => { if (results[i].status === "rejected") console.warn(`${name}: ${results[i].reason?.message}`); });
     }));

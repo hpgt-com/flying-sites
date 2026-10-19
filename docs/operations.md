@@ -120,6 +120,15 @@ the menu and is marked `noindex`. It shows per site:
   (the latest fetch during the hour wins), kept for 30 days in the store (`forecast_hours`). The last 6 hours are in
   `/v1/forecast.json` as `past`, which «Målt mot varslet» on the weather page draws over the measurements.
 
+## Winds aloft
+
+- Fetched by the data service every 30 minutes from Open-Meteo for the launches in `WINDGRAM_SITES` in
+  `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), served as
+  `https://data.hpgt.workers.dev/v1/windgram.json`. No key. A launch that fails keeps its previous grid for up to 6
+  hours. The site page uses it when it is newer than the grid built into the page; the section stays hidden when
+  neither has hours left.
+- A new launch: add its folder to `WINDGRAM_SITES` and deploy both the site and the data service.
+
 ## Weather stations (MET)
 
 - MET's own stations are found by the data service itself: once a day it asks Frost for the stations in the area of the
