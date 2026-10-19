@@ -115,8 +115,7 @@
     },
     {
       "title": { "nb": "Det som mangler på noen steder", "en": "What is missing on some sites" },
-      "text": { "nb": "Parkering, tekster og regler. Trenger lokal kunnskap: meld gjerne fra om du kjenner stedene.", "en": "Parking, texts and rules. Needs local knowledge: please report if you know the sites." },
-      "issue": 103
+      "text": { "nb": "Parkering, tekster og regler. Trenger lokal kunnskap: meld gjerne fra om du kjenner stedene.", "en": "Parking, texts and rules. Needs local knowledge: please report if you know the sites." }
     }
   ]
 }
