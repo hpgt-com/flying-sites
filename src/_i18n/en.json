@@ -235,7 +235,7 @@
     "windgramTitle": "Wind above the launch",
     "windgramIntro": "The wind at heights above the launch hour by hour, and under it gusts, thermals, clouds and rain. Swipe sideways for more hours.",
     "windgramSource": "Model data from <a href=\"https://open-meteo.com/\">Open-Meteo</a> (CC BY 4.0). Rough: the model does not see the local terrain, and the cloud base is estimated from temperature and dew point at ground level.",
-    "canIFly": "Can I fly here now?",
+    "canIFly": "The wind now – may it work?",
     "next12": "Wind over the next 12 hours",
     "hourCardsKey": "Bar: wind, line: gust. Arrow: where the wind blows. Numbers: wind (gust) in m/s.",
     "siteMaxWind": "The site has its own wind limit: {m} m/s.",

@@ -144,7 +144,7 @@ flowchart LR
   wind["wind.js<br/>rateWind(): Kan passe / Usikkert /<br/>For mye vind / Passer ikke"]
   home["home.js<br/>home page: search, filters,<br/>card, summary"]
   site["site.js<br/>site map, direction arcs,<br/>elevation profile"]
-  sitewind["site-wind.js<br/>«Kan jeg fly her nå?» on the site page"]
+  sitewind["site-wind.js<br/>«Vinden nå – kan det passe?» on the site page"]
   stations["stations.js<br/>weather stations: map layer, rows,<br/>cards, charts, rating"]
   weather["weather.js<br/>the weather page /vaer/"]
   data["data service<br/>data.hpgt.workers.dev<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live (.json),<br/>POST /v1/report"]
@@ -197,7 +197,7 @@ flowchart LR
   `defer` (in order, after the page is parsed), and OpenTopoMap below Kartverket's map (for the world outside Norway) is
   added only once Kartverket's first tiles have loaded, so its slower tiles do not hold up the first view (`withUnderlay`
   in `common.js`). Three font files, all preloaded. The home page opens the connections to the tile servers early (`preconnect` in the front matter). The
-  site page keeps space for «Kan jeg fly her nå?» until `site-wind.js` has filled it in, so the boxes below do not jump.
+  site page keeps space for «Vinden nå – kan det passe?» until `site-wind.js` has filled it in, so the boxes below do not jump.
 - **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself (and Cloudflare
   Turnstile for «Meld fra om endring»), and images and
   data only from the sources above. A new external source must be added there. See [SECURITY.md](../SECURITY.md).
@@ -272,7 +272,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
 | Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
 | Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, at once and every 10 minutes while the page is in view (`watchForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
-| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Kan jeg fly her nå?» on the station's site), refetched every minute |
+| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Vinden nå – kan det passe?» on the station's site), refetched every minute |
 | Data service: winds aloft | Open-Meteo, for the launches in `WINDGRAM_SITES` (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen) | `workers/data/src/sources/windgram.js` (the same `lib/weather/open-meteo.js` and `lib/windgram.js`) | Every 10 minutes, 2 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/windgram.json` | `windgram.js` on the site page, when newer than the grid in the page (or the page has none) |
 | Data service: verification | The forecast hours and the measurements already stored | `workers/data/src/sources/verify.js`, the sites in `siteLinks()` in `stations.js` | Twice an hour (:09, :39) | Durable Object (SQLite) `verify_hours`, kept a year; the last 30 days as `https://data.hpgt.workers.dev/v1/verification.json` | «Målt nå» on the site page and «Målt mot varslet» on /vaer/ (`verifyBlock` in `stations.js`) |
 | Data service: pilots in the air | Open Glider Network (live positions of paragliders, ODbL) | `workers/data/src/live.js` | On demand, when someone has «Piloter i lufta» on; cached 5 seconds | The last 10 minutes of each track, with the climb, in the store's memory only, never written down; served as `https://data.hpgt.workers.dev/v1/live.json` | `live.js` on the home and site maps |
@@ -325,8 +325,8 @@ The main features, roughly in the order they were added. Details are in [SPEC.md
   search, filters for direction, level and category, a card for the selected site, and tabs for Flysteder ("Sites")
   and Vær ("Weather").
 - **Wind assessment from MET:** «Kan passe», «Usikkert», «For mye vind» and «Passer ikke» for any hour in the
-  forecast (a timeline on the map), with a summary that follows the filters, and «Kan jeg fly her nå?» ("Can I fly
-  here now?") with the next 12 hours on the site pages. Turned off when the forecast is too old.
+  forecast (a timeline on the map), with a summary that follows the filters, and «Vinden nå – kan det passe?» ("The wind now – may it
+  work?") with the next 12 hours on the site pages. Turned off when the forecast is too old.
 - **Site pages:** map with launches, direction arcs, landings, parking, walking routes and numbered points from the
   drawing, elevation profile from Kartverket, hazards, airspace above the launch, Yr meteogram and image viewer.
 - **Data and quality:** Kartverket heights for launch, landing and parking, review of all 32 sites, the status page

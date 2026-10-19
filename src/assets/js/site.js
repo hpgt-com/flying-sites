@@ -58,7 +58,7 @@
   }
 
   var data = FS.readJson("site-data");
-  // «Målt nå» (the weather station, stations.js) follows «Kan jeg fly her nå?» in the HTML, which is the mobile order. On
+  // «Målt nå» (the weather station, stations.js) follows «Vinden nå – kan det passe?» in the HTML, which is the mobile order. On
   // desktop it goes to the top of the right column, under «Før du starter», where its chart has a sensible size and the
   // left column does not have to wait for it.
   var stationBlock = document.getElementById("station-now");
