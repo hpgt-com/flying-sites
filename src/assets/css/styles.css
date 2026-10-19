@@ -1835,3 +1835,16 @@ body.sheet-open { overflow: hidden; }
 .report__status:empty { display: none; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
+
+/* «Piloter i lufta» (live.js): an arrow pointing where the aircraft flies, with the height and climb beside it. Paragliders
+   and hang gliders in the site's fjord colour, other aircraft dark grey. White on both is over 4.5:1. */
+.live-marker { position: relative; --live: #3C4A52; color: var(--live); }
+.live-marker--flyer { --live: #1F5A6B; }
+.live-marker__arrow { display: grid; place-items: center; width: 26px; height: 26px; filter: drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 1px 2px rgba(28, 43, 51, 0.5)); }
+.live-marker__label:empty { display: none; }
+.live-marker__label {
+  position: absolute; left: 24px; top: 50%; transform: translateY(-50%); padding: 2px 6px; white-space: nowrap; border-radius: 6px;
+  background: var(--live); color: #FFFFFF; font: 700 12px/1.2 var(--font-body); font-variant-numeric: tabular-nums; box-shadow: 0 1px 3px rgba(28, 43, 51, 0.4);
+}
+.live-popup { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.live-popup__age { color: var(--muted); font-size: 13px; }
