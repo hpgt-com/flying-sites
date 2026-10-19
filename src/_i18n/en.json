@@ -527,6 +527,7 @@
       "layerObstacles": "Power lines and obstacles",
       "obstaclesLoading": "Loading power lines …",
       "obstaclesError": "Could not load power lines.",
+      "obstaclesZoom": "Zoom in to see power lines.",
       "obstaclesAttribution": "Power lines: {sources}, {date}. Not complete: low voltage and wires may be missing",
       "obstacle": {
         "power": "Power line {kv} kV",

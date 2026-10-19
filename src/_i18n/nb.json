@@ -527,6 +527,7 @@
       "layerObstacles": "Kraftlinjer og hindre",
       "obstaclesLoading": "Laster kraftlinjer …",
       "obstaclesError": "Kunne ikke hente kraftlinjer.",
+      "obstaclesZoom": "Zoom inn for å se kraftlinjer.",
       "obstaclesAttribution": "Kraftlinjer: {sources}, {date}. Ikke komplett: lavspent og vaiere kan mangle",
       "obstacle": {
         "power": "Kraftlinje {kv} kV",

@@ -1,0 +1,7 @@
+{"type":"FeatureCollection","features":[
+{"type":"Feature","id":"nve/grid/2/133550","properties":{"kind":"power","src":"nve","kv":22,"owner":"TROMS KRAFT NETT AS"},"geometry":{"type":"LineString","coordinates":[[17.10393,69.26055],[17.10461,69.26134],[17.11698,69.26939],[17.12099,69.27119],[17.12324,69.27184]]}},
+{"type":"Feature","id":"nve/grid/2/24513","properties":{"kind":"power","src":"nve","kv":22,"owner":"TROMS KRAFT NETT AS"},"geometry":{"type":"LineString","coordinates":[[17.1061,69.25726],[17.10703,69.25641],[17.10885,69.25266]]}},
+{"type":"Feature","id":"nve/grid/2/44744","properties":{"kind":"power","src":"nve","kv":22,"owner":"TROMS KRAFT NETT AS"},"geometry":{"type":"LineString","coordinates":[[17.10885,69.25266],[17.10966,69.25107],[17.11007,69.25021],[17.11089,69.24856],[17.1131,69.24653],[17.11439,69.24535],[17.11504,69.2431]]}},
+{"type":"Feature","id":"nve/grid/2/56752","properties":{"kind":"power","src":"nve","kv":22,"owner":"TROMS KRAFT NETT AS"},"geometry":{"type":"LineString","coordinates":[[17.1061,69.25726],[17.10603,69.25732],[17.10375,69.25946],[17.10393,69.26055]]}},
+{"type":"Feature","id":"nve/grid/2/7357","properties":{"kind":"power","src":"nve","kv":22,"owner":"TROMS KRAFT NETT AS"},"geometry":{"type":"LineString","coordinates":[[17.12324,69.27184],[17.12541,69.27248]]}}
+]}
