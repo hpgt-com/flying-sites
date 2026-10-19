@@ -392,8 +392,8 @@ p { margin: 0; }
 .rose-marker--unknown > * { opacity: 0.6; }
 /* Cluster of launches when zoomed out: white circle with a count. */
 .site-cluster__ring { border-radius: 10px !important; width: 40px; height: 40px; font: 700 16px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--text); }
-/* The cluster's glide while it splits or merges, only on its own markers: on every marker it also slowed the weather
-   stations and the pilots in the air, which then lagged behind the map's zoom and slid into place afterwards. */
+/* The cluster's glide while it splits or merges, only on its own markers, so the weather stations and the pilots in the
+   air keep the map's own zoom animation. */
 .leaflet-cluster-anim .leaflet-marker-icon:not(.station-marker):not(.live-marker) { transition: transform 0.3s ease-out, opacity 0.3s ease-in; }
 .leaflet-cluster-spider-leg { transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in; }
 /* Selected site: larger, with a dark outer ring (white gap between), so the rating colour on the ring is kept.
@@ -1647,7 +1647,10 @@ body.sheet-open { overflow: hidden; }
    pointing where the wind blows, so the direction shows without a tap. Zoomed in (.map--station-labels), a label beside it
    with the wind and gust as measured. MET's are smaller, grey, rounded squares (another shape, not only another colour),
    slightly translucent, and say «MET» in the label. White on #1C2B33, #56636B and #2F6A9E is 4.5:1 or more. */
-.station-marker { position: relative; font: 700 13px/1 var(--font-body); color: #FFFFFF; --st-bg: #1C2B33; }
+/* No position here: Leaflet places markers with position: absolute (.leaflet-marker-icon), and position: relative put
+   them in the flow, each pushed down by the markers before it, so they sat in the wrong place and moved when some were
+   hidden on zoom. Absolute is also what the parts inside are placed from. */
+.station-marker { font: 700 13px/1 var(--font-body); color: #FFFFFF; --st-bg: #1C2B33; }
 .station-marker__dial {
   position: absolute; inset: 0; display: grid; place-items: center; background: var(--st-bg); border: 2px solid #FFFFFF;
   border-radius: 50%; box-shadow: 0 1px 4px rgba(28, 43, 51, 0.5); font-variant-numeric: tabular-nums; z-index: 1;
@@ -1921,7 +1924,7 @@ body.sheet-open { overflow: hidden; }
 /* «Piloter i lufta» (live.js): the wing seen from above, pointing where it flies, in the site's fjord colour with the
    height and climb beside it (white on it is over 4.5:1). The track is coloured by the climb, blue for sink, grey for
    gliding and red for lift, over a light edge (dark on the dark map) so every colour shows on the map. */
-.live-marker { position: relative; --live: #1F5A6B; color: var(--live); }
+.live-marker { --live: #1F5A6B; color: var(--live); }
 .live-marker__wing { display: grid; place-items: center; width: 26px; height: 26px; filter: drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 0 1px #FFFFFF) drop-shadow(0 1px 2px rgba(28, 43, 51, 0.5)); }
 .live-marker__label:empty { display: none; }
 .live-marker__label {
