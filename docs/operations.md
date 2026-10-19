@@ -108,7 +108,10 @@ the menu and is marked `noindex`. It shows per site:
   «Run workflow».
 - When it reports a problem: the logs are in Cloudflare (Workers → data → Observability), and a source that fails keeps
   its error in the status until it succeeds again. The usual causes are a source down (MET, Holfuy, Frost, Open-Meteo),
-  an expired secret, or the free plan's daily limit (100 000 requests, reset at 00:00 UTC).
+  an expired secret, or one of the free plan's daily limits (reset at 00:00 UTC): 100 000 requests, and for the store
+  5 million rows read (Cloudflare e-mails at 90 %). Every query on the time goes through an index
+  (`workers/data/src/indexes.js`, tested in `test/store-indexes.test.js`); a new query or table that does not would read
+  the whole table on every run.
 - Restoring: the code is in Git (redeploy with Actions → «Data service» → «Run workflow»). The store (the Durable
   Object) holds only data that comes back by itself: the forecast and winds aloft within half an hour, the last 7 days
   of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses
