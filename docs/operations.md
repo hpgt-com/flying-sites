@@ -85,8 +85,8 @@ the menu and is marked `noindex`. It shows per site:
 
 ## Wind forecast
 
-- Fetched from MET on every build. `deploy.yml` builds at xx:17 and xx:47, but GitHub may delay or skip scheduled
-  runs.
+- Fetched from MET on every build (the `weather` job; the site is built only when its content changes, with no
+  schedule).
 - The **data service** (`workers/data`, Cloudflare account «HPGT») fetches MET by itself every 5 minutes, six launches
   per run, and the pages use its forecast when it is newer than the one built into the page. See it at
   `https://data.hpgt.workers.dev/v1/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
@@ -122,7 +122,7 @@ the menu and is marked `noindex`. It shows per site:
 
 ## Winds aloft
 
-- Fetched by the data service every 30 minutes from Open-Meteo for the launches in `WINDGRAM_SITES` in
+- Fetched by the data service from Open-Meteo, two launches every 10 minutes (each about every half hour), for the launches in `WINDGRAM_SITES` in
   `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), served as
   `https://data.hpgt.workers.dev/v1/windgram.json`. No key. A launch that fails keeps its previous grid for up to 6
   hours. The site page uses it when it is newer than the grid built into the page; the section stays hidden when
@@ -140,7 +140,7 @@ the menu and is marked `noindex`. It shows per site:
   Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `FROST_CLIENT_ID` (the client ID
   only; the client secret is not used). Without it the service skips MET.
 - A MET station on a flying site is linked to it in `MET_STATION_SITES` in `workers/data/src/stations.js` (MET's number
-  and the site's folder). A station that should not be shown goes in `MET_EXCLUDE` there; the stations are then looked up
+  and the site's folder; Sætertinden's own MET station, SN87772, is linked to it). A station that should not be shown goes in `MET_EXCLUDE` there; the stations are then looked up
   again at the next run.
 
 ## Weather archive (R2)

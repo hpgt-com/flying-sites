@@ -237,9 +237,11 @@ test("Frost: stations within 50 km of a launch are kept, from Lofoten to Bardu",
 // --- Winds aloft (Open-Meteo) ---
 const windgramMod = await import("../workers/data/src/sources/windgram.js");
 
-test("windgram: every half hour, only fresh launches, as old as the oldest, and a failed launch keeps its grid", async () => {
+test("windgram: every ten minutes, only fresh launches, as old as the oldest, and a failed launch keeps its grid", async () => {
   const minute = (m) => Date.parse("2026-10-18T15:00:00Z") + m * 60000;
-  assert.deepEqual([0, 1, 29, 30].map((m) => due("windgram", minute(m))), [true, false, false, true]);
+  assert.deepEqual([0, 1, 9, 10].map((m) => due("windgram", minute(m))), [true, false, false, true]);
+  const picked = windgramMod.pickSites([{ id: "a" }, { id: "b" }, { id: "c" }], { sites: { a: { fetched: ago(5) }, b: { fetched: ago(40) } } });
+  assert.deepEqual(picked.map((s) => s.id), ["c", "b"], "the missing launch first, then the one fetched longest ago");
   const grid = { times: [1], heights: [250], cells: [[[200, 4]]], blh: [800], cloudBase: [900], cape: [0] };
   const state = { sites: { a: { fetched: ago(10), grid }, b: { fetched: ago(30), grid }, old: { fetched: ago(7 * 60), grid } } };
   const body = windgramMod.buildWindgram(state, NOW);

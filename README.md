@@ -84,10 +84,9 @@ Other commands:
 ## Publishing
 
 - Everything merged to `main` is published automatically to GitHub Pages.
-- The site is also rebuilt twice an hour, so the wind assessment on the home page uses a fresh forecast. The forecast
-  is fetched in its own job (`weather`) before the build, and the build only reads it. GitHub may
-  delay or skip scheduled runs. If the forecast is more than 6 hours old, the wind assessment is turned off. To fetch
-  a new forecast immediately, run «Build and deploy» manually under Actions.
+- The site is built only when its content changes. Each build starts from a forecast fetched in its own job
+  (`weather`); after loading, the pages fetch the forecast, the winds aloft and the weather stations from the data
+  service (`workers/data`) when it has newer, so they stay fresh between builds.
 - The image variants (`_site/img`) are cached between builds in CI, so a build without image changes skips them.
   The cache is replaced whenever an image, the image code or a package changes.
 - Changes go through a branch and a pull request. The PR check builds the site and stops invalid site files, broken
@@ -106,7 +105,7 @@ Other commands:
 - Heights of launches, landings and parking: Kartverket
 - Heights along walking routes: Kartverket
 - Wind forecast: [MET Norway](https://api.met.no/) and [Yr](https://www.yr.no/)
-- Winds aloft (draft, Sollifjellet): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+- Winds aloft (draft, Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
 - Precipitation radar: [Rain Viewer](https://www.rainviewer.com/) (free for non-commercial use, with attribution)
 - Airspace: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
 - Thermals: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)

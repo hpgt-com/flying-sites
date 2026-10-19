@@ -13,7 +13,10 @@ export const HOLFUY_STATIONS = [
 // MET's stations (sources/frost.js) are found by MET itself within the area of the flying sites, so they are not listed
 // here. A MET station that belongs to a flying site is linked to it here, by MET's number (SN…) and the site's folder,
 // as `site` above: that site page then shows it and uses it for the assessment of the hour now.
-export const MET_STATION_SITES = {};
+export const MET_STATION_SITES = {
+  // «Sætertinden ved tjeldsundet», 1095 moh, about 100 m from the launch (1089 moh). Measures once an hour.
+  SN87772: "saetertinden",
+};
 // MET's stations that are found in the area but should not be shown (MET's number, "SN…"), e.g. one that says nothing
 // useful for flying.
 export const MET_EXCLUDE = [];
