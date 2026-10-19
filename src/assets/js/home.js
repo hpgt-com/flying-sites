@@ -285,7 +285,18 @@
   function windText(wind) {
     return FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s, " +
       (wind.gust != null ? FS.t("wind.gust", { g: Math.round(wind.gust) }) : FS.t("wind.gustUnknown")) +
-      (wind.rain != null && wind.rain >= rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "");
+      (wind.rain != null && wind.rain >= rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "") +
+      (wind.measured ? " (" + FS.t("home.measured") + ")" : "");
+  }
+
+  // The fresh measurement from a site's weather station (stations.js), or null. stationData is the latest answer from the
+  // data service, set by addStations below.
+  var stationData = null;
+  function stationMeasurement(siteId, now) {
+    var ST = window.FlyingSitesStations;
+    if (!ST || !stationData) return null;
+    var item = stationData.items.filter(function (i) { return i.site === siteId; })[0];
+    return item ? ST.measurement(item, now) : null;
   }
 
   // Assessment for all sites at the chosen time: { id: { wind, rating, reasons } }, or null when wind is off
@@ -298,11 +309,16 @@
     windIndex = index;
     updateForecastStatus(index);
     if (index < 0) return null;
-    var result = {};
+    var result = {}, now = Date.now();
     sites.forEach(function (site) {
       var wind = W.windAt(forecast, site.id, index);
       if (!wind) return;
-      var rating = W.rateWind(site, wind, rules);
+      // «Nå» for a site with a weather station: the fresh measurement counts as on the site page (wind.js rateNow), and the
+      // wind shown is then the measured one, marked «målt».
+      var m = windSlot === "0" ? stationMeasurement(site.id, now) : null;
+      var assessed = W.rateNow(site, wind, m && m.wind, rules, m && m.steady);
+      var rating = assessed.result;
+      if (assessed.basis === "measured") wind = { dir: m.wind.dir, speed: m.wind.speed, gust: m.wind.gust, rain: wind.rain, measured: true };
       result[site.id] = { wind: wind, rating: rating.rating, reasons: rating.reasons, codes: rating.codes };
     });
     return result;
@@ -1131,14 +1147,21 @@
   setInterval(recheck, 60 * 1000);
 
   // --- Weather stations (stations.js) ---
-  // The measured wind as the map layer «Værstasjoner», and the same stations as a list in the Vær tab.
+  // The measured wind as the map layer «Værstasjoner», and the same stations as short rows in the Vær tab (the change over
+  // the last half hour); the charts and the rest are on the weather page, which each row links to.
   function addStations() {
     var ST = window.FlyingSitesStations;
     var stationsEl = document.getElementById("stations");
     var listEl2 = document.getElementById("station-list");
     if (!ST || !stationsEl) return;
+    ST.useRules(rules);
+    // Each row links to the station's card on the weather page (the link below the list gives its address).
+    var more = stationsEl.querySelector(".stations__more");
+    var weatherUrl = more ? more.getAttribute("href") : "";
     ST.addMapLayer(map, stationsEl.getAttribute("data-url"), function (data, now) {
-      listEl2.replaceChildren.apply(listEl2, data.items.map(function (item) { return ST.listItem(item, now); }));
+      stationData = data;
+      update();
+      listEl2.replaceChildren.apply(listEl2, data.items.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item)); }));
       stationsEl.hidden = !data.items.length;
     });
   }

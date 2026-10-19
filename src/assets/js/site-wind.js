@@ -91,25 +91,11 @@
   }
   function measuredValue(v) { return ST ? ST.value(v) : String(v); }
 
-  // The site's weather station (stations.js), when it has one: its latest measurement while it is at most FRESH_MINUTES
-  // old, and whether the wind is steady over the last half hour (not rising, not gusty), which a better measurement needs
-  // to count. Null without a station or a fresh measurement.
+  // The site's weather station (stations.js), when it has one: its latest measurement while it is fresh, and whether the
+  // wind is steady (stations.js measurement).
   var ST = window.FlyingSitesStations;
-  var FRESH_MINUTES = 15;
   var stationItem = null;
-  function measurement(now) {
-    var item = stationItem;
-    if (!ST || !item || !item.wind || item.wind.speed == null || item.wind.dir == null) return null;
-    var age = ST.ageMinutes(item, now);
-    if (age === null || age > FRESH_MINUTES) return null;
-    var c = ST.character(ST.change(item, 30));
-    return {
-      item: item,
-      wind: { dir: item.wind.dir, speed: item.wind.speed, gust: item.wind.gust },
-      steady: !!c && c.kind !== "turbulent" && c.trend !== "rising",
-      rising: !!c && c.trend === "rising",
-    };
-  }
+  function measurement(now) { return ST && stationItem ? ST.measurement(stationItem, now) : null; }
   var stationEl = document.getElementById("station-now");
   if (ST && stationEl) {
     ST.watch(stationEl.getAttribute("data-url"), function (d) {

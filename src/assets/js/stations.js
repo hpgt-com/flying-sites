@@ -160,6 +160,87 @@
     return { now: at(i), next: next };
   }
 
+  // A station's latest measurement for the assessment of the hour now (wind.js rateNow), while it is at most FRESH_MINUTES
+  // old: { item, wind, steady, rising }, where steady means the wind over the last half hour is neither rising nor gusty,
+  // which a measurement that is better than the forecast needs to count. Null without a fresh measurement.
+  var FRESH_MINUTES = 15;
+  function measurement(item, now) {
+    if (!item || !item.wind || !isNum(item.wind.speed) || !isNum(item.wind.dir)) return null;
+    var age = ageMinutes(item, now);
+    if (age === null || age > FRESH_MINUTES) return null;
+    var c = character(change(item, 30));
+    return {
+      item: item,
+      wind: { dir: item.wind.dir, speed: item.wind.speed, gust: isNum(item.wind.gust) ? item.wind.gust : null },
+      steady: !!c && c.kind !== "turbulent" && c.trend !== "rising",
+      rising: !!c && c.trend === "rising",
+    };
+  }
+
+  // --- Rating and table rows (the weather page and the Vær tab) ---
+  // The wind rules (src/_data/windRules.json), given by the page: the home page from its forecast data, the weather page
+  // from its own.
+  var rules = null;
+  function useRules(r) { rules = r || null; }
+  // The symbol in each rating chip, so the rating does not rest on colour alone (as on the home page).
+  var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
+
+  function hasWind(item, now) { return !isOld(item, now) && !!item.wind && isNum(item.wind.speed); }
+  // The id of a station's card on the weather page, «stasjon-490».
+  function anchor(item) { return "stasjon-" + String(item.id).replace(/[^\w-]/g, ""); }
+
+  // A rough assessment of the measured wind, with the same rules as the forecast (wind.js): for a station on a flying site
+  // against the site's launch directions and limits; for a station that is not, only the strength (too much wind or too
+  // strong gusts), since without launch directions it cannot say that it may work. { rating, reasons } or null.
+  function assess(item, now) {
+    if (!rules || !hasWind(item, now)) return null;
+    var w = item.wind, site = siteInfo(item.site);
+    var wind = { dir: w.dir, speed: w.speed, gust: isNum(w.gust) ? w.gust : null };
+    if (site) return W().rateWind({ primary: site.primary || [], possible: site.possible || [], maxWind: site.maxWind == null ? null : site.maxWind }, wind, rules);
+    if (!isNum(w.dir)) return null;
+    var r = W().rateWind({ primary: globalThis.FlyingSites.DIRECTIONS, possible: [], maxWind: null }, wind, rules);
+    return r.rating === "high" ? r : null;
+  }
+  function ratingChip(r) {
+    var el = make("span", "rating-chip rating-chip--" + r.rating);
+    var icon = make("span", null, ICONS[r.rating]);
+    icon.setAttribute("aria-hidden", "true");
+    el.append(icon, document.createTextNode(W().RATINGS[r.rating].label));
+    return el;
+  }
+
+  // One station as a row, a link to `href` (its card): the site's wind rose with the measured arrow, the name, the rating
+  // chip, the site, height and age, the direction against the launch directions, and on the right the wind (gust), the
+  // change over `minutes` and how even the wind is.
+  function row(item, now, minutes, href) {
+    var li = make("li");
+    var a = make("a", "weather-row" + (hasWind(item, now) ? "" : " weather-row--old"));
+    a.href = href;
+    var site = siteInfo(item.site), w = item.wind || {};
+    a.appendChild(compass(hasWind(item, now) ? w.dir : null, site));
+    var rating = assess(item, now);
+    if (rating) a.setAttribute("data-rating", rating.rating);
+    var info = make("span", "weather-row__info");
+    info.appendChild(make("strong", "weather-row__name", item.name));
+    if (rating) info.appendChild(ratingChip(rating));
+    info.appendChild(make("span", "weather-row__sub", [site && site.name ? text("stations.site", { name: site.name }) : "", altitudeText(item), ageText(item, now)].filter(Boolean).join(" · ")));
+    if (hasWind(item, now) && isNum(w.dir)) {
+      var where = launchText(w.dir, site);
+      info.appendChild(make("span", "weather-row__dir", dirText(w.dir) + (where ? " · " + where : "")));
+    }
+    a.appendChild(info);
+    if (hasWind(item, now)) {
+      var ch = change(item, minutes), c = character(ch);
+      var nums = make("span", "weather-row__nums");
+      nums.appendChild(make("strong", "weather-row__wind", value(w.speed) + (isNum(w.gust) ? " (" + value(w.gust) + ")" : "")));
+      if (ch && isNum(ch.speed)) nums.appendChild(make("span", "weather-row__change", text("stations.change", { v: signed(ch.speed), period: text("stations.period_" + minutes) })));
+      if (c) nums.appendChild(make("span", "weather-row__char", text("stations.char_" + c.kind) + text("stations.trend_" + c.trend)));
+      a.appendChild(nums);
+    }
+    li.appendChild(a);
+    return li;
+  }
+
   // A link to the station at Holfuy, in a new tab, which screen readers are told (as the external() macro does).
   function stationLink(item, cls) {
     var a = make("a", cls, item.name);
@@ -446,8 +527,8 @@
   }
 
   // A station as a card: the name (to Holfuy) and how old the measurement is, the wind now with the compass, the rest,
-  // and the chart of the last hours. An old measurement shows only its age and the chart. As li in the Vær tab, as div
-  // on the site page (with «Målt nå på» before the name), as div in the map's popup (without the chart on small maps).
+  // and the chart of the last hours. An old measurement shows only its age and the chart. On the site page (with «Målt nå
+  // på» before the name), and in the map's popup (without the chart on small maps).
   function card(item, nowMs, tag, sitePage, noChart) {
     var old = isOld(item, nowMs);
     var el = make(tag, "station" + (old ? " station--old" : ""));
@@ -476,7 +557,6 @@
     el.appendChild(sourceLine(item));
     return el;
   }
-  function listItem(item, nowMs) { return card(item, nowMs, "li", false); }
 
   // The stations as a map layer «Værstasjoner» (on by default): a compass dial with an arrow for where the wind blows, and
   // the mean wind and the gust as measured («4,4 (7,2)»), dimmed when the measurement is old. A tap shows the station's
@@ -577,6 +657,13 @@
     dirText: dirText,
     scale: scale,
     compass: compass,
+    measurement: measurement,
+    useRules: useRules,
+    hasWind: hasWind,
+    anchor: anchor,
+    assess: assess,
+    ratingChip: ratingChip,
+    row: row,
     altitudeText: altitudeText,
     temperatureRange: temperatureRange,
     temperatureText: temperatureText,
@@ -589,7 +676,6 @@
     position: position,
     addMapLayer: addMapLayer,
     launchText: launchText,
-    listItem: listItem,
     card: card,
     chart: chart,
     make: make,

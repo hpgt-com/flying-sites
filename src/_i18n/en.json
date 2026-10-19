@@ -101,7 +101,7 @@
     "resultsNote": "A rough guide: each pilot decides whether the site and the conditions are OK.",
     "weatherIntro": "More weather stations and forecasts:",
     "stationsTitle": "Measured wind now",
-    "stationsNote": "Measured by the Holfuy stations, the numbers as the station sends them. The chart shows the last 6 hours in m/s, with arrows for where the wind blows. Tap or use the arrow keys to see each measurement.",
+    "stationsNote": "Measured by the Holfuy stations, the numbers as the station sends them, with the change over the last 30 minutes. Tap a station for the chart, the forecast and more.",
     "weatherLabel": "Weather",
     "flybart": "Weather stations in the area in one place",
     "xcc": "Egil Fonn's weather stations",
@@ -469,7 +469,8 @@
       "allDirections": "All directions",
       "directionsChosen": "Direction: {list}",
       "removeFilter": "Remove the filter {name}",
-      "suggestChip": "May work"
+      "suggestChip": "May work",
+      "measured": "measured"
     },
     "map": {
       "fullscreenOpen": "Show the map in full screen",

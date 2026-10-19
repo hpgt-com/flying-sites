@@ -101,7 +101,7 @@
     "resultsNote": "En grov guide: hver pilot vurderer selv om stedet og forholdene er OK.",
     "weatherIntro": "Flere værstasjoner og varsler:",
     "stationsTitle": "Målt vind nå",
-    "stationsNote": "Målt på Holfuy-stasjonene, tallene slik stasjonen sender dem. Grafen viser de siste 6 timene i m/s, med piler for hvor vinden blåser. Trykk eller bruk piltastene for å se hver måling.",
+    "stationsNote": "Målt på Holfuy-stasjonene, tallene slik stasjonen sender dem, med endringen siste 30 minutter. Trykk på en stasjon for grafen, varselet og mer.",
     "weatherLabel": "Vær",
     "flybart": "Værstasjoner i området samlet på ett sted",
     "xcc": "Værstasjonene til Egil Fonn",
@@ -469,7 +469,8 @@
       "allDirections": "Alle retninger",
       "directionsChosen": "Retning: {list}",
       "removeFilter": "Fjern filteret {name}",
-      "suggestChip": "Kan passe"
+      "suggestChip": "Kan passe",
+      "measured": "målt"
     },
     "map": {
       "fullscreenOpen": "Vis kartet i fullskjerm",
