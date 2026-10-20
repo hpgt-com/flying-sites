@@ -7,6 +7,7 @@ import { DurableObject } from "cloudflare:workers";
 import { FIELDS } from "./measurements.js";
 import { mergeTrails } from "./live.js";
 import { INDEXES } from "./indexes.js";
+import { TABLES, JSON_META, backupPath, latestPath, expiredDay, backupBody, backupRows, restoreSql } from "./backup.js";
 
 const COLUMNS = FIELDS.map((f) => f.key);
 // A measurement row as stored: the fields as numbers, extra as JSON text.
@@ -14,36 +15,77 @@ const COLUMNS = FIELDS.map((f) => f.key);
 const toRow = (r) => [r.source, String(r.station), r.time, ...COLUMNS.map((c) => r[c] ?? null), r.extra ? JSON.stringify(r.extra) : null];
 const fromRow = (r) => ({ ...r, extra: r.extra ? JSON.parse(r.extra) : null });
 const SELECT = `SELECT source, station, time, ${COLUMNS.join(", ")}, extra FROM measurements`;
+const ROW_KEYS = ["source", "station", "time", ...COLUMNS, "extra"];
+// How many hours of measurements per source are kept in memory (Store.measurementsSince): the 6 of the stations dataset
+// (HISTORY_HOURS in the sources) and a margin.
+export const RECENT_HOURS = 7;
 
 export class Store extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
-    this.sql.exec("CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
-    this.sql.exec("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
-    this.sql.exec("CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (site, time))");
+    // snapshots, state and measurements are WITHOUT ROWID tables, keyed so no query needs another index: a row written is
+    // then one row counted, not one for the table and one per index (the free plan allows 100 000 a day). Before
+    // 20.10.2026 they were ordinary tables, and measurements was keyed (source, station, time) with an index on (source,
+    // time); rebuilt once here (rebuild).
+    // All in one transaction, so a start that fails halfway leaves the tables as they were.
+    ctx.storage.transactionSync(() => this.createTables());
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL,
+      fetched TEXT NOT NULL, PRIMARY KEY (site, time))`);
     // Forecast against measured, per site and finished hour (sources/verify.js), kept for a year.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS verify_hours (site TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
       f_dir REAL, f_speed REAL, f_gust REAL, m_dir REAL, m_speed REAL, m_gust REAL, n INTEGER, PRIMARY KEY (site, station, time))`);
     // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, flights INTEGER NOT NULL, pilots INTEGER NOT NULL,
       minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
-    let have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
-    // The first version (18.10.2026) had no source, and the station and time as the key. Rebuilt once with (source,
-    // station, time) as the key; the rows already there were all Holfuy's and keep their values.
-    const old = have.size > 0 && !have.has("source");
-    if (old) this.sql.exec("ALTER TABLE measurements RENAME TO measurements_v1");
-    this.sql.exec("CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL, PRIMARY KEY (source, station, time))");
+    // The index measurements had before the rebuild goes with the old table; dropped here in case it is left.
+    this.sql.exec("DROP INDEX IF EXISTS measurements_source_time");
+    for (const index of INDEXES) this.sql.exec(index);
+  }
+
+  // snapshots, state and measurements, rebuilt as WITHOUT ROWID if they are ordinary tables from before (see above).
+  createTables() {
+    const rebuilt = {};
+    for (const [table, create] of [
+      ["snapshots", "CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL) WITHOUT ROWID"],
+      ["state", "CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID"],
+      ["measurements", `CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
+        ${COLUMNS.map((c) => `${c} REAL`).join(", ")}, extra TEXT, PRIMARY KEY (source, time, station)) WITHOUT ROWID`],
+    ]) {
+      const old = this.sql.exec("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", table).toArray()[0]?.sql;
+      if (old && !/WITHOUT ROWID/i.test(old)) {
+        this.sql.exec(`ALTER TABLE ${table} RENAME TO ${table}_old`);
+        rebuilt[table] = true;
+      }
+      this.sql.exec(create);
+    }
     // A field added to measurements.js gets its column here; the rows already stored get null in it.
-    have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
+    const have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
     for (const c of COLUMNS) if (!have.has(c)) this.sql.exec(`ALTER TABLE measurements ADD COLUMN ${c} REAL`);
     if (!have.has("extra")) this.sql.exec("ALTER TABLE measurements ADD COLUMN extra TEXT");
-    if (old) {
-      this.sql.exec(`INSERT OR IGNORE INTO measurements (source, station, time, dir, speed, gust, min, temperature)
-        SELECT 'holfuy', CAST(station AS TEXT), time, dir, speed, gust, min, temperature FROM measurements_v1`);
-      this.sql.exec("DROP TABLE measurements_v1");
+    this.rebuild(rebuilt);
+  }
+
+  // The rows of the tables rebuilt as WITHOUT ROWID (constructor) copied over. Of the measurements only those not yet in
+  // the archive (after the day archived through, per source): the rest are in R2 already and would be deleted within the
+  // days kept, and copying them all would use a good part of a day's rows written.
+  rebuild(rebuilt) {
+    for (const table of ["snapshots", "state"]) {
+      if (!rebuilt[table]) continue;
+      this.sql.exec(`INSERT OR IGNORE INTO ${table} SELECT * FROM ${table}_old`);
+      this.sql.exec(`DROP TABLE ${table}_old`);
     }
-    for (const index of INDEXES) this.sql.exec(index);
+    if (rebuilt.measurements) {
+      // The columns both tables have: one added to measurements.js since the old table was made is null in the copy.
+      const old = new Set(this.sql.exec("PRAGMA table_info(measurements_old)").toArray().map((c) => c.name));
+      const cols = ROW_KEYS.filter((c) => old.has(c)).join(", ");
+      for (const { source } of this.sql.exec("SELECT DISTINCT source FROM measurements_old").toArray()) {
+        const through = this.getState(`${source}-archive`)?.through;
+        const from = through ? new Date(Date.parse(`${through}T00:00:00Z`) + 86400000).toISOString() : "";
+        this.sql.exec(`INSERT OR IGNORE INTO measurements (${cols}) SELECT ${cols} FROM measurements_old WHERE source = ? AND time >= ?`, source, from);
+      }
+      this.sql.exec("DROP TABLE measurements_old");
+    }
   }
 
   // The recent track of each aircraft for «Piloter i lufta» (live.js mergeTrails), in memory only: lost when the object
@@ -124,10 +166,32 @@ export class Store extends DurableObject {
       this.sql.exec(`INSERT OR IGNORE INTO measurements (source, station, time, ${COLUMNS.join(", ")}, extra) VALUES (${["?", "?", "?", ...COLUMNS.map(() => "?"), "?"].join(", ")})`,
         ...toRow(r));
     }
+    for (const source of new Set(rows.map((r) => r.source))) {
+      const recent = this.recent?.get(source);
+      // As INSERT OR IGNORE: a row already kept stays (it comes last, so it wins in keepRecent).
+      const added = rows.filter((r) => r.source === source).map((r) => fromRow(Object.fromEntries(toRow(r).map((v, i) => [ROW_KEYS[i], v]))));
+      if (recent) this.keepRecent(source, recent.from, [...added, ...recent.rows.values()]);
+    }
   }
 
+  // The last hours of each source's measurements, which the stations dataset is built from every minute, are also kept in
+  // memory (recent): read from SQLite once, then added to as they are stored, instead of RECENT_HOURS of rows read again
+  // on each run (over a million rows a day). Lost when the object is evicted, and then read again.
   measurementsSince(source, since) {
-    return this.sql.exec(`${SELECT} WHERE source = ? AND time >= ? ORDER BY time`, source, since).toArray().map(fromRow);
+    const recent = this.recent?.get(source);
+    if (recent && recent.from <= since) return [...recent.rows.values()].filter((r) => r.time >= since).sort((a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0));
+    const rows = this.sql.exec(`${SELECT} WHERE source = ? AND time >= ? ORDER BY time`, source, since).toArray().map(fromRow);
+    this.keepRecent(source, since, rows);
+    return rows;
+  }
+
+  // The recent rows of a source from since, by station and time, without those older than RECENT_HOURS before the newest.
+  keepRecent(source, since, rows) {
+    this.recent ??= new Map();
+    const newest = Date.parse(rows.reduce((t, r) => (r.time > t ? r.time : t), since));
+    const cut = Number.isFinite(newest) ? new Date(newest - RECENT_HOURS * 3600000).toISOString() : since;
+    const from = since > cut ? since : cut;
+    this.recent.set(source, { from, rows: new Map(rows.filter((r) => r.time >= from).map((r) => [`${r.station}|${r.time}`, r])) });
   }
 
   measurementsBetween(source, from, to) {
@@ -186,6 +250,35 @@ export class Store extends DurableObject {
 
   flightDays() {
     return this.sql.exec("SELECT day, site, flights, pilots, minutes, max_dist, max_alt FROM flight_days ORDER BY day").toArray();
+  }
+
+  // The nightly backup (backup.js) to the archive (R2). A store that has never made one (a new, empty Durable Object)
+  // first reads the latest backup back in, so the history survives a lost store. Returns the rows written per table,
+  // and those read back in.
+  async backup(day) {
+    const bucket = this.env.ARCHIVE;
+    if (!bucket) return null;
+    const fresh = !this.getState("backup");
+    const out = { day, rows: {}, restored: {} };
+    for (const table of Object.keys(TABLES)) {
+      if (fresh) {
+        const latest = await bucket.get(latestPath(table));
+        if (latest) {
+          const rows = backupRows(await latest.text(), table);
+          const sql = restoreSql(table);
+          this.ctx.storage.transactionSync(() => { for (const r of rows) this.sql.exec(sql, ...r); });
+          out.restored[table] = rows.length;
+        }
+      }
+      const rows = this.sql.exec(`SELECT ${TABLES[table].join(", ")} FROM ${table}`).toArray();
+      const body = backupBody(table, rows, day);
+      await bucket.put(backupPath(table, day), body, JSON_META);
+      await bucket.put(latestPath(table), body, JSON_META);
+      await bucket.delete(backupPath(table, expiredDay(day)));
+      out.rows[table] = rows.length;
+    }
+    this.putState("backup", { day, rows: out.rows });
+    return out;
   }
 
   prune(source, before) {

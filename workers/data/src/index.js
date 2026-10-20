@@ -34,6 +34,7 @@ import { mergeStations } from "./merge.js";
 import { handleReport, ORIGINS } from "./report.js";
 import { handleLive } from "./live.js";
 import { recordRuns, buildStatus, MAX_AGE } from "./health.js";
+import { cached, CACHE_SECONDS } from "./cache.js";
 import { WINDGRAM_SITES } from "../../../lib/weather/open-meteo.js";
 import SITES from "./sites.json";
 
@@ -63,6 +64,7 @@ export default {
     if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
     if (due("verify", now)) runs.verify = verify.run(s, siteLinks(), now);
     if (due("flights", now)) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
+    if (due("backup", now)) runs.backup = s.backup(new Date(now).toISOString().slice(0, 10));
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
       Object.keys(runs).forEach((name, i) => {
@@ -75,7 +77,7 @@ export default {
     }));
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url);
     // «Meld fra om endring» (report.js): only from the site itself (or REPORT_ORIGINS when testing).
     if (pathname === "/v1/report") {
@@ -97,28 +99,36 @@ export default {
       for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
       return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
     }
-    if (pathname === "/v1/status.json") {
-      const s = store(env);
-      const [runs, snapshots, holfuyArchive, metArchive] = await Promise.all([
-        s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
-        s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`),
-      ]);
-      // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
-      const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
-      if (st) snapshots[holfuy.DATASET] = st;
-      const body = buildStatus({ runs, snapshots, now: Date.now(),
-        expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
-        archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null } });
-      return Response.json(body, { headers: { ...HEADERS, "cache-control": "public, max-age=60" } });
-    }
-    const dataset = DATASETS[pathname];
-    if (!dataset) return new Response("Not found", { status: 404, headers: HEADERS });
-    const body = dataset === holfuy.DATASET
-      ? mergeStations(await store(env).getSnapshot(holfuy.DATASET), await store(env).getSnapshot(frost.DATASET))
-      : await store(env).getSnapshot(dataset);
-    if (!body) return Response.json({ dataset, error: "no data yet" }, { status: 503, headers: { ...HEADERS, "cache-control": "no-store" } });
-    return new Response(request.method === "HEAD" ? null : body, {
-      headers: { ...HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=120" },
-    });
+    if (pathname !== "/v1/status.json" && !DATASETS[pathname]) return new Response("Not found", { status: 404, headers: HEADERS });
+    const res = await cached(globalThis.caches?.default, request, ctx, () => (pathname === "/v1/status.json" ? status(env) : dataset(env, DATASETS[pathname])));
+    return request.method === "HEAD" ? new Response(null, { status: res.status, headers: res.headers }) : res;
   },
 };
+
+const JSON_HEADERS = { ...HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${CACHE_SECONDS}` };
+
+// How the sources and datasets are doing (health.js).
+async function status(env) {
+  const s = store(env);
+  const [runs, snapshots, holfuyArchive, metArchive] = await Promise.all([
+    s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
+    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`),
+  ]);
+  // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
+  const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
+  if (st) snapshots[holfuy.DATASET] = st;
+  const body = buildStatus({ runs, snapshots, now: Date.now(),
+    expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
+    archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null } });
+  return Response.json(body, { headers: JSON_HEADERS });
+}
+
+// A dataset as stored; the stations are Holfuy's and MET's merged. 503 (not cached) until the first run has stored it.
+async function dataset(env, name) {
+  const s = store(env);
+  const body = name === holfuy.DATASET
+    ? mergeStations(...(await Promise.all([s.getSnapshot(holfuy.DATASET), s.getSnapshot(frost.DATASET)])))
+    : await s.getSnapshot(name);
+  if (!body) return Response.json({ dataset: name, error: "no data yet" }, { status: 503, headers: { ...HEADERS, "cache-control": "no-store" } });
+  return new Response(body, { headers: JSON_HEADERS });
+}
