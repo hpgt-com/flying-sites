@@ -46,11 +46,14 @@ const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": h
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 
 // Public data, read by the pages on flysteder.hpgt.com (and anyone else), so any origin may read it. Short cache: the
-// data changes every few minutes.
+// data changes every few minutes. The answers are data, never a page: opened as a document or in a frame they can do
+// nothing (content-security-policy), and other sites may load them (cross-origin-resource-policy).
+const INERT = { "content-security-policy": "default-src 'none'; frame-ancestors 'none'", "cross-origin-resource-policy": "cross-origin" };
 const HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, HEAD, OPTIONS",
   "x-content-type-options": "nosniff",
+  ...INERT,
 };
 
 export default {
@@ -84,7 +87,7 @@ export default {
       const origin = request.headers.get("origin") || "";
       const allowed = (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).includes(origin);
       const cors = { "access-control-allow-origin": allowed ? origin : ORIGINS[0], "access-control-allow-methods": "POST, OPTIONS",
-        "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store" };
+        "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
       if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
       if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
       if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
