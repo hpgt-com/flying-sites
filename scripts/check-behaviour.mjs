@@ -44,19 +44,20 @@ function liveNow() {
 async function answer(context, origin, { down = false, reports = [] } = {}) {
   await context.route("**/*", async (route) => {
     const req = route.request();
-    const url = req.url();
-    if (url.startsWith(origin)) return route.continue();
-    if (url.startsWith(`${DATA}/v1/report`)) {
+    // Compared by origin, not as text: «https://data.hpgt.workers.dev.example» is another host.
+    const url = new URL(req.url());
+    if (url.origin === origin) return route.continue();
+    if (url.origin === DATA && url.pathname === "/v1/report") {
       if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type", "access-control-allow-methods": "POST" } });
       reports.push(JSON.parse(req.postData() ?? "{}"));
       return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify({ ok: true, issue: 200, url: "https://github.com/hpgt-com/flying-sites/issues/200" }) });
     }
-    if (url.startsWith(DATA)) {
-      const path = new URL(url).pathname;
+    if (url.origin === DATA) {
+      const path = url.pathname;
       const body = down ? null : path === "/v1/stations.json" ? stationsNow() : path === "/v1/live.json" ? liveNow() : null;
       return route.fulfill({ status: body ? 200 : 503, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(body ?? { error: "no data yet" }) });
     }
-    if (url.startsWith("https://challenges.cloudflare.com/turnstile/")) {
+    if (url.origin === "https://challenges.cloudflare.com" && url.pathname.startsWith("/turnstile/")) {
       return route.fulfill({ contentType: "text/javascript", body: "window.turnstile = { render: function (el, o) { setTimeout(function () { o.callback('test-token'); }, 10); return 'w1'; }, reset: function () {} };" });
     }
     return route.abort();

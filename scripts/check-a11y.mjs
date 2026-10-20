@@ -25,7 +25,7 @@ try {
   for (const colorScheme of ["light", "dark"]) {
     // bypassCSP: the pages only allow their own scripts, and axe is injected from outside.
     const context = await browser.newContext({ colorScheme, bypassCSP: true, viewport: { width: 1280, height: 900 } });
-    await context.route("**/*", (route) => (route.request().url().startsWith(origin) ? route.continue() : route.abort()));
+    await context.route("**/*", (route) => (new URL(route.request().url()).origin === origin ? route.continue() : route.abort()));
     const page = await context.newPage();
     for (const url of PAGES) {
       await page.goto(origin + url, { waitUntil: "load" });
