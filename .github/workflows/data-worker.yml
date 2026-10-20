@@ -2,6 +2,7 @@ name: Data service
 
 # Publishes the data service (workers/data) to Cloudflare Workers when it, the MET code or the sites change on main.
 # The service fetches its data by itself (a Cron Trigger every minute, each source on its own interval), so this only runs on changes.
+# After publishing it waits until the new version has run successfully, and rolls back to the one before if not.
 on:
   push:
     branches: [main]
@@ -12,6 +13,7 @@ on:
       - "lib/windgram.js"
       - "lib/site-files.js"
       - "scripts/data-sites.mjs"
+      - "scripts/data-smoke.mjs"
       - "src/sites/*/index.md"
       - ".github/workflows/data-worker.yml"
   workflow_dispatch:
@@ -25,7 +27,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     # The token and account are secrets in the environment «cloudflare», which only main may use. The token may only
     # publish Workers in the HPGT account (see SECURITY.md).
     environment: cloudflare
@@ -49,11 +51,53 @@ jobs:
       - run: npm ci --ignore-scripts
         working-directory: workers/data
 
-      - run: npx wrangler deploy
+      # The version that runs now, to roll back to if the new one does not work.
+      - name: Versjonen som kjører nå
+        id: before
         working-directory: workers/data
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Unknown (empty) if the answer cannot be read; the rollback then goes to the version before the new one.
+          npx wrangler deployments status --json > before.json || true
+          version=$(node -e 'try { const d = JSON.parse(require("fs").readFileSync("before.json", "utf8")); const v = (d.versions ?? []).slice().sort((a, b) => b.percentage - a.percentage)[0]; process.stdout.write(/^[0-9a-f-]{36}$/.test(v?.version_id ?? "") ? v.version_id : ""); } catch {}')
+          echo "Kjører nå: ${version:-ukjent}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publiser
+        id: deploy
+        working-directory: workers/data
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler deploy
+          echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      # Waits until the new version has run the stations successfully and serves a dataset (scripts/data-smoke.mjs).
+      - name: Sjekk den nye versjonen
+        id: smoke
+        env:
+          PUBLISHED_AT: ${{ steps.deploy.outputs.at }}
+        run: node scripts/data-smoke.mjs "$PUBLISHED_AT"
+
+      # If it does not, the version from before runs again, and the run fails (the alert job opens an issue). A store
+      # rebuilt by the new version keeps its tables: the old code reads them as they are.
+      - name: Rull tilbake
+        if: failure() && steps.smoke.outcome == 'failure'
+        working-directory: workers/data
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          VERSION: ${{ steps.before.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -n "$VERSION" ]; then
+            npx wrangler rollback "$VERSION" --message "Sjekken etter publisering feilet: $RUN_URL" --yes
+          else
+            npx wrangler rollback --message "Sjekken etter publisering feilet: $RUN_URL" --yes
+          fi
 
   # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
   # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.

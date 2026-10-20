@@ -48,9 +48,9 @@ test("every query by time finds its rows through a key or an index on the time",
   }
 });
 
-test("without the indexes the queries on the forecast and verification hours read the whole table", () => {
+test("without the index the queries on the verification hours read the whole table", () => {
   const db = database(false);
-  const needIndex = byTime.filter((sql) => /\b(forecast_hours|verify_hours)\b/.test(sql));
-  assert.ok(needIndex.length >= 4);
+  const needIndex = byTime.filter((sql) => /\bverify_hours\b/.test(sql));
+  assert.ok(needIndex.length >= 2);
   assert.ok(needIndex.every((sql) => !readsByTime(plan(db, sql))));
 });

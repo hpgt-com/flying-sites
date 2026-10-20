@@ -24,31 +24,36 @@ export class Store extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
-    // snapshots, state and measurements are WITHOUT ROWID tables, keyed so no query needs another index: a row written is
-    // then one row counted, not one for the table and one per index (the free plan allows 100 000 a day). Before
-    // 20.10.2026 they were ordinary tables, and measurements was keyed (source, station, time) with an index on (source,
-    // time); rebuilt once here (rebuild).
+    // snapshots, state, forecast_hours and measurements are WITHOUT ROWID tables, keyed so no query needs another index: a
+    // row written is then one row counted, not one for the table and one per index (the free plan allows 100 000 a day).
+    // Before 20.10.2026 they were ordinary tables: measurements was keyed (source, station, time) with an index on
+    // (source, time), and forecast_hours (site, time) with one on time. Rebuilt once here (rebuild).
     // All in one transaction, so a start that fails halfway leaves the tables as they were.
     ctx.storage.transactionSync(() => this.createTables());
-    this.sql.exec(`CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL,
-      fetched TEXT NOT NULL, PRIMARY KEY (site, time))`);
     // Forecast against measured, per site and finished hour (sources/verify.js), kept for a year.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS verify_hours (site TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
       f_dir REAL, f_speed REAL, f_gust REAL, m_dir REAL, m_speed REAL, m_gust REAL, n INTEGER, PRIMARY KEY (site, station, time))`);
     // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, flights INTEGER NOT NULL, pilots INTEGER NOT NULL,
       minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
-    // The index measurements had before the rebuild goes with the old table; dropped here in case it is left.
+    // The indexes measurements and forecast_hours had before the rebuild go with the old tables; dropped here in case one
+    // is left.
     this.sql.exec("DROP INDEX IF EXISTS measurements_source_time");
+    this.sql.exec("DROP INDEX IF EXISTS forecast_hours_time");
     for (const index of INDEXES) this.sql.exec(index);
   }
 
-  // snapshots, state and measurements, rebuilt as WITHOUT ROWID if they are ordinary tables from before (see above).
+  // snapshots, state, forecast_hours and measurements, rebuilt as WITHOUT ROWID if they are ordinary tables from before
+  // (see above).
   createTables() {
     const rebuilt = {};
     for (const [table, create] of [
       ["snapshots", "CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL) WITHOUT ROWID"],
       ["state", "CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID"],
+      // The forecast for each hour as it stood during that hour (sources/forecast.js), keyed by the time first: read and
+      // pruned by time.
+      ["forecast_hours", `CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL,
+        rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (time, site)) WITHOUT ROWID`],
       ["measurements", `CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
         ${COLUMNS.map((c) => `${c} REAL`).join(", ")}, extra TEXT, PRIMARY KEY (source, time, station)) WITHOUT ROWID`],
     ]) {
@@ -66,11 +71,11 @@ export class Store extends DurableObject {
     this.rebuild(rebuilt);
   }
 
-  // The rows of the tables rebuilt as WITHOUT ROWID (constructor) copied over. Of the measurements only those not yet in
-  // the archive (after the day archived through, per source): the rest are in R2 already and would be deleted within the
-  // days kept, and copying them all would use a good part of a day's rows written.
+  // The rows of the tables rebuilt as WITHOUT ROWID (constructor) copied over: all of them, except the measurements, of
+  // which only those not yet in the archive (after the day archived through, per source). The rest are in R2 already and
+  // would be deleted within the days kept, and copying them all would use a good part of a day's rows written.
   rebuild(rebuilt) {
-    for (const table of ["snapshots", "state"]) {
+    for (const table of ["snapshots", "state", "forecast_hours"]) {
       if (!rebuilt[table]) continue;
       this.sql.exec(`INSERT OR IGNORE INTO ${table} SELECT * FROM ${table}_old`);
       this.sql.exec(`DROP TABLE ${table}_old`);

@@ -40,6 +40,7 @@ test("cache: a dataset is read from the store once a minute, whatever the query 
       assert.equal(res.status, 200);
       assert.equal(await res.text(), '{"dataset":"forecast"}');
       assert.match(res.headers.get("cache-control"), /max-age=60/);
+      assert.equal(res.headers.get("content-security-policy"), "default-src 'none'; frame-ancestors 'none'");
     }
     const head = await worker.fetch(new Request("https://data.test/v1/forecast.json", { method: "HEAD" }), svc.env, {});
     assert.equal(head.status, 200);
@@ -107,6 +108,9 @@ test("rebuild: the tables from before 20.10.2026 become WITHOUT ROWID, with only
   db.exec("CREATE TABLE state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
   db.exec("CREATE TABLE measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, min REAL, temperature REAL, PRIMARY KEY (source, station, time))");
   db.exec("CREATE INDEX measurements_source_time ON measurements (source, time)");
+  db.exec("CREATE TABLE forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (site, time))");
+  db.exec("CREATE INDEX forecast_hours_time ON forecast_hours (time)");
+  for (const site of ["heia", "elgen"]) db.exec(`INSERT INTO forecast_hours VALUES ('${site}', '2026-10-01T10:00:00Z', 230, 5, 9, 0, '2026-10-01T10:05:00Z')`);
   db.exec(`INSERT INTO state VALUES ('holfuy-archive', '{"through":"2026-10-18"}')`);
   db.exec(`INSERT INTO snapshots VALUES ('stations', '{}', '2026-10-19T12:00:00Z')`);
   for (const t of ["2026-10-17T12:00:00.000Z", "2026-10-18T23:59:00.000Z", "2026-10-19T00:00:00.000Z", "2026-10-19T12:00:00.000Z"]) {
@@ -114,10 +118,13 @@ test("rebuild: the tables from before 20.10.2026 become WITHOUT ROWID, with only
     db.exec(`INSERT INTO measurements (source, station, time, dir, speed) VALUES ('met', 'SN1', '${t}', 210, 5)`);
   }
   const store = new Store({ storage }, {});
-  for (const t of ["snapshots", "state", "measurements"]) {
+  for (const t of ["snapshots", "state", "measurements", "forecast_hours"]) {
     assert.match(db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(t).sql, /WITHOUT ROWID/, t);
   }
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name LIKE '%_old' OR name = 'measurements_source_time'").get().n, 0);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name LIKE '%_old' OR name IN ('measurements_source_time', 'forecast_hours_time')").get().n, 0);
+  assert.deepEqual(store.forecastHoursSince("2026-10-01").map((r) => [r.site, r.speed]), [["elgen", 5], ["heia", 5]], "all the forecast hours are kept");
+  store.putForecastHours([{ site: "heia", time: "2026-10-01T10:00:00Z", dir: 200, speed: 7, gust: 11, rain: 0, fetched: "2026-10-01T10:30:00Z" }]);
+  assert.equal(store.forecastHoursSince("2026-10-01").find((r) => r.site === "heia").speed, 7, "the latest fetch for the hour wins");
   assert.deepEqual(store.getState("holfuy-archive"), { through: "2026-10-18" });
   assert.equal(store.getSnapshot("stations"), "{}");
   // Holfuy is archived through the 18th, so only the 19th is kept; MET has no archive yet, so all of it is.
@@ -142,4 +149,15 @@ test("the measurements kept in memory answer as SQLite does, also after new ones
   assert.deepEqual(cached, cold);
   assert.equal(cached.length, first.length + 2, "the repeated measurement is kept once, as first stored");
   assert.equal(cached.find((r) => r.station === "490" && r.time.endsWith("19:59:00.000Z")).speed, 4);
+});
+
+test("after a publish: done when the stations have succeeded after it, an error before that is reported but not final", async () => {
+  const { smokeVerdict } = await import("../scripts/data-smoke.mjs");
+  const since = "2026-10-20T06:00:10Z";
+  assert.equal(smokeVerdict(null, since).done, false);
+  assert.equal(smokeVerdict({ sources: { stations: { ok: "2026-10-20T06:00:00.000Z" } } }, since).done, false, "a run from before the publish does not count");
+  const cut = smokeVerdict({ sources: { stations: { ok: "2026-10-20T05:59:00.000Z", error: "Network connection lost.", errorAt: "2026-10-20T06:01:00.000Z" } } }, since);
+  assert.deepEqual([cut.done, cut.errors], [false, ["stations: Network connection lost."]]);
+  const ok = smokeVerdict({ sources: { stations: { ok: "2026-10-20T06:02:00.000Z", error: "x", errorAt: "2026-10-20T06:01:00.000Z" } } }, since);
+  assert.deepEqual([ok.done, ok.ok], [true, true]);
 });

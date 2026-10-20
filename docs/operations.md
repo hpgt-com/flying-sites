@@ -114,6 +114,10 @@ the menu and is marked `noindex`. It shows per site:
   `QUOTA_DETAIL=1` to see which queries cost what). Every query on the time goes through a key or an index
   (`workers/data/src/indexes.js`, `test/store-indexes.test.js`), and each index costs a row written per row. The
   datasets are cached 60 seconds in front of the store (`cache.js`), so page views add little.
+- Publishing (`data-worker.yml`): after `wrangler deploy` the job waits up to 6 minutes until the new version has run
+  the stations successfully and serves `/v1/forecast.json` (`scripts/data-smoke.mjs`). If it does not, the job rolls
+  back to the version that ran before (`wrangler rollback`) and fails, so the alert opens an issue. A rollback by hand:
+  Cloudflare → Workers & Pages → data → Deployments, or `npx wrangler rollback` in `workers/data`.
 - Restoring: the code is in Git (redeploy with Actions → «Data service» → «Run workflow»). The store (the Durable
   Object) holds only data that comes back by itself: the forecast and winds aloft within half an hour, the last 7 days
   of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses
@@ -196,8 +200,8 @@ the menu and is marked `noindex`. It shows per site:
 
 ## Pilots in the air (OGN)
 
-- The map layer «Piloter i lufta» asks the data service every 5 seconds while it is on; the data service asks OGN's live
-  map (`live.glidernet.org/lxml.php`, the area of the sites with a margin) at most once per 5 seconds and passes on what
+- The map layer «Piloter i lufta» asks the data service every 10 seconds while it is on; the data service asks OGN's live
+  map (`live.glidernet.org/lxml.php`, the area of the sites with a margin) at most once per 10 seconds and passes on what
   it gets for paragliders (`workers/data/src/live.js`; hang gliders and other aircraft are left out), with each pilot's
   track and climb over the last 10 minutes, kept in the store's memory
   only (never written down; gone when the store is evicted). No key.

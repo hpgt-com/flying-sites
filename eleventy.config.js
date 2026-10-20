@@ -19,7 +19,12 @@ export default function (eleventyConfig) {
   // Walking routes sit next to the site pages: src/sites/<id>/*.gpx becomes /flysteder/<id>/*.gpx.
   eleventyConfig.addPassthroughCopy({ "src/sites": "flysteder" }, { filter: ["**/*.gpx"] });
   eleventyConfig.addPassthroughCopy("src/assets");
-  eleventyConfig.addPassthroughCopy({ "node_modules/leaflet/dist": "assets/leaflet" });
+  // Only what the pages load: leaflet-src.js and leaflet-src.esm.js (about 0.9 MB with their maps) are left out.
+  eleventyConfig.addPassthroughCopy({
+    "node_modules/leaflet/dist/leaflet.js": "assets/leaflet/leaflet.js",
+    "node_modules/leaflet/dist/leaflet.css": "assets/leaflet/leaflet.css",
+    "node_modules/leaflet/dist/images": "assets/leaflet/images",
+  });
   eleventyConfig.addPassthroughCopy({ "node_modules/leaflet.markercluster/dist/leaflet.markercluster.js": "assets/leaflet-markercluster/leaflet.markercluster.js" });
   // Fonts from Fontsource (SIL OFL 1.1), Latin subset and used weights only. @font-face is in src/assets/css/fonts.css.
   for (const [pkg, weights] of [["barlow", [400, 600]], ["barlow-condensed", [700]]]) {

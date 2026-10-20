@@ -10,7 +10,9 @@
 (function () {
   "use strict";
 
-  var POLL_MS = 5000;
+  // Every 10 seconds: a paraglider moves 100–150 m in that time, and each ask counts against the data service's
+  // requests per day (the data service keeps the answer as long, CACHE_SECONDS in workers/data/src/live.js).
+  var POLL_MS = 10000;
   // The wing seen from above, nose up (north) before it is turned to the track: a paraglider's curved wing with the lines
   // down to the pilot. The data service sends only paragliders (OGN's type 7).
   var WING = '<path d="M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z" fill="currentColor"/>' +

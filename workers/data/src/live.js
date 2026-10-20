@@ -1,7 +1,7 @@
 // «Piloter i lufta»: the paragliders (and speedflyers) the Open Glider Network hears in the area right now (FANET from
 // varios and phone apps, FLARM), as /v1/live.json. Fetched on demand, not on the schedule: the map asks every few seconds
 // while the layer is on, and the answer is kept CACHE_SECONDS in Cloudflare's cache, so OGN gets at most one request per
-// few seconds however many look. Each pilot's track over the last TRAIL_MINUTES, with the climb at each point, is kept in
+// ten seconds however many look. Each pilot's track over the last TRAIL_MINUTES, with the climb at each point, is kept in
 // memory in the store (never written down) and sent along as trail, so the map can draw it at once.
 // OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners' privacy choices are followed (OGN's live data
 // already leaves out devices that must not be tracked, and gives those that must not be identified a random short name,
@@ -11,7 +11,7 @@
 export const DATASET = "live";
 export const SOURCE = "Open Glider Network";
 export const LICENSE = "ODbL, Open Glider Network";
-export const CACHE_SECONDS = 5;
+export const CACHE_SECONDS = 10;
 export const MAX_AGE_SECONDS = 600;
 export const TRAIL_MINUTES = 10;
 const API = "https://live.glidernet.org/lxml.php";
