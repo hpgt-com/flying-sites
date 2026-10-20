@@ -131,8 +131,6 @@
     "now": "Nå"
   },
   "site": {
-    "hazardsChipOne": "1 lokal fare – les før start",
-    "hazardsChip": "{n} lokale farer – les før start",
     "hazardsTitle": "Før du starter",
     "hazardsNotReviewed": "<strong>Farene er ikke gjennomgått ennå.</strong> At ingen er registrert, betyr ikke at stedet er uten farer. Spør klubben eller lokale piloter før du flyr her.",
     "hazardsNone": "Ingen spesielle farer registrert for stedet.",
