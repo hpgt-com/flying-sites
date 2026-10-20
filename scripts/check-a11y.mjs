@@ -8,29 +8,16 @@
 // CHROMIUM_PATH: a Chromium already installed (otherwise the one from `npx playwright install chromium`).
 
 import fs from "node:fs";
-import http from "node:http";
-import path from "node:path";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { serveSite } from "./site-server.mjs";
 
-const SITE_DIR = path.resolve("_site");
 const PAGES = ["/", "/en/", "/flysteder/sollifjellet/", "/tarn/", "/om/", "/status/", "/vaer/", "/flyaktivitet/", "/nytt/"];
 const FAIL_ON = new Set(["serious", "critical"]);
 const axeSource = fs.readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".webp": "image/webp", ".jpeg": "image/jpeg", ".jpg": "image/jpeg", ".png": "image/png", ".woff2": "font/woff2", ".geojson": "application/geo+json", ".gpx": "application/gpx+xml" };
-
-// A minimal static server for _site/: /tarn/ serves tarn/index.html. Nothing outside _site/ is served.
-const server = http.createServer((req, res) => {
-  let file = path.join(SITE_DIR, decodeURIComponent(new URL(req.url, "http://x").pathname));
-  if (!file.startsWith(SITE_DIR)) return res.writeHead(403).end();
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, "index.html");
-  if (!fs.existsSync(file)) return res.writeHead(404).end();
-  res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream" });
-  fs.createReadStream(file).pipe(res);
-});
-await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-const origin = `http://127.0.0.1:${server.address().port}`;
+const server = await serveSite();
+const origin = server.origin;
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 let failures = 0;
@@ -38,7 +25,7 @@ try {
   for (const colorScheme of ["light", "dark"]) {
     // bypassCSP: the pages only allow their own scripts, and axe is injected from outside.
     const context = await browser.newContext({ colorScheme, bypassCSP: true, viewport: { width: 1280, height: 900 } });
-    await context.route("**/*", (route) => (route.request().url().startsWith(origin) ? route.continue() : route.abort()));
+    await context.route("**/*", (route) => (new URL(route.request().url()).origin === origin ? route.continue() : route.abort()));
     const page = await context.newPage();
     for (const url of PAGES) {
       await page.goto(origin + url, { waitUntil: "load" });
@@ -55,7 +42,7 @@ try {
   }
 } finally {
   await browser.close();
-  server.close();
+  await server.stop();
 }
 if (failures) {
   console.error(`\n${failures} funn med alvorlighet serious eller critical.`);

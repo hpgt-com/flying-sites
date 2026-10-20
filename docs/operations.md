@@ -26,11 +26,14 @@ npm run check:html    # HTML validation of every page, rules in .htmlvalidate.mj
 npm run check:output  # no «[object Object]», «undefined», «NaN» or unfilled placeholders in the pages
 npx playwright install chromium   # once
 npm run check:a11y    # axe in Chromium on a few pages, light and dark mode
+npm run check:behaviour  # what the pages do in Chromium: markers on zoom, live layer, data service down, «Meld fra», offline
 ```
 
 `check:a11y` fails only on findings with impact «serious» or «critical», and lists the rest. With a Chromium already
 installed, set `CHROMIUM_PATH` instead of running `playwright install`. Pages checked: `PAGES` in
-`scripts/check-a11y.mjs`.
+`scripts/check-a11y.mjs`. `check:behaviour` runs the scenarios in `scripts/check-behaviour.mjs` with the data service and
+Turnstile answered by the script (stations from `test/fixtures/stations.json`, moved to now) and no network; add a scenario
+there when something in the browser breaks.
 
 ## Workflow
 

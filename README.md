@@ -81,6 +81,7 @@ Other commands:
 | `npm run check:html` | After the build: validates the HTML of every page (`.htmlvalidate.mjs`). |
 | `npm run check:output` | After the build: fails if a page has «[object Object]», «undefined», «NaN» or a placeholder that was not filled in. Also runs in the deploy build. |
 | `npm run check:a11y` | After the build: axe accessibility check of a few pages in Chromium (`npx playwright install chromium` first). |
+| `npm run check:behaviour` | After the build: what the pages do in Chromium (map markers on zoom, «Piloter i lufta», data service down, «Meld fra», offline). |
 
 ## Publishing
 

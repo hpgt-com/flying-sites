@@ -65,7 +65,7 @@ jobs:
           retention-days: 1
 
   # axe-core in Chromium on a few pages that cover the templates, in light and dark mode (scripts/check-a11y.mjs).
-  # Fails on findings with impact serious or critical.
+  # Fails on findings with impact serious or critical. Then the behaviour check in the same browser (below).
   accessibility:
     needs: build
     runs-on: ubuntu-latest
@@ -92,6 +92,10 @@ jobs:
           path: _site
 
       - run: npm run check:a11y
+
+      # What the pages do in the browser (scripts/check-behaviour.mjs): map markers on zoom, «Piloter i lufta», the data
+      # service down, «Meld fra», offline. No network: the script answers the data service and Turnstile.
+      - run: npm run check:behaviour
 
   # Blocks PRs that add npm packages or Actions with known vulnerabilities (moderate or higher).
   dependency-review:
