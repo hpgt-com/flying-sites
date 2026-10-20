@@ -1056,12 +1056,6 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 .hero__status a:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
 .hero__status-icon { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--r); color: #FFFFFF; font-size: 15px; }
 .hero__status[data-rating="maybe"] .hero__status-icon { color: #1C2B33; }
-/* The local hazards as a chip linking down to «Før du starter»: dark red with white (over 7:1), with the same «!» as that
-   box, 44 px tall as a touch target. */
-.hero__chips .hero__hazards { padding: 0; background: #8A2C0D; border-color: #8A2C0D; }
-.hero__hazards a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 9px; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; }
-.hero__hazards a:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; border-radius: 999px; }
-.hero__hazards-icon { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; color: #8A2C0D; font-size: 15px; }
 .hero__eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); }
 /* The site's directions on the image: a white disc so the rose reads on any photo. Light colours also in the dark theme. */
 .hero__rose {
