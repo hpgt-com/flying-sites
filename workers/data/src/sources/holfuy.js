@@ -106,8 +106,10 @@ export async function run(store, env, stations, now = Date.now()) {
   const own = measurements.filter((m) => wanted.has(m.station));
   await store.addMeasurements(own);
   const meta = (await store.getState("holfuy-meta")) ?? {};
+  const before = JSON.stringify(meta);
   for (const m of own) meta[m.station] = { name: m.name, lat: m.lat, lon: m.lon, altitude: m.altitude };
-  await store.putState("holfuy-meta", meta);
+  // Written only when a name or position changed, which is seldom: a write every minute counts against the day's rows.
+  if (JSON.stringify(meta) !== before) await store.putState("holfuy-meta", meta);
   // The fresh measurements are published first; the archive comes after, and a failing archive (R2 down) only logs.
   const rows = await store.measurementsSince(KEY, new Date(now - HISTORY_HOURS * 3600000).toISOString());
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(stations, rows, meta, now)));

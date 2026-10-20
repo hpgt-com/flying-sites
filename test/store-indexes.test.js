@@ -3,22 +3,26 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import { INDEXES } from "../workers/data/src/indexes.js";
+import { register } from "node:module";
 import { FIELDS } from "../workers/data/src/measurements.js";
+
+register("./helpers/cloudflare-loader.mjs", import.meta.url);
+const { sqliteStorage } = await import("./helpers/data-service.mjs");
+const { Store } = await import("../workers/data/src/store.js");
 
 const source = readFileSync(new URL("../workers/data/src/store.js", import.meta.url), "utf8");
 const COLUMNS = FIELDS.map((f) => f.key);
-// The SQL of each sql.exec in store.js, with the parts it builds put in.
+// The SQL of each sql.exec in store.js, with the parts it builds put in. Those built from a table name (the rebuild
+// and the backup) are left out.
 const statements = [...source.matchAll(/sql\.exec\(\s*(?:"([^"]+)"|`([^`]+)`)/g)].map((m) => (m[1] ?? m[2])
   .replace("${SELECT}", `SELECT source, station, time, ${COLUMNS.join(", ")}, extra FROM measurements`)
-  .replace(/\s+/g, " "));
+  .replace(/\s+/g, " ")).filter((s) => !s.includes("${"));
 
+// The store's tables as the Durable Object makes them, with or without the indexes in indexes.js.
 function database(withIndexes) {
-  const db = new DatabaseSync(":memory:");
-  for (const sql of statements.filter((s) => s.startsWith("CREATE TABLE"))) db.exec(sql);
-  for (const c of [...COLUMNS, "extra"]) db.exec(`ALTER TABLE measurements ADD COLUMN ${c} ${c === "extra" ? "TEXT" : "REAL"}`);
-  if (withIndexes) for (const sql of INDEXES) db.exec(sql);
+  const { db, storage } = sqliteStorage();
+  new Store({ storage }, {});
+  if (!withIndexes) for (const { name } of db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'").all()) db.exec(`DROP INDEX ${name}`);
   return db;
 }
 
@@ -27,24 +31,26 @@ const byTime = statements.filter((s) => /^(SELECT|DELETE)/.test(s) && /\btime\b/
 
 // How SQLite would run it: each step's detail, such as «SEARCH measurements USING INDEX … (source=? AND time>?)».
 const plan = (db, sql) => db.prepare(`EXPLAIN QUERY PLAN ${sql}`).all(...Array((sql.match(/\?/g) ?? []).length).fill(null)).map((r) => r.detail);
-const readsByTime = (steps) => steps.some((d) => /USING (COVERING )?INDEX \w+ \((source=\? AND )?time[<>=]/.test(d));
+const readsByTime = (steps) => steps.some((d) => /USING (PRIMARY KEY|(COVERING )?INDEX \w+) \((source=\? AND )?time[<>=]/.test(d));
 
 test("the store has queries by time to check", () => {
   assert.ok(byTime.length >= 6, `found ${byTime.length}`);
   assert.ok(byTime.some((s) => s.includes("FROM measurements")) && byTime.some((s) => s.includes("FROM forecast_hours")) && byTime.some((s) => s.includes("FROM verify_hours")));
 });
 
-test("every query by time finds its rows through an index on the time", () => {
+test("every query by time finds its rows through a key or an index on the time", () => {
   const db = database(true);
   for (const sql of byTime) {
     const steps = plan(db, sql);
-    // MIN(time) for one source reads the first row of the index.
-    const ok = readsByTime(steps) || (/MIN\(time\)/.test(sql) && steps.some((d) => /measurements_source_time \(source=\?\)/.test(d)));
+    // MIN(time) for one source reads the first row of the key.
+    const ok = readsByTime(steps) || (/MIN\(time\)/.test(sql) && steps.some((d) => /USING PRIMARY KEY \(source=\?\)/.test(d)));
     assert.ok(ok, `${sql}\n  ${steps.join("\n  ")}`);
   }
 });
 
-test("without the indexes the same queries read the whole table or the whole source", () => {
+test("without the indexes the queries on the forecast and verification hours read the whole table", () => {
   const db = database(false);
-  assert.ok(byTime.every((sql) => !readsByTime(plan(db, sql))));
+  const needIndex = byTime.filter((sql) => /\b(forecast_hours|verify_hours)\b/.test(sql));
+  assert.ok(needIndex.length >= 4);
+  assert.ok(needIndex.every((sql) => !readsByTime(plan(db, sql))));
 });

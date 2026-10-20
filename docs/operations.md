@@ -109,14 +109,19 @@ the menu and is marked `noindex`. It shows per site:
 - When it reports a problem: the logs are in Cloudflare (Workers → data → Observability), and a source that fails keeps
   its error in the status until it succeeds again. The usual causes are a source down (MET, Holfuy, Frost, Open-Meteo),
   an expired secret, or one of the free plan's daily limits (reset at 00:00 UTC): 100 000 requests, and for the store
-  5 million rows read (Cloudflare e-mails at 90 %). Every query on the time goes through an index
-  (`workers/data/src/indexes.js`, tested in `test/store-indexes.test.js`); a new query or table that does not would read
-  the whole table on every run.
+  100 000 requests, 5 million rows read and 100 000 rows written (Cloudflare e-mails at 90 %). `test/data-quota.test.js`
+  runs one day of the schedule against a full store and fails when it uses more than 30 % of any of these (run it with
+  `QUOTA_DETAIL=1` to see which queries cost what). Every query on the time goes through a key or an index
+  (`workers/data/src/indexes.js`, `test/store-indexes.test.js`), and each index costs a row written per row. The
+  datasets are cached 60 seconds in front of the store (`cache.js`), so page views add little.
 - Restoring: the code is in Git (redeploy with Actions → «Data service» → «Run workflow»). The store (the Durable
   Object) holds only data that comes back by itself: the forecast and winds aloft within half an hour, the last 7 days
   of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses
   the days not yet archived), the verification from then on. The flying activity per day (`flight_days`) and the
-  verification history exist only there; the archive in R2 has the measurements of every finished day.
+  verification history (`verify_hours`) are backed up to R2 every night at 02:14 UTC (`backup.js`:
+  `backup/<table>/<day>.json` and `latest.json`, 90 days kept). A new, empty store reads `latest.json` back in on its
+  first backup run, so after a lost store the history is back the following night, with nothing to do by hand. The
+  archive in R2 has the measurements of every finished day.
 
 ## Weather stations (Holfuy)
 
