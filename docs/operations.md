@@ -233,8 +233,9 @@ the menu and is marked `noindex`. It shows per site:
   seconds, the flying activity 20. The stream is OGN's own backbone, which receivers and apps such as pgpilot send to;
   it needs no receiver of ours. Since the stream has every device, OGN's rules are followed here: the no-tracking flag
   in each message and `tracked: N` in OGN's device database (`ddb.glidernet.org/download/?j=1`, fetched by the store
-  once a day, state `ogn-notrack`) leave a device out, and no one is named (all are «Ukjent»). Without that list the
-  reserve gives nothing. `/v1/live.json` then has `"via": "aprs"`, and the flights run logs `flights: … fra OGNs
+  every day at 05:14 UTC while OGN is up, source `ognDdb` in `/v1/status.json`, state `ogn-notrack`) leave a device
+  out, and no one is named (all are «Ukjent»). The database went down with the live map on 21.10.2026, so the list is
+  fetched ahead and the kept one used however old; without any list the reserve gives nothing. `/v1/live.json` then has `"via": "aprs"`, and the flights run logs `flights: … fra OGNs
   APRS-strøm`. It does not help when all of OGN is down, or when a pilot's app could not send.
 - The address is OGN's own live map's and is not documented; if OGN changes it, the reserve above is used, and if that
   fails too the layer shows nothing and the data service logs `live: …`. Receivers near Harstad (October 2026): AVX970 north of Evenes, AVX1058 Hadsel/Sortland,

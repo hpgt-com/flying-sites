@@ -297,16 +297,22 @@ export class Store extends DurableObject {
     return { points: body.elev.length, hours: body.times.length };
   }
 
-  // The devices that must not be tracked, from OGN's device database (aprs.js fetchNoTrack), for the APRS reserve: kept
-  // a day in the state, fetched here where parsing the few MB may take the CPU it needs. When the database does not
-  // answer, the kept list is used however old; without any list this throws, and the reserve gives nothing.
+  // The devices that must not be tracked, from OGN's device database (aprs.js fetchNoTrack), for the APRS reserve: fetched
+  // here, where parsing the few MB may take the CPU it needs, once a day on the schedule (refreshNoTrack, so the list is
+  // there before OGN goes down, as the database may go down with it) and kept in the state. noTrack: the kept list, or
+  // fetched now when none is kept or it is over DDB_MAX_AGE_HOURS old and the database answers; without any list it
+  // throws, and the reserve gives nothing.
+  async refreshNoTrack(now) {
+    const ids = await fetchNoTrack();
+    this.putState("ogn-notrack", { fetched: now, ids });
+    return { devices: ids.length };
+  }
   async noTrack(now) {
     const kept = this.getState("ogn-notrack");
     if (kept && now - kept.fetched < DDB_MAX_AGE_HOURS * 3600000) return kept.ids;
     try {
-      const ids = await fetchNoTrack();
-      this.putState("ogn-notrack", { fetched: now, ids });
-      return ids;
+      await this.refreshNoTrack(now);
+      return this.getState("ogn-notrack").ids;
     } catch (err) {
       if (kept) return kept.ids;
       throw err;

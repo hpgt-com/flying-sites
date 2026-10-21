@@ -162,6 +162,10 @@ export function fakeFetch(clock, sites, { frostStations = 30 } = {}) {
         : "";
       return new Response(`<?xml version="1.0"?><markers>${ms}</markers>`);
     }
+    if (url.host === "ddb.glidernet.org") {
+      // OGN's device database: 1200 devices, every hundredth not to be tracked.
+      return json({ devices: Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).toUpperCase().padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" })) });
+    }
     if (url.host === "ws.geonorge.no") {
       const points = JSON.parse(url.searchParams.get("punkter") ?? "[]");
       return json({ punkter: points.map(() => ({ z: 100 })) });

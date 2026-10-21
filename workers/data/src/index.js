@@ -75,6 +75,7 @@ export default {
     if (due("grid", now)) runs.grid = grid.run(s, "grid", SITES, now);
     if (due("gridWide", now)) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
     if (due("backup", now)) runs.backup = s.backup(new Date(now).toISOString().slice(0, 10));
+    if (due("ognDdb", now)) runs.ognDdb = s.refreshNoTrack(now);
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
       Object.keys(runs).forEach((name, i) => {

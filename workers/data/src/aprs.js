@@ -6,8 +6,8 @@
 // OGN's rules (glidernet.org/ogn-data-usage), which the web map follows for us and must be followed here instead: a
 // device that must not be tracked, by the no-tracking flag in its message or «tracked: N» in OGN's device database
 // (DDB), is left out, and no device is identified (every name is null, shown as unknown). The database's list of devices
-// that must not be tracked is fetched in the store (Store.noTrack, a few MB, more CPU than a Worker run has) and kept a
-// day; without it the reserve gives nothing rather than risk showing one. Tested in test/data-worker.test.js.
+// that must not be tracked is fetched in the store once a day (Store.refreshNoTrack, a few MB, more CPU than a Worker run
+// has) and kept, so it is there when OGN goes down; without it the reserve gives nothing rather than risk showing one. Tested in test/data-worker.test.js.
 
 import { bounds, MAX_AGE_SECONDS, PARAGLIDER } from "./live.js";
 

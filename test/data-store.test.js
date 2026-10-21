@@ -261,6 +261,7 @@ test("APRS reserve: the list of devices that must not be tracked is kept a day, 
     assert.equal(asked, 1, "within a day the kept list is used");
     globalThis.fetch = async () => new Response("", { status: 503 });
     assert.deepEqual(await svc.store.noTrack(1000 + 30 * 3600000), ["AB0007"], "the database down: the kept list, however old");
+    await assert.rejects(() => svc.store.refreshNoTrack(1000 + 30 * 3600000), /503/, "the daily run reports the failure");
   } finally {
     globalThis.fetch = saved;
   }
