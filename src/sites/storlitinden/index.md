@@ -25,22 +25,22 @@ launch:
   lon: 16.30583
   source: flightlog
 landings:
-- name: Landing og parkering
+- name: Landing
   lat: 68.783847
   lon: 16.329384
   primary: true
   source: manual
 parking:
-- name: Parkering
-  lat: 68.783847
-  lon: 16.329384
-  source: manual
+- name: Parkering ved Røde Kors-hytta (sommer)
+  lat: 68.78611
+  lon: 16.36583
+  source: local_knowledge
 - name: Parkering Kvæfjordløyper
-  lat: 68.77866
-  lon: 16.33697
-  source: manual
+  lat: 68.77865
+  lon: 16.33713
+  source: local_knowledge
 access:
-  parking_text: Ved Røde Kors-hytta på Kvæfjordeidet, eller ved Kvæfjordløyper ca. 650 m lenger sør.
+  parking_text: Om sommeren ved Røde Kors-hytta på Kvæfjordeidet, ellers ved Kvæfjordløyper ca. 1,4 km lenger sørvest.
   route_text: Stien fra hytta er lett å finne. Stien fra Kvæfjordløyper brukes mest om vinteren, fordi den parkeringen brøytes.
   routes:
   - file: storlitinden-route-1.gpx
