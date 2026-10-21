@@ -7,6 +7,7 @@ import { DurableObject } from "cloudflare:workers";
 import { FIELDS } from "./measurements.js";
 import { mergeTrails } from "./live.js";
 import { INDEXES } from "./indexes.js";
+import { fetchGrid, GRIDS } from "./sources/grid.js";
 import { TABLES, JSON_META, backupPath, latestPath, expiredDay, backupBody, backupRows, restoreSql } from "./backup.js";
 
 const COLUMNS = FIELDS.map((f) => f.key);
@@ -284,6 +285,15 @@ export class Store extends DurableObject {
     }
     this.putState("backup", { day, rows: out.rows });
     return out;
+  }
+
+  // A forecast grid (sources/grid.js, «grid» or «grid-wide»): fetched and built here, where a run may use far more CPU
+  // than in the Worker, and stored as the dataset. A failure leaves the previous one and is thrown back to the run.
+  async refreshGrid(name, sites, now) {
+    if (!GRIDS[name]) throw new Error(`ukjent rutenett ${name}`);
+    const body = await fetchGrid(name, sites, now);
+    this.putSnapshot(name, JSON.stringify(body));
+    return { points: body.elev.length, hours: body.times.length };
   }
 
   prune(source, before) {

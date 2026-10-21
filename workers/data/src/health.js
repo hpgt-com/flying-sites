@@ -6,8 +6,8 @@
 
 // Minutes a dataset may go without being written before it counts as too old: a few runs of its source missed
 // (schedule.js), so one slow or failed run is not an alarm. The flights are written only when someone is in the air,
-// the verification twice an hour.
-export const MAX_AGE = { forecast: 60, stations: 15, windgram: 90, verification: 90 };
+// the verification twice an hour, the forecast grids every three and six hours.
+export const MAX_AGE = { forecast: 60, stations: 15, windgram: 90, verification: 90, grid: 400, "grid-wide": 760 };
 
 // An error message as it may be shown: addresses are left out (Holfuy's has the key in it), and it is kept short.
 export const cleanError = (message) => String(message).replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi, "[adresse]").replace(/[?&][^\s=]+=\S+/g, "").slice(0, 200);

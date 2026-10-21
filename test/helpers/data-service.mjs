@@ -145,8 +145,13 @@ export function fakeFetch(clock, sites, { frostStations = 30 } = {}) {
       })) });
     }
     if (url.host === "api.open-meteo.com") {
-      const time = Array.from({ length: 72 }, (_, i) => (hour + i * 3600000) / 1000);
-      return json({ elevation: 300, hourly: { time, wind_speed_10m: time.map(() => 4), wind_direction_10m: time.map(() => 220) } });
+      // From midnight UTC, as Open-Meteo answers. Several points (the forecast grid) give a list, one answer per point.
+      const day = Math.floor(now / 86400000) * 86400000;
+      const time = Array.from({ length: 72 }, (_, i) => (day + i * 3600000) / 1000);
+      const vars = (url.searchParams.get("hourly") ?? "").split(",");
+      const one = (k) => ({ elevation: k % 3 ? 300 : 0, hourly: Object.fromEntries([["time", time], ...vars.map((v) => [v, time.map((t, i) => (v.includes("direction") ? 220 : 4 + (i % 5)))])]) });
+      const lats = (url.searchParams.get("latitude") ?? "").split(",");
+      return json(lats.length > 1 ? lats.map((_, k) => one(k)) : one(1));
     }
     if (url.host === "live.glidernet.org") {
       // Three paragliders over the first site between 10 and 16 UTC, none otherwise.
