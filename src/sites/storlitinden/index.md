@@ -25,11 +25,11 @@ launch:
   lon: 16.30583
   source: flightlog
 landings:
-- name: Landing
-  lat: 68.783847
-  lon: 16.329384
+- name: Landing og parkering
+  lat: 68.78611
+  lon: 16.36583
   primary: true
-  source: manual
+  source: local_knowledge
 parking:
 - name: Parkering ved Røde Kors-hytta (sommer)
   lat: 68.78611
@@ -55,8 +55,8 @@ access:
     walk_time_min: 50
 elevation:
   launch_masl: 597
-  landing_masl: 206
-  difference_m: 391
+  landing_masl: 190
+  difference_m: 407
   source: kartverket
 airspace:
 - name: Evenes TMA1
