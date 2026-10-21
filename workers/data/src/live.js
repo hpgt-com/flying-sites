@@ -6,12 +6,17 @@
 // OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners' privacy choices are followed (OGN's live data
 // already leaves out devices that must not be tracked, and gives those that must not be identified a random short name,
 // which is shown as unknown here), and nothing older than 24 hours is passed on (positions older than MAX_AGE_SECONDS are
-// left out). Tested in test/data-worker.test.js.
+// left out). When the web map does not answer, the same positions are read from OGN's APRS stream (aprs.js), where those
+// rules are followed here. Tested in test/data-worker.test.js.
+
+import { listenAprs } from "./aprs.js";
 
 export const DATASET = "live";
 export const SOURCE = "Open Glider Network";
 export const LICENSE = "ODbL, Open Glider Network";
 export const CACHE_SECONDS = 10;
+// How long the map's request listens to the APRS stream when the web map is down.
+export const APRS_LIVE_SECONDS = 8;
 export const MAX_AGE_SECONDS = 600;
 export const TRAIL_MINUTES = 10;
 const API = "https://live.glidernet.org/lxml.php";
@@ -70,13 +75,28 @@ export function mergeTrails(tracks, positions, now, keepMs) {
 }
 
 // The paragliders OGN hears in the area of the sites now, as parseLive gives them. Also used for the flying activity
-// (sources/flights.js).
-export async function fetchLive(sites, now = Date.now()) {
+// (sources/flights.js). When the web map fails and a store is given, from the APRS stream instead (aprs.js), listening
+// aprsSeconds; items then has via: "aprs". Throws the web map's error when the reserve cannot be used either.
+export async function fetchLive(sites, now = Date.now(), { store = null, aprsSeconds = 20, connect } = {}) {
   const b = bounds(sites);
   const url = `${API}?a=0&b=${b.n.toFixed(2)}&c=${b.s.toFixed(2)}&d=${b.e.toFixed(2)}&e=${b.w.toFixed(2)}`;
-  const r = await fetch(url, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(8000) });
-  if (!r.ok) throw new Error(`OGN svarte ${r.status}`);
-  return parseLive(await r.text(), now);
+  let error;
+  try {
+    const r = await fetch(url, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(8000) });
+    if (r.ok) return parseLive(await r.text(), now);
+    error = new Error(`OGN svarte ${r.status}`);
+  } catch (err) {
+    error = err;
+  }
+  if (!store) throw error;
+  try {
+    const noTrack = new Set(await store.noTrack(now));
+    const items = await listenAprs(sites, noTrack, { seconds: aprsSeconds, now, connect });
+    items.via = "aprs";
+    return items;
+  } catch (err) {
+    throw new Error(`${error.message}; APRS: ${err.message}`);
+  }
 }
 
 // The answer to GET /v1/live.json, from OGN, or from the cache when it is fresh. store: for the tracks (mergeLive).
@@ -86,12 +106,13 @@ export async function handleLive(sites, now = Date.now(), cache = globalThis.cac
   if (hit) return hit;
   let body;
   try {
-    const items = await fetchLive(sites, now);
+    // A short listen when the reserve is needed: the map asks again in a few seconds.
+    const items = await fetchLive(sites, now, { store, aprsSeconds: APRS_LIVE_SECONDS });
     if (store && items.length) {
       const trails = await store.mergeLive(items.map(({ id, time, lat, lon, climb }) => ({ id, time, lat, lon, climb })), now, TRAIL_MINUTES * 60000);
       for (const item of items) item.trail = trails[item.id] ?? [];
     }
-    body = JSON.stringify({ dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), items });
+    body = JSON.stringify({ dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), ...(items.via ? { via: items.via } : {}), items });
   } catch (err) {
     console.warn(`live: ${err.message}`);
     return Response.json({ dataset: DATASET, error: "unavailable" }, { status: 503, headers: { "cache-control": "no-store" } });

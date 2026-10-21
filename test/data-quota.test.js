@@ -84,6 +84,6 @@ test("one day of the schedule stays well within the free plan, with every source
   assert.deepEqual(warnings, [], "every source ran without a warning (the stand-ins answer as the sources do)");
   const health = svc.store.getState("health");
   for (const [name, run] of Object.entries(health)) assert.ok(run.ok && !run.error, `${name} succeeded`);
-  for (const name of ["forecast", "stations", "met", "windgram", "verify", "flights", "backup", "grid", "gridWide"]) assert.ok(health[name], `${name} ran`);
+  for (const name of ["forecast", "stations", "met", "windgram", "verify", "flights", "backup", "grid", "gridWide", "ognDdb"]) assert.ok(health[name], `${name} ran`);
   for (const [k, v] of Object.entries(use)) assert.ok(v <= FREE[k] * BUDGET, `${k}: ${v} is over ${BUDGET * 100} % of ${FREE[k]}`);
 });

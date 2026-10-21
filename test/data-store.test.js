@@ -246,3 +246,23 @@ test("grid: the store fetches it in batches and serves it as /v1/grid.json; a fa
     globalThis.fetch = saved;
   }
 });
+
+test("APRS reserve: the list of devices that must not be tracked is kept a day, the kept one used when OGN's database is down", async () => {
+  const svc = service();
+  const saved = globalThis.fetch;
+  const devices = Array.from({ length: 1500 }, (_, i) => ({ device_id: `AB${String(i).padStart(4, "0")}`, tracked: i === 7 ? "N" : "Y" }));
+  let asked = 0;
+  try {
+    globalThis.fetch = async () => { throw new Error("nede"); };
+    await assert.rejects(() => svc.store.noTrack(1000), /nede/, "no list at all: the reserve gives nothing");
+    globalThis.fetch = async () => { asked++; return Response.json({ devices }); };
+    assert.deepEqual(await svc.store.noTrack(1000), ["AB0007"]);
+    await svc.store.noTrack(1000 + 23 * 3600000);
+    assert.equal(asked, 1, "within a day the kept list is used");
+    globalThis.fetch = async () => new Response("", { status: 503 });
+    assert.deepEqual(await svc.store.noTrack(1000 + 30 * 3600000), ["AB0007"], "the database down: the kept list, however old");
+    await assert.rejects(() => svc.store.refreshNoTrack(1000 + 30 * 3600000), /503/, "the daily run reports the failure");
+  } finally {
+    globalThis.fetch = saved;
+  }
+});

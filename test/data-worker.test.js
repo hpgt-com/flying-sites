@@ -718,3 +718,85 @@ test("status: when each source ran and succeeded, and which datasets are too old
   assert.equal(later.datasets["grid-wide"].ok, false, "once it has run, a missing dataset counts");
   assert.equal(s.archive.holfuy, "2026-10-17");
 });
+
+const aprsMod = await import("../workers/data/src/aprs.js");
+// Lines from OGN's APRS stream at NOW: a paraglider (detail byte 1E: type 7, FLARM address) heard twice, a glider (06),
+// one that must not be tracked by its flag (5E), one in stealth (9E, still counted, never named), and server lines.
+const APRS = [
+  "# aprsc 2.1.14 18 Oct 2026 15:19:50 GMT GLIDERN1 1.2.3.4:14580",
+  "FLRDDA5BA>OGFLR,qAS,Kvaefj:/151940h6847.40N/01622.00E'342/019/A=003200 !W00! id1EDDA5BA +100fpm",
+  "FLRDDA5BA>OGFLR,qAS,Kvaefj:/151955h6847.41N/01622.03E'342/019/A=003281 !W52! id1EDDA5BA +197fpm -1.1rot 8.8dB",
+  "FLRDD0001>OGFLR,qAS,Kvaefj:/151955h6848.00N/01620.00E'090/050/A=004000 !W00! id06DD0001 +300fpm",
+  "FNT110002>OGNFNT,qAS,Kvaefj:/151955h6848.00N/01620.00E'090/015/A=004000 !W00! id5E110002 +300fpm",
+  "FNT110003>OGNFNT,qAS,Kvaefj:/151950h6846.00N/01621.00E'000/000/A=002000 !W00! id9E110003 -400fpm",
+  "OGN123456>OGNSDR,TCPIP*,qAC,GLIDERN1:/151955h6847.00N/01622.00EI v0.2.8",
+];
+
+test("aprs: positions of paragliders from the stream, in live.js's shape, no-tracking and other aircraft left out", () => {
+  const items = APRS.map((l) => aprsMod.parseAprsLine(l, NOW)).filter(Boolean);
+  assert.equal(items.length, 3);
+  assert.deepEqual(items[1], { id: "dda5ba", name: null, lat: 68.79025, lon: 16.3672, alt: 1000, track: 342, speed: 9.8, climb: 1, type: 7, time: "2026-10-18T15:19:55.000Z" });
+  assert.equal(items[2].id, "110003", "stealth: counted, but never named");
+  assert.equal(items[2].name, null);
+  assert.equal(items[2].track, null, "course 0 with no speed is not known");
+  assert.equal(items[2].climb, -2);
+  assert.equal(aprsMod.parseAprsLine(APRS[2], NOW, new Set(["DDA5BA"])), null, "«tracked: N» in OGN's device database");
+  assert.equal(aprsMod.parseAprsLine(APRS[2], NOW + 11 * 60000), null, "older than ten minutes");
+  assert.equal(aprsMod.parseAprsLine(APRS[2].replace("151955h", "235958h"), Date.parse("2026-10-19T00:00:30Z"))?.time, "2026-10-18T23:59:58.000Z", "just before midnight UTC");
+  assert.equal(aprsMod.aprsFilter([{ lat: 68, lon: 16 }, { lat: 69, lon: 17 }]), "a/69.50/15.00/67.50/18.00");
+});
+
+// A stand-in for Cloudflare's connect: the stream sends the chunks (split mid-line, as TCP may) and then stays open.
+function fakeAprs(chunks) {
+  const sent = [];
+  let closed = false;
+  const connect = ({ hostname, port }) => {
+    sent.push(`${hostname}:${port}`);
+    let i = 0;
+    return {
+      writable: new WritableStream({ write(chunk) { sent.push(new TextDecoder().decode(chunk)); } }),
+      readable: new ReadableStream({ pull(c) { if (i < chunks.length) c.enqueue(new TextEncoder().encode(chunks[i++])); else return new Promise(() => {}); } }),
+      close: async () => { closed = true; },
+    };
+  };
+  return { connect, sent, closed: () => closed };
+}
+
+test("aprs: a read-only login with the area filter, each aircraft's newest position, the connection closed after the time", async () => {
+  const text = APRS.join("\r\n") + "\r\n";
+  const fake = fakeAprs([text.slice(0, 150), text.slice(150, 400), text.slice(400)]);
+  const items = await aprsMod.listenAprs([{ lat: 68.8, lon: 16.5 }], new Set(), { seconds: 0.05, now: NOW, connect: fake.connect });
+  assert.equal(fake.sent[0], "aprs.glidernet.org:14580");
+  assert.match(fake.sent[1], /^user HPGTFS pass -1 vers hpgt-flysteder 1\.0 filter a\/69\.30\/15\.50\/68\.30\/17\.50\r\n$/);
+  assert.deepEqual(items.map((i) => [i.id, i.time.slice(11, 19)]), [["dda5ba", "15:19:55"], ["110003", "15:19:50"]]);
+  assert.ok(fake.closed());
+});
+
+test("aprs: the reserve when OGN's web map does not answer, only with the list of devices that must not be tracked", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("down", { status: 521 });
+  try {
+    const sites = [{ lat: 68.8, lon: 16.5 }];
+    const fake = fakeAprs([APRS.join("\n") + "\n"]);
+    const store = { noTrack: async () => ["DDA5BA"] };
+    const items = await liveMod.fetchLive(sites, NOW, { store, aprsSeconds: 0.05, connect: fake.connect });
+    assert.equal(items.via, "aprs");
+    assert.deepEqual(items.map((i) => i.id), ["110003"], "the device the database says must not be tracked is left out");
+    await assert.rejects(() => liveMod.fetchLive(sites, NOW), /OGN svarte 521/, "without a store, no reserve");
+    const noList = { noTrack: async () => { throw new Error("OGN-registeret svarte 503"); } };
+    await assert.rejects(() => liveMod.fetchLive(sites, NOW, { store: noList, connect: fakeAprs([]).connect }), /OGN svarte 521; APRS: OGN-registeret svarte 503/,
+      "without the list the reserve gives nothing");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("aprs: the devices that must not be tracked, from OGN's device database, over HTTP when HTTPS fails, a broken answer refused", async () => {
+  const devices = Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" }));
+  const asked = [];
+  const ids = await aprsMod.fetchNoTrack(async (url) => { asked.push(url.slice(0, 5)); return url.startsWith("https") ? new Response("", { status: 502 }) : Response.json({ devices }); });
+  assert.deepEqual(asked, ["https", "http:"]);
+  assert.equal(ids.length, 12);
+  assert.equal(ids[1], "000064");
+  await assert.rejects(() => aprsMod.fetchNoTrack(async () => Response.json({ devices: devices.slice(0, 10) })), /uventet svar/);
+});
