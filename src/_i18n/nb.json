@@ -484,6 +484,7 @@
       "statusWind": "Mest {dir} {speed} m/s{gust}",
       "statusGust": ", kast {g}",
       "whenNow": "nå",
+      "coarse": "(grovt varsel: hver 6. time, uten vindkast)",
       "whenToday": "kl. {time}",
       "whenTomorrow": "i morgen kl. {time}",
       "whenDay": "{day} kl. {time}",

@@ -22,7 +22,11 @@ export const LICENSE = "CC BY 4.0, Open-Meteo";
 export const API = "https://api.open-meteo.com/v1/forecast";
 // Points per request (the addresses stay short).
 export const PER_REQUEST = 100;
-export const FORECAST_DAYS = 3;
+// Five days, as far as the timeline on the home page goes (lib/weather/met.js). Every hour for the first HOURLY_HOURS,
+// as MET has; after that MET has only 00, 06, 12 and 18 UTC, so only 06, 12 and 18 are kept: the timeline shows no
+// other hours there, and every hour of five days would come near the 2 MB a value in the store may be.
+export const FORECAST_DAYS = 5;
+export const HOURLY_HOURS = 60;
 // The hours kept, in UTC: 04–20 is 05/06–21/22 in Norway, the hours anyone flies.
 export const FIRST_HOUR = 4;
 export const LAST_HOUR = 20;
@@ -69,13 +73,16 @@ export function gridUrl(points) {
 }
 
 // The dataset from Open-Meteo's answers, one per point in the grid's order (an answer for several points is a list):
-// the hours from the one going on, within FIRST_HOUR–LAST_HOUR UTC; for each variable one list per point; the model's
-// height of each point (0 at sea). Throws when an answer is missing or has other hours than the first.
+// the hours from the one going on, within FIRST_HOUR–LAST_HOUR UTC (beyond HOURLY_HOURS only every sixth); for each
+// variable one list per point; the model's height of each point (0 at sea). Throws when an answer is missing or has other hours than the first.
 export function buildGrid(name, grid, answers, now = Date.now()) {
   if (answers.length !== grid.points.length) throw new Error(`Open-Meteo: ${answers.length} svar for ${grid.points.length} punkter`);
   const all = answers[0]?.hourly?.time;
   if (!Array.isArray(all) || !all.length) throw new Error("Open-Meteo: tomt svar");
-  const keep = all.map((t, i) => [t, i]).filter(([t]) => t * 1000 > now - 3600000 && new Date(t * 1000).getUTCHours() >= FIRST_HOUR && new Date(t * 1000).getUTCHours() <= LAST_HOUR);
+  const keep = all.map((t, i) => [t, i]).filter(([t]) => {
+    const hour = new Date(t * 1000).getUTCHours();
+    return t * 1000 > now - 3600000 && hour >= FIRST_HOUR && hour <= LAST_HOUR && (t * 1000 < now + HOURLY_HOURS * 3600000 || hour % 6 === 0);
+  });
   const values = {};
   for (const [name, key, dec] of VARS) {
     values[key] = answers.map((a) => {

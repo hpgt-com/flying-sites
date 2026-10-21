@@ -66,13 +66,17 @@ function gridNow(name) {
 }
 
 // The MET forecast as the data service gives it, from the hour going on, so the home page has a timeline also when it
-// is built without one (the PR check skips it): a light south-westerly at Heia.
+// is built without one (the PR check skips it): a light south-westerly at Heia, without gusts in the 6-hour steps.
 function forecastNow() {
   const hour0 = Math.floor(Date.now() / 3600000) * 3600000;
-  const times = Array.from({ length: 30 }, (_, k) => new Date(hour0 + k * 3600000).toISOString().replace(".000", ""));
+  // Every hour for 57 hours, then every 6 hours to five days, as MET gives it (lib/weather/met.js).
+  const ms = Array.from({ length: 57 }, (_, k) => hour0 + k * 3600000);
+  const six = Math.ceil((ms.at(-1) + 3600000) / 21600000) * 21600000;
+  for (let t = six; t < hour0 + 120 * 3600000; t += 21600000) ms.push(t);
+  const times = ms.map((t) => new Date(t).toISOString().replace(".000", ""));
   const now = new Date().toISOString();
   return { dataset: "forecast", license: "CC BY 4.0, MET Norway", product: "locationforecast", fetched: now, updated: now, source: "MET Norway",
-    times, sites: { heia: times.map(() => [225, 3, 5, 0]) }, past: {} };
+    times, sites: { heia: times.map((t, k) => [225, 3, k < 57 ? 5 : null, 0]) }, past: {} };
 }
 
 // The answers from outside: the data service (stations and pilots from the fixtures, the rest as «no data yet», so the
@@ -235,6 +239,35 @@ const scenarios = {
     }
     await page.waitForTimeout(300);
     if (await page.locator(".fc-barb, .fc-top, .fc-temp, .fc-speed, .fc-legend").count()) problems.push("prognosen ble stående etter at lagene ble slått av");
+    await context.close();
+    return [...problems, ...errors];
+  },
+
+  async "Tidslinjen: fem dager fram, 6-timersverdiene stripete og nådd med piltastene"(browser, origin) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await answer(context, origin, { forecast: true });
+    const page = await context.newPage();
+    const errors = [];
+    watchErrors(page, errors);
+    await page.goto(`${origin}/`, { waitUntil: "load" });
+    const problems = [];
+    const range = page.locator("#timeline-range");
+    await range.waitFor({ timeout: 15000 }).catch(() => problems.push("ingen tidslinje"));
+    const max = Number(await range.getAttribute("max"));
+    if (!(max >= 110)) problems.push(`tidslinjen går bare ${max} timer fram`);
+    if (!(await page.locator(".timeline__coarse").count())) problems.push("de grove 6-timersverdiene er ikke markert");
+    // To the last hour, then one step on with the arrow key: on to the first 6-hour step, and back.
+    await range.evaluate((el) => { el.value = "56"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+    await range.focus();
+    await page.keyboard.press("ArrowRight");
+    const on = Number(await range.inputValue());
+    if (!(on > 56 && on <= 62)) problems.push(`piltasten fra siste time ga ${on}, ikke første 6-timersverdi`);
+    if (!(await page.locator("#forecast-status").textContent()).includes("hver 6. time")) problems.push("ingen merknad om grovt varsel");
+    await page.keyboard.press("ArrowRight");
+    if (Number(await range.inputValue()) !== on + 6) problems.push("piltasten flyttet ikke 6 timer i den grove delen");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    if (Number(await range.inputValue()) !== 56) problems.push("tilbake med piltastene kom ikke til siste time");
     await context.close();
     return [...problems, ...errors];
   },

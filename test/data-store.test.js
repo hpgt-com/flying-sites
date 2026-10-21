@@ -266,3 +266,16 @@ test("APRS reserve: the list of devices that must not be tracked is kept a day, 
     globalThis.fetch = saved;
   }
 });
+
+test("forecast grid: every hour for the first 60 hours, then only 06, 12 and 18 UTC, five days ahead", async () => {
+  const { buildGrid, gridPoints, GRIDS } = await import("../workers/data/src/sources/grid.js");
+  const grid = gridPoints(GRIDS.grid, [{ lat: 68.8, lon: 16.5 }]);
+  const day = Date.UTC(2026, 9, 21) / 1000;
+  const time = Array.from({ length: 120 }, (_, i) => day + i * 3600);
+  const answers = grid.points.map(() => ({ elevation: 300, hourly: { time } }));
+  const now = Date.UTC(2026, 9, 21, 9, 30);
+  const hours = buildGrid("grid", grid, answers, now).times.map((t) => new Date(t * 1000).toISOString().slice(8, 13));
+  assert.equal(hours[0], "21T09");
+  assert.ok(hours.includes("23T20"), "every hour within 60 hours");
+  assert.deepEqual(hours.filter((h) => h >= "24T"), ["24T06", "24T12", "24T18", "25T06", "25T12", "25T18"]);
+});

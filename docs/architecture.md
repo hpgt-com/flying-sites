@@ -120,7 +120,7 @@ flowchart TB
 | Power lines and obstacles | `lib/obstacles.js`, `scripts/update-obstacles.mjs` | NVE's overhead power lines and wind turbines, and OpenStreetMap's low-voltage lines, lifts and masts, in the region 25 km around the sites (NVE's masts only within 1.5 km of each site), as tiles of 0.25° × 0.5° with an index. Copied to `/assets/obstacles/` for the map layer; nothing is computed at build time. |
 | Winds aloft | `lib/windgram.js`, `lib/weather/open-meteo.js` | The grid for «Vind over starten»: wind every 250 m, boundary layer, cloud base, clouds, rain, sun and gusts per hour. |
 | What's new | `src/_data/news.json`, `src/nytt.njk` | «Nytt på siden» (`/nytt/`): new features in both languages, and the plan with links to the issues. |
-| Weather | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | 48 hours of wind, gusts and precipitation per launch from MET, and winds aloft from Open-Meteo. Read from `.cache/weather/`, see [Data modules](#data-modules). If one site fails, only that site is missing. |
+| Weather | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | Five days of wind and precipitation per launch from MET (every hour for about 2½ days with gusts, then every 6 hours without), and winds aloft from Open-Meteo. Read from `.cache/weather/`, see [Data modules](#data-modules). If one site fails, only that site is missing. |
 | Languages | `lib/i18n.js`, `lib/translations.js` | Dictionaries, URLs per language and translated site text. See below. |
 | Status | `lib/status.js` | What is missing per site, for `/status/`. |
 | Open data | `lib/export.js` | GeoJSON and KML with launches, landings, parking and walking routes (CC BY 4.0). |
