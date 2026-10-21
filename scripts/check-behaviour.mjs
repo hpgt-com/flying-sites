@@ -39,6 +39,32 @@ function liveNow() {
   return { dataset: "live", source: "Open Glider Network", license: "ODbL, Open Glider Network", fetched: at(0), items };
 }
 
+// A forecast grid (/v1/grid.json, /v1/grid-wide.json) over the home region from the hour going on, for 30 hours: land
+// with thermals inland, sea in the west, wind from the south-west getting stronger to the north, rain in one corner.
+function gridNow(name) {
+  const wide = name === "grid-wide", dLat = wide ? 0.2 : 0.1, dLon = wide ? 0.5 : 0.25;
+  const lat0 = wide ? 67.8 : 68.4, lon0 = wide ? 14 : 15.5, rows = 9, cols = 9;
+  const hour0 = Math.floor(Date.now() / 3600000) * 3600;
+  const times = Array.from({ length: 30 }, (_, k) => hour0 + k * 3600);
+  const n = rows * cols, elev = [], values = { T: [], Td: [], ws: [], wd: [], ws9: [], wd9: [], blh: [], cl: [], pr: [], sw: [] };
+  for (let i = 0; i < n; i++) {
+    const r = Math.floor(i / cols), c = i % cols;
+    elev.push(c < 2 ? 0 : 100 + c * 60);
+    const each = (f) => times.map((t, k) => f(k));
+    values.T.push(each((k) => 10 + c * 0.5 - (k % 24 > 12 ? 4 : 0)));
+    values.Td.push(each(() => 4));
+    values.ws.push(each(() => 2 + r * 0.6));
+    values.wd.push(each(() => 225));
+    values.ws9.push(each(() => 4 + r * 1.5));
+    values.wd9.push(each(() => 240));
+    values.blh.push(each(() => 400 + c * 150));
+    values.cl.push(each(() => (r === 0 && c < 3 ? 90 : 10)));
+    values.pr.push(each(() => (r > 6 && c > 6 ? 1.4 : 0)));
+    values.sw.push(each(() => 550));
+  }
+  return { dataset: name, source: "Open-Meteo", license: "CC BY 4.0, Open-Meteo", fetched: new Date().toISOString(), lat0, lon0, dLat, dLon, rows, cols, times, elev, values };
+}
+
 // The answers from outside: the data service (stations and pilots from the fixtures, the rest as «no data yet», so the
 // pages use what is built in, or everything 503 when down), Turnstile as a stand-in that passes at once, and nothing else.
 async function answer(context, origin, { down = false, reports = [] } = {}) {
@@ -54,7 +80,8 @@ async function answer(context, origin, { down = false, reports = [] } = {}) {
     }
     if (url.origin === DATA) {
       const path = url.pathname;
-      const body = down ? null : path === "/v1/stations.json" ? stationsNow() : path === "/v1/live.json" ? liveNow() : null;
+      const body = down ? null : path === "/v1/stations.json" ? stationsNow() : path === "/v1/live.json" ? liveNow()
+        : path === "/v1/grid.json" ? gridNow("grid") : path === "/v1/grid-wide.json" ? gridNow("grid-wide") : null;
       return route.fulfill({ status: body ? 200 : 503, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(body ?? { error: "no data yet" }) });
     }
     if (url.origin === "https://challenges.cloudflare.com" && url.pathname.startsWith("/turnstile/")) {
@@ -83,9 +110,13 @@ function misplaced(page) {
   }));
 }
 
-// Turns a layer on in the map's layer list by its label, if it is off.
+// A layer's box in the map's layer list, by its whole label («Prognose: termikk» is not «Prognose: termikktopp …»).
+function layerBox(page, label) {
+  return page.locator(".leaflet-control-layers-overlays label").filter({ has: page.getByText(label, { exact: true }) }).locator("input");
+}
+// Turns a layer on, if it is off.
 async function layerOn(page, label) {
-  const box = page.locator(".leaflet-control-layers-overlays label", { hasText: label }).locator("input");
+  const box = layerBox(page, label);
   if (!(await box.isChecked())) await box.evaluate((el) => el.click());
 }
 
@@ -132,6 +163,54 @@ const scenarios = {
     await page.locator(".leaflet-control-layers-overlays label", { hasText: "Piloter i lufta" }).locator("input").evaluate((el) => el.click());
     await page.waitForTimeout(300);
     if (await page.locator(".live-marker").count()) problems.push("pilotene ble stående etter at laget ble slått av");
+    await context.close();
+    return [...problems, ...errors];
+  },
+
+  async "«Prognose»: termikk, topp, vind og forklaringen vises, følger tidslinjen, og forsvinner når lagene slås av"(browser, origin) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await answer(context, origin);
+    const page = await context.newPage();
+    const errors = [];
+    watchErrors(page, errors);
+    await page.goto(`${origin}/`, { waitUntil: "load" });
+    const problems = [];
+    for (const label of ["Prognose: termikk", "Prognose: termikktopp og skybase", "Prognose: vind"]) await layerOn(page, label);
+    await page.locator(".fc-barb").first().waitFor({ state: "attached", timeout: 15000 }).catch(() => problems.push("ingen vindfjær på kartet"));
+    if (!(await page.locator(".leaflet-overlay-pane canvas").count())) problems.push("ingen termikkruter på kartet");
+    if (!(await page.locator(".fc-top").count())) problems.push("ingen termikktopp på kartet");
+    if (!(await page.locator(".fc-legend .fc-legend__bar").count())) problems.push("ingen skala for termikken");
+    const before = await page.locator(".fc-legend__status").textContent();
+    // A few hours on in the timeline: the legend's time follows.
+    await page.locator("#timeline-range").evaluate((el) => { el.value = "3"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+    await page.waitForTimeout(200);
+    const after = await page.locator(".fc-legend__status").textContent();
+    if (before === after) problems.push(`prognosen fulgte ikke tidslinjen (${after})`);
+    // The barbs at the ground are weaker than at 750 m: the numbers change.
+    const at750 = await page.locator(".fc-barb b").allTextContents();
+    await page.locator(".fc-legend [data-level=ground]").click();
+    const atGround = await page.locator(".fc-barb b").allTextContents();
+    if (at750.join() === atGround.join()) problems.push("vind ved bakken viser det samme som 750 m");
+    await zoom(page, 1);
+    const off = await misplaced(page);
+    if (off.length) problems.push(`etter zoom: ${off.slice(0, 5).join("; ")}`);
+    // A tap in the map gives the numbers for the nearest point.
+    // Where nothing else is on top: not a site, a control or the timeline.
+    const spot = await page.evaluate(() => {
+      const box = document.querySelector("#home-map").getBoundingClientRect();
+      for (let fy = 0.3; fy < 0.8; fy += 0.05) for (let fx = 0.2; fx < 0.8; fx += 0.05) {
+        const x = box.left + box.width * fx, y = box.top + box.height * fy, el = document.elementFromPoint(x, y);
+        if (el && (el.matches("canvas, .leaflet-container, .leaflet-tile") || el.closest(".fc-label"))) return { x, y };
+      }
+      return null;
+    });
+    if (spot) await page.mouse.click(spot.x, spot.y);
+    await page.locator(".fc-popup").waitFor({ timeout: 3000 }).catch(() => problems.push("ingen tall når kartet trykkes"));
+    for (const label of ["Prognose: termikk", "Prognose: termikktopp og skybase", "Prognose: vind"]) {
+      await layerBox(page, label).evaluate((el) => el.click());
+    }
+    await page.waitForTimeout(300);
+    if (await page.locator(".fc-barb, .fc-top, .fc-legend").count()) problems.push("prognosen ble stående etter at lagene ble slått av");
     await context.close();
     return [...problems, ...errors];
   },
