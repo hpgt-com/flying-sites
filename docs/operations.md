@@ -227,8 +227,17 @@ the menu and is marked `noindex`. It shows per site:
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
   on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
   unidentified a random name, shown here as «Ukjent».
-- The address is OGN's own live map's and is not documented; if OGN changes it, the layer shows nothing and the data
-  service logs `live: …`. Receivers near Harstad (October 2026): AVX970 north of Evenes, AVX1058 Hadsel/Sortland,
+- **The APRS reserve** (`workers/data/src/aprs.js`): when the live map does not answer (it gave `521` all of the afternoon
+  of 21.10.2026), both the layer and the flying activity read the same positions from OGN's APRS stream instead
+  (`aprs.glidernet.org:14580`, read-only with passcode -1 and an area filter for the same area): the layer listens 8
+  seconds, the flying activity 20. The stream is OGN's own backbone, which receivers and apps such as pgpilot send to;
+  it needs no receiver of ours. Since the stream has every device, OGN's rules are followed here: the no-tracking flag
+  in each message and `tracked: N` in OGN's device database (`ddb.glidernet.org/download/?j=1`, fetched by the store
+  once a day, state `ogn-notrack`) leave a device out, and no one is named (all are «Ukjent»). Without that list the
+  reserve gives nothing. `/v1/live.json` then has `"via": "aprs"`, and the flights run logs `flights: … fra OGNs
+  APRS-strøm`. It does not help when all of OGN is down, or when a pilot's app could not send.
+- The address is OGN's own live map's and is not documented; if OGN changes it, the reserve above is used, and if that
+  fails too the layer shows nothing and the data service logs `live: …`. Receivers near Harstad (October 2026): AVX970 north of Evenes, AVX1058 Hadsel/Sortland,
   AVX1004 Tromsø (`live.glidernet.org/rec.php`).
 
 ## How well the forecast hits

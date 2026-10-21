@@ -184,7 +184,8 @@ export function buildFlights(rows, since, now = Date.now()) {
 // One run: what OGN hears now is added to the day; when something changed (or a new day began), the day's sums and the
 // dataset are stored. minutes: the time between runs (schedule.js).
 export async function run(store, sites, now = Date.now(), minutes = 2) {
-  const items = await fetchLive(sites, now);
+  const items = await fetchLive(sites, now, { store });
+  if (items.via) console.log(`flights: ${items.length} fra OGNs APRS-strøm (kartet svarte ikke)`);
   const today = osloDay(now);
   let day = await store.getState(STATE);
   let changed = false;
