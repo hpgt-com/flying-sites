@@ -121,6 +121,11 @@ the menu and is marked `noindex`. It shows per site:
   the stations successfully and serves `/v1/forecast.json` (`scripts/data-smoke.mjs`). If it does not, the job rolls
   back to the version that ran before (`wrangler rollback`) and fails, so the alert opens an issue. A rollback by hand:
   Cloudflare → Workers & Pages → data → Deployments, or `npx wrangler rollback` in `workers/data`.
+- The forecast grids (`/v1/grid.json`, `/v1/grid-wide.json`, `sources/grid.js`) use Open-Meteo's free, non-commercial
+  use: at most 600 points a minute and 10 000 a day. The close grid (about 540 points) is fetched every 3 hours and the
+  wide one (about 380) every 6, at different minutes, so a day uses about 5 800, and the winds aloft about 300 more.
+  `test/data-store.test.js` fails if a grid gets over 600 points or the day over 7 000. A larger area or a finer grid
+  needs Open-Meteo's paid API.
 - Restoring: the code is in Git (redeploy with Actions → «Data service» → «Run workflow»). The store (the Durable
   Object) holds only data that comes back by itself: the forecast and winds aloft within half an hour, the last 7 days
   of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses

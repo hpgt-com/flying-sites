@@ -161,3 +161,88 @@ test("after a publish: done when the stations have succeeded after it, an error 
   const ok = smokeVerdict({ sources: { stations: { ok: "2026-10-20T06:02:00.000Z", error: "x", errorAt: "2026-10-20T06:01:00.000Z" } } }, since);
   assert.deepEqual([ok.done, ok.ok], [true, true]);
 });
+
+test("grid: the close grid around the sites and the wide one over its box, on whole steps from the south", async () => {
+  const { gridPoints, GRIDS, VARS } = await import("../workers/data/src/sources/grid.js");
+  const g = gridPoints(GRIDS.grid, [{ lat: 68.76, lon: 16.51 }, { lat: 68.9, lon: 16.28 }, { lat: Number.NaN, lon: 1 }]);
+  assert.deepEqual([g.lat0, g.lon0], [68.4, 15.25]);
+  assert.equal(g.points.length, g.rows * g.cols);
+  assert.deepEqual(g.points[0], [68.4, 15.25]);
+  assert.deepEqual(g.points[1], [68.4, 15.5]);
+  assert.deepEqual(g.points[g.cols], [68.5, 15.25]);
+  assert.deepEqual(g.points.at(-1), [69.3, 17.5], "the margin is never cut");
+  const w = gridPoints(GRIDS["grid-wide"]);
+  assert.deepEqual([w.lat0, w.lon0, w.dLat, w.dLon], [66.6, 11.5, 0.2, 0.5]);
+  assert.ok(w.points.at(-1)[1] >= 21.5, "east into Sweden");
+  // Open-Meteo's free use: at most 600 points a minute (each grid is fetched in its own minute), 10 000 a day.
+  const sites = (await import("../workers/data/src/sites.json")).default;
+  const close = gridPoints(GRIDS.grid, sites).points.length;
+  assert.ok(VARS.length <= 10, "a point counts once");
+  assert.ok(close < 600 && w.points.length < 600, `${close} and ${w.points.length} points`);
+  assert.ok(close * 8 + w.points.length * 4 < 7000, "with the winds aloft, well under 10 000 a day");
+});
+
+test("grid: the request asks for all the variables for the points, in m/s and Unix time", async () => {
+  const { gridUrl, VARS } = await import("../workers/data/src/sources/grid.js");
+  const u = new URL(gridUrl([[68.4, 15.25], [68.5, 15.5]]));
+  assert.equal(u.searchParams.get("latitude"), "68.4,68.5");
+  assert.equal(u.searchParams.get("longitude"), "15.25,15.5");
+  assert.equal(u.searchParams.get("hourly").split(",").length, VARS.length);
+  assert.equal(u.searchParams.get("wind_speed_unit"), "ms");
+  assert.equal(u.searchParams.get("timeformat"), "unixtime");
+});
+
+test("grid: the dataset keeps the day hours from now, rounds the values, and refuses a wrong answer", async () => {
+  const { buildGrid, VARS, FIRST_HOUR, LAST_HOUR } = await import("../workers/data/src/sources/grid.js");
+  const day = Date.parse("2026-10-21T00:00:00Z"), now = Date.parse("2026-10-21T10:20:00Z");
+  const time = Array.from({ length: 48 }, (_, i) => (day + i * 3600000) / 1000);
+  const answer = (elev) => ({ elevation: elev, hourly: Object.fromEntries([["time", time], ...VARS.map(([n]) => [n, time.map(() => 3.456)])]) });
+  const grid = { dLat: 0.1, dLon: 0.25, lat0: 68.4, lon0: 15.25, rows: 1, cols: 2, points: [[68.4, 15.25], [68.4, 15.5]] };
+  const d = buildGrid("grid", grid, [answer(-3), answer(412.6)], now);
+  assert.equal(d.dataset, "grid");
+  assert.deepEqual([d.dLat, d.dLon], [0.1, 0.25]);
+  assert.deepEqual(d.elev, [0, 413]);
+  const hours = d.times.map((t) => new Date(t * 1000).getUTCHours());
+  assert.equal(new Date(d.times[0] * 1000).toISOString(), "2026-10-21T10:00:00.000Z", "from the hour going on");
+  assert.ok(hours.every((h) => h >= FIRST_HOUR && h <= LAST_HOUR));
+  assert.equal(d.times.length, (LAST_HOUR - 10 + 1) + (LAST_HOUR - FIRST_HOUR + 1));
+  assert.equal(d.values.T[1][0], 3.5);
+  assert.equal(d.values.wd[0][0], 3);
+  assert.equal(d.values.T.length, 2);
+  assert.throws(() => buildGrid("grid", grid, [answer(0)], now), /1 svar for 2 punkter/);
+  const other = answer(0); other.hourly.time = time.map((t) => t + 3600);
+  assert.throws(() => buildGrid("grid", grid, [answer(0), other], now), /ulike timer/);
+});
+
+test("grid: the store fetches it in batches and serves it as /v1/grid.json; a failure keeps the previous", async () => {
+  const { PER_REQUEST } = await import("../workers/data/src/sources/grid.js");
+  const svc = service();
+  const clock = { now: Date.parse("2026-10-21T09:21:00Z") };
+  const { fakeFetch } = await import("./helpers/data-service.mjs");
+  const { fetch } = fakeFetch(clock, []);
+  let requests = 0;
+  const saved = globalThis.fetch;
+  globalThis.fetch = async (u, o) => { requests++; return fetch(u, o); };
+  try {
+    // Lofoten to Bardu: more points than one request takes.
+    const sites = [{ lat: 68.2, lon: 13.6 }, { lat: 69.0, lon: 18.0 }];
+    const out = await svc.store.refreshGrid("grid", sites, clock.now);
+    assert.ok(out.points > PER_REQUEST && out.hours > 0);
+    assert.equal(requests, Math.ceil(out.points / PER_REQUEST));
+    const body = JSON.parse(svc.store.getSnapshot("grid"));
+    assert.equal(body.elev.length, out.points);
+    assert.equal(body.values.blh[0].length, body.times.length);
+    globalThis.fetch = async () => new Response("down", { status: 502 });
+    await assert.rejects(() => svc.store.refreshGrid("grid", sites, clock.now + 3 * 3600000), /502/);
+    await assert.rejects(() => svc.store.refreshGrid("other", sites, clock.now), /ukjent rutenett/);
+    globalThis.fetch = async (u, o) => fetch(u, o);
+    await svc.store.refreshGrid("grid-wide", [], clock.now);
+    assert.equal(JSON.parse(svc.store.getSnapshot("grid-wide")).dLat, 0.2);
+    assert.equal(JSON.parse(svc.store.getSnapshot("grid")).fetched, body.fetched, "the previous grid is kept");
+    const res = await withCache(fakeCache(), () => worker.fetch(new Request("https://data.test/v1/grid.json"), svc.env, {}));
+    assert.equal(res.status, 200);
+    assert.equal((await res.json()).dataset, "grid");
+  } finally {
+    globalThis.fetch = saved;
+  }
+});

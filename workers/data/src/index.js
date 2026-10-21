@@ -15,6 +15,10 @@
 // - flights: how many paragliders are seen in the air from each flying site, per month, from the Open Glider Network
 //   (sources/flights.js), on the site page (src/assets/js/flights.js).
 //
+// - grid, grid-wide: Open-Meteo's forecast for a grid close around the sites every three hours, and a coarser one over
+//   a wider area every six (sources/grid.js), for the map layers
+//   «Prognose» (src/assets/js/forecast-layer.js).
+//
 // - live: the aircraft the Open Glider Network hears in the area now (live.js), fetched on demand and cached a few
 //   seconds, for the map layer «Piloter i lufta» (src/assets/js/live.js).
 // - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
@@ -28,6 +32,7 @@ import * as frost from "./sources/frost.js";
 import * as windgram from "./sources/windgram.js";
 import * as verify from "./sources/verify.js";
 import * as flights from "./sources/flights.js";
+import * as grid from "./sources/grid.js";
 import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE, siteLinks } from "./stations.js";
 import { due, INTERVALS } from "./schedule.js";
 import { mergeStations } from "./merge.js";
@@ -41,7 +46,7 @@ import SITES from "./sites.json";
 export { Store } from "./store.js";
 
 const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET, "/v1/windgram.json": windgram.DATASET, "/v1/verification.json": verify.DATASET,
-  "/v1/flights.json": flights.DATASET };
+  "/v1/flights.json": flights.DATASET, "/v1/grid.json": "grid", "/v1/grid-wide.json": "grid-wide" };
 
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 
@@ -67,6 +72,8 @@ export default {
     if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
     if (due("verify", now)) runs.verify = verify.run(s, siteLinks(), now);
     if (due("flights", now)) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
+    if (due("grid", now)) runs.grid = grid.run(s, "grid", SITES, now);
+    if (due("gridWide", now)) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
     if (due("backup", now)) runs.backup = s.backup(new Date(now).toISOString().slice(0, 10));
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
