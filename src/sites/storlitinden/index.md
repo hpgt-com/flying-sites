@@ -25,9 +25,9 @@ launch:
   lon: 16.30583
   source: flightlog
 landings:
-- name: Landing og parkering
-  lat: 68.78611
-  lon: 16.36583
+- name: Landing
+  lat: 68.78638
+  lon: 16.36601
   primary: true
   source: local_knowledge
 parking:

@@ -14,7 +14,7 @@ launches:
   - text: Somewhat gentle and requires good airspeed. Good for top-to-bottom flights.
   - text: Ridge soaring on the back side is possible. Watch out for the rotor on the way down.
 landings:
-  - name: Landing and parking
+  - name: Landing
 access:
   parking_text: In summer at the Red Cross cabin (Røde Kors-hytta) on Kvæfjordeidet, otherwise at Kvæfjordløyper about 1.4 km further southwest.
   route_text: The trail from the cabin is easy to find. The trail from Kvæfjordløyper is mostly used in winter, because that parking is cleared of snow.
