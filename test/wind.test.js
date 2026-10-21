@@ -298,3 +298,34 @@ test("wind to stay up (soar_min_wind) is only a note: the rating stays the same,
   assert.equal(rate(light).note, undefined, "no note without the field");
   assert.equal(rate({ dir: 90, speed: 3, gust: 4 }, soar).note, undefined, "no note when the direction does not work anyway");
 });
+
+// Hourly from start, then every 6 hours (as MET gives it further ahead).
+function hourlyThenSix(start, hours, sixes) {
+  const times = hourly(start, hours);
+  const last = Date.parse(times.at(-1));
+  for (let k = 1; k <= sixes; k++) times.push(new Date(last + k * 6 * 3600000).toISOString().replace(".000Z", "Z"));
+  return times;
+}
+
+test("the times ahead as hours from now, each counting until the next, the 6-hour steps reached by the arrow keys", () => {
+  const times = hourlyThenSix("2026-10-21T10:00:00Z", 4, 2);
+  const now = Date.parse("2026-10-21T11:20:00Z");
+  const ahead = W.hoursAhead(times, now);
+  assert.deepEqual(ahead.map((a) => [a.index, a.hours]), [[1, 0], [2, 1], [3, 2], [4, 8], [5, 14]]);
+  assert.deepEqual([0, 3, 4, 5].map((i) => W.stepAt(times, i) / 3600000), [1, 6, 6, 6], "the last as long as the one before");
+  assert.equal(W.nearestHours(ahead, 6), 8, "dragged to 6 hours: the nearest time");
+  assert.equal(W.nearestHours(ahead, 4), 2);
+  assert.equal(W.nearestHours(ahead, 3, 2), 8, "one step on from the last hour: on to the 6-hour step");
+  assert.equal(W.nearestHours(ahead, 9, 8), 14);
+  assert.equal(W.nearestHours(ahead, 7, 8), 2, "and back");
+  assert.equal(W.slotIndex(times, "8", now), 4, "the hours found again by time");
+  assert.deepEqual(W.hoursAhead(times, Date.parse("2026-10-20T10:00:00Z")), [], "not covering now");
+});
+
+test("the day overview counts a 6-hour step as six hours", () => {
+  const times = hourlyThenSix("2026-10-24T10:00:00Z", 2, 2);
+  const forecast = { times, sites: { x: times.map(() => [240, 4, 6, 0]) } };
+  const days = W.dayWindows(forecast, { id: "x", ...site }, rules, 68.8, 16.3);
+  // 10 and 11 UTC, then 17 UTC (after sunset, left out): 11 UTC counts until 17.
+  assert.deepEqual(days["2026-10-24"].map((w) => [new Date(w.start).toISOString(), new Date(w.end).toISOString()]), [["2026-10-24T10:00:00.000Z", "2026-10-24T17:00:00.000Z"]]);
+});

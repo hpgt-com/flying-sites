@@ -141,7 +141,7 @@
     if (windSlot !== "off") {
       text = index < 0
         ? "<strong>" + FS.escapeHtml(FS.t("wind.notCovered")) + "</strong> " + text
-        : FS.escapeHtml(FS.t("wind.showingWhen", { when: whenLabel(index) })) + " " + text;
+        : FS.escapeHtml(FS.t("wind.showingWhen", { when: whenLabel(index) }) + (W.stepAt(forecast.times, index) > 3600000 ? " " + FS.t("home.coarse") : "")) + " " + text;
     }
     forecastStatusEl.innerHTML = text + sunLine(index);
   }
@@ -919,8 +919,8 @@
       var day = dayPlanDaysEl.appendChild(domEl("div", "day-plan__day"));
       var label = date === today ? FS.t("dayPlan.today") : date === tomorrow ? FS.t("dayPlan.tomorrow") : dayFormat.format(Date.parse(date + "T12:00:00Z"));
       day.appendChild(domEl("h3", "day-plan__date", label.charAt(0).toUpperCase() + label.slice(1)));
-      // The forecast ends mid-day (48 hours ahead): say so, so «07–10» does not look like it only suits until 10.
-      var lastTime = Date.parse(forecast.times[forecast.times.length - 1]) + 3600000;
+      // The forecast ends mid-day: say so, so «07–10» does not look like it only suits until 10.
+      var lastTime = Date.parse(forecast.times[forecast.times.length - 1]) + W.stepAt(forecast.times, forecast.times.length - 1);
       if (W.osloParts(lastTime - 1).date === date && W.osloParts(lastTime).hour < 20) {
         day.appendChild(domEl("p", "muted day-plan__partial", FS.t("dayPlan.partial", { time: hourLabel(lastTime) })));
       }
@@ -975,12 +975,14 @@
   }
 
   // The time as hours from now. Old links can have «tomorrow» (12:00 tomorrow) or «off», which give the nearest valid time.
-  function setWind(value) {
+  // Further ahead the forecast has a time every 6 hours, so the hours are taken to the nearest time it has (from: the
+  // hours chosen now, so stepping an hour at a time moves on to the next one).
+  function setWind(value, from) {
     if (!forecast || stale) return;
-    var now = Date.now(), current = W.slotIndex(forecast.times, "0", now);
-    var max = current < 0 ? 0 : forecast.times.length - 1 - current;
-    var hours = value === "tomorrow" ? W.slotIndex(forecast.times, "tomorrow", now) - current : parseInt(value, 10);
-    windSlot = String(Number.isFinite(hours) && hours > 0 ? Math.min(hours, max) : 0);
+    var now = Date.now(), ahead = W.hoursAhead(forecast.times, now);
+    var tomorrow = value === "tomorrow" ? W.slotIndex(forecast.times, "tomorrow", now) : -1;
+    var hours = tomorrow >= 0 ? ahead.filter(function (a) { return a.index === tomorrow; }).map(function (a) { return a.hours; })[0] : parseInt(value, 10);
+    windSlot = String(Number.isFinite(hours) && hours > 0 ? W.nearestHours(ahead, hours, from) : 0);
   }
 
   // The suggestion switch only works with a forecast. The text follows the chosen time («nå», «kl. 17.00» …).
@@ -1020,52 +1022,68 @@
   var BAR_COLORS = { ok: "var(--wind-ok)", maybe: "var(--wind-maybe)", high: "var(--wind-high)", no: "var(--wind-no)" };
   function renderTimeline(ids) {
     if (!timelineEl) return;
-    var now = Date.now(), current = forecast && !stale ? W.slotIndex(forecast.times, "0", now) : -1;
-    timelineEl.hidden = current < 0;
-    if (current < 0) return;
-    var max = forecast.times.length - 1 - current;
+    var now = Date.now(), ahead = forecast && !stale ? W.hoursAhead(forecast.times, now) : [];
+    timelineEl.hidden = !ahead.length;
+    if (!ahead.length) return;
+    // The slider and the track in hours, so the 6-hour steps further ahead take the room their time does.
+    var max = ahead[ahead.length - 1].hours;
+    var total = max + W.stepAt(forecast.times, ahead[ahead.length - 1].index) / 3600000;
     rangeEl.max = String(max);
     rangeEl.value = windSlot;
-    var index = current + Number(windSlot);
+    var index = W.slotIndex(forecast.times, windSlot, now);
     // «kl. 13.00» also for now (the button says «Nå»), with the day when it is not today.
     var label = windSlot === "0" ? FS.t("home.whenToday", { time: W.formatClock(Date.parse(forecast.times[index])) }) : whenLabel(index);
     timeEl.textContent = label;
     rangeEl.setAttribute("aria-valuetext", label);
     nowButton.setAttribute("aria-pressed", String(windSlot === "0"));
-    var stops = [], days = [];
+    var stops = [], days = [], coarse = null;
     var byId = {};
     sites.forEach(function (s) { byId[s.id] = s; });
-    for (var h = 0; h <= max; h++) {
+    var pct = function (h) { return (h / total * 100).toFixed(2) + "%"; };
+    ahead.forEach(function (a) {
       var best = null;
       ids.forEach(function (id) {
-        var wind = W.windAt(forecast, id, current + h);
+        var wind = W.windAt(forecast, id, a.index);
         if (!wind) return;
         var r = W.rateWind(byId[id], wind, rules).rating;
         if (!best || RATINGS[r].order < RATINGS[best].order) best = r;
       });
-      var from = (h / (max + 1) * 100).toFixed(2) + "%", to = ((h + 1) / (max + 1) * 100).toFixed(2) + "%";
+      var step = W.stepAt(forecast.times, a.index) / 3600000;
+      if (step > 1 && coarse === null) coarse = a.hours;
       var color = best ? BAR_COLORS[best] : "var(--line)";
-      stops.push(color + " " + from, color + " " + to);
-      var ms = Date.parse(forecast.times[current + h]);
-      if (h > 0 && W.osloParts(ms).hour === 0) {
-        var day = document.createElement("span");
-        day.style.left = from;
-        day.textContent = dayShort.format(ms).replace(/\.$/, "");
-        days.push(day);
-      }
+      stops.push(color + " " + pct(a.hours), color + " " + pct(a.hours + step));
+    });
+    // The weekday at each midnight in Norway, wherever it falls between the forecast's times.
+    var start = Date.parse(forecast.times[ahead[0].index]);
+    for (var h = 1; h <= max; h++) {
+      var ms = start + h * 3600000;
+      if (W.osloParts(ms).hour !== 0) continue;
+      var day = document.createElement("span");
+      day.style.left = pct(h);
+      day.textContent = dayShort.format(ms).replace(/\.$/, "");
+      days.push(day);
     }
     barEl.style.background = "linear-gradient(90deg, " + stops.join(", ") + ")";
+    // From where the forecast has a time only every 6 hours (no gusts): striped, with its words for the mouse.
+    var coarseEl = null;
+    if (coarse !== null) {
+      coarseEl = document.createElement("span");
+      coarseEl.className = "timeline__coarse";
+      coarseEl.style.left = pct(coarse);
+      coarseEl.title = FS.t("home.coarse");
+    }
+    barEl.replaceChildren.apply(barEl, coarseEl ? [coarseEl] : []);
     daysEl.replaceChildren.apply(daysEl, days);
   }
-  function setTime(value, track) {
-    setWind(String(value));
+  function setTime(value, track, from) {
+    setWind(String(value), from);
     setSuggest(suggest);
     update();
     writeHash();
     if (track) FS.track("filter/wind/" + windSlot);
   }
   if (rangeEl) {
-    rangeEl.addEventListener("input", function () { setTime(rangeEl.value); });
+    rangeEl.addEventListener("input", function () { setTime(rangeEl.value, false, Number(windSlot)); });
     rangeEl.addEventListener("change", function () { FS.track("filter/wind/" + windSlot); });
     nowButton.addEventListener("click", function () { setTime(0, true); });
   }

@@ -484,6 +484,7 @@
       "statusWind": "Mostly {dir} {speed} m/s{gust}",
       "statusGust": ", gusts {g}",
       "whenNow": "now",
+      "coarse": "(rough forecast: every 6 hours, no gusts)",
       "whenToday": "at {time}",
       "whenTomorrow": "tomorrow at {time}",
       "whenDay": "{day} at {time}",

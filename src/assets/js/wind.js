@@ -143,6 +143,32 @@
     return -1;
   }
 
+  // How long the forecast's value at index i counts (ms): until the next time, an hour or, further ahead, 6 hours
+  // (lib/weather/met.js); the last as long as the one before it.
+  function stepAt(times, i) {
+    if (i + 1 < times.length) return Date.parse(times[i + 1]) - Date.parse(times[i]);
+    return i > 0 ? Date.parse(times[i]) - Date.parse(times[i - 1]) : HOUR;
+  }
+
+  // The forecast's times from the hour now, as hours from it: [{ index, hours }]. Empty when it does not cover now.
+  function hoursAhead(times, now) {
+    var current = slotIndex(times, "0", now);
+    if (current < 0) return [];
+    var start = Date.parse(times[current]);
+    return times.slice(current).map(function (t, k) { return { index: current + k, hours: Math.round((Date.parse(t) - start) / HOUR) }; });
+  }
+
+  // The hours of the time in ahead (hoursAhead) nearest to hours. A step of one hour from `from` (the hours chosen now,
+  // as the arrow keys on the slider give) that lands on the same time goes on to the next one that way, so the keys also
+  // move through the 6-hour steps.
+  function nearestHours(ahead, hours, from) {
+    if (!ahead.length) return 0;
+    var best = 0;
+    ahead.forEach(function (a, k) { if (Math.abs(a.hours - hours) < Math.abs(ahead[best].hours - hours)) best = k; });
+    if (from != null && ahead[best].hours === from && Math.abs(hours - from) === 1) best = Math.max(0, Math.min(ahead.length - 1, best + (hours > from ? 1 : -1)));
+    return ahead[best].hours;
+  }
+
   // --- Assessment ---
   function directionCode(degrees) {
     return DIRECTIONS[Math.round((((degrees % 360) + 360) % 360) / 45) % 8];
@@ -284,7 +310,8 @@
   }
 
   // Day overview for a site: for each day in the forecast, the daylight periods where the assessment is «Kan passe»
-  // or «Usikkert», as [{ start, end, rating }] (milliseconds, end is the end of the last hour). Hours in darkness
+  // or «Usikkert», as [{ start, end, rating }] (milliseconds, end is the end of the last hour, or of the last 6-hour step
+  // further ahead). Hours in darkness
   // are excluded. With midnight sun the whole day counts; in polar night 10–14, when it is lightest. Each period
   // also has the wind: dir (most common direction), min and max (mean wind, m/s) and gust (highest gust).
   // { "2026-10-09": [...] }, only days with at least one period.
@@ -297,7 +324,8 @@
       var ms = Date.parse(time);
       var p = osloParts(ms);
       var sun = suns[p.date] || (suns[p.date] = sunTimes(p.date, lat, lon));
-      var light = sun.polar === "day" ? true : sun.polar === "night" ? p.hour >= 10 && p.hour < 14 : ms + HOUR > sun.rise && ms < sun.set;
+      var step = stepAt(forecast.times, i);
+      var light = sun.polar === "day" ? true : sun.polar === "night" ? p.hour >= 10 && p.hour < 14 : ms + step > sun.rise && ms < sun.set;
       var wind = windAt(forecast, site.id, i);
       if (!light || !wind) return;
       var rating = rateWind(site, wind, rules).rating;
@@ -305,7 +333,7 @@
       var list = days[p.date] || (days[p.date] = []);
       var last = list[list.length - 1];
       if (!(last && last.rating === rating && last.end === ms)) list.push(last = { start: ms, rating: rating, winds: [] });
-      last.end = ms + HOUR;
+      last.end = ms + step;
       last.winds.push(wind);
     });
     // Wind in each period: most common direction, lowest and highest mean wind and highest gust (null when unknown).
@@ -334,6 +362,9 @@
     fetchNewerForecast: fetchNewerForecast,
     watchForecast: watchForecast,
     slotIndex: slotIndex,
+    stepAt: stepAt,
+    hoursAhead: hoursAhead,
+    nearestHours: nearestHours,
     directionCode: directionCode,
     rateWind: rateWind,
     rateNow: rateNow,

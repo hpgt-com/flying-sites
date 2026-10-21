@@ -720,6 +720,8 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
 .timeline__time { flex: none; min-width: 5.5em; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .timeline__track { position: relative; flex: 1; min-width: 0; height: 44px; }
 .timeline__bar { position: absolute; left: 0; right: 0; top: 19px; height: 6px; border-radius: 3px; background: var(--line); }
+/* Where the forecast has a time only every 6 hours, without gusts (home.js): striped over the rating colours. */
+.timeline__coarse { position: absolute; top: 0; right: 0; bottom: 0; border-radius: 0 3px 3px 0; background: repeating-linear-gradient(135deg, transparent 0 3px, color-mix(in srgb, var(--card) 70%, transparent) 3px 6px); }
 .timeline__days { position: absolute; left: 0; right: 0; top: 30px; height: 14px; font-size: 11px; color: var(--muted); }
 .timeline__days span { position: absolute; padding-left: 3px; border-left: 1px solid var(--muted); line-height: 12px; }
 /* 44 px tall, so the slider is easy to hit; the visible thumb is 22 px. */

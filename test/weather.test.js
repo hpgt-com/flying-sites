@@ -18,6 +18,18 @@ test("the MET response becomes one row per hour with direction, wind, gust and r
   assert.deepEqual(rows, [["2026-10-17T10:00:00Z", 272, 4.2, 7.1, 0.3], ["2026-10-17T11:00:00Z", 90, 2, null, null]]);
 });
 
+test("the hours as long as MET gives them, then the 6-hour steps without gust and with the rain per hour, up to five days", () => {
+  const t0 = Date.parse("2026-10-17T10:00:00Z");
+  const at = (h) => new Date(t0 + h * 3600000).toISOString().replace(".000", "");
+  const six = (time, rain) => ({ time, data: { instant: { details: { wind_from_direction: 200, wind_speed: 5 } }, next_6_hours: { details: { precipitation_amount: rain } } } });
+  const series = [...Array.from({ length: 57 }, (_, h) => hour(at(h), 180, 3, 6, 0)), ...Array.from({ length: 30 }, (_, k) => six(at(56 + 6 * (k + 1)), 1.2))];
+  const rows = metRows({ properties: { timeseries: series } });
+  assert.equal(rows.at(-1)[0], at(116), "five days from the first hour, not further");
+  assert.equal(rows.length, 57 + 10);
+  assert.deepEqual(rows[57], [at(62), 200, 5, null, 0.2], "no gust in the 6-hour steps; 1.2 mm over 6 hours is 0.2 mm an hour");
+  assert.equal(metRows({ properties: { timeseries: series } }, 2).length, 48);
+});
+
 test("sites that start an hour later are placed at their own times", () => {
   const forecast = mergeSites({
     a: [["10:00", 180, 3, 5, 0], ["11:00", 190, 4, 6, 0]],
