@@ -45,9 +45,9 @@ access:
   routes:
   - file: storlitinden-route-1.gpx
     name: fra Røde Kors-hytta
-    km: 2.5
-    elevation_gain_m: 430
-    walk_time_min: 40
+    km: 3.0
+    elevation_gain_m: 410
+    walk_time_min: 45
   - file: storlitinden-route-2.gpx
     name: fra Kvæfjordløyper
     km: 2.7
