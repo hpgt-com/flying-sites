@@ -706,11 +706,15 @@ test("status: when each source ran and succeeded, and which datasets are too old
     stations: { updated: ago(30), body: "{}" },
     windgram: { updated: ago(20), body: JSON.stringify({ sites: { a: {} } }) },
   };
-  const s = health.buildStatus({ runs, snapshots, expected: { forecast: ["a", "b", "c"], windgram: ["a"] }, archive: { holfuy: "2026-10-17" }, now: NOW });
+  // The verification has run (and failed); the forecast grids have never run.
+  const s = health.buildStatus({ runs: health.recordRuns(runs, { verify: "feil" }, NOW), snapshots, expected: { forecast: ["a", "b", "c"], windgram: ["a"] }, archive: { holfuy: "2026-10-17" }, now: NOW });
   assert.equal(s.ok, false);
   assert.deepEqual(s.datasets.forecast, { updated: ago(10), ageMinutes: 10, maxAgeMinutes: 60, ok: true, missing: ["c"] });
   assert.equal(s.datasets.stations.ok, false, "30 minutes without measurements is too old");
   assert.deepEqual(s.datasets.windgram.missing, []);
-  assert.equal(s.datasets.verification.ok, false, "never written");
+  assert.equal(s.datasets.verification.ok, false, "never written, though its source has run");
+  assert.deepEqual([s.datasets.grid.ok, s.datasets.grid.pending, s.datasets["grid-wide"].pending], [true, true, true], "a source that has never run is pending, not an alarm");
+  const later = health.buildStatus({ runs: health.recordRuns(runs, { gridWide: "Open-Meteo svarte 502" }, NOW), snapshots: {}, expected: {}, archive: {}, now: NOW });
+  assert.equal(later.datasets["grid-wide"].ok, false, "once it has run, a missing dataset counts");
   assert.equal(s.archive.holfuy, "2026-10-17");
 });

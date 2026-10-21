@@ -25,6 +25,9 @@ export function recordRuns(prev, results, now) {
 
 // The status. snapshots: { dataset: { updated, body } } as stored; expected: { forecast: [ids], windgram: [ids] }, the
 // launches each should have; archive: { source: last day archived }.
+// The source that writes a dataset, where its name differs (index.js scheduled).
+const SOURCE_OF = { verification: "verify", "grid-wide": "gridWide" };
+
 export function buildStatus({ runs, snapshots, expected, archive, now }) {
   const datasets = {};
   let ok = true;
@@ -32,7 +35,9 @@ export function buildStatus({ runs, snapshots, expected, archive, now }) {
     const snap = snapshots[name];
     const updated = snap?.updated ?? null;
     const age = updated ? Math.round((now - Date.parse(updated)) / 60000) : null;
-    const d = { updated, ageMinutes: age, maxAgeMinutes: max, ok: age !== null && age <= max };
+    // A dataset whose source has never run (a new one, before its first turn on the schedule) is pending, not an alarm.
+    const pending = !snap && !runs?.[SOURCE_OF[name] ?? name];
+    const d = { updated, ageMinutes: age, maxAgeMinutes: max, ok: pending || (age !== null && age <= max), ...(pending ? { pending: true } : {}) };
     if (expected[name] && snap?.body) {
       let sites = {};
       try { sites = JSON.parse(snap.body).sites ?? {}; } catch { /* not JSON */ }
