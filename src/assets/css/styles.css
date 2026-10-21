@@ -782,7 +782,9 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
   .map-status { left: 64px; right: auto; align-items: flex-start; }
   .map-status__pill { flex-direction: row; min-height: 36px; }
   .map-status__sub { margin-left: 4px; }
-  .timeline { left: 50%; right: auto; bottom: 22px; width: min(560px, calc(100% - 120px)); transform: translateX(-50%); }
+  /* Three quarters of the map's width, so an hour is easy to hit on any screen: at least 560 px, at most 1400, and
+     always clear of the zoom buttons on the left. */
+  .timeline { left: 50%; right: auto; bottom: 22px; width: min(calc(100% - 140px), max(560px, 75%), 1400px); transform: translateX(-50%); }
   .home__map .leaflet-control-scale { display: block; }
   .home__map .map-attribution { left: auto; right: 0; bottom: 0; z-index: 1000; border: 0; border-top-left-radius: 6px; background: color-mix(in srgb, var(--card) 85%, transparent); }
   .results__item { padding: 8px 10px; gap: 10px; }
