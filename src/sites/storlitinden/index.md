@@ -26,10 +26,10 @@ launch:
   source: flightlog
 landings:
 - name: Landing
-  lat: 68.783847
-  lon: 16.329384
+  lat: 68.78638
+  lon: 16.36601
   primary: true
-  source: manual
+  source: local_knowledge
 parking:
 - name: Parkering ved Røde Kors-hytta (sommer)
   lat: 68.78611
@@ -45,9 +45,9 @@ access:
   routes:
   - file: storlitinden-route-1.gpx
     name: fra Røde Kors-hytta
-    km: 2.5
-    elevation_gain_m: 430
-    walk_time_min: 40
+    km: 3.0
+    elevation_gain_m: 410
+    walk_time_min: 45
   - file: storlitinden-route-2.gpx
     name: fra Kvæfjordløyper
     km: 2.7
@@ -55,8 +55,8 @@ access:
     walk_time_min: 50
 elevation:
   launch_masl: 597
-  landing_masl: 206
-  difference_m: 391
+  landing_masl: 190
+  difference_m: 407
   source: kartverket
 airspace:
 - name: Evenes TMA1
