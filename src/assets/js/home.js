@@ -434,6 +434,10 @@
   FS.addViewControls(map, mapEl, fitAllSites, FS.t("home.showSitesIn", { region: homeRegion }));
   // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
   if (window.FlyingSitesLive) window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"));
+  // «Prognose» (forecast-layer.js), off until turned on; it follows the time in the timeline (update()).
+  var forecastLayers = window.FlyingSitesForecast
+    ? window.FlyingSitesForecast.addMapLayers(map, { close: mapEl.getAttribute("data-grid-url"), wide: mapEl.getAttribute("data-grid-wide-url") })
+    : null;
 
   // --- Card for the selected site ---
   var cardEl = document.getElementById("selected");
@@ -568,6 +572,8 @@
   function update() {
     applyCategory();
     var assessments = assessAll();
+    // The forecast layers show the hour chosen in the timeline, or now when the wind assessment is off.
+    if (forecastLayers) forecastLayers.setTime(windIndex >= 0 && windSlot !== "off" && forecast && !stale ? Date.parse(forecast.times[windIndex]) : Date.now());
     var windOn = !!(forecast && !stale && windSlot !== "off");
     var counts = { match: 0, unknown: 0, nowind: 0, no: 0 };
     var matchById = {};

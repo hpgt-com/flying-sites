@@ -16,6 +16,9 @@ export default {
   verificationUrl: "https://data.hpgt.workers.dev/v1/verification.json",
   liveUrl: "https://data.hpgt.workers.dev/v1/live.json",
   flightsUrl: "https://data.hpgt.workers.dev/v1/flights.json",
+  // The forecast grids for the map layers «Prognose» on the home page (forecast-layer.js).
+  gridUrl: "https://data.hpgt.workers.dev/v1/grid.json",
+  gridWideUrl: "https://data.hpgt.workers.dev/v1/grid-wide.json",
   // «Meld fra om endring» on the site pages (report.js, workers/data/src/report.js). The form is shown only when the
   // Turnstile site key is set (public; the secret is TURNSTILE_SECRET in Cloudflare), see docs/operations.md.
   reportUrl: "https://data.hpgt.workers.dev/v1/report",

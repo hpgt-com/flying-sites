@@ -1953,3 +1953,63 @@ body.sheet-open { overflow: hidden; }
 .live-legend__ends { display: flex; justify-content: space-between; color: var(--muted); }
 .live-popup { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .live-popup__age { color: var(--muted); font-size: 13px; }
+
+/* «Prognose» on the home map (forecast-layer.js): the thermal cells drawn on canvas in the colours of the scale below,
+   labels in ink with a white halo so they read on every base map, wind barbs as on RASP, and a legend under the layer
+   list as for «Piloter i lufta». */
+:root { --fc-t1: #4CC46A; --fc-t2: #B9D94A; --fc-t3: #EBD94A; --fc-t4: #F2A23F; --fc-t5: #E5535A; --fc-ink: #1C2B33; --fc-halo: #FFFFFF; }
+.fc-label { background: none; border: 0; display: grid; place-items: center; }
+.fc-top, .fc-temp {
+  display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; color: var(--fc-ink); font: 700 12px/1 var(--font-body); font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 2px var(--fc-halo), 0 0 2px var(--fc-halo), 0 0 3px var(--fc-halo);
+}
+.fc-top--cu { padding: 2px 5px; border: 1.5px solid var(--fc-ink); border-radius: 9px; background: rgba(255, 255, 255, 0.75); text-shadow: none; }
+.fc-top--cu svg { fill: var(--fc-ink); }
+.fc-temp { padding: 2px 5px; border-radius: 9px; color: #FFFFFF; text-shadow: none; box-shadow: 0 1px 2px rgba(28, 43, 51, 0.35); }
+.fc-temp--warm { background: #B4462E; }
+.fc-temp--cold { background: #2E5FA8; }
+.fc-barb svg { display: block; overflow: visible; }
+.fc-barb__halo { fill: none; stroke: var(--fc-halo); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.fc-barb__line { fill: none; stroke: var(--fc-ink); stroke-width: 1.8; stroke-linecap: round; }
+.fc-barb__flag, .fc-barb__dot { fill: var(--fc-ink); }
+.fc-barb__calm { fill: none; stroke: var(--fc-ink); stroke-width: 1.8; }
+.fc-barb b {
+  position: absolute; left: 50%; top: 50%; transform: translate(4px, 3px); color: var(--fc-ink); font: 700 11px/1 var(--font-body);
+  text-shadow: 0 0 2px var(--fc-halo), 0 0 2px var(--fc-halo), 0 0 3px var(--fc-halo);
+}
+.fc-rain svg circle { fill: #2E63E6; fill-opacity: 0.6; }
+.fc-legend {
+  max-width: 230px; padding: 6px 8px; border-radius: 8px; background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(28, 43, 51, 0.35);
+  font: 12px/1.35 var(--font-body); font-variant-numeric: tabular-nums;
+}
+.fc-legend p { margin: 0; }
+.fc-legend__status { font-weight: 700; }
+.fc-legend__status button { font: inherit; }
+.fc-legend__title { display: block; margin-top: 4px; }
+.fc-legend__bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin: 2px 0 0; padding: 0; list-style: none; }
+.fc-legend__step { padding-top: 8px; border-radius: 2px; position: relative; }
+.fc-legend__step::before { content: ""; position: absolute; inset: 0 0 auto; height: 8px; border-radius: 2px; background: var(--fc-step); opacity: 0.8; }
+.fc-legend__step span { display: block; color: var(--muted); }
+.fc-legend__step--t1 { --fc-step: var(--fc-t1); }
+.fc-legend__step--t2 { --fc-step: var(--fc-t2); }
+.fc-legend__step--t3 { --fc-step: var(--fc-t3); }
+.fc-legend__step--t4 { --fc-step: var(--fc-t4); }
+.fc-legend__step--t5 { --fc-step: var(--fc-t5); }
+.fc-legend__keys { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.fc-legend__key::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; border-radius: 2px; }
+.fc-legend__key--low::before { background: #7F9396; opacity: 0.7; }
+.fc-legend__key--rain::before { background: #2E63E6; opacity: 0.6; border-radius: 50%; }
+.fc-legend__levels { display: flex; gap: 4px; margin-top: 4px; }
+.fc-legend__levels button {
+  min-height: 28px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); font: inherit; cursor: pointer;
+}
+.fc-legend__levels button[aria-pressed="true"] { background: var(--text); color: var(--card); border-color: var(--text); }
+.fc-legend__note { color: var(--muted); }
+.fc-legend__more { margin-top: 4px; }
+.fc-legend__more summary { cursor: pointer; color: var(--muted); }
+.fc-popup strong { display: block; margin-bottom: 4px; }
+.fc-popup table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.fc-popup th { text-align: left; font-weight: 400; color: var(--muted); padding: 1px 10px 1px 0; }
+.fc-popup td { font-weight: 700; padding: 1px 0; }
+.fc-popup__note { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+@media (max-width: 600px) { .fc-legend { max-width: 190px; } }

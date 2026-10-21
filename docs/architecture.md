@@ -147,8 +147,9 @@ flowchart LR
   sitewind["site-wind.js<br/>«Vinden nå – kan det passe?» on the site page"]
   stations["stations.js<br/>weather stations: map layer, rows,<br/>cards, charts, rating"]
   weather["weather.js<br/>the weather page /vaer/"]
-  data["data service<br/>data.hpgt.workers.dev<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live (.json),<br/>POST /v1/report"]
+  data["data service<br/>data.hpgt.workers.dev<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live, grid (.json),<br/>POST /v1/report"]
   live["live.js<br/>«Piloter i lufta» map layer"]
+  forecastlayer["forecast-layer.js<br/>«Prognose» map layers: thermals,<br/>top and cloud base, wind barbs,<br/>temperature, low cloud and rain"]
   windgram["windgram.js<br/>«Vind over starten»"]
   flights["flights.js, activity.js<br/>flying activity: site page,<br/>/flyaktivitet/"]
   report["report.js<br/>«Meld fra» form"]
@@ -164,6 +165,8 @@ flowchart LR
   j3 --> wind --> home & sitewind
   data -- "fetch every minute" --> stations --> home & site & sitewind & weather
   data --> live & windgram & flights
+  data -- "when a layer is turned on" --> forecastlayer
+  home -- "the time in the timeline" --> forecastlayer
   report -- "POST /v1/report" --> data
   common -- "FS.track()" --> goat
   common --> pwa --> sw
@@ -276,7 +279,7 @@ it fetches (a workflow today, a backend later) without the site noticing.
 | Data service: winds aloft | Open-Meteo, for the launches in `WINDGRAM_SITES` (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen) | `workers/data/src/sources/windgram.js` (the same `lib/weather/open-meteo.js` and `lib/windgram.js`) | Every 10 minutes, 2 launches per run | Durable Object (SQLite), served as `https://data.hpgt.workers.dev/v1/windgram.json` | `windgram.js` on the site page, when newer than the grid in the page (or the page has none) |
 | Data service: verification | The forecast hours and the measurements already stored | `workers/data/src/sources/verify.js`, the sites in `siteLinks()` in `stations.js` | Twice an hour (:09, :39) | Durable Object (SQLite) `verify_hours`, kept a year; the last 30 days as `https://data.hpgt.workers.dev/v1/verification.json` | «Målt nå» on the site page and «Målt mot varslet» on /vaer/ (`verifyBlock` in `stations.js`) |
 | Data service: pilots in the air | Open Glider Network (live positions of paragliders, ODbL) | `workers/data/src/live.js` | On demand, when someone has «Piloter i lufta» on, every 10 seconds; cached 10 seconds | The last 10 minutes of each track, with the climb, in the store's memory only, never written down; served as `https://data.hpgt.workers.dev/v1/live.json` | `live.js` on the home and site maps |
-| Data service: forecast grids | Open-Meteo: temperature, dew point, wind at 10 m and 925 hPa, boundary layer, low cloud, rain, sunshine | `workers/data/src/sources/grid.js`, built in the store (`Store.refreshGrid`) | `grid` (0.1 × 0.25°, around the sites) every 3 hours at :21, `grid-wide` (0.2 × 0.5°, Saltfjellet–Tromsø–Kiruna) every 6 hours at :51 | Durable Object, served as `https://data.hpgt.workers.dev/v1/grid.json` and `/v1/grid-wide.json`: the day hours (04–20 UTC) of the next days | The map layers «Prognose» |
+| Data service: forecast grids | Open-Meteo: temperature, dew point, wind at 10 m and 925 hPa, boundary layer, low cloud, rain, sunshine | `workers/data/src/sources/grid.js`, built in the store (`Store.refreshGrid`) | `grid` (0.1 × 0.25°, around the sites) every 3 hours at :21, `grid-wide` (0.2 × 0.5°, Saltfjellet–Tromsø–Kiruna) every 6 hours at :51 | Durable Object, served as `https://data.hpgt.workers.dev/v1/grid.json` and `/v1/grid-wide.json`: the day hours (04–20 UTC) of the next days | `forecast-layer.js`: the map layers «Prognose» on the home page |
 | Data service: backup | `flight_days` and `verify_hours` in the store | `workers/data/src/backup.js`, `Store.backup` | Every night at 02:14 UTC | R2 `backup/<table>/<day>.json` and `latest.json`, 90 days; a new, empty store reads `latest.json` back in | Restoring only |
 | Data service: status | The service's own runs and datasets | `workers/data/src/health.js` | Each scheduled run records which sources ran and how it went | Durable Object state `health`, served as `https://data.hpgt.workers.dev/v1/status.json` with each dataset's age against its limit, the launches missing and the last day archived | `health.yml` every hour |
 | Data service: flying activity | Open Glider Network (as above) | `workers/data/src/sources/flights.js` | Every 2 minutes | Per site and day the flights, pilots, minutes in the air, farthest and highest (`flight_days`, kept); the day's pilots by a salted key that is thrown away the next day; served as `https://data.hpgt.workers.dev/v1/flights.json` | `flights.js` on the site page, `activity.js` on /flyaktivitet/ |
