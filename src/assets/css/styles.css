@@ -1973,8 +1973,8 @@ body.sheet-open { overflow: hidden; }
 .fc-barb__line { fill: none; stroke: var(--fc-ink); stroke-width: 1.8; stroke-linecap: round; }
 .fc-barb__flag, .fc-barb__dot { fill: var(--fc-ink); }
 .fc-barb__calm { fill: none; stroke: var(--fc-ink); stroke-width: 1.8; }
-.fc-barb b {
-  position: absolute; left: 50%; top: 50%; transform: translate(4px, 3px); color: var(--fc-ink); font: 700 11px/1 var(--font-body);
+.fc-speed {
+  color: var(--fc-ink); font: 700 12px/1 var(--font-body); font-variant-numeric: tabular-nums;
   text-shadow: 0 0 2px var(--fc-halo), 0 0 2px var(--fc-halo), 0 0 3px var(--fc-halo);
 }
 .fc-rain svg circle { fill: #2E63E6; fill-opacity: 0.6; }

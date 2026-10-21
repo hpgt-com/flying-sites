@@ -22,7 +22,7 @@
   var COLORS = { t1: "#4CC46A", t2: "#B9D94A", t3: "#EBD94A", t4: "#F2A23F", t5: "#E5535A" };
   var LAYERS = ["thermal", "top", "wind", "temp", "cloud"];
   // The space each label needs on screen (px): fewer labels when zoomed out, never on top of each other.
-  var SPACING = { top: 52, wind: 64, temp: 44, cloud: 30 };
+  var SPACING = { top: 52, wind: 60, windStack: 84, temp: 44, cloud: 30 };
 
   // Only data in the expected shape: a grid of rows × cols points, the hours as Unix times, and for each variable one
   // list per point with a number or null per hour.
@@ -101,6 +101,22 @@
       '</g><circle r="2" class="fc-barb__dot"/></svg>';
   }
 
+  // Where a stack of labels goes ({ x, y: [per row] } in px from the point): on the point without wind, otherwise out
+  // on the side the wind blows to (the staff points to where it comes from), far enough that the whole stack clears
+  // the station whichever way that is. rows: [{ size: [w, h] }].
+  function stackAt(dir, rows) {
+    var w = 0, h = 0;
+    rows.forEach(function (r) { w = Math.max(w, r.size[0]); h += r.size[1]; });
+    var cx = 0, cy = 0;
+    if (isNum(dir)) {
+      var a = dir * Math.PI / 180, ux = -Math.sin(a), uy = Math.cos(a), d = 8 + Math.abs(ux) * w / 2 + Math.abs(uy) * h / 2;
+      cx = Math.round(ux * d) + 0; // + 0: no −0
+      cy = Math.round(uy * d) + 0;
+    }
+    var y = cy - h / 2, ys = rows.map(function (r) { var mid = y + r.size[1] / 2; y += r.size[1]; return Math.round(mid); });
+    return { x: cx, y: ys };
+  }
+
   function formatTemp(T) {
     var r = Math.round(T);
     return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r) + "°";
@@ -173,9 +189,9 @@
       return L.rectangle([[p.lat - g.dLat / 2, p.lon - g.dLon / 2], [p.lat + g.dLat / 2, p.lon + g.dLon / 2]],
         Object.assign({ renderer: renderer, stroke: false, interactive: false }, options));
     }
-    // A label on the point, or shift px above it (below when negative).
-    function label(p, cls, html, size, shift) {
-      return L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "fc-label " + cls, html: html, iconSize: size, iconAnchor: [size[0] / 2, size[1] / 2 + (shift || 0)] }), interactive: false, keyboard: false });
+    // A label centred dx px to the right of the point and dy px below it.
+    function label(p, cls, html, size, dx, dy) {
+      return L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "fc-label " + cls, html: html, iconSize: size, iconAnchor: [size[0] / 2 - dx, size[1] / 2 - dy] }), interactive: false, keyboard: false });
     }
     function windOf(p) { return level === "750" ? { dir: p.h.wd9, speed: p.h.ws9 } : { dir: p.h.wd, speed: p.h.ws }; }
     // Labels far enough apart on screen, inside the view: the first point in each square of the given size.
@@ -207,24 +223,28 @@
           layers.cloud.addLayer(label(p, "fc-rain", '<svg width="20" height="20" viewBox="-10 -10 20 20" aria-hidden="true"><circle r="' + r.toFixed(1) + '"/></svg>', [20, 20]));
         });
       }
-      // The labels at the same points, thinned once: the barb on the point, the top above it and the temperature below
-      // when they are shown together.
-      var picked = thin(list, on.wind ? SPACING.wind : on.top ? SPACING.top : SPACING.temp, function (p) {
+      // The labels at the same points, thinned once. With the wind on, the barb is on the point and the speed, the top
+      // and the temperature are stacked on the side the wind blows to, where the staff and its barbs never are; without
+      // it, the top above the temperature on the point.
+      var picked = thin(list, on.wind ? (on.top || on.temp ? SPACING.windStack : SPACING.wind) : on.top ? SPACING.top : SPACING.temp, function (p) {
         return (on.top && p.h.w >= 1 && p.h.top !== null) || (on.temp && p.h.T !== null) || (on.wind && windOf(p).speed !== null);
       });
-      var shiftTop = on.wind ? 24 : on.temp ? 10 : 0, shiftTemp = on.wind ? -22 : on.top ? -10 : 0;
       picked.forEach(function (p) {
+        var wind = windOf(p), rows = [];
+        if (on.wind && wind.speed !== null) {
+          layers.wind.addLayer(label(p, "fc-barb", barbSvg(wind.dir, wind.speed), [56, 56], 0, 0));
+          rows.push({ layer: layers.wind, html: '<b class="fc-speed">' + Math.round(wind.speed) + "</b>", size: [30, 16] });
+        }
         if (on.top && p.h.w >= 1 && p.h.top !== null) {
-          var html = p.h.cu
+          rows.push({ layer: layers.top, size: [60, 20], html: p.h.cu
             ? '<span class="fc-top fc-top--cu"><svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M3.5 9.5h7.5a2.5 2.5 0 0 0 .3-5A3.6 3.6 0 0 0 4.4 3.6 3 3 0 0 0 3.5 9.5z"/></svg>' + p.h.base + "</span>"
-            : '<span class="fc-top">↑' + p.h.top + "</span>";
-          layers.top.addLayer(label(p, "", html, [60, 20], shiftTop));
+            : '<span class="fc-top">↑' + p.h.top + "</span>" });
         }
         if (on.temp && p.h.T !== null) {
-          layers.temp.addLayer(label(p, "", '<span class="fc-temp ' + (p.h.T < 0 ? "fc-temp--cold" : "fc-temp--warm") + '">' + formatTemp(p.h.T) + "</span>", [44, 20], shiftTemp));
+          rows.push({ layer: layers.temp, size: [44, 20], html: '<span class="fc-temp ' + (p.h.T < 0 ? "fc-temp--cold" : "fc-temp--warm") + '">' + formatTemp(p.h.T) + "</span>" });
         }
-        var wind = windOf(p);
-        if (on.wind && wind.speed !== null) layers.wind.addLayer(label(p, "fc-barb", barbSvg(wind.dir, wind.speed) + "<b>" + Math.round(wind.speed) + "</b>", [56, 56], 0));
+        var at = stackAt(on.wind && wind.speed !== null ? wind.dir : null, rows);
+        rows.forEach(function (r, k) { r.layer.addLayer(label(p, "", r.html, r.size, at.x, at.y[k])); });
       });
     }
 
@@ -378,6 +398,6 @@
 
   globalThis.FlyingSitesForecast = {
     addMapLayers: addMapLayers, isGridData: isGridData, hourIndex: hourIndex, hourAt: hourAt, pointAt: pointAt,
-    barbSvg: barbSvg, scaleKey: scaleKey, popupRows: popupRows, formatTemp: formatTemp, useText: useText,
+    barbSvg: barbSvg, stackAt: stackAt, scaleKey: scaleKey, popupRows: popupRows, formatTemp: formatTemp, useText: useText,
   };
 })();

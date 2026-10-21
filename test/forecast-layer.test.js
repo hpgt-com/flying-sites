@@ -117,3 +117,17 @@ test("the popup's lines: numbers and directions, only what is known", () => {
   assert.equal(FC.formatTemp(-2.6), "−3°");
   assert.equal(FC.formatTemp(0.2), "0°");
 });
+
+test("the labels with a barb: stacked on the side the wind blows to, clear of the station", () => {
+  const rows = [{ size: [30, 16] }, { size: [44, 20] }];
+  // From the south: the staff points down, the stack goes up.
+  const south = FC.stackAt(180, rows);
+  assert.equal(south.x, 0);
+  assert.ok(south.y[1] + 10 <= -8, `bottom of the stack at ${south.y[1] + 10}`);
+  assert.ok(south.y[0] < south.y[1]);
+  // From the west: the stack goes right, its left edge clear of the station.
+  const west = FC.stackAt(270, rows);
+  assert.ok(west.x - 22 >= 8, `left edge at ${west.x - 22}`);
+  // Without wind: on the point.
+  assert.deepEqual(FC.stackAt(null, rows), { x: 0, y: [-10, 8] });
+});

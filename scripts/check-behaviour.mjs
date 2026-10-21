@@ -198,10 +198,23 @@ const scenarios = {
     const after = await page.locator(".fc-legend__status").textContent();
     if (before === after) problems.push(`prognosen fulgte ikke tidslinjen (${after})`);
     // The barbs at the ground are weaker than at 750 m: the numbers change.
-    const at750 = await page.locator(".fc-barb b").allTextContents();
+    const at750 = await page.locator(".fc-speed").allTextContents();
     await page.locator(".fc-legend [data-level=ground]").click();
-    const atGround = await page.locator(".fc-barb b").allTextContents();
+    const atGround = await page.locator(".fc-speed").allTextContents();
     if (at750.join() === atGround.join()) problems.push("vind ved bakken viser det samme som 750 m");
+    // With the temperature on too, the numbers stay clear of the barbs and of each other (they overlapped, 21.10.2026).
+    await layerOn(page, "Prognose: temperatur");
+    await page.waitForTimeout(200);
+    const overlaps = await page.evaluate(() => {
+      const boxes = (sel) => [...document.querySelectorAll(sel)].map((el) => el.getBoundingClientRect());
+      const texts = boxes(".fc-speed, .fc-top, .fc-temp"), barbs = boxes(".fc-barb__line");
+      const hit = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+      let n = 0;
+      texts.forEach((t, i) => { barbs.forEach((b) => { if (hit(t, b)) n++; }); texts.slice(i + 1).forEach((u) => { if (hit(t, u)) n++; }); });
+      return { n, texts: texts.length };
+    });
+    if (!overlaps.texts) problems.push("ingen temperatur på kartet");
+    if (overlaps.n) problems.push(`${overlaps.n} tall ligger oppå vindfjær eller andre tall`);
     await zoom(page, 1);
     const off = await misplaced(page);
     if (off.length) problems.push(`etter zoom: ${off.slice(0, 5).join("; ")}`);
@@ -217,11 +230,11 @@ const scenarios = {
     });
     if (spot) await page.mouse.click(spot.x, spot.y);
     await page.locator(".fc-popup").waitFor({ timeout: 3000 }).catch(() => problems.push("ingen tall når kartet trykkes"));
-    for (const label of ["Prognose: termikk", "Prognose: termikktopp og skybase", "Prognose: vind"]) {
+    for (const label of ["Prognose: termikk", "Prognose: termikktopp og skybase", "Prognose: vind", "Prognose: temperatur"]) {
       await layerBox(page, label).evaluate((el) => el.click());
     }
     await page.waitForTimeout(300);
-    if (await page.locator(".fc-barb, .fc-top, .fc-legend").count()) problems.push("prognosen ble stående etter at lagene ble slått av");
+    if (await page.locator(".fc-barb, .fc-top, .fc-temp, .fc-speed, .fc-legend").count()) problems.push("prognosen ble stående etter at lagene ble slått av");
     await context.close();
     return [...problems, ...errors];
   },
