@@ -417,11 +417,12 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
 
   const calls = [];
   const realFetch = globalThis.fetch;
+  let tokenAsk = null;
   globalThis.fetch = async (url, init = {}) => {
     calls.push([String(url), init.headers?.authorization ?? ""]);
     if (String(url).includes("siteverify")) return Response.json({ success: true, hostname: "flysteder.hpgt.com" });
     if (String(url).endsWith("/installation")) return Response.json({ id: 99 });
-    if (String(url).endsWith("/app/installations/99/access_tokens")) return Response.json({ token: "inst-token" }, { status: 201 });
+    if (String(url).endsWith("/app/installations/99/access_tokens")) { tokenAsk = JSON.parse(init.body); return Response.json({ token: "inst-token" }, { status: 201 }); }
     return new Response("{}", { status: 201 });
   };
   try {
@@ -430,6 +431,7 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
     const res = await reportMod.handleReport(req, { TURNSTILE_SECRET: "s", REPORTS_APP_ID: "12345", REPORTS_APP_PRIVATE_KEY: pem }, store, { heia: "Heia" }, NOW);
     assert.equal(res.status, 200);
     assert.deepEqual(calls.find(([u]) => u.endsWith("/repos/hpgt-com/flying-sites/issues")), ["https://api.github.com/repos/hpgt-com/flying-sites/issues", "Bearer inst-token"]);
+    assert.deepEqual(tokenAsk, { repositories: ["flying-sites"], permissions: { issues: "write" } }, "the token is asked for with only this repository and Issues: write");
   } finally {
     globalThis.fetch = realFetch;
   }
