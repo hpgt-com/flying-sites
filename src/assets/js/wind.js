@@ -309,6 +309,66 @@
     return text("wind.sun", { rise: formatClock(sun.rise), set: formatClock(sun.set) });
   }
 
+  // The sun's position at a time: elevation above the horizon and azimuth (0 = north, 90 = east, 180 = south), in
+  // degrees. The same approximations as sunTimes (no refraction), accurate to about a degree.
+  function sunPosition(ms, lat, lon) {
+    var rad = Math.PI / 180;
+    var d = ms / DAY - 10957.5; // days since 1 January 2000, 12:00 UTC
+    var m = (357.5291 + 0.98560028 * d) % 360;
+    var c = 1.9148 * Math.sin(m * rad) + 0.02 * Math.sin(2 * m * rad) + 0.0003 * Math.sin(3 * m * rad);
+    var lambda = (m + c + 180 + 102.9372) % 360;
+    var dec = Math.asin(Math.sin(lambda * rad) * Math.sin(23.4397 * rad));
+    var ra = Math.atan2(Math.sin(lambda * rad) * Math.cos(23.4397 * rad), Math.cos(lambda * rad));
+    var hourAngle = ((280.16 + 360.9856235 * d + lon) % 360) * rad - ra;
+    var elevation = Math.asin(Math.sin(lat * rad) * Math.sin(dec) + Math.cos(lat * rad) * Math.cos(dec) * Math.cos(hourAngle));
+    // Measured from south towards west, so 180 is added to count from north.
+    var azimuth = Math.atan2(Math.sin(hourAngle), Math.cos(hourAngle) * Math.sin(lat * rad) - Math.tan(dec) * Math.cos(lat * rad));
+    return { elevation: elevation / rad, azimuth: (azimuth / rad + 540) % 360 };
+  }
+
+  // When the sun shines on a launch during a calendar day: the launch faces the directions it takes wind from, and the
+  // sun is on it when it is more than 3° above the horizon and less than 60° to the side of one of those directions.
+  // Shade from the terrain is not known, so it is a rough guide. [[from, to]] in Norwegian hours of the day (decimal,
+  // sampled every 10 minutes), empty when the sun does not reach it. With the midnight sun a period may run past
+  // midnight, as [22, 26] for 22–02.
+  var SUN_MIN_ELEVATION = 3;
+  var SUN_MAX_ASIDE = 60;
+  function sunOnLaunch(date, lat, lon, directions) {
+    var facing = directions.map(function (code) { return DIRECTIONS.indexOf(code) * 45; }).filter(function (a) { return a >= 0; });
+    if (!facing.length) return [];
+    var midnight = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
+    var offset = osloParts(midnight + 12 * HOUR).hour - 12; // Norwegian time is UTC+1 or +2
+    var periods = [];
+    var on = false;
+    for (var tenth = 0; tenth <= 24 * 6; tenth++) {
+      var hour = tenth / 6;
+      var sun = sunPosition(midnight + (hour - offset) * HOUR, lat, lon);
+      var lit = sun.elevation > SUN_MIN_ELEVATION && facing.some(function (a) {
+        var diff = Math.abs(((sun.azimuth - a) % 360 + 540) % 360 - 180);
+        return diff <= SUN_MAX_ASIDE;
+      });
+      if (lit && !on) periods.push([hour, hour]);
+      if (lit) periods[periods.length - 1][1] = hour;
+      on = lit;
+    }
+    // A period that ends at midnight and one that starts at midnight are the same, across midnight.
+    if (periods.length > 1 && periods[0][0] === 0 && periods[periods.length - 1][1] === 24) {
+      periods[periods.length - 1][1] = 24 + periods.shift()[1];
+    }
+    return periods;
+  }
+
+  // «Sol på starten ca. kl. 09–15.», «... kl. 09–12 og 15–18.» or «Lite sol på starten i dag.» Whole hours.
+  function sunOnLaunchText(date, lat, lon, directions) {
+    var periods = sunOnLaunch(date, lat, lon, directions).map(function (p) {
+      return [Math.round(p[0]), Math.round(p[1])];
+    }).filter(function (p) { return p[1] > p[0]; });
+    if (!periods.length) return text("wind.sunOnNone");
+    var two = function (h) { h = h % 24; return (h < 10 ? "0" : "") + h; };
+    var hours = periods.map(function (p) { return two(p[0]) + "\u2013" + two(p[1]); }).join(text("wind.sunOnJoin"));
+    return text("wind.sunOn", { hours: hours });
+  }
+
   // Day overview for a site: for each day in the forecast, the daylight periods where the assessment is «Kan passe»
   // or «Usikkert», as [{ start, end, rating }] (milliseconds, end is the end of the last hour, or of the last 6-hour step
   // further ahead). Hours in darkness
@@ -372,6 +432,9 @@
     formatRain: formatRain,
     sunTimes: sunTimes,
     sunText: sunText,
+    sunPosition: sunPosition,
+    sunOnLaunch: sunOnLaunch,
+    sunOnLaunchText: sunOnLaunchText,
     dayWindows: dayWindows,
     useText: useText,
   };

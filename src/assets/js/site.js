@@ -58,6 +58,26 @@
   }
 
   var data = FS.readJson("site-data");
+
+  // Sun on each launch today (wind.js sunOnLaunchText), from the directions the launch takes wind from, as a line under
+  // the launch text. Computed here, so the page does not go out of date between builds. The note under the list says
+  // the times do not account for terrain shade.
+  var W = window.FlyingSitesWind;
+  var launchList = document.querySelector(".launch-list");
+  if (W && data && data.launch && launchList) {
+    var today = W.osloParts(Date.now()).date;
+    launchList.querySelectorAll("li[data-dirs]").forEach(function (li) {
+      var dirs = (li.getAttribute("data-dirs") || "").split(" ").filter(Boolean);
+      var texts = li.querySelector(".launch-list__texts");
+      if (!dirs.length || !texts) return;
+      var line = document.createElement("span");
+      line.className = "launch-list__sun";
+      line.textContent = W.sunOnLaunchText(today, data.launch.lat, data.launch.lon, dirs);
+      texts.append(line);
+    });
+    var note = launchList.parentElement.querySelector(".launch-list__note");
+    if (note && launchList.querySelector(".launch-list__sun")) note.hidden = false;
+  }
   // «Målt nå» (the weather station, stations.js) follows «Vinden nå – kan det passe?» in the HTML, which is the mobile order. On
   // desktop it goes to the top of the right column, under «Før du starter», where its chart has a sensible size and the
   // left column does not have to wait for it.
