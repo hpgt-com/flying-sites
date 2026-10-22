@@ -19,7 +19,8 @@
     "check:html": "html-validate \"_site/**/*.html\"",
     "check:output": "node scripts/check-output.mjs",
     "check:a11y": "node scripts/check-a11y.mjs",
-    "check:behaviour": "node scripts/check-behaviour.mjs"
+    "check:behaviour": "node scripts/check-behaviour.mjs",
+    "check:budget": "node scripts/check-budget.mjs"
   },
   "engines": {
     "node": ">=22.22"
