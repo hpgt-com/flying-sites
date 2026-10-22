@@ -12,7 +12,6 @@ const { sqliteStorage, rpcStub, fakeR2, fakeCache, fakeFetch } = await import(".
 const worker = (await import("../workers/data/src/index.js")).default;
 const { Store } = await import("../workers/data/src/store.js");
 const { siteLinks, HOLFUY_STATIONS } = await import("../workers/data/src/stations.js");
-const { backupRows } = await import("../workers/data/src/backup.js");
 const SITES = (await import("../workers/data/src/sites.json")).default;
 
 // The free plan's limits per day (Workers and Durable Objects), and the share of each one day of the schedule may use.

@@ -37,6 +37,9 @@ jobs:
 
       - run: npm test
 
+      # ESLint, the recommended rules only (eslint.config.js): an undefined name or an unused variable the tests do not reach.
+      - run: npm run lint
+
       # Image variants from the deploy build on main (same key as in deploy.yml), so the PR build is quicker.
       # Only restored, never saved, so a PR cannot change what main uses.
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

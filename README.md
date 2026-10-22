@@ -71,6 +71,7 @@ Other commands:
 | Command | What |
 |---|---|
 | `npm run build` | Builds the site into `_site/`. |
+| `npm run lint` | ESLint with the recommended rules (`eslint.config.js`): undefined names, unused variables. Also runs in the PR check. |
 | `npm test` | Tests the wind assessment, validation, drawings, images, status page, language support, export, the weather stations, winds aloft, OGN, flight logs and power lines. |
 | `npm run images` | Checks all images (size, GPS data) and shrinks them if needed. |
 | `npm run images -- <files or folder>` | Imports images named by the convention, e.g. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (see [SPEC.md](SPEC.md#content)). All images are imported, and the build finds them by file name. |
