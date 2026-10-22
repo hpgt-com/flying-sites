@@ -355,7 +355,9 @@
     var stationNow = document.getElementById("station-now");
     if (window.FlyingSitesStations && stationNow) window.FlyingSitesStations.addMapLayer(map, stationNow.getAttribute("data-url"));
     // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
-    if (window.FlyingSitesLive) window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"));
+    FS.lazyOverlays(map, mapEl.getAttribute("data-live-script"), [{ key: "live", label: FS.t("live.layer"), attribution: FS.t("live.credit") }], function (layers) {
+      window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"), layers.live);
+    });
     // «Kraftlinjer og hindre» (common.js), off until it is turned on in the layer list.
     FS.addObstacleLayer(map, mapEl.getAttribute("data-obstacles-url"));
 

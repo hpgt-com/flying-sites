@@ -465,12 +465,25 @@
   });
   // «Vis flysteder i Harstad og Kvæfjord» and full screen below the zoom buttons, as on the site page.
   FS.addViewControls(map, mapEl, fitAllSites, FS.t("home.showSitesIn", { region: homeRegion }));
-  // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
-  if (window.FlyingSitesLive) window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"));
-  // «Prognose» (forecast-layer.js), off until turned on; it follows the time in the timeline (update()).
-  var forecastLayers = window.FlyingSitesForecast
-    ? window.FlyingSitesForecast.addMapLayers(map, { close: mapEl.getAttribute("data-grid-url"), wide: mapEl.getAttribute("data-grid-wide-url") })
-    : null;
+  // «Piloter i lufta» (live.js) and «Prognose» (forecast-layer.js): off until turned on in the layer list, and their
+  // scripts are fetched only then (FS.lazyOverlays). The forecast layers follow the time in the timeline (update()).
+  FS.lazyOverlays(map, mapEl.getAttribute("data-live-script"), [{ key: "live", label: FS.t("live.layer"), attribution: FS.t("live.credit") }], function (layers) {
+    window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"), layers.live);
+  });
+  var forecastLayers = null;
+  // The five layers, as LAYERS in forecast-layer.js, with their names in the layer list.
+  var FORECAST_LAYERS = {
+    thermal: FS.t("forecast.layer_thermal"), top: FS.t("forecast.layer_top"), wind: FS.t("forecast.layer_wind"),
+    temp: FS.t("forecast.layer_temp"), cloud: FS.t("forecast.layer_cloud"),
+  };
+  FS.lazyOverlays(map, mapEl.getAttribute("data-forecast-script"), Object.keys(FORECAST_LAYERS).map(function (key) {
+    return { key: "forecast-" + key, label: FORECAST_LAYERS[key], attribution: FS.t("forecast.credit") };
+  }), function (layers) {
+    var existing = {};
+    Object.keys(FORECAST_LAYERS).forEach(function (key) { existing[key] = layers["forecast-" + key]; });
+    forecastLayers = window.FlyingSitesForecast.addMapLayers(map, { close: mapEl.getAttribute("data-grid-url"), wide: mapEl.getAttribute("data-grid-wide-url") }, existing);
+    if (forecastLayers) forecastLayers.setTime(forecastTime());
+  });
 
   // --- Card for the selected site ---
   var cardEl = document.getElementById("selected");
@@ -683,11 +696,14 @@
   }
   var weekdayLong = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "long", timeZone: "Europe/Oslo" });
 
+  // The time the forecast layers show: the hour chosen in the timeline, or now when the wind assessment is off.
+  function forecastTime() {
+    return windIndex >= 0 && windSlot !== "off" && forecast && !stale ? Date.parse(forecast.times[windIndex]) : Date.now();
+  }
   function update() {
     applyCategory();
     var assessments = assessAll();
-    // The forecast layers show the hour chosen in the timeline, or now when the wind assessment is off.
-    if (forecastLayers) forecastLayers.setTime(windIndex >= 0 && windSlot !== "off" && forecast && !stale ? Date.parse(forecast.times[windIndex]) : Date.now());
+    if (forecastLayers) forecastLayers.setTime(forecastTime());
     var windOn = !!(forecast && !stale && windSlot !== "off");
     var counts = { match: 0, unknown: 0, nowind: 0, no: 0 };
     var matchById = {};

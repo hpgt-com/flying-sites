@@ -150,15 +150,17 @@
   }
 
   // The layers on a map. urls: { close, wide }. Returns { setTime(ms) } for the page's timeline, or null.
-  function addMapLayers(map, urls) {
+  // existing: the layers already in the layer list, keyed thermal … cloud, when this script was fetched on first use
+  // (common.js lazyOverlays); they are taken over, and the ones on the map already are drawn at once.
+  function addMapLayers(map, urls, existing) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !map.layersControl || !urls || !urls.close) return null;
     var attribution = text("forecast.credit");
     var layers = {}, on = {};
     var renderer = L.canvas({ padding: 0.2 });
     LAYERS.forEach(function (key) {
-      layers[key] = L.layerGroup([], { attribution: attribution });
-      map.layersControl.addOverlay(layers[key], FS.layerLabel(map, "forecast-" + key, text("forecast.layer_" + key)));
+      layers[key] = (existing && existing[key]) || L.layerGroup([], { attribution: attribution });
+      if (!existing || !existing[key]) map.layersControl.addOverlay(layers[key], FS.layerLabel(map, "forecast-" + key, text("forecast.layer_" + key)));
     });
     var grids = null, loading = null, failed = false, time = Date.now(), level = "750", moreOpen = null;
     var legend = legendControl();
@@ -353,14 +355,17 @@
     }
     function anyOn() { return LAYERS.some(function (k) { return on[k]; }); }
 
+    function switched(key, isOn) {
+      on[key] = isOn;
+      if (anyOn()) { legend.addTo(map); load(); } else legend.remove();
+      if (isOn) FS.track("map-layer/forecast-" + key);
+      render();
+    }
     map.on("overlayadd overlayremove", function (ev) {
       var key = LAYERS.filter(function (k) { return layers[k] === ev.layer; })[0];
-      if (!key) return;
-      on[key] = ev.type === "overlayadd";
-      if (anyOn()) { legend.addTo(map); load(); } else legend.remove();
-      if (on[key]) FS.track("map-layer/forecast-" + key);
-      render();
+      if (key) switched(key, ev.type === "overlayadd");
     });
+    LAYERS.forEach(function (key) { if (map.hasLayer(layers[key])) switched(key, true); });
     map.on("zoomend moveend", function () { if (anyOn()) render(); });
 
     // A tap in the map while a layer is on: all the numbers for the nearest point at the chosen time.

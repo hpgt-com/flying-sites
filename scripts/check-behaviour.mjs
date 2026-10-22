@@ -162,6 +162,30 @@ const scenarios = {
     return [...problems, ...errors];
   },
 
+  async "Forsiden: skriptet for «Prognose» hentes først når laget slås på, og laget tegnes da"(browser, origin) {
+    const context = await browser.newContext(MOBILE);
+    await answer(context, origin);
+    const page = await context.newPage();
+    const errors = [];
+    watchErrors(page, errors);
+    const scripts = [];
+    page.on("request", (req) => { if (req.resourceType() === "script") scripts.push(new URL(req.url()).pathname); });
+    await page.goto(`${origin}/`, { waitUntil: "load" });
+    await page.locator(".station-marker").first().waitFor({ state: "attached", timeout: 15000 });
+    const problems = [];
+    const lazy = (name) => scripts.filter((p) => p.endsWith(`/assets/js/${name}`)).length;
+    if (lazy("forecast-layer.js") || lazy("live.js")) problems.push("forecast-layer.js eller live.js ble hentet før laget ble slått på");
+    await layerOn(page, "Prognose: termikk");
+    await page.locator(".fc-legend").first().waitFor({ state: "attached", timeout: 15000 });
+    await page.waitForTimeout(500);
+    if (lazy("forecast-layer.js") !== 1) problems.push(`forecast-layer.js hentet ${lazy("forecast-layer.js")} ganger etter at laget ble slått på`);
+    if (lazy("live.js")) problems.push("live.js ble hentet uten at «Piloter i lufta» var slått på");
+    const legend = await page.evaluate(() => ({ legend: document.querySelectorAll(".fc-legend").length, checked: document.querySelector(".leaflet-control-layers-overlays input:checked") !== null }));
+    if (legend.legend !== 1) problems.push(`${legend.legend} forklaringer for prognosen`);
+    await context.close();
+    return [...problems, ...errors];
+  },
+
   async "Forsiden: kartet og filtrene er som før når man kommer tilbake fra en stedsside"(browser, origin) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     await answer(context, origin);

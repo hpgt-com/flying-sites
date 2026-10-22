@@ -18,8 +18,6 @@ scripts:
   - /assets/leaflet-markercluster/leaflet.markercluster.js
   - /assets/js/wind.js
   - /assets/js/stations.js
-  - /assets/js/live.js
-  - /assets/js/forecast-layer.js
   - /assets/js/home.js
 ---
 {%- import "macros.njk" as m with context -%}
@@ -171,7 +169,7 @@ scripts:
   </main>
 
   <section class="home__map" id="home-map-wrap" aria-label="{{ t.home.mapLabel }}">
-    <div id="home-map" class="map map--home" data-live-url="{{ site.liveUrl }}" data-grid-url="{{ site.gridUrl }}" data-grid-wide-url="{{ site.gridWideUrl }}" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" data-obstacles-url="{{ '/assets/obstacles/index.json' | url }}"></div>
+    <div id="home-map" class="map map--home" data-live-url="{{ site.liveUrl }}" data-live-script="{{ '/assets/js/live.js' | asset }}" data-grid-url="{{ site.gridUrl }}" data-grid-wide-url="{{ site.gridWideUrl }}" data-forecast-script="{{ '/assets/js/forecast-layer.js' | asset }}" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" data-obstacles-url="{{ '/assets/obstacles/index.json' | url }}"></div>
     {#- Status on the map (home.js): a small pill with how many sites may work at the chosen time and the most common
         direction. It opens the details: the wind in the area, the count per rating, when the forecast was fetched,
         the legend and how the assessment works. -#}
