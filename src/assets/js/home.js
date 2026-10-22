@@ -213,7 +213,7 @@
     var order = [["ok", c.ok, FS.t("summary.ok")], ["maybe", c.maybe, maybeLabel(c.maybe)], ["high", c.high, FS.t("summary.high")],
       ["no", c.no - sum.noByRain, FS.t("summary.wrongDirection")], ["no", sum.noByRain, FS.t("summary.rain")]];
     var bar = order.map(function (o) {
-      return o[1] ? '<span class="wind-bar__part wind-dot--' + o[0] + '" style="flex-grow:' + o[1] + '"></span>' : "";
+      return o[1] ? '<span class="wind-bar__part wind-dot--' + o[0] + '" data-grow="' + o[1] + '"></span>' : "";
     }).join("");
     var chips = order.map(function (o) {
       return o[1] ? '<span><span class="wind-dot wind-dot--' + o[0] + '"></span>' + o[1] + " " + FS.escapeHtml(o[2]) + "</span>" : "";
@@ -224,6 +224,8 @@
       '<p class="wind-summary__counts">' + chips + "</p>" +
       (sum.missing ? '<p class="wind-summary__missing">' + FS.escapeHtml(FS.t("summary.missing", { places: places(sum.missing) })) + "</p>" : "") +
       (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">' + FS.escapeHtml(FS.t("summary.noneCanWork") + " " + noneReason(sum)) + "</p>" : "");
+    // The parts' widths set on the elements, not in the HTML: the page allows no inline styles (CSP style-src 'self').
+    summaryEl.querySelectorAll(".wind-bar__part").forEach(function (el) { el.style.flexGrow = el.getAttribute("data-grow"); });
   }
   // The pill on the map: how many sites may work at the chosen time, with the best rating found, and the most common
   // direction («✓ 3 kan passe · mest NV»). The details open below it. Without wind, how many sites are shown.
@@ -1195,9 +1197,17 @@
     // Each row links to the station's card on the weather page (the link below the list gives its address).
     var more = stationsEl.querySelector(".stations__more");
     var weatherUrl = more ? more.getAttribute("href") : "";
+    var lastMeasured = null;
     ST.addMapLayer(map, stationsEl.getAttribute("data-url"), function (data, now) {
       stationData = data;
-      update();
+      // The stations answer every minute, and update() draws all the markers, rows and clusters again, which is a lot on
+      // a phone. The measurements enter the assessment only at «Nå» (assessAll), so the page is drawn again only then,
+      // and only when a measurement that counts has changed (or gone old).
+      var measured = windSlot === "0" ? JSON.stringify(data.items.filter(function (i) { return i.site; }).map(function (i) {
+        var m = ST.measurement(i, now);
+        return [i.site, m ? m.wind : null, m ? m.steady : null];
+      })) : null;
+      if (measured !== lastMeasured) { lastMeasured = measured; update(); }
       // The club's stations as rows, in their own order (Heia first); MET's as a small folded table under them.
       listEl2.replaceChildren.apply(listEl2, ST.groups(data.items).club.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item), true); }));
       var oldMet = stationsEl.querySelector(".met-stations"), met = ST.metTable(data.items, now, oldMet && oldMet.open);

@@ -65,17 +65,26 @@ export default {
   async scheduled(controller, env, ctx) {
     const s = store(env);
     const now = controller.scheduledTime;
+    // When each source last ran, for the ones that are caught up after a missed minute (schedule.js CATCH_UP).
+    const last = (await s.getState("health")) ?? {};
+    const isDue = (name) => due(name, now, last[name]?.tried);
     const runs = {};
-    if (due("forecast", now)) runs.forecast = forecast.run(s, SITES, now);
-    if (due("stations", now)) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
-    if (due("met", now)) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE);
-    if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
-    if (due("verify", now)) runs.verify = verify.run(s, siteLinks(), now);
-    if (due("flights", now)) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
-    if (due("grid", now)) runs.grid = grid.run(s, "grid", SITES, now);
-    if (due("gridWide", now)) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
-    if (due("backup", now)) runs.backup = s.backup(new Date(now).toISOString().slice(0, 10));
-    if (due("ognDdb", now)) runs.ognDdb = s.refreshNoTrack(now);
+    if (isDue("forecast")) runs.forecast = forecast.run(s, SITES, now);
+    if (isDue("stations")) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
+    if (isDue("met")) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE);
+    if (isDue("windgram")) runs.windgram = windgram.run(s, SITES, now);
+    if (isDue("verify")) runs.verify = verify.run(s, siteLinks(), now);
+    if (isDue("flights")) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
+    if (isDue("grid")) runs.grid = grid.run(s, "grid", SITES, now);
+    if (isDue("gridWide")) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
+    if (isDue("backup")) {
+      const day = new Date(now).toISOString().slice(0, 10);
+      runs.backup = s.backup(day);
+      // The salts and address hashes of «Meld fra» from earlier days (report.js): deleted with the day, not only when
+      // the next report comes.
+      ctx.waitUntil(s.pruneReports(day));
+    }
+    if (isDue("ognDdb")) runs.ognDdb = s.refreshNoTrack(now);
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
       Object.keys(runs).forEach((name, i) => {
@@ -88,49 +97,71 @@ export default {
     }));
   },
 
+  // Whatever goes wrong (the store overloaded or out of its daily quota, a bug), the answer is still JSON with the CORS
+  // headers, so the page sees a 503 it can handle, not Cloudflare's error page without them (which the browser reports
+  // as a CORS failure).
   async fetch(request, env, ctx) {
-    const { pathname } = new URL(request.url);
-    // «Meld fra om endring» (report.js): only from the site itself (or REPORT_ORIGINS when testing).
-    if (pathname === "/v1/report") {
-      const origin = request.headers.get("origin") || "";
-      const allowed = (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).includes(origin);
-      const cors = { "access-control-allow-origin": allowed ? origin : ORIGINS[0], "access-control-allow-methods": "POST, OPTIONS",
-        "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
-      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-      if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
-      if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
-      const { status, body } = await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])));
-      return Response.json(body, { status, headers: cors });
+    try {
+      return await handle(request, env, ctx);
+    } catch (err) {
+      console.warn(`fetch ${new URL(request.url).pathname}: ${err.message}`);
+      const report = new URL(request.url).pathname === "/v1/report";
+      return Response.json({ error: "unavailable" }, { status: 503, headers: { ...(report ? reportCors(request, env).cors : HEADERS), "cache-control": "no-store" } });
     }
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
-    if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
-    if (pathname === "/v1/live.json") {
-      const res = await handleLive(SITES, Date.now(), globalThis.caches?.default, store(env));
-      const headers = new Headers(res.headers);
-      for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
-      return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
-    }
-    if (pathname !== "/v1/status.json" && !DATASETS[pathname]) return new Response("Not found", { status: 404, headers: HEADERS });
-    const res = await cached(globalThis.caches?.default, request, ctx, () => (pathname === "/v1/status.json" ? status(env) : dataset(env, DATASETS[pathname])));
-    return request.method === "HEAD" ? new Response(null, { status: res.status, headers: res.headers }) : res;
   },
 };
+
+// The CORS headers for /v1/report, and whether the request's origin is allowed: the site itself (or REPORT_ORIGINS when
+// testing).
+function reportCors(request, env) {
+  const origin = request.headers.get("origin") || "";
+  const allowed = (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).includes(origin);
+  const cors = { "access-control-allow-origin": allowed ? origin : ORIGINS[0], "access-control-allow-methods": "POST, OPTIONS",
+    "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
+  return { allowed, cors };
+}
+
+async function handle(request, env, ctx) {
+  const { pathname } = new URL(request.url);
+  // «Meld fra om endring» (report.js).
+  if (pathname === "/v1/report") {
+    const { allowed, cors } = reportCors(request, env);
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+    if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
+    if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
+    const { status, body } = await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])));
+    return Response.json(body, { status, headers: cors });
+  }
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
+  if (pathname === "/v1/live.json") {
+    const res = await handleLive(SITES, Date.now(), globalThis.caches?.default, store(env));
+    const headers = new Headers(res.headers);
+    for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
+    return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
+  }
+  if (pathname !== "/v1/status.json" && !DATASETS[pathname]) return new Response("Not found", { status: 404, headers: HEADERS });
+  const res = await cached(globalThis.caches?.default, request, ctx, () => (pathname === "/v1/status.json" ? status(env) : dataset(env, DATASETS[pathname])));
+  return request.method === "HEAD" ? new Response(null, { status: res.status, headers: res.headers }) : res;
+}
 
 const JSON_HEADERS = { ...HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${CACHE_SECONDS}` };
 
 // How the sources and datasets are doing (health.js).
 async function status(env) {
   const s = store(env);
-  const [runs, snapshots, holfuyArchive, metArchive] = await Promise.all([
+  const [runs, snapshots, holfuyArchive, metArchive, backup] = await Promise.all([
     s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
-    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`),
+    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`), s.getState("backup"),
   ]);
   // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
   const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
   if (st) snapshots[holfuy.DATASET] = st;
   const body = buildStatus({ runs, snapshots, now: Date.now(),
     expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
-    archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null } });
+    archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null },
+    // Without the archive (no R2 binding) there is no backup to report on.
+    backup: env.ARCHIVE ? backup ?? null : undefined });
   return Response.json(body, { headers: JSON_HEADERS });
 }
 

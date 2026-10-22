@@ -1,5 +1,5 @@
 // The data service's store and cache (workers/data/src): the cache in front of the datasets (cache.js), the nightly
-// backup and its way back (backup.js), the rebuild of the tables as WITHOUT ROWID, and the measurements kept in memory.
+// backup and its way back (backup.js), and the measurements kept in memory.
 // The stand-ins for Cloudflare are in test/helpers/data-service.mjs. Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -48,6 +48,34 @@ test("cache: a dataset is read from the store once a minute, whatever the query 
   });
   assert.equal(svc.calls.getSnapshot, 1, "one read of the store for 51 requests");
   assert.equal(cacheKey(new Request("https://data.test/v1/forecast.json?a=1")).url, "https://data.test/v1/forecast.json");
+});
+
+test("cache: when the store fails, the last good answer is served as the reserve, marked and not cached", async () => {
+  const svc = service();
+  svc.store.putSnapshot("forecast", '{"dataset":"forecast","fetched":"2026-10-18T15:00:00Z"}');
+  const cache = fakeCache();
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    await withCache(cache, async () => {
+      const waits = [];
+      assert.equal((await worker.fetch(new Request("https://data.test/v1/forecast.json"), svc.env, { waitUntil: (p) => waits.push(p) })).status, 200);
+      await Promise.all(waits);
+      assert.match(cache.entries.get("https://data.test/v1/forecast.json?stale").headers.get("cache-control"), /max-age=43200/, "the reserve is kept twelve hours");
+      cache.entries.delete("https://data.test/v1/forecast.json");
+      const down = { ...svc.env, STORE: { idFromName: (n) => n, get: () => ({ getSnapshot: async () => { throw new Error("Durable Object overloaded"); } }) } };
+      const res = await worker.fetch(new Request("https://data.test/v1/forecast.json"), down, {});
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get("x-stale"), "1");
+      assert.equal(res.headers.get("cache-control"), "no-store");
+      assert.equal(res.headers.get("access-control-allow-origin"), "*");
+      assert.equal((await res.json()).fetched, "2026-10-18T15:00:00Z", "the last good answer, with its own time");
+      cache.entries.clear();
+      assert.equal((await worker.fetch(new Request("https://data.test/v1/forecast.json"), down, {})).status, 503, "without a reserve the failure is a 503");
+    });
+  } finally {
+    console.warn = warn;
+  }
 });
 
 test("cache: «no data yet» and unknown paths are not cached", async () => {
@@ -102,39 +130,6 @@ test("backup: a file for another table or with other columns is refused", () => 
   assert.throws(() => backupRows(JSON.stringify({ ...JSON.parse(body), rows: [["x"]] }), "flight_days"), /feil rad/);
 });
 
-test("rebuild: the tables from before 20.10.2026 become WITHOUT ROWID, with only the measurements not yet archived", () => {
-  const { db, storage } = sqliteStorage();
-  db.exec("CREATE TABLE snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
-  db.exec("CREATE TABLE state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
-  db.exec("CREATE TABLE measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, min REAL, temperature REAL, PRIMARY KEY (source, station, time))");
-  db.exec("CREATE INDEX measurements_source_time ON measurements (source, time)");
-  db.exec("CREATE TABLE forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (site, time))");
-  db.exec("CREATE INDEX forecast_hours_time ON forecast_hours (time)");
-  for (const site of ["heia", "elgen"]) db.exec(`INSERT INTO forecast_hours VALUES ('${site}', '2026-10-01T10:00:00Z', 230, 5, 9, 0, '2026-10-01T10:05:00Z')`);
-  db.exec(`INSERT INTO state VALUES ('holfuy-archive', '{"through":"2026-10-18"}')`);
-  db.exec(`INSERT INTO snapshots VALUES ('stations', '{}', '2026-10-19T12:00:00Z')`);
-  for (const t of ["2026-10-17T12:00:00.000Z", "2026-10-18T23:59:00.000Z", "2026-10-19T00:00:00.000Z", "2026-10-19T12:00:00.000Z"]) {
-    db.exec(`INSERT INTO measurements (source, station, time, dir, speed) VALUES ('holfuy', '490', '${t}', 200, 4)`);
-    db.exec(`INSERT INTO measurements (source, station, time, dir, speed) VALUES ('met', 'SN1', '${t}', 210, 5)`);
-  }
-  const store = new Store({ storage }, {});
-  for (const t of ["snapshots", "state", "measurements", "forecast_hours"]) {
-    assert.match(db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(t).sql, /WITHOUT ROWID/, t);
-  }
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name LIKE '%_old' OR name IN ('measurements_source_time', 'forecast_hours_time')").get().n, 0);
-  assert.deepEqual(store.forecastHoursSince("2026-10-01").map((r) => [r.site, r.speed]), [["elgen", 5], ["heia", 5]], "all the forecast hours are kept");
-  store.putForecastHours([{ site: "heia", time: "2026-10-01T10:00:00Z", dir: 200, speed: 7, gust: 11, rain: 0, fetched: "2026-10-01T10:30:00Z" }]);
-  assert.equal(store.forecastHoursSince("2026-10-01").find((r) => r.site === "heia").speed, 7, "the latest fetch for the hour wins");
-  assert.deepEqual(store.getState("holfuy-archive"), { through: "2026-10-18" });
-  assert.equal(store.getSnapshot("stations"), "{}");
-  // Holfuy is archived through the 18th, so only the 19th is kept; MET has no archive yet, so all of it is.
-  assert.deepEqual(store.measurementsSince("holfuy", "").map((r) => r.time), ["2026-10-19T00:00:00.000Z", "2026-10-19T12:00:00.000Z"]);
-  assert.equal(store.measurementsSince("met", "").length, 4);
-  assert.equal(store.measurementsSince("holfuy", "")[0].dir, 200);
-  // A second start changes nothing.
-  new Store({ storage }, {});
-  assert.equal(store.measurementsSince("met", "").length, 4);
-});
 
 test("the measurements kept in memory answer as SQLite does, also after new ones are stored", () => {
   const { storage } = sqliteStorage();
@@ -151,7 +146,7 @@ test("the measurements kept in memory answer as SQLite does, also after new ones
   assert.equal(cached.find((r) => r.station === "490" && r.time.endsWith("19:59:00.000Z")).speed, 4);
 });
 
-test("after a publish: done when the stations have succeeded after it, an error before that is reported but not final", async () => {
+test("after a publish: done when one of the quick sources has succeeded after it, an error before that is reported but not final", async () => {
   const { smokeVerdict } = await import("../scripts/data-smoke.mjs");
   const since = "2026-10-20T06:00:10Z";
   assert.equal(smokeVerdict(null, since).done, false);
@@ -160,6 +155,9 @@ test("after a publish: done when the stations have succeeded after it, an error 
   assert.deepEqual([cut.done, cut.errors], [false, ["stations: Network connection lost."]]);
   const ok = smokeVerdict({ sources: { stations: { ok: "2026-10-20T06:02:00.000Z", error: "x", errorAt: "2026-10-20T06:01:00.000Z" } } }, since);
   assert.deepEqual([ok.done, ok.ok], [true, true]);
+  const holfuyDown = smokeVerdict({ sources: { stations: { error: "Holfuy svarte 503", errorAt: "2026-10-20T06:02:00.000Z" }, forecast: { ok: "2026-10-20T06:05:00.000Z" } } }, since);
+  assert.deepEqual([holfuyDown.done, holfuyDown.ok, holfuyDown.reason], [true, true, "forecast kjørte 2026-10-20T06:05:00.000Z"], "Holfuy down is not a failed publish when the forecast ran");
+  assert.equal(smokeVerdict({ sources: { backup: { ok: "2026-10-20T06:05:00.000Z" } } }, since).done, false, "only the sources that run every few minutes count");
 });
 
 test("grid: the close grid around the sites and the wide one over its box, on whole steps from the south", async () => {
@@ -260,8 +258,9 @@ test("APRS reserve: the list of devices that must not be tracked is kept a day, 
     await svc.store.noTrack(1000 + 23 * 3600000);
     assert.equal(asked, 1, "within a day the kept list is used");
     globalThis.fetch = async () => new Response("", { status: 503 });
-    assert.deepEqual(await svc.store.noTrack(1000 + 30 * 3600000), ["AB0007"], "the database down: the kept list, however old");
+    assert.deepEqual(await svc.store.noTrack(1000 + 30 * 3600000), ["AB0007"], "the database down: the kept list, up to a week old");
     await assert.rejects(() => svc.store.refreshNoTrack(1000 + 30 * 3600000), /503/, "the daily run reports the failure");
+    await assert.rejects(() => svc.store.noTrack(1000 + 8 * 24 * 3600000), /503/, "a list over a week old is not used: the reserve gives nothing");
   } finally {
     globalThis.fetch = saved;
   }
@@ -278,4 +277,22 @@ test("forecast grid: every hour for the first 60 hours, then only 06, 12 and 18 
   assert.equal(hours[0], "21T09");
   assert.ok(hours.includes("23T20"), "every hour within 60 hours");
   assert.deepEqual(hours.filter((h) => h >= "24T"), ["24T06", "24T12", "24T18", "25T06", "25T12", "25T18"]);
+});
+
+test("a failure in the store gives a JSON 503 with the CORS headers, never Cloudflare's error page", async () => {
+  const env = { STORE: { idFromName: (n) => n, get: () => ({ getSnapshot: async () => { throw new Error("Durable Object overloaded"); }, getState: async () => { throw new Error("nede"); } }) } };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const res = await worker.fetch(new Request("https://data.test/v1/forecast.json"), env, {});
+    assert.equal(res.status, 503);
+    assert.equal(res.headers.get("access-control-allow-origin"), "*");
+    assert.equal(res.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await res.json(), { error: "unavailable" });
+    const report = await worker.fetch(new Request("https://data.test/v1/report", { method: "POST", headers: { origin: "https://flysteder.hpgt.com", "content-type": "application/json" }, body: "{}" }),
+      { ...env, TURNSTILE_SECRET: "x", GITHUB_ISSUES_TOKEN: "y", REPORTS_APP_ID: "", REPORTS_APP_PRIVATE_KEY: "" }, {});
+    assert.equal(report.status, 400, "a report that is wrong is refused before the store is asked");
+  } finally {
+    console.warn = warn;
+  }
 });

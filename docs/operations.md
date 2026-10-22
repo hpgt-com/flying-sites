@@ -164,7 +164,7 @@ the menu and is marked `noindex`. It shows per site:
 - A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
   <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
   Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
-  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day, and 5 from one address (kept
+  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 50 a day, and 3 from one address (kept
   only as a hash with a salt for the day). Turnstile's answer must be for `flysteder.hpgt.com` (or the hosts in
   `REPORT_ORIGINS` when testing).
 - The issue gets the labels for its kind (`LABELS` in `report.js`): what concerns a site `endringsforslag` and
@@ -232,10 +232,10 @@ the menu and is marked `noindex`. It shows per site:
   (`aprs.glidernet.org:14580`, read-only with passcode -1 and an area filter for the same area): the layer listens 8
   seconds, the flying activity 20. The stream is OGN's own backbone, which receivers and apps such as pgpilot send to;
   it needs no receiver of ours. Since the stream has every device, OGN's rules are followed here: the no-tracking flag
-  in each message and `tracked: N` in OGN's device database (`ddb.glidernet.org/download/?j=1`, fetched by the store
+  in each message and `tracked: N` in OGN's device database (`ddb.glidernet.org/download/ddb-cache.csv`, fetched by the store
   every day at 05:14 UTC while OGN is up, source `ognDdb` in `/v1/status.json`, state `ogn-notrack`) leave a device
   out, and no one is named (all are «Ukjent»). The database went down with the live map on 21.10.2026, so the list is
-  fetched ahead and the kept one used however old; without any list the reserve gives nothing. `/v1/live.json` then has `"via": "aprs"`, and the flights run logs `flights: … fra OGNs
+  fetched ahead and the kept one used up to a week old; without any list the reserve gives nothing. `/v1/live.json` then has `"via": "aprs"`, and the flights run logs `flights: … fra OGNs
   APRS-strøm`. It does not help when all of OGN is down, or when a pilot's app could not send.
 - The address is OGN's own live map's and is not documented; if OGN changes it, the reserve above is used, and if that
   fails too the layer shows nothing and the data service logs `live: …`. Receivers near Harstad (October 2026): AVX970 north of Evenes, AVX1058 Hadsel/Sortland,
@@ -418,6 +418,58 @@ set in `src/_data/photoCredit.json`.
 
 MET and Kartverket require no key. MET requires the client to provide contact details (`USER_AGENT` in
 `lib/weather/met.js`).
+
+## Runbook
+
+What to do when something stops, and how the next board takes over. Everything here can be done by one person with
+admin on the repository and the Cloudflare account; nothing needs a developer machine except where `npm` is named.
+
+**A source is down (MET, Holfuy, Frost, Open-Meteo, OGN).** Nothing to do. The data service keeps the last good data,
+the pages show it with its age, and the assessment goes off when the forecast is too old (6 hours). The status
+(`/v1/status.json`) shows the source's last error; the hourly check opens an issue only when the source has failed for a
+day or a dataset is over its limit.
+
+**The schedule has stopped.** GitHub turns the schedule of a public repository off after 60 days without a commit, and
+runs it late when busy. Signs: the monthly airspace PR did not come, or «Data service health» has not run for days
+(Actions → the workflow → the list of runs). Fix: Actions → the workflow → «Enable workflow», then «Run workflow». A
+commit of any kind resets the 60 days. The data service's own schedule runs on Cloudflare and is not affected.
+
+**The data service does not answer, or answers 503.** The pages still work from the built-in forecast. Look at
+Cloudflare → Workers & Pages → data → Observability (the logs name the source and the error) and at Metrics (the
+free plan's daily limits reset at 00:00 UTC; Cloudflare e-mails at 90 %). A bad version: roll back under Deployments
+(or `npx wrangler rollback` in `workers/data`). A lost store comes back by itself, see
+[Data service health](#data-service-health). To publish again from the code: Actions → «Data service» → «Run workflow».
+
+**A publish of the site went wrong.** Actions → «Build and deploy» → an earlier green run → «Re-run all jobs» publishes
+that commit again, with a fresh forecast. For good: `git revert` of the merge on `main` through a PR. Nothing is lost:
+every publish is built from Git.
+
+**A secret or token may have leaked, or has expired.** Roll it where it lives (the table under
+[Accounts and secrets](#accounts-and-secrets)), and nothing else needs to change:
+
+- `CLOUDFLARE_API_TOKEN`: My Profile → API Tokens → Roll, then the environment `cloudflare` in GitHub. Expires
+  18.10.2027; «Data service» then fails with an authentication error.
+- The Worker's secrets (`HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`): new value under
+  Variables and Secrets; the running version picks it up at once. For a GitHub App key, make a new key under the app
+  and delete the old one. For Turnstile, a new widget under Cloudflare → Turnstile gives a new site key
+  (`src/_data/site.js`) and secret.
+- `OPENAIP_API_KEY` and `APP_PRIVATE_KEY`: new value under Settings → Secrets.
+- A GitHub account with admin: change the password, check Settings → Sessions and Applications, and keep two-factor
+  with a security key.
+
+If a token with write access to the repository may have leaked, also read the commits and Actions runs since (Settings →
+Audit log on the organization).
+
+**The domain does not resolve, or shows GitHub's 404.** `flysteder.hpgt.com` is a CNAME to `hpgt-com.github.io` at the
+DNS provider of `hpgt.com`, and the domain is set under Settings → Pages (with «Enforce HTTPS»). GitHub also checks the
+verification record `_github-pages-challenge-hpgt-com` (Organization → Settings → Pages → Verified domains). If the
+record or the Pages setting is gone, put it back; the certificate renews by itself within a day.
+
+**Handing over to a new board.** Give the new person owner on the GitHub organization `hpgt-com` and admin on the
+repository, a member with Administrator on the Cloudflare account «HPGT» (and move the account's owner to a club
+address if it is still a person's), access to the GoatCounter account and to the DNS of `hpgt.com`, and ownership of
+the two GitHub Apps (the organization owns them). Then remove the people who left. The checklist in `SECURITY.md`
+is the list of settings to go through afterwards.
 
 ## Troubleshooting
 

@@ -667,7 +667,7 @@
         '<span class="station-marker__label">' + tag + (hasT ? value(item.temperature) + " °C" : "–") + "</span>";
     }
     // The notch: the whole marker turned by the direction, with the notch at the bottom (where a wind from north blows).
-    var notch = hasW && isNum(w.dir) ? '<span class="station-marker__notch" style="transform: rotate(' + Math.round(w.dir) + 'deg)"></span>' : "";
+    var notch = hasW && isNum(w.dir) ? '<span class="station-marker__notch" data-dir="' + Math.round(w.dir) + '"></span>' : "";
     return notch + '<span class="station-marker__dial">' + (hasW ? Math.round(w.speed) : "–") + "</span>" +
       '<span class="station-marker__label">' + tag + (hasW ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–") + "</span>";
   }
@@ -711,6 +711,12 @@
       return metLayer;
     }
     var mode = readMode(), entries = [], lastNow = Date.now();
+    // The notch's turn set on the element once the marker is on the map, not in the HTML: the page allows no inline
+    // styles (CSP style-src 'self').
+    function turnNotch(marker) {
+      var el = marker.getElement(), notch = el && el.querySelector(".station-marker__notch");
+      if (notch) notch.style.transform = "rotate(" + notch.getAttribute("data-dir") + "deg)";
+    }
     // A station placed at its site's launch (no position of its own) is drawn up and to the right of the point, so it does
     // not cover the launch's own marker.
     function icon(item, now, atLaunch) {
@@ -746,7 +752,7 @@
             mode = m;
             saveMode(m);
             box.querySelectorAll("button").forEach(function (x, k) { x.setAttribute("aria-pressed", String(["wind", "temp"][k] === m)); });
-            entries.forEach(function (e) { e.marker.setIcon(icon(e.item, lastNow, e.atLaunch)); });
+            entries.forEach(function (e) { e.marker.setIcon(icon(e.item, lastNow, e.atLaunch)); turnNotch(e.marker); });
           });
         });
         L.DomEvent.disableClickPropagation(box);
@@ -770,6 +776,7 @@
         // MET's stations under everything else (the launches, the club's stations), so they never cover them.
         var marker = L.marker(at, { icon: icon(item, now, atLaunch), keyboard: true, title: item.name, zIndexOffset: isHolfuy(item) ? 500 : -1000 })
           .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] });
+        marker.on("add", function () { turnNotch(marker); });
         entries.push({ item: item, latlng: L.latLng(at), marker: marker, atLaunch: atLaunch });
       });
       thin();

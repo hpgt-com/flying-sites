@@ -1,7 +1,7 @@
 // Tests for the data service (workers/data): the forecast and the Holfuy stations. Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildForecast, keepSites, pickSites, MAX_AGE_HOURS } from "../workers/data/src/sources/forecast.js";
+import { buildForecast, keepSites, pickSites, MAX_AGE_HOURS, run as forecastRun } from "../workers/data/src/sources/forecast.js";
 import { buildStations, holfuyUrl, parseHolfuy } from "../workers/data/src/sources/holfuy.js";
 import { due } from "../workers/data/src/schedule.js";
 import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../workers/data/src/archive.js";
@@ -16,6 +16,37 @@ test("picks the launches missing from the state first, then those fetched longes
   const state = { sites: { a: { fetched: ago(5) }, b: { fetched: ago(25) }, c: { fetched: ago(15) } } };
   assert.deepEqual(pickSites(sites, state, 2).map((s) => s.id), ["d", "b"]);
   assert.deepEqual(pickSites(sites, state, 6).map((s) => s.id), ["d", "b", "c", "a"]);
+});
+
+test("forecast run: a launch is not asked for again before Expires, and a 304 keeps its rows, counted as fetched now", async () => {
+  let state = null;
+  const snapshots = [];
+  const store = { getState: async () => state, putState: async (k, v) => { state = v; }, putForecastHours: async () => {}, pruneForecastHours: async () => {},
+    forecastHoursSince: async () => [], putSnapshot: async (k, v) => snapshots.push(JSON.parse(v)) };
+  const body = { properties: { meta: { updated_at: "2026-10-18T14:00:00Z" }, timeseries: [{ time: "2026-10-18T15:00:00Z",
+    data: { instant: { details: { wind_from_direction: 200, wind_speed: 5, wind_speed_of_gust: 9 } }, next_1_hours: { details: { precipitation_amount: 0 } } } }] } };
+  const realFetch = globalThis.fetch;
+  const asked = [];
+  globalThis.fetch = async (url, init) => {
+    asked.push(init.headers["if-modified-since"] ?? null);
+    return asked.length === 1
+      ? new Response(JSON.stringify(body), { headers: { expires: "Sun, 18 Oct 2026 15:40:00 GMT", "last-modified": "Sun, 18 Oct 2026 14:05:00 GMT" } })
+      : new Response(null, { status: 304, headers: { expires: "Sun, 18 Oct 2026 16:40:00 GMT" } });
+  };
+  try {
+    const one = [{ id: "a", lat: 68.8, lon: 16.5, altitude: 500 }];
+    await forecastRun(store, one, NOW);
+    assert.deepEqual([state.sites.a.expires, state.sites.a.lastModified, state.sites.a.rows.length], ["2026-10-18T15:40:00.000Z", "2026-10-18T14:05:00.000Z", 1]);
+    await forecastRun(store, one, NOW + 10 * 60000);
+    assert.equal(asked.length, 1, "before Expires MET is not asked");
+    assert.equal(state.sites.a.fetched, new Date(NOW + 10 * 60000).toISOString(), "but the launch counts as fetched now");
+    await forecastRun(store, one, NOW + 30 * 60000);
+    assert.deepEqual(asked, [null, "Sun, 18 Oct 2026 14:05:00 GMT"], "after Expires, with If-Modified-Since");
+    assert.deepEqual([state.sites.a.rows.length, state.sites.a.updated, state.sites.a.expires], [1, "2026-10-18T14:00:00Z", "2026-10-18T16:40:00.000Z"], "a 304 keeps the rows and takes the new Expires");
+    assert.equal(snapshots.at(-1).fetched, new Date(NOW + 30 * 60000).toISOString());
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("a site removed from the site files disappears from the state", () => {
@@ -113,6 +144,14 @@ test("one schedule every minute: the stations every minute, the forecast every f
   assert.deepEqual([0, 1, 2, 3, 4, 5, 10].map((m) => due("forecast", minute(m))), [true, false, false, false, false, true, true]);
   // The heavier sources never share a minute (one invocation has 10 ms of CPU in all).
   for (let m = 0; m < 60; m++) assert.ok(["forecast", "met", "windgram", "verify"].filter((n) => due(n, minute(m))).length <= 1, `minute ${m}`);
+  // A daily source whose minute was missed runs on the next minute once an interval and a minute have passed since it
+  // last ran; the frequent ones just wait for their next minute.
+  const at = (h) => new Date(minute(0) - h * 3600000).toISOString();
+  assert.equal(due("backup", minute(1), at(23.9)), false, "under a day and a minute since the last run: not yet");
+  assert.equal(due("backup", minute(1), at(24.5)), true, "over a day since the last run: caught up");
+  assert.equal(due("ognDdb", minute(1), undefined), false, "never run: waits for its minute");
+  assert.equal(due("grid", minute(1), at(4)), true);
+  assert.equal(due("forecast", minute(1), at(24)), false, "the forecast runs every five minutes anyway");
 });
 
 test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {
@@ -417,11 +456,12 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
 
   const calls = [];
   const realFetch = globalThis.fetch;
+  let tokenAsk = null;
   globalThis.fetch = async (url, init = {}) => {
     calls.push([String(url), init.headers?.authorization ?? ""]);
     if (String(url).includes("siteverify")) return Response.json({ success: true, hostname: "flysteder.hpgt.com" });
     if (String(url).endsWith("/installation")) return Response.json({ id: 99 });
-    if (String(url).endsWith("/app/installations/99/access_tokens")) return Response.json({ token: "inst-token" }, { status: 201 });
+    if (String(url).endsWith("/app/installations/99/access_tokens")) { tokenAsk = JSON.parse(init.body); return Response.json({ token: "inst-token" }, { status: 201 }); }
     return new Response("{}", { status: 201 });
   };
   try {
@@ -430,6 +470,7 @@ test("report: with the GitHub App, a signed JWT gets an installation token that 
     const res = await reportMod.handleReport(req, { TURNSTILE_SECRET: "s", REPORTS_APP_ID: "12345", REPORTS_APP_PRIVATE_KEY: pem }, store, { heia: "Heia" }, NOW);
     assert.equal(res.status, 200);
     assert.deepEqual(calls.find(([u]) => u.endsWith("/repos/hpgt-com/flying-sites/issues")), ["https://api.github.com/repos/hpgt-com/flying-sites/issues", "Bearer inst-token"]);
+    assert.deepEqual(tokenAsk, { repositories: ["flying-sites"], permissions: { issues: "write" } }, "the token is asked for with only this repository and Issues: write");
   } finally {
     globalThis.fetch = realFetch;
   }
@@ -490,6 +531,13 @@ test("live: answered from the cache when fresh, OGN asked otherwise, 503 when OG
     assert.equal(calls, 1, "the second answer came from the cache");
     fail = true;
     assert.equal((await liveMod.handleLive(sites, NOW, null)).status, 503);
+    const empty = new Map();
+    const cache2 = { match: async (k) => empty.get(k.url)?.clone(), put: async (k, r) => { empty.set(k.url, r); } };
+    calls = 0;
+    assert.equal((await liveMod.handleLive(sites, NOW, cache2)).status, 503);
+    assert.equal((await liveMod.handleLive(sites, NOW, cache2)).status, 503);
+    assert.equal(calls, 1, "after a failure the answer is 503 at once for a while, OGN is not asked again");
+    assert.equal(empty.get("https://data.hpgt.workers.dev/v1/live.json?failed").headers.get("cache-control"), `public, max-age=${liveMod.FAIL_SECONDS}`);
   } finally {
     globalThis.fetch = realFetch;
     console.warn = warn;
@@ -717,6 +765,12 @@ test("status: when each source ran and succeeded, and which datasets are too old
   const later = health.buildStatus({ runs: health.recordRuns(runs, { gridWide: "Open-Meteo svarte 502" }, NOW), snapshots: {}, expected: {}, archive: {}, now: NOW });
   assert.equal(later.datasets["grid-wide"].ok, false, "once it has run, a missing dataset counts");
   assert.equal(s.archive.holfuy, "2026-10-17");
+  assert.equal(s.backup, null, "no archive: nothing to report on");
+  const withBackup = (backup) => health.buildStatus({ runs, snapshots, expected: {}, archive: {}, backup, now: NOW }).backup;
+  assert.deepEqual(withBackup({ day: "2026-10-17", rows: {} }), { day: "2026-10-17", daysAgo: 1, maxDays: 2, ok: true });
+  assert.deepEqual(withBackup({ day: "2026-10-15", rows: {} }), { day: "2026-10-15", daysAgo: 3, maxDays: 2, ok: false }, "three days without a backup is a problem");
+  assert.deepEqual(withBackup(null), { day: null, daysAgo: null, maxDays: 2, ok: false }, "the archive set up but never backed up");
+  assert.equal(health.buildStatus({ runs, snapshots: { forecast: snapshots.forecast }, expected: {}, archive: {}, backup: { day: "2026-10-15" }, now: NOW }).ok, false, "a late backup makes the status not ok");
 });
 
 const aprsMod = await import("../workers/data/src/aprs.js");
@@ -791,12 +845,18 @@ test("aprs: the reserve when OGN's web map does not answer, only with the list o
   }
 });
 
-test("aprs: the devices that must not be tracked, from OGN's device database, over HTTP when HTTPS fails, a broken answer refused", async () => {
-  const devices = Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" }));
+test("aprs: the devices that must not be tracked, from OGN's device database as CSV (or JSON), a broken answer refused", async () => {
+  const csv = "#DEVICE_TYPE,DEVICE_ID,AIRCRAFT_MODEL,REGISTRATION,CN,TRACKED,IDENTIFIED\n"
+    + Array.from({ length: 1200 }, (_, i) => `'F','${i.toString(16).padStart(6, "0")}','${i === 5 ? "Ventus 2cxM, 18m" : i === 6 ? "L'Hirondelle" : "Unknown"}','D-${i}','','${i % 100 ? "Y" : "N"}','Y'`).join("\r\n") + "\r\n";
   const asked = [];
-  const ids = await aprsMod.fetchNoTrack(async (url) => { asked.push(url.slice(0, 5)); return url.startsWith("https") ? new Response("", { status: 502 }) : Response.json({ devices }); });
-  assert.deepEqual(asked, ["https", "http:"]);
+  const ids = await aprsMod.fetchNoTrack(async (url) => { asked.push(url); return new Response(csv); });
+  assert.deepEqual(asked, [aprsMod.DDB_URL], "over HTTPS only");
   assert.equal(ids.length, 12);
   assert.equal(ids[1], "000064");
+  assert.deepEqual(aprsMod.parseDdb(csv).slice(5, 7), [{ id: "000005", tracked: "Y" }, { id: "000006", tracked: "Y" }], "a comma or a quote in the model does not matter");
+  const devices = Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" }));
+  assert.equal((await aprsMod.fetchNoTrack(async () => Response.json({ devices }))).length, 12, "the old JSON form is still read");
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => Response.json({ devices: devices.slice(0, 10) })), /uventet svar/);
+  await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("<html>down</html>")), /uventet svar/);
+  await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("", { status: 502 })), /svarte 502/);
 });

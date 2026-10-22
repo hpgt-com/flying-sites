@@ -6,7 +6,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { FIELDS } from "./measurements.js";
 import { mergeTrails } from "./live.js";
-import { fetchNoTrack, DDB_MAX_AGE_HOURS } from "./aprs.js";
+import { fetchNoTrack, DDB_MAX_AGE_HOURS, DDB_MAX_KEEP_HOURS } from "./aprs.js";
 import { INDEXES } from "./indexes.js";
 import { fetchGrid, GRIDS } from "./sources/grid.js";
 import { TABLES, JSON_META, backupPath, latestPath, expiredDay, backupBody, backupRows, restoreSql } from "./backup.js";
@@ -28,8 +28,6 @@ export class Store extends DurableObject {
     this.sql = ctx.storage.sql;
     // snapshots, state, forecast_hours and measurements are WITHOUT ROWID tables, keyed so no query needs another index: a
     // row written is then one row counted, not one for the table and one per index (the free plan allows 100 000 a day).
-    // Before 20.10.2026 they were ordinary tables: measurements was keyed (source, station, time) with an index on
-    // (source, time), and forecast_hours (site, time) with one on time. Rebuilt once here (rebuild).
     // All in one transaction, so a start that fails halfway leaves the tables as they were.
     ctx.storage.transactionSync(() => this.createTables());
     // Forecast against measured, per site and finished hour (sources/verify.js), kept for a year.
@@ -38,61 +36,23 @@ export class Store extends DurableObject {
     // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, flights INTEGER NOT NULL, pilots INTEGER NOT NULL,
       minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
-    // The indexes measurements and forecast_hours had before the rebuild go with the old tables; dropped here in case one
-    // is left.
-    this.sql.exec("DROP INDEX IF EXISTS measurements_source_time");
-    this.sql.exec("DROP INDEX IF EXISTS forecast_hours_time");
     for (const index of INDEXES) this.sql.exec(index);
   }
 
-  // snapshots, state, forecast_hours and measurements, rebuilt as WITHOUT ROWID if they are ordinary tables from before
-  // (see above).
+  // The tables, made when missing. A field added to measurements.js gets its column here; the rows already stored get
+  // null in it.
   createTables() {
-    const rebuilt = {};
-    for (const [table, create] of [
-      ["snapshots", "CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL) WITHOUT ROWID"],
-      ["state", "CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID"],
-      // The forecast for each hour as it stood during that hour (sources/forecast.js), keyed by the time first: read and
-      // pruned by time.
-      ["forecast_hours", `CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL,
-        rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (time, site)) WITHOUT ROWID`],
-      ["measurements", `CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
-        ${COLUMNS.map((c) => `${c} REAL`).join(", ")}, extra TEXT, PRIMARY KEY (source, time, station)) WITHOUT ROWID`],
-    ]) {
-      const old = this.sql.exec("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", table).toArray()[0]?.sql;
-      if (old && !/WITHOUT ROWID/i.test(old)) {
-        this.sql.exec(`ALTER TABLE ${table} RENAME TO ${table}_old`);
-        rebuilt[table] = true;
-      }
-      this.sql.exec(create);
-    }
-    // A field added to measurements.js gets its column here; the rows already stored get null in it.
+    this.sql.exec("CREATE TABLE IF NOT EXISTS snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL) WITHOUT ROWID");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID");
+    // The forecast for each hour as it stood during that hour (sources/forecast.js), keyed by the time first: read and
+    // pruned by time.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL,
+      rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (time, site)) WITHOUT ROWID`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
+      ${COLUMNS.map((c) => `${c} REAL`).join(", ")}, extra TEXT, PRIMARY KEY (source, time, station)) WITHOUT ROWID`);
     const have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
     for (const c of COLUMNS) if (!have.has(c)) this.sql.exec(`ALTER TABLE measurements ADD COLUMN ${c} REAL`);
     if (!have.has("extra")) this.sql.exec("ALTER TABLE measurements ADD COLUMN extra TEXT");
-    this.rebuild(rebuilt);
-  }
-
-  // The rows of the tables rebuilt as WITHOUT ROWID (constructor) copied over: all of them, except the measurements, of
-  // which only those not yet in the archive (after the day archived through, per source). The rest are in R2 already and
-  // would be deleted within the days kept, and copying them all would use a good part of a day's rows written.
-  rebuild(rebuilt) {
-    for (const table of ["snapshots", "state", "forecast_hours"]) {
-      if (!rebuilt[table]) continue;
-      this.sql.exec(`INSERT OR IGNORE INTO ${table} SELECT * FROM ${table}_old`);
-      this.sql.exec(`DROP TABLE ${table}_old`);
-    }
-    if (rebuilt.measurements) {
-      // The columns both tables have: one added to measurements.js since the old table was made is null in the copy.
-      const old = new Set(this.sql.exec("PRAGMA table_info(measurements_old)").toArray().map((c) => c.name));
-      const cols = ROW_KEYS.filter((c) => old.has(c)).join(", ");
-      for (const { source } of this.sql.exec("SELECT DISTINCT source FROM measurements_old").toArray()) {
-        const through = this.getState(`${source}-archive`)?.through;
-        const from = through ? new Date(Date.parse(`${through}T00:00:00Z`) + 86400000).toISOString() : "";
-        this.sql.exec(`INSERT OR IGNORE INTO measurements (${cols}) SELECT ${cols} FROM measurements_old WHERE source = ? AND time >= ?`, source, from);
-      }
-      this.sql.exec("DROP TABLE measurements_old");
-    }
   }
 
   // The recent track of each aircraft for «Piloter i lufta» (live.js mergeTrails), in memory only: lost when the object
@@ -134,7 +94,7 @@ export class Store extends DurableObject {
   // «Meld fra» (report.js): the day's random salt for hashing the senders' addresses, made on first use. The salts and
   // counts of earlier days are deleted, so no address hash outlives its day.
   reportSalt(day) {
-    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?)", `reports-${day}`, `report-salt-${day}`);
+    this.pruneReports(day);
     let salt = this.getState(`report-salt-${day}`);
     if (!salt) {
       salt = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -143,12 +103,17 @@ export class Store extends DurableObject {
     return salt;
   }
 
+  // Deletes the salts and counts (with the address hashes) of every day but `day`. Called with each report, and once a
+  // day on the schedule (index.js), so no hash outlives its day by more than the time to the next run.
+  pruneReports(day) {
+    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?)", `reports-${day}`, `report-salt-${day}`);
+  }
+
   // Counts one report for the day and the sender, if both are under their limits: "ok", "limit" or "ip-limit". One
   // synchronous method in the Durable Object, so the read and the write cannot be split by another request.
   reserveReport(day, who, dailyLimit, perIpLimit) {
     const key = `reports-${day}`;
     const c = this.getState(key) ?? { n: 0, ips: {} };
-    if (typeof c === "number") return c >= dailyLimit ? "limit" : (this.putState(key, { n: c + 1, ips: who ? { [who]: 1 } : {} }), "ok");
     if (c.n >= dailyLimit) return "limit";
     if (who && (c.ips[who] ?? 0) >= perIpLimit) return "ip-limit";
     c.n += 1;
@@ -300,8 +265,8 @@ export class Store extends DurableObject {
   // The devices that must not be tracked, from OGN's device database (aprs.js fetchNoTrack), for the APRS reserve: fetched
   // here, where parsing the few MB may take the CPU it needs, once a day on the schedule (refreshNoTrack, so the list is
   // there before OGN goes down, as the database may go down with it) and kept in the state. noTrack: the kept list, or
-  // fetched now when none is kept or it is over DDB_MAX_AGE_HOURS old and the database answers; without any list it
-  // throws, and the reserve gives nothing.
+  // fetched now when none is kept or it is over DDB_MAX_AGE_HOURS old and the database answers; when it does not, the
+  // kept list is used up to DDB_MAX_KEEP_HOURS old. Without a list it throws, and the reserve gives nothing.
   async refreshNoTrack(now) {
     const ids = await fetchNoTrack();
     this.putState("ogn-notrack", { fetched: now, ids });
@@ -314,7 +279,7 @@ export class Store extends DurableObject {
       await this.refreshNoTrack(now);
       return this.getState("ogn-notrack").ids;
     } catch (err) {
-      if (kept) return kept.ids;
+      if (kept && now - kept.fetched < DDB_MAX_KEEP_HOURS * 3600000) return kept.ids;
       throw err;
     }
   }

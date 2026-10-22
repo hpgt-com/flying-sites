@@ -125,9 +125,36 @@
     map.layersControl.addOverlay(layer, FS.layerLabel(map, "live", text("live.layer")));
     var markers = {}, trails = {}, timer = null, on = false, legend = legendControl(L);
 
+    // What the layer says when the pilots cannot be fetched (the data service down, or no network): a box with «Prøv
+    // igjen», like the radar's and the airspace's (common.js), so an empty map is never mistaken for an empty sky.
+    var statusEl = null;
+    var Status = L.Control.extend({
+      options: { position: "topright" },
+      onAdd: function () {
+        statusEl = make("div", "airspace-status live-status");
+        statusEl.setAttribute("role", "status");
+        statusEl.hidden = true;
+        L.DomEvent.disableClickPropagation(statusEl);
+        statusEl.addEventListener("click", function (ev) { if (ev.target.closest("[data-retry]")) load(); });
+        return statusEl;
+      },
+    });
+    function setStatus(failed) {
+      if (!statusEl) return;
+      statusEl.hidden = !failed;
+      statusEl.classList.toggle("airspace-status--error", !!failed);
+      statusEl.textContent = "";
+      if (!failed) return;
+      statusEl.appendChild(make("span", null, text("live.error")));
+      var b = make("button", null, text("live.retry"));
+      b.type = "button";
+      b.setAttribute("data-retry", "");
+      statusEl.appendChild(b);
+    }
+
     function icon(item) {
       var shape = isNum(item.track)
-        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + WING + '</svg>'
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(' + Math.round(item.track) + ' 12 12)">' + WING + '</g></svg>'
         : '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
       return L.divIcon({ className: "live-marker",
         html: '<span class="live-marker__wing">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
@@ -162,15 +189,19 @@
       Object.keys(markers).forEach(function (id) { if (!seen[id]) { layer.removeLayer(markers[id]); delete markers[id]; } });
       Object.keys(trails).forEach(function (id) { if (!seen[id]) { layer.removeLayer(trails[id]); delete trails[id]; } });
     }
+    var status = new Status();
     function load() {
       if (!on || document.hidden || typeof fetch !== "function") return;
       fetch(url, { credentials: "omit" })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) { if (on && isLiveData(d)) draw(d); })
-        .catch(function () {});
+        .then(function (d) {
+          if (!on) return;
+          if (isLiveData(d)) { draw(d); setStatus(false); } else setStatus(true);
+        })
+        .catch(function () { if (on) setStatus(true); });
     }
-    function start() { if (on) return; on = true; legend.addTo(map); load(); timer = setInterval(load, POLL_MS); }
-    function stop() { on = false; legend.remove(); clearInterval(timer); timer = null; }
+    function start() { if (on) return; on = true; legend.addTo(map); status.addTo(map); load(); timer = setInterval(load, POLL_MS); }
+    function stop() { on = false; legend.remove(); status.remove(); statusEl = null; clearInterval(timer); timer = null; }
     map.on("overlayadd", function (ev) { if (ev.layer === layer) { start(); FS.track("map-layer/live"); } });
     map.on("overlayremove", function (ev) { if (ev.layer === layer) stop(); });
     document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
