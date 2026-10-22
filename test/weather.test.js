@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { metRows, metUpdated, mergeSites } from "../lib/weather/met.js";
+import { metRows, metUpdated, mergeSites, fetchSite } from "../lib/weather/met.js";
 import { loadWeather, readWeather, writeWeather } from "../lib/weather/index.js";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "weather-"));
@@ -77,4 +77,29 @@ test("FORECAST_OFFLINE gives no weather, and a null file is read as null", async
   writeWeather("windgram", null, dir);
   assert.equal(readWeather("windgram", dir), null);
   assert.equal(readWeather("missing", dir), undefined);
+});
+
+test("MET: not asked again before Expires, If-Modified-Since sent after, and a 304 keeps the rows", async () => {
+  const launch = { lat: 68.8, lon: 16.5 };
+  const now = Date.parse("2026-10-18T15:00:00Z");
+  const body = { properties: { meta: { updated_at: "2026-10-18T14:00:00Z" }, timeseries: [hour("2026-10-18T15:00:00Z", 200, 5, 9, 0)] } };
+  const calls = [];
+  const ok = async (url, init) => { calls.push(init.headers); return new Response(JSON.stringify(body), { headers: { expires: "Sun, 18 Oct 2026 15:30:00 GMT", "last-modified": "Sun, 18 Oct 2026 14:05:00 GMT" } }); };
+  const r = await fetchSite(launch, 500, { now, fetchFn: ok });
+  assert.equal(r.rows.length, 1);
+  assert.equal(r.updated, "2026-10-18T14:00:00Z");
+  assert.equal(r.expires, "2026-10-18T15:30:00.000Z");
+  assert.equal(r.lastModified, "2026-10-18T14:05:00.000Z");
+  assert.equal(calls[0]["if-modified-since"], undefined, "nothing to send the first time");
+  assert.match(calls[0]["user-agent"], /hpgt-flysteder/);
+  const skipped = await fetchSite(launch, 500, { now: now + 10 * 60000, expires: r.expires, lastModified: r.lastModified, fetchFn: ok });
+  assert.deepEqual(skipped, { notModified: true, expires: r.expires, lastModified: r.lastModified });
+  assert.equal(calls.length, 1, "no request before Expires");
+  const unchanged = async (url, init) => { calls.push(init.headers); return new Response(null, { status: 304, headers: { expires: "Sun, 18 Oct 2026 16:30:00 GMT" } }); };
+  const nm = await fetchSite(launch, 500, { now: now + 40 * 60000, expires: r.expires, lastModified: r.lastModified, fetchFn: unchanged });
+  assert.equal(calls[1]["if-modified-since"], "Sun, 18 Oct 2026 14:05:00 GMT");
+  assert.deepEqual(nm, { notModified: true, expires: "2026-10-18T16:30:00.000Z", lastModified: r.lastModified });
+  const noHeaders = await fetchSite(launch, 500, { now, fetchFn: async () => new Response(JSON.stringify(body)) });
+  assert.deepEqual([noHeaders.expires, noHeaders.lastModified], [null, null], "without the headers, nothing is kept");
+  await assert.rejects(() => fetchSite(launch, 500, { now, fetchFn: async () => new Response(null, { status: 304 }) }), /MET svarte 304/, "a 304 without If-Modified-Since sent is an error");
 });
