@@ -65,9 +65,11 @@ export default {
   async scheduled(controller, env, ctx) {
     const s = store(env);
     const now = controller.scheduledTime;
-    // When each source last ran, for the ones that are caught up after a missed minute (schedule.js CATCH_UP).
+    // When each source last ran, and whether that run failed, for the ones that are caught up after a missed minute
+    // or retried after a failure (schedule.js CATCH_UP).
     const last = (await s.getState("health")) ?? {};
-    const isDue = (name) => due(name, now, last[name]?.tried);
+    const failed = (r) => Boolean(r?.errorAt && (!r.ok || r.errorAt > r.ok));
+    const isDue = (name) => due(name, now, last[name]?.tried, failed(last[name]));
     // Each run timed, so the status shows how long each source takes (health.js recordRuns): a source that fails after
     // twenty seconds has timed out, one that succeeds in eight is slow, and a change over the days is visible.
     const runs = {};
