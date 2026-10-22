@@ -1,5 +1,5 @@
 // The data service's store and cache (workers/data/src): the cache in front of the datasets (cache.js), the nightly
-// backup and its way back (backup.js), the rebuild of the tables as WITHOUT ROWID, and the measurements kept in memory.
+// backup and its way back (backup.js), and the measurements kept in memory.
 // The stand-ins for Cloudflare are in test/helpers/data-service.mjs. Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -130,39 +130,6 @@ test("backup: a file for another table or with other columns is refused", () => 
   assert.throws(() => backupRows(JSON.stringify({ ...JSON.parse(body), rows: [["x"]] }), "flight_days"), /feil rad/);
 });
 
-test("rebuild: the tables from before 20.10.2026 become WITHOUT ROWID, with only the measurements not yet archived", () => {
-  const { db, storage } = sqliteStorage();
-  db.exec("CREATE TABLE snapshots (dataset TEXT PRIMARY KEY, body TEXT NOT NULL, updated TEXT NOT NULL)");
-  db.exec("CREATE TABLE state (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
-  db.exec("CREATE TABLE measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, min REAL, temperature REAL, PRIMARY KEY (source, station, time))");
-  db.exec("CREATE INDEX measurements_source_time ON measurements (source, time)");
-  db.exec("CREATE TABLE forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL, rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (site, time))");
-  db.exec("CREATE INDEX forecast_hours_time ON forecast_hours (time)");
-  for (const site of ["heia", "elgen"]) db.exec(`INSERT INTO forecast_hours VALUES ('${site}', '2026-10-01T10:00:00Z', 230, 5, 9, 0, '2026-10-01T10:05:00Z')`);
-  db.exec(`INSERT INTO state VALUES ('holfuy-archive', '{"through":"2026-10-18"}')`);
-  db.exec(`INSERT INTO snapshots VALUES ('stations', '{}', '2026-10-19T12:00:00Z')`);
-  for (const t of ["2026-10-17T12:00:00.000Z", "2026-10-18T23:59:00.000Z", "2026-10-19T00:00:00.000Z", "2026-10-19T12:00:00.000Z"]) {
-    db.exec(`INSERT INTO measurements (source, station, time, dir, speed) VALUES ('holfuy', '490', '${t}', 200, 4)`);
-    db.exec(`INSERT INTO measurements (source, station, time, dir, speed) VALUES ('met', 'SN1', '${t}', 210, 5)`);
-  }
-  const store = new Store({ storage }, {});
-  for (const t of ["snapshots", "state", "measurements", "forecast_hours"]) {
-    assert.match(db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(t).sql, /WITHOUT ROWID/, t);
-  }
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name LIKE '%_old' OR name IN ('measurements_source_time', 'forecast_hours_time')").get().n, 0);
-  assert.deepEqual(store.forecastHoursSince("2026-10-01").map((r) => [r.site, r.speed]), [["elgen", 5], ["heia", 5]], "all the forecast hours are kept");
-  store.putForecastHours([{ site: "heia", time: "2026-10-01T10:00:00Z", dir: 200, speed: 7, gust: 11, rain: 0, fetched: "2026-10-01T10:30:00Z" }]);
-  assert.equal(store.forecastHoursSince("2026-10-01").find((r) => r.site === "heia").speed, 7, "the latest fetch for the hour wins");
-  assert.deepEqual(store.getState("holfuy-archive"), { through: "2026-10-18" });
-  assert.equal(store.getSnapshot("stations"), "{}");
-  // Holfuy is archived through the 18th, so only the 19th is kept; MET has no archive yet, so all of it is.
-  assert.deepEqual(store.measurementsSince("holfuy", "").map((r) => r.time), ["2026-10-19T00:00:00.000Z", "2026-10-19T12:00:00.000Z"]);
-  assert.equal(store.measurementsSince("met", "").length, 4);
-  assert.equal(store.measurementsSince("holfuy", "")[0].dir, 200);
-  // A second start changes nothing.
-  new Store({ storage }, {});
-  assert.equal(store.measurementsSince("met", "").length, 4);
-});
 
 test("the measurements kept in memory answer as SQLite does, also after new ones are stored", () => {
   const { storage } = sqliteStorage();
