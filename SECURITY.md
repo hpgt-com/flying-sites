@@ -127,8 +127,8 @@ GitHub in autumn 2026.
   Target = Include default branch:
   - Restrict deletions and Block force pushes.
   - Require a pull request before merging, Required approvals = 0 as long as one person merges alone.
-  - Require status checks to pass: `build`, `dependency-review`, `workflow-security` and `accessibility`, with source
-    GitHub Actions.
+  - Require status checks to pass: `build`, `dependency-review`, `workflow-security`, `accessibility` and `worker`
+    (the data service's dry run), with source GitHub Actions.
     «Require branches to be up to date» off. A check can only be selected once it has run recently.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
     (once CodeQL has run on `main`).
