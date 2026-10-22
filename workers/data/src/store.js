@@ -134,13 +134,19 @@ export class Store extends DurableObject {
   // «Meld fra» (report.js): the day's random salt for hashing the senders' addresses, made on first use. The salts and
   // counts of earlier days are deleted, so no address hash outlives its day.
   reportSalt(day) {
-    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?)", `reports-${day}`, `report-salt-${day}`);
+    this.pruneReports(day);
     let salt = this.getState(`report-salt-${day}`);
     if (!salt) {
       salt = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
       this.putState(`report-salt-${day}`, salt);
     }
     return salt;
+  }
+
+  // Deletes the salts and counts (with the address hashes) of every day but `day`. Called with each report, and once a
+  // day on the schedule (index.js), so no hash outlives its day by more than the time to the next run.
+  pruneReports(day) {
+    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?)", `reports-${day}`, `report-salt-${day}`);
   }
 
   // Counts one report for the day and the sender, if both are under their limits: "ok", "limit" or "ip-limit". One

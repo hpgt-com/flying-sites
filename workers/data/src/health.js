@@ -23,12 +23,16 @@ export function recordRuns(prev, results, now) {
   return out;
 }
 
+// Days the nightly backup (store.js backup) may be behind before it counts as a problem: one missed run is not an alarm.
+export const BACKUP_MAX_DAYS = 2;
+
 // The status. snapshots: { dataset: { updated, body } } as stored; expected: { forecast: [ids], windgram: [ids] }, the
-// launches each should have; archive: { source: last day archived }.
+// launches each should have; archive: { source: last day archived }; backup: { day, rows } from the last nightly backup,
+// or null when none has been made (ok then only while the archive is not set up, env.ARCHIVE missing).
 // The source that writes a dataset, where its name differs (index.js scheduled).
 const SOURCE_OF = { verification: "verify", "grid-wide": "gridWide" };
 
-export function buildStatus({ runs, snapshots, expected, archive, now }) {
+export function buildStatus({ runs, snapshots, expected, archive, backup, now }) {
   const datasets = {};
   let ok = true;
   for (const [name, max] of Object.entries(MAX_AGE)) {
@@ -46,5 +50,9 @@ export function buildStatus({ runs, snapshots, expected, archive, now }) {
     if (!d.ok) ok = false;
     datasets[name] = d;
   }
-  return { dataset: "status", fetched: new Date(now).toISOString(), ok, datasets, sources: runs ?? {}, archive };
+  const today = new Date(now).toISOString().slice(0, 10);
+  const backupDays = backup?.day ? Math.round((Date.parse(today) - Date.parse(backup.day)) / 86400000) : null;
+  const b = backup === undefined ? null : { day: backup?.day ?? null, daysAgo: backupDays, maxDays: BACKUP_MAX_DAYS, ok: backupDays !== null && backupDays <= BACKUP_MAX_DAYS };
+  if (b && !b.ok) ok = false;
+  return { dataset: "status", fetched: new Date(now).toISOString(), ok, datasets, sources: runs ?? {}, archive, backup: b };
 }
