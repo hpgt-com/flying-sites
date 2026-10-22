@@ -1197,9 +1197,17 @@
     // Each row links to the station's card on the weather page (the link below the list gives its address).
     var more = stationsEl.querySelector(".stations__more");
     var weatherUrl = more ? more.getAttribute("href") : "";
+    var lastMeasured = null;
     ST.addMapLayer(map, stationsEl.getAttribute("data-url"), function (data, now) {
       stationData = data;
-      update();
+      // The stations answer every minute, and update() draws all the markers, rows and clusters again, which is a lot on
+      // a phone. The measurements enter the assessment only at «Nå» (assessAll), so the page is drawn again only then,
+      // and only when a measurement that counts has changed (or gone old).
+      var measured = windSlot === "0" ? JSON.stringify(data.items.filter(function (i) { return i.site; }).map(function (i) {
+        var m = ST.measurement(i, now);
+        return [i.site, m ? m.wind : null, m ? m.steady : null];
+      })) : null;
+      if (measured !== lastMeasured) { lastMeasured = measured; update(); }
       // The club's stations as rows, in their own order (Heia first); MET's as a small folded table under them.
       listEl2.replaceChildren.apply(listEl2, ST.groups(data.items).club.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item), true); }));
       var oldMet = stationsEl.querySelector(".met-stations"), met = ST.metTable(data.items, now, oldMet && oldMet.open);
