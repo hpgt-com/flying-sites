@@ -4,12 +4,11 @@
 <meta charset="utf-8">
 {#- Security. GitHub Pages does not let us set HTTP headers, so the policy is a meta tag (frame-ancestors
     does not work then). Scripts only from the site itself. Images from the map tiles (Kartverket, OpenTopoMap,
-    EOX, thermal.kk7.ch) and the Yr meteogram. Styles allow inline only for Turnstile's widget («Meld fra»):
-    our own code sets no style attributes (Leaflet and the markers set style through the DOM, which the policy
-    allows), so if the widget is checked to work with style-src 'self' alone, 'unsafe-inline' can go.
-    A new external source (map layer, image, script) must be added here, or it is blocked.
+    EOX, thermal.kk7.ch) and the Yr meteogram. No inline styles: our own code sets none (Leaflet and the markers set
+    style through the DOM, which the policy allows), and Turnstile's widget («Meld fra») was checked to work without
+    them on 22.10.2026. A new external source (map layer, image, script) must be added here, or it is blocked.
     The web app manifest and the service worker (src/sw.11ty.js) come only from the site itself. -#}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com https://data.hpgt.workers.dev; manifest-src 'self'; worker-src 'self'; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com https://data.hpgt.workers.dev; manifest-src 'self'; worker-src 'self'; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {#- Site pages: mobile browsers otherwise turn «Sollifjellet 567 moh» into a map link (taking it for an address).
