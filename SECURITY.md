@@ -26,7 +26,7 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
 - «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
   `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000
-  characters, and makes at most 20 issues a day and 5 from one address. Turnstile's answer must be for
+  characters, and makes at most 50 issues a day and 3 from one address. Turnstile's answer must be for
   `flysteder.hpgt.com`, the body is read only as JSON up to 8 KB, and the day's count and the per-address count are
   reserved in one step in the Durable Object (so two reports at the same time cannot pass the limit), and given back
   when GitHub fails. The address is kept only as a hash with a salt for the day, deleted with the count the next day.

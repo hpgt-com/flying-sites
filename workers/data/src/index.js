@@ -74,7 +74,13 @@ export default {
     if (due("flights", now)) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
     if (due("grid", now)) runs.grid = grid.run(s, "grid", SITES, now);
     if (due("gridWide", now)) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
-    if (due("backup", now)) runs.backup = s.backup(new Date(now).toISOString().slice(0, 10));
+    if (due("backup", now)) {
+      const day = new Date(now).toISOString().slice(0, 10);
+      runs.backup = s.backup(day);
+      // The salts and address hashes of «Meld fra» from earlier days (report.js): deleted with the day, not only when
+      // the next report comes.
+      ctx.waitUntil(s.pruneReports(day));
+    }
     if (due("ognDdb", now)) runs.ognDdb = s.refreshNoTrack(now);
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
@@ -121,16 +127,18 @@ const JSON_HEADERS = { ...HEADERS, "content-type": "application/json; charset=ut
 // How the sources and datasets are doing (health.js).
 async function status(env) {
   const s = store(env);
-  const [runs, snapshots, holfuyArchive, metArchive] = await Promise.all([
+  const [runs, snapshots, holfuyArchive, metArchive, backup] = await Promise.all([
     s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
-    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`),
+    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`), s.getState("backup"),
   ]);
   // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
   const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
   if (st) snapshots[holfuy.DATASET] = st;
   const body = buildStatus({ runs, snapshots, now: Date.now(),
     expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
-    archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null } });
+    archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null },
+    // Without the archive (no R2 binding) there is no backup to report on.
+    backup: env.ARCHIVE ? backup ?? null : undefined });
   return Response.json(body, { headers: JSON_HEADERS });
 }
 

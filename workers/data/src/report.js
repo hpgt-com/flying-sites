@@ -18,8 +18,9 @@ export const GENERAL_KINDS = ["newsite", "bug", "idea", "other"];
 export const MAX_MESSAGE = 1000;
 export const MIN_MESSAGE = 10;
 export const MAX_NAME = 80;
-export const DAILY_LIMIT = 20;
-export const PER_IP_LIMIT = 5;
+// 50 a day: enough for a busy evening after a club meeting, and few enough that a flood is bounded. 3 from one address.
+export const DAILY_LIMIT = 50;
+export const PER_IP_LIMIT = 3;
 // The largest request body read (the form's fields and the Turnstile token are far below it).
 export const MAX_BODY = 8192;
 export const ORIGINS = ["https://flysteder.hpgt.com"];
@@ -84,8 +85,13 @@ async function turnstileOk(env, token, ip) {
   try {
     const r = await fetch(env.TURNSTILE_URL || "https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form, signal: AbortSignal.timeout(10000) });
     const d = r.ok ? await r.json() : null;
-    return !!(d && d.success && reportHosts(env).includes(d.hostname));
-  } catch {
+    const ok = !!(d && d.success && reportHosts(env).includes(d.hostname));
+    // Why a token was refused (Turnstile's error codes, nothing about the sender), so a wrong secret or hostname is seen
+    // in the logs and not only as the form's «check failed».
+    if (!ok) console.warn(`turnstile: ${!r.ok ? `svarte ${r.status}` : d?.success ? `hostname ${d.hostname}` : (d?.["error-codes"] ?? []).join(",") || "avvist"}`);
+    return ok;
+  } catch (err) {
+    console.warn(`turnstile: ${err.message}`);
     return false;
   }
 }
