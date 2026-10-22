@@ -162,6 +162,39 @@ const scenarios = {
     return [...problems, ...errors];
   },
 
+  async "Forsiden: kartet og filtrene er som før når man kommer tilbake fra en stedsside"(browser, origin) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await answer(context, origin);
+    const page = await context.newPage();
+    const errors = [];
+    watchErrors(page, errors);
+    const problems = [];
+    // The zoom the map has, as home.js keeps it for the session after every move (the tiles themselves are not fetched here).
+    const savedZoom = () => page.evaluate(() => { try { return JSON.parse(sessionStorage.getItem("fs-home-view") || "null")?.zoom ?? null; } catch { return null; } });
+    await page.goto(`${origin}/#direction=S`, { waitUntil: "load" });
+    await page.locator(".station-marker").first().waitFor({ state: "attached", timeout: 15000 });
+    await page.waitForTimeout(500);
+    const start = await savedZoom();
+    await zoom(page, 1);
+    await zoom(page, 1);
+    await page.waitForTimeout(800);
+    const before = await savedZoom();
+    if (!(before > start)) problems.push(`zoomet ikke inn (${start} → ${before})`);
+    // To a site page by the row's link, and back with «‹ Alle flysteder».
+    const row = page.locator("#results-list li:not([hidden])").first();
+    await row.locator("button.results__item").click();
+    await row.locator("a.results__open").evaluate((a) => a.click());
+    await page.locator(".hero__back").waitFor({ timeout: 10000 });
+    await page.locator(".hero__back").click();
+    await page.locator(".station-marker").first().waitFor({ state: "attached", timeout: 15000 });
+    await page.waitForTimeout(800);
+    const after = await savedZoom();
+    if (after !== before) problems.push(`kartet kom tilbake på zoom ${after}, ikke ${before}`);
+    if (!/direction=S/.test(page.url())) problems.push(`filteret er borte etter tilbake (${page.url()})`);
+    await context.close();
+    return [...problems, ...errors];
+  },
+
   async "«Piloter i lufta»: pilotene og forklaringen vises når laget slås på, og forsvinner når det slås av"(browser, origin) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     await answer(context, origin);

@@ -431,7 +431,38 @@
   function fitAllSites() {
     if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], animate: false });
   }
-  FS.fitWhenVisible(map, mapEl, fitAllSites);
+
+  // --- Back from a site page: the same view as before ---
+  // The map's position and zoom, and the state in the URL (filters, time, search, selected site), are kept for the
+  // session (sessionStorage) and used again when the visitor comes back from a site page («‹ Alle flysteder», or the
+  // back button when the browser did not keep the page): the map and the list are then as they were left, not the
+  // home region. A fresh visit, or one from anywhere else, starts as before.
+  var VIEW_KEY = "fs-home-view";
+  function saveView() {
+    try {
+      var c = map.getCenter();
+      sessionStorage.setItem(VIEW_KEY, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom(), hash: location.hash }));
+    } catch (e) { /* no view yet, or storage off */ }
+  }
+  function cameBackFromSite() {
+    var nav = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
+    if (nav && nav.type === "back_forward") return true;
+    try {
+      var ref = new URL(document.referrer);
+      return ref.origin === location.origin && /\/(flysteder|sites)\/[^/]+\/?$/.test(ref.pathname);
+    } catch (e) { return false; }
+  }
+  var restoredView = null;
+  if (cameBackFromSite()) {
+    try { restoredView = JSON.parse(sessionStorage.getItem(VIEW_KEY)); } catch (e) { /* storage off */ }
+    if (!restoredView || typeof restoredView.lat !== "number" || typeof restoredView.lng !== "number" || typeof restoredView.zoom !== "number") restoredView = null;
+    else if (!location.hash && typeof restoredView.hash === "string" && restoredView.hash) history.replaceState(null, "", restoredView.hash);
+  }
+  map.on("moveend", saveView);
+  FS.fitWhenVisible(map, mapEl, function () {
+    if (restoredView) map.setView([restoredView.lat, restoredView.lng], restoredView.zoom, { animate: false });
+    else fitAllSites();
+  });
   // «Vis flysteder i Harstad og Kvæfjord» and full screen below the zoom buttons, as on the site page.
   FS.addViewControls(map, mapEl, fitAllSites, FS.t("home.showSitesIn", { region: homeRegion }));
   // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
@@ -1133,6 +1164,7 @@
     if (selectedId) params.set("site", selectedId);
     var hash = params.toString();
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
+    saveView();
   }
 
   function readHash() {
