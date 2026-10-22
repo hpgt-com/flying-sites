@@ -18,7 +18,7 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
 
 **The site**
 - Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
-  scripts) and Cloudflare Turnstile (`challenges.cloudflare.com`, also the only `frame-src`; loaded only when someone
+  scripts, and no inline styles either: `style-src 'self'`) and Cloudflare Turnstile (`challenges.cloudflare.com`, also the only `frame-src`; loaded only when someone
   opens «Meld fra om endring»), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
   GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
