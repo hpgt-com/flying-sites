@@ -15,7 +15,16 @@ export const INTERVALS = { forecast: 5, stations: 1, met: 10, windgram: 10, veri
 // at :51 (00:51, 06:51 …), so they never share Open-Meteo's minute; their work is done in the store too.
 export const OFFSETS = { forecast: 0, stations: 0, met: 3, windgram: 7, verify: 9, flights: 0, backup: 134, grid: 21, gridWide: 51, ognDdb: 314 };
 
-// Whether the source should run on the scheduled minute (scheduledTime in milliseconds).
-export function due(name, time) {
-  return Math.floor(time / 60000) % INTERVALS[name] === (OFFSETS[name] ?? 0);
+// The sources that are caught up when their minute was missed (Cloudflare's Cron Triggers are best effort, and a run
+// can be skipped or cut off): the daily ones and the forecast grids, where a missed minute would otherwise mean a day
+// (or hours) without a backup, a no-track list or a grid. The others run so often that the next minute makes up for it.
+export const CATCH_UP = ["backup", "ognDdb", "grid", "gridWide"];
+
+// Whether the source should run on the scheduled minute (scheduledTime in milliseconds), or, for the sources in
+// CATCH_UP, when it last ran (lastTried, ISO time from the health state, index.js) more than an interval and a minute
+// ago. A source that keeps failing is tried again once an interval, not every minute, since a failed run counts as tried.
+export function due(name, time, lastTried) {
+  if (Math.floor(time / 60000) % INTERVALS[name] === (OFFSETS[name] ?? 0)) return true;
+  if (!CATCH_UP.includes(name) || !lastTried) return false;
+  return time - Date.parse(lastTried) >= (INTERVALS[name] + 1) * 60000;
 }

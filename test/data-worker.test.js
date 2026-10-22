@@ -113,6 +113,14 @@ test("one schedule every minute: the stations every minute, the forecast every f
   assert.deepEqual([0, 1, 2, 3, 4, 5, 10].map((m) => due("forecast", minute(m))), [true, false, false, false, false, true, true]);
   // The heavier sources never share a minute (one invocation has 10 ms of CPU in all).
   for (let m = 0; m < 60; m++) assert.ok(["forecast", "met", "windgram", "verify"].filter((n) => due(n, minute(m))).length <= 1, `minute ${m}`);
+  // A daily source whose minute was missed runs on the next minute once an interval and a minute have passed since it
+  // last ran; the frequent ones just wait for their next minute.
+  const at = (h) => new Date(minute(0) - h * 3600000).toISOString();
+  assert.equal(due("backup", minute(1), at(23.9)), false, "under a day and a minute since the last run: not yet");
+  assert.equal(due("backup", minute(1), at(24.5)), true, "over a day since the last run: caught up");
+  assert.equal(due("ognDdb", minute(1), undefined), false, "never run: waits for its minute");
+  assert.equal(due("grid", minute(1), at(4)), true);
+  assert.equal(due("forecast", minute(1), at(24)), false, "the forecast runs every five minutes anyway");
 });
 
 test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {

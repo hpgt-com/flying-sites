@@ -65,23 +65,26 @@ export default {
   async scheduled(controller, env, ctx) {
     const s = store(env);
     const now = controller.scheduledTime;
+    // When each source last ran, for the ones that are caught up after a missed minute (schedule.js CATCH_UP).
+    const last = (await s.getState("health")) ?? {};
+    const isDue = (name) => due(name, now, last[name]?.tried);
     const runs = {};
-    if (due("forecast", now)) runs.forecast = forecast.run(s, SITES, now);
-    if (due("stations", now)) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
-    if (due("met", now)) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE);
-    if (due("windgram", now)) runs.windgram = windgram.run(s, SITES, now);
-    if (due("verify", now)) runs.verify = verify.run(s, siteLinks(), now);
-    if (due("flights", now)) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
-    if (due("grid", now)) runs.grid = grid.run(s, "grid", SITES, now);
-    if (due("gridWide", now)) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
-    if (due("backup", now)) {
+    if (isDue("forecast")) runs.forecast = forecast.run(s, SITES, now);
+    if (isDue("stations")) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
+    if (isDue("met")) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE);
+    if (isDue("windgram")) runs.windgram = windgram.run(s, SITES, now);
+    if (isDue("verify")) runs.verify = verify.run(s, siteLinks(), now);
+    if (isDue("flights")) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
+    if (isDue("grid")) runs.grid = grid.run(s, "grid", SITES, now);
+    if (isDue("gridWide")) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
+    if (isDue("backup")) {
       const day = new Date(now).toISOString().slice(0, 10);
       runs.backup = s.backup(day);
       // The salts and address hashes of «Meld fra» from earlier days (report.js): deleted with the day, not only when
       // the next report comes.
       ctx.waitUntil(s.pruneReports(day));
     }
-    if (due("ognDdb", now)) runs.ognDdb = s.refreshNoTrack(now);
+    if (isDue("ognDdb")) runs.ognDdb = s.refreshNoTrack(now);
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
       Object.keys(runs).forEach((name, i) => {
