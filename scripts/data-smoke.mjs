@@ -1,20 +1,26 @@
-// After the data service is published (.github/workflows/data-worker.yml): waits until the new version has run the
-// stations (scheduled every minute) successfully after the publish, and checks that a dataset is served. Exits 1 if that
-// does not happen within MAX_WAIT_MS, and the workflow then rolls back to the version that ran before.
+// After the data service is published (.github/workflows/data-worker.yml): waits until the new version has run one of
+// the sources that run every few minutes (the stations, the forecast or the flights) successfully after the publish,
+// and checks that a dataset is served. Exits 1 if that does not happen within MAX_WAIT_MS, and the workflow then rolls
+// back to the version that ran before. One source is enough: the check is that the new code runs, not that Holfuy or
+// MET is up right now (a good version was once rolled back because the source was down at the time).
 //
 //   node scripts/data-smoke.mjs <published at, ISO time> [base address]
 
 export const MAX_WAIT_MS = 6 * 60000;
 const POLL_MS = 15000;
 
-// What the status (/v1/status.json) says about the runs after since: done with ok when the stations have succeeded after
-// it. Errors after since are reported but not final, since a run cut off by the publish itself can fail once.
+// The sources whose success after the publish shows the new version runs (each on the schedule within a few minutes).
+export const SMOKE_SOURCES = ["stations", "forecast", "flights"];
+
+// What the status (/v1/status.json) says about the runs after since: done with ok when one of SMOKE_SOURCES has
+// succeeded after it. Errors after since are reported but not final, since a run cut off by the publish itself can
+// fail once.
 export function smokeVerdict(status, since) {
   const sources = status?.sources;
   if (!sources) return { done: false, reason: "ingen status ennå" };
   const errors = Object.entries(sources).filter(([, r]) => r?.errorAt && r.errorAt > since).map(([n, r]) => `${n}: ${r.error}`);
-  const st = sources.stations;
-  if (st?.ok && st.ok > since) return { done: true, ok: true, reason: `stasjonene kjørte ${st.ok}`, errors };
+  const ran = SMOKE_SOURCES.find((n) => sources[n]?.ok && sources[n].ok > since);
+  if (ran) return { done: true, ok: true, reason: `${ran} kjørte ${sources[ran].ok}`, errors };
   return { done: false, reason: "venter på første vellykkede kjøring etter publisering", errors };
 }
 

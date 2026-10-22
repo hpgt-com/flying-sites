@@ -98,6 +98,30 @@ jobs:
       - run: npm run check:behaviour
 
   # Blocks PRs that add npm packages or Actions with known vulnerabilities (moderate or higher).
+  # The data service (workers/data) bundled by wrangler without publishing: a wrong import, a mistake in wrangler.toml or
+  # a migration that does not parse is found here, not by the deploy on main (which would roll back). No secrets.
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+      - run: node scripts/data-sites.mjs
+      - run: npm ci --ignore-scripts
+        working-directory: workers/data
+      - run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/worker"
+        working-directory: workers/data
+        env:
+          WRANGLER_SEND_METRICS: "false"
+
   dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 5

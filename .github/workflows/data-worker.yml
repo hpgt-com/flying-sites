@@ -47,6 +47,9 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: node scripts/data-sites.mjs
 
+      # The tests once more before publishing: the PR check ran them, but a merge of two PRs is a new combination.
+      - run: npm test
+
       # Wrangler, at the version in workers/data/package-lock.json.
       - run: npm ci --ignore-scripts
         working-directory: workers/data
@@ -75,7 +78,7 @@ jobs:
           npx wrangler deploy
           echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
-      # Waits until the new version has run the stations successfully and serves a dataset (scripts/data-smoke.mjs).
+      # Waits until the new version has run a source successfully and serves a dataset (scripts/data-smoke.mjs).
       - name: Sjekk den nye versjonen
         id: smoke
         env:
