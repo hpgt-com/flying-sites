@@ -14,7 +14,7 @@ const browserGlobals = {
   Image: "readonly", FormData: "readonly", Blob: "readonly", TextEncoder: "readonly", TextDecoder: "readonly", crypto: "readonly",
   caches: "readonly", self: "readonly", globalThis: "readonly", L: "readonly", screen: "readonly", getComputedStyle: "readonly",
   scrollTo: "readonly", innerWidth: "readonly", innerHeight: "readonly", alert: "readonly", structuredClone: "readonly",
-  DOMMatrixReadOnly: "readonly", parent: "readonly",
+  DOMMatrixReadOnly: "readonly", parent: "readonly", PerformanceObserver: "readonly",
 };
 
 export default [
@@ -42,7 +42,7 @@ export default [
   },
   // The browser checks run code in the page (page.evaluate), so they use the browser's names too.
   {
-    files: ["scripts/check-a11y.mjs", "scripts/check-behaviour.mjs"],
+    files: ["scripts/check-a11y.mjs", "scripts/check-behaviour.mjs", "scripts/check-budget.mjs"],
     languageOptions: { globals: browserGlobals },
   },
   // The browser scripts: plain scripts, one IIFE each, sharing through globalThis.
