@@ -128,6 +128,52 @@
     return label;
   }
 
+  // A script fetched when it is first needed (the same-origin scripts behind the map layers below). One load per
+  // address; a failed load is forgotten, so the next try fetches again.
+  var scriptLoads = {};
+  function loadScript(src) {
+    if (!scriptLoads[src]) {
+      scriptLoads[src] = new Promise(function (resolve, reject) {
+        var el = document.createElement("script");
+        el.src = src;
+        el.async = true;
+        el.onload = function () { resolve(); };
+        el.onerror = function () { delete scriptLoads[src]; el.remove(); reject(new Error("Could not load " + src)); };
+        document.head.appendChild(el);
+      });
+    }
+    return scriptLoads[src];
+  }
+
+  // Map layers whose script (live.js, forecast-layer.js) is fetched the first time one of them is switched on, so the
+  // pages do not load it for the many who never do. The layer list gets the entries at once, as empty layers; when one
+  // is turned on, the script is loaded and attach(layers) is called with the empty layers, keyed as in entries, which
+  // the script takes over and fills from then on. If the script cannot be loaded (offline), the layer is switched off
+  // again, and the next switch-on tries again. entries: [{ key, label, attribution }].
+  function lazyOverlays(map, src, entries, attach) {
+    if (!map.layersControl || !src) return null;
+    var layers = {};
+    entries.forEach(function (e) {
+      layers[e.key] = L.layerGroup([], { attribution: e.attribution });
+      map.layersControl.addOverlay(layers[e.key], layerLabel(map, e.key, e.label));
+    });
+    var isOurs = function (layer) { return Object.keys(layers).some(function (k) { return layers[k] === layer; }); };
+    var loading = false;
+    function onAdd(ev) {
+      if (loading || !isOurs(ev.layer)) return;
+      loading = true;
+      loadScript(src).then(function () {
+        map.off("overlayadd", onAdd);
+        attach(layers);
+      }, function () {
+        loading = false;
+        Object.keys(layers).forEach(function (k) { if (map.hasLayer(layers[k])) map.removeLayer(layers[k]); });
+      });
+    }
+    map.on("overlayadd", onAdd);
+    return layers;
+  }
+
   // Touch screens: one finger scrolls the page, two fingers pan and zoom the map, so you do not get trapped in the map
   // when scrolling down the page. Without Leaflet's dragging, leaflet.css gives the map touch-action: pan-x pan-y, so
   // the browser scrolls the page while Leaflet takes the pinch (which also pans the map). Dragging with one finger briefly
@@ -927,6 +973,8 @@
     addObstacleLayer: addObstacleLayer,
     addRadarLayer: addRadarLayer,
     layerLabel: layerLabel,
+    loadScript: loadScript,
+    lazyOverlays: lazyOverlays,
     fitWhenVisible: fitWhenVisible,
     addViewControls: addViewControls,
     escapeHtml: escapeHtml,

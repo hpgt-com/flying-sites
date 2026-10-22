@@ -19,10 +19,10 @@ const PAGES = ["/", "/flysteder/sollifjellet/", "/vaer/", "/en/"];
 // Per page: bytes by kind (KB, uncompressed), requests, DOM nodes, CLS. A kind missing from a page's budget is not
 // checked for it.
 const BUDGET = {
-  "/": { html: 140, css: 165, js: 480, font: 80, image: 20, data: 10, requests: 30, nodes: 2000, cls: 0.05 },
-  "/flysteder/sollifjellet/": { html: 100, css: 165, js: 470, font: 80, image: 140, data: 10, requests: 32, nodes: 3400, cls: 0.1 },
+  "/": { html: 140, css: 165, js: 440, font: 80, image: 20, data: 10, requests: 30, nodes: 2000, cls: 0.05 },
+  "/flysteder/sollifjellet/": { html: 100, css: 165, js: 440, font: 80, image: 140, data: 10, requests: 32, nodes: 3400, cls: 0.1 },
   "/vaer/": { html: 50, css: 150, js: 170, font: 80, image: 10, data: 10, requests: 20, nodes: 300, cls: 0.05 },
-  "/en/": { html: 140, css: 165, js: 480, font: 80, image: 20, data: 10, requests: 30, nodes: 2000, cls: 0.05 },
+  "/en/": { html: 140, css: 165, js: 440, font: 80, image: 20, data: 10, requests: 30, nodes: 2000, cls: 0.05 },
 };
 const KINDS = { document: "html", stylesheet: "css", script: "js", font: "font", image: "image", fetch: "data", xhr: "data", manifest: "data", other: "data" };
 

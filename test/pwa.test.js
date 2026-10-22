@@ -52,11 +52,12 @@ test("the manifest follows the language and the path prefix", () => {
 test("the files a stored page uses: own assets and images, with srcset, not other sites", () => {
   const html = `<link rel="stylesheet" href="/assets/css/styles.css?v=old1"><script src="/assets/js/site.js?v=old2"></script>
     <img src="/img/a-400.webp" srcset="/img/a-400.webp 400w, /img/a-800.webp 800w"><img src="https://www.yr.no/x.svg">
-    <a href="/flysteder/elgen/">x</a><script src="../../assets/js/wind.js?v=old3&amp;x=1"></script>`;
+    <a href="/flysteder/elgen/">x</a><script src="../../assets/js/wind.js?v=old3&amp;x=1"></script>
+    <div id="site-map" data-live-url="https://data.hpgt.workers.dev/v1/live.json" data-live-script="/assets/js/live.js?v=old4"></div>`;
   assert.deepEqual(referencedAssets(html, "https://flysteder.hpgt.com/flysteder/elgen/", scope), [
     "https://flysteder.hpgt.com/assets/css/styles.css?v=old1", "https://flysteder.hpgt.com/assets/js/site.js?v=old2",
     "https://flysteder.hpgt.com/img/a-400.webp", "https://flysteder.hpgt.com/img/a-400.webp", "https://flysteder.hpgt.com/img/a-800.webp",
-    "https://flysteder.hpgt.com/assets/js/wind.js?v=old3&x=1",
+    "https://flysteder.hpgt.com/assets/js/wind.js?v=old3&x=1", "https://flysteder.hpgt.com/assets/js/live.js?v=old4",
   ]);
   const keep = ["https://flysteder.hpgt.com/assets/css/styles.css?v=old1"];
   assert.equal(staticToKeep("https://flysteder.hpgt.com/assets/css/styles.css?v=old1", keep, scope), true);

@@ -118,11 +118,13 @@
     return control;
   }
 
-  function addMapLayer(map, url) {
+  // existing: the layer already in the layer list when this script was fetched on first use (common.js lazyOverlays);
+  // it is taken over, and when it is on the map already, the pilots are fetched at once.
+  function addMapLayer(map, url, existing) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !url || !map.layersControl) return null;
-    var layer = L.layerGroup([], { attribution: text("live.credit") });
-    map.layersControl.addOverlay(layer, FS.layerLabel(map, "live", text("live.layer")));
+    var layer = existing || L.layerGroup([], { attribution: text("live.credit") });
+    if (!existing) map.layersControl.addOverlay(layer, FS.layerLabel(map, "live", text("live.layer")));
     var markers = {}, trails = {}, timer = null, on = false, legend = legendControl(L);
 
     // What the layer says when the pilots cannot be fetched (the data service down, or no network): a box with «Prøv
@@ -205,6 +207,7 @@
     map.on("overlayadd", function (ev) { if (ev.layer === layer) { start(); FS.track("map-layer/live"); } });
     map.on("overlayremove", function (ev) { if (ev.layer === layer) stop(); });
     document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+    if (map.hasLayer(layer)) { start(); FS.track("map-layer/live"); }
     return layer;
   }
 
