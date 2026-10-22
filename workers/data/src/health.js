@@ -12,13 +12,23 @@ export const MAX_AGE = { forecast: 60, stations: 15, windgram: 90, verification:
 // An error message as it may be shown: addresses are left out (Holfuy's has the key in it), and it is kept short.
 export const cleanError = (message) => String(message).replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi, "[adresse]").replace(/[?&][^\s=]+=\S+/g, "").slice(0, 200);
 
-// The sources' runs recorded: { name: { tried, ok, error } } from the previous one and this run's results
-// ({ name: null for success, or the error message }).
+// The sources' runs recorded: { name: { tried, ok, error, errorAt, lastMs, avgMs, maxMs } } from the previous one and
+// this run's results ({ name: null for success, the error message, or { error, ms } with how long the run took }).
+// lastMs is the latest run, avgMs a running average (a fifth of each new run, so a day's changes show without one slow
+// run swinging it), maxMs the slowest run today (reset with the day).
 export function recordRuns(prev, results, now) {
   const out = { ...(prev ?? {}) };
   const at = new Date(now).toISOString();
-  for (const [name, error] of Object.entries(results)) {
-    out[name] = { ...out[name], tried: at, ...(error ? { error: cleanError(error), errorAt: at } : { ok: at }) };
+  for (const [name, result] of Object.entries(results)) {
+    const { error, ms } = result && typeof result === "object" ? result : { error: result, ms: null };
+    const r = { ...out[name], tried: at, ...(error ? { error: cleanError(error), errorAt: at } : { ok: at }) };
+    if (Number.isFinite(ms)) {
+      r.lastMs = Math.round(ms);
+      r.avgMs = Math.round(Number.isFinite(r.avgMs) ? r.avgMs + (ms - r.avgMs) / 5 : ms);
+      const sameDay = typeof r.maxAt === "string" && r.maxAt.slice(0, 10) === at.slice(0, 10);
+      if (!sameDay || ms > r.maxMs) { r.maxMs = Math.round(ms); r.maxAt = at; }
+    }
+    out[name] = r;
   }
   return out;
 }

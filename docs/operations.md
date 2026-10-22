@@ -102,7 +102,8 @@ the menu and is marked `noindex`. It shows per site:
 ## Data service health
 
 - `https://data.hpgt.workers.dev/v1/status.json` (`workers/data/src/health.js`) says for each source when it last
-  ran, last succeeded and its last error, for each dataset when it was last written and whether that is within its
+  ran, last succeeded and its last error, and how long its runs take (`lastMs`, `avgMs` as a running average, `maxMs`
+  the slowest today: a failure at 20 000 ms is a timeout, a success at 8 000 a slow source), for each dataset when it was last written and whether that is within its
   limit (forecast 60 min, stations 15, winds aloft 90, verification 90), which launches the forecast and the winds aloft
   lack, and the last day archived per station source. `"ok": false` when a dataset is too old.
 - «Data service health» (`health.yml`) checks it from outside every hour: when something is wrong it opens an issue

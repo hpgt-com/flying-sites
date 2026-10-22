@@ -748,6 +748,15 @@ test("status: when each source ran and succeeded, and which datasets are too old
   runs = health.recordRuns(runs, { forecast: "MET svarte 500" }, NOW);
   assert.deepEqual(runs.forecast, { tried: new Date(NOW).toISOString(), ok: new Date(NOW - 60000).toISOString(), error: "MET svarte 500", errorAt: new Date(NOW).toISOString() });
   assert.equal(runs.stations.ok, new Date(NOW - 60000).toISOString());
+  // Timed runs: the latest, a running average and the slowest today, kept with a failure too.
+  let timed = health.recordRuns(null, { forecast: { error: null, ms: 1000 } }, NOW);
+  assert.deepEqual([timed.forecast.lastMs, timed.forecast.avgMs, timed.forecast.maxMs, timed.forecast.maxAt], [1000, 1000, 1000, new Date(NOW).toISOString()]);
+  timed = health.recordRuns(timed, { forecast: { error: null, ms: 2000 } }, NOW + 60000);
+  assert.deepEqual([timed.forecast.lastMs, timed.forecast.avgMs, timed.forecast.maxMs], [2000, 1200, 2000]);
+  timed = health.recordRuns(timed, { forecast: { error: "MET svarte 500", ms: 20000 } }, NOW + 120000);
+  assert.deepEqual([timed.forecast.lastMs, timed.forecast.maxMs, timed.forecast.error, timed.forecast.ok], [20000, 20000, "MET svarte 500", new Date(NOW + 60000).toISOString()]);
+  timed = health.recordRuns(timed, { forecast: { error: null, ms: 500 } }, NOW + 86400000);
+  assert.deepEqual([timed.forecast.maxMs, timed.forecast.maxAt], [500, new Date(NOW + 86400000).toISOString()], "the slowest run starts over with the day");
   assert.equal(health.cleanError("fetch failed: https://api.holfuy.com/live/?s=101&pw=hemmelig&m=JSON"), "fetch failed: [adresse]", "never a key from an address");
   const snapshots = {
     forecast: { updated: ago(10), body: JSON.stringify({ sites: { a: [], b: [] } }) },
