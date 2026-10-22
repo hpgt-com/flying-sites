@@ -5,9 +5,9 @@ name: Scorecard
 # Scorecard API, which the badge in README reads.
 # Follows the template from ossf/scorecard-action. With publish_results the job may only contain these steps.
 
+# Weekly, not on every push: the checks look at the repository's settings and history, which one merge rarely changes,
+# and the badge reads the API, which the weekly run updates.
 on:
-  push:
-    branches: [main]
   schedule:
     - cron: "23 4 * * 1" # Mondays at 04:23 UTC
   # Rerun when branch protection changes, since it is one of the checks.
