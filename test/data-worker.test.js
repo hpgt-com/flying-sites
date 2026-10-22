@@ -152,6 +152,13 @@ test("one schedule every minute: the stations every minute, the forecast every f
   assert.equal(due("ognDdb", minute(1), undefined), false, "never run: waits for its minute");
   assert.equal(due("grid", minute(1), at(4)), true);
   assert.equal(due("forecast", minute(1), at(24)), false, "the forecast runs every five minutes anyway");
+  // A daily source whose last run failed is tried again after an hour, not a day; the forecast grids, which run every
+  // few hours, likewise after an hour.
+  assert.equal(due("ognDdb", minute(1), at(0.9), true), false, "failed under an hour ago: not yet");
+  assert.equal(due("ognDdb", minute(1), at(1.1), true), true, "failed over an hour ago: tried again");
+  assert.equal(due("ognDdb", minute(1), at(1.1), false), false, "succeeded an hour ago: waits for its minute");
+  assert.equal(due("grid", minute(1), at(1.1), true), true);
+  assert.equal(due("forecast", minute(1), at(1.1), true), false, "the forecast runs every five minutes anyway");
 });
 
 test("archive: whole UTC days from the oldest measurement or after the last archived, up to yesterday, two at a time", () => {

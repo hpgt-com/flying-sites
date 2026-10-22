@@ -22,9 +22,13 @@ export const CATCH_UP = ["backup", "ognDdb", "grid", "gridWide"];
 
 // Whether the source should run on the scheduled minute (scheduledTime in milliseconds), or, for the sources in
 // CATCH_UP, when it last ran (lastTried, ISO time from the health state, index.js) more than an interval and a minute
-// ago. A source that keeps failing is tried again once an interval, not every minute, since a failed run counts as tried.
-export function due(name, time, lastTried) {
+// ago. A daily source whose last run failed (failed, from the same state) is tried again after RETRY_MINUTES rather
+// than a day later, so a bad day at the other end does not leave a day without a backup or a no-track list; a source
+// that keeps failing is still tried once an hour, not every minute, since a failed run counts as tried.
+export const RETRY_MINUTES = 60;
+export function due(name, time, lastTried, failed) {
   if (Math.floor(time / 60000) % INTERVALS[name] === (OFFSETS[name] ?? 0)) return true;
   if (!CATCH_UP.includes(name) || !lastTried) return false;
-  return time - Date.parse(lastTried) >= (INTERVALS[name] + 1) * 60000;
+  const wait = failed ? Math.min(RETRY_MINUTES, INTERVALS[name]) : INTERVALS[name];
+  return time - Date.parse(lastTried) >= (wait + 1) * 60000;
 }
