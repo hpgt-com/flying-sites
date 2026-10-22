@@ -75,8 +75,8 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   old or the service does not answer. The status has no secrets and nothing about visitors: run times, ages, error
   messages from the sources, the launch ids missing and the last archived day. Since GitHub turns the schedule off
   after 60 days without a commit, the watch that counts is outside GitHub: UptimeRobot (free plan, set up 22.10.2026)
-  checks `https://flysteder.hpgt.com/` and `/v1/status.json` for `"ok":true` every five minutes and e-mails the
-  maintainer when either fails, with nothing from the site stored there but the two addresses.
+  checks `https://flysteder.hpgt.com/`, `https://hpgt.com/` and `/v1/status.json` for `"ok":true` every five minutes
+  and e-mails the maintainer when one fails, with nothing from the site stored there but the addresses.
 - OpenSSF Scorecard (`scorecard.yml`) checks the repository against supply-chain good practice weekly (and
   when the branch rules change). The results are in Code scanning and behind the badge in README.
 - Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored in the GitHub environment `automation`, which only `main`
