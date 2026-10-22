@@ -1,7 +1,7 @@
 // Tests for the data service (workers/data): the forecast and the Holfuy stations. Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildForecast, keepSites, pickSites, MAX_AGE_HOURS } from "../workers/data/src/sources/forecast.js";
+import { buildForecast, keepSites, pickSites, MAX_AGE_HOURS, run as forecastRun } from "../workers/data/src/sources/forecast.js";
 import { buildStations, holfuyUrl, parseHolfuy } from "../workers/data/src/sources/holfuy.js";
 import { due } from "../workers/data/src/schedule.js";
 import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../workers/data/src/archive.js";
@@ -16,6 +16,37 @@ test("picks the launches missing from the state first, then those fetched longes
   const state = { sites: { a: { fetched: ago(5) }, b: { fetched: ago(25) }, c: { fetched: ago(15) } } };
   assert.deepEqual(pickSites(sites, state, 2).map((s) => s.id), ["d", "b"]);
   assert.deepEqual(pickSites(sites, state, 6).map((s) => s.id), ["d", "b", "c", "a"]);
+});
+
+test("forecast run: a launch is not asked for again before Expires, and a 304 keeps its rows, counted as fetched now", async () => {
+  let state = null;
+  const snapshots = [];
+  const store = { getState: async () => state, putState: async (k, v) => { state = v; }, putForecastHours: async () => {}, pruneForecastHours: async () => {},
+    forecastHoursSince: async () => [], putSnapshot: async (k, v) => snapshots.push(JSON.parse(v)) };
+  const body = { properties: { meta: { updated_at: "2026-10-18T14:00:00Z" }, timeseries: [{ time: "2026-10-18T15:00:00Z",
+    data: { instant: { details: { wind_from_direction: 200, wind_speed: 5, wind_speed_of_gust: 9 } }, next_1_hours: { details: { precipitation_amount: 0 } } } }] } };
+  const realFetch = globalThis.fetch;
+  const asked = [];
+  globalThis.fetch = async (url, init) => {
+    asked.push(init.headers["if-modified-since"] ?? null);
+    return asked.length === 1
+      ? new Response(JSON.stringify(body), { headers: { expires: "Sun, 18 Oct 2026 15:40:00 GMT", "last-modified": "Sun, 18 Oct 2026 14:05:00 GMT" } })
+      : new Response(null, { status: 304, headers: { expires: "Sun, 18 Oct 2026 16:40:00 GMT" } });
+  };
+  try {
+    const one = [{ id: "a", lat: 68.8, lon: 16.5, altitude: 500 }];
+    await forecastRun(store, one, NOW);
+    assert.deepEqual([state.sites.a.expires, state.sites.a.lastModified, state.sites.a.rows.length], ["2026-10-18T15:40:00.000Z", "2026-10-18T14:05:00.000Z", 1]);
+    await forecastRun(store, one, NOW + 10 * 60000);
+    assert.equal(asked.length, 1, "before Expires MET is not asked");
+    assert.equal(state.sites.a.fetched, new Date(NOW + 10 * 60000).toISOString(), "but the launch counts as fetched now");
+    await forecastRun(store, one, NOW + 30 * 60000);
+    assert.deepEqual(asked, [null, "Sun, 18 Oct 2026 14:05:00 GMT"], "after Expires, with If-Modified-Since");
+    assert.deepEqual([state.sites.a.rows.length, state.sites.a.updated, state.sites.a.expires], [1, "2026-10-18T14:00:00Z", "2026-10-18T16:40:00.000Z"], "a 304 keeps the rows and takes the new Expires");
+    assert.equal(snapshots.at(-1).fetched, new Date(NOW + 30 * 60000).toISOString());
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("a site removed from the site files disappears from the state", () => {

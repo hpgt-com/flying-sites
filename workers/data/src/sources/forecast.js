@@ -67,14 +67,18 @@ export function buildForecast(state, now = Date.now(), past = null) {
 }
 
 // One run: fetches the launches fetched longest ago, one after another (MET gets at most one request at a time from
-// us), and stores the state and the forecast. A launch that fails keeps its previous rows.
+// us), and stores the state and the forecast. A launch that fails keeps its previous rows. MET's Expires and
+// Last-Modified are kept per launch (lib/weather/met.js fetchSite): a launch is not asked for again before Expires, and
+// an unchanged forecast comes back as a 304; both count as fetched now, since MET has said the rows are current.
 export async function run(store, sites, now = Date.now()) {
   const state = keepSites(await store.getState(DATASET), sites);
   const hours = [];
   for (const site of pickSites(sites, state)) {
     try {
-      const { rows, updated } = await fetchSite({ lat: site.lat, lon: site.lon }, site.altitude);
-      state.sites[site.id] = { fetched: new Date(now).toISOString(), updated, rows };
+      const prev = state.sites[site.id] ?? {};
+      const r = await fetchSite({ lat: site.lat, lon: site.lon }, site.altitude, { expires: prev.expires, lastModified: prev.rows ? prev.lastModified : null, now });
+      const rows = r.notModified ? prev.rows : r.rows;
+      state.sites[site.id] = { fetched: new Date(now).toISOString(), updated: r.notModified ? prev.updated : r.updated, rows, expires: r.expires ?? null, lastModified: r.lastModified ?? null };
       const h = hourNow(rows, now);
       if (h) hours.push({ site: site.id, time: h[0], dir: h[1], speed: h[2], gust: h[3], rain: h[4], fetched: new Date(now).toISOString() });
     } catch (err) {
