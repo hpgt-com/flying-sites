@@ -234,6 +234,41 @@ test("sunrise and sunset in Harstad, with midnight sun and polar night", () => {
   assert.match(W.sunText("2026-10-09", 68.8, 16.3), /^Sola opp 07\.3\d, ned 17\.4\d\.$/);
 });
 
+test("sunPosition: elevation and azimuth at solar noon and midnight", () => {
+  // Harstad, 21 June: solar noon about 10:55 UTC, the sun 90 − 68.8 + 23.4 = 44.6° high in the south; at solar midnight
+  // 23.4 − 21.2 = 2.2° above the horizon in the north.
+  const noon = W.sunPosition(Date.parse("2026-06-21T10:55:00Z"), 68.8, 16.3);
+  assert.ok(Math.abs(noon.elevation - 44.6) < 1, String(noon.elevation));
+  assert.ok(Math.abs(noon.azimuth - 180) < 2, String(noon.azimuth));
+  const midnight = W.sunPosition(Date.parse("2026-06-21T22:55:00Z"), 68.8, 16.3);
+  assert.ok(Math.abs(midnight.elevation - 2.2) < 1, String(midnight.elevation));
+  assert.ok(midnight.azimuth > 358 || midnight.azimuth < 2, String(midnight.azimuth));
+  // 9 October, sunrise about 07:37 in the east-southeast (sunTimes above), the sun 15° high at noon.
+  const rise = W.sunPosition(Date.parse("2026-10-09T05:37:00Z"), 68.8, 16.3);
+  assert.ok(Math.abs(rise.elevation) < 1.5, String(rise.elevation));
+  assert.ok(rise.azimuth > 100 && rise.azimuth < 110, String(rise.azimuth));
+});
+
+test("sunOnLaunch: when the sun is on a launch, from its directions", () => {
+  // A south launch in October gets the sun through the middle of the day, a north launch not at all, and a launch
+  // with starts to the east and west gets it in the morning and the afternoon.
+  const south = W.sunOnLaunch("2026-10-09", 68.8, 16.3, ["S"]);
+  assert.equal(south.length, 1);
+  assert.ok(south[0][0] > 8 && south[0][0] < 10 && south[0][1] > 16 && south[0][1] < 17.5, JSON.stringify(south));
+  assert.deepEqual(W.sunOnLaunch("2026-10-09", 68.8, 16.3, ["N"]), []);
+  assert.equal(W.sunOnLaunch("2026-10-09", 68.8, 16.3, ["E", "W"]).length, 2);
+  assert.deepEqual(W.sunOnLaunch("2026-12-15", 68.8, 16.3, ["S"]), []);
+  assert.deepEqual(W.sunOnLaunch("2026-10-09", 68.8, 16.3, []), []);
+  // Midnight sun further north: a north launch has the sun across midnight, as one period past 24.
+  const north = W.sunOnLaunch("2026-06-21", 70.5, 23, ["N"]);
+  assert.equal(north.length, 1);
+  assert.ok(north[0][0] > 18 && north[0][1] > 24 && north[0][1] < 30, JSON.stringify(north));
+  assert.equal(W.sunOnLaunchText("2026-10-09", 68.8, 16.3, ["S"]), "Sol på starten ca. kl. 09–17.");
+  assert.equal(W.sunOnLaunchText("2026-10-09", 68.8, 16.3, ["E", "W"]), "Sol på starten ca. kl. 09–11 og 15–17.");
+  assert.equal(W.sunOnLaunchText("2026-06-21", 70.5, 23, ["N"]), "Sol på starten ca. kl. 20–05.");
+  assert.equal(W.sunOnLaunchText("2026-10-09", 68.8, 16.3, ["N"]), "Lite sol på starten i dag.");
+});
+
 test("the day plan merges hours with the same assessment and skips dark hours", () => {
   const times = hourly("2026-10-09T00:00:00Z", 24);
   const good = [247, 4, 6, 0], unsure = [247, 6, null, 0], wrong = [90, 4, 6, 0];
