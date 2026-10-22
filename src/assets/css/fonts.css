@@ -3,3 +3,11 @@
 @font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fonts/barlow-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fonts/barlow-latin-600-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 700; font-display: swap; src: url("../fonts/barlow-condensed-latin-700-normal.woff2") format("woff2"); }
+
+/* Reservefonter med Barlows mål, for det lille øyeblikket før Barlow er lastet (font-display: swap): Arial (eller
+   Helvetica, Liberation Sans) skalert så en linje blir like lang som i Barlow, og med Barlows høyder, så teksten ikke
+   flytter seg når byttet skjer. Faktorene er gjennomsnittlig tegnbredde i Barlow delt på den i Arial (målt på
+   nettsidens egne tekster), og høydene er Barlows (1,0 / 0,2 / 0). */
+@font-face { font-family: "Barlow Fallback"; font-style: normal; font-weight: 400; src: local("Arial"), local("Helvetica Neue"), local("Helvetica"), local("Liberation Sans"); size-adjust: 96.1%; ascent-override: 100%; descent-override: 20%; line-gap-override: 0%; }
+@font-face { font-family: "Barlow Fallback"; font-style: normal; font-weight: 600 700; src: local("Arial Bold"), local("Arial-BoldMT"), local("Helvetica Neue Bold"), local("Helvetica Bold"), local("Liberation Sans Bold"); size-adjust: 90.6%; ascent-override: 100%; descent-override: 20%; line-gap-override: 0%; }
+@font-face { font-family: "Barlow Condensed Fallback"; font-style: normal; font-weight: 700; src: local("Arial Bold"), local("Arial-BoldMT"), local("Helvetica Neue Bold"), local("Helvetica Bold"), local("Liberation Sans Bold"); size-adjust: 75.7%; ascent-override: 100%; descent-override: 20%; line-gap-override: 0%; }

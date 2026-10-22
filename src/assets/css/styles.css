@@ -33,8 +33,8 @@
   --map-ink: #1C2B33;
   color-scheme: light;
   --radius: 12px;
-  --font-heading: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --font-body: "Barlow", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-heading: "Barlow Condensed", "Barlow Condensed Fallback", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Barlow Fallback", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Dark mode. data-theme is set by the script in <head> (base.njk): the choice in the colour button, or
@@ -1064,8 +1064,11 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
    photo, with the same symbol as in «Vinden nå – kan det passe?». A link down to that box, 44 px tall as a touch target. */
 .hero__chips .hero__status { --r: var(--wind-no); padding: 0; background: color-mix(in srgb, var(--r) 18%, #FFFFFF); border: 0; }
 .hero__chips .hero__status[hidden] { display: none; }
-/* Room kept for the verdict until site-wind.js has filled it in (or hidden it), so the chips beside it do not jump. */
+/* Room kept for the verdict until site-wind.js has filled it in (or hidden it), so the chips beside it do not jump:
+   the chip is as wide as a verdict («Kan passe»), not as wide as the heading text it holds until then, which would
+   wrap the chips on an extra row before the scripts run. */
 .hero__chips .hero__status[data-pending] { visibility: hidden; min-width: 9em; }
+.hero__chips .hero__status[data-pending] .hero__status-text { display: none; }
 .hero__status[data-rating="ok"] { --r: var(--wind-ok); }
 .hero__status[data-rating="maybe"] { --r: var(--wind-maybe); }
 .hero__status[data-rating="high"] { --r: var(--wind-high); }
@@ -1093,6 +1096,8 @@ a.logo:focus-visible { outline: 3px solid var(--fjord); outline-offset: 3px; bor
    class after the first render. The heights are a little below the smallest filled box (measured on all sites). */
 [data-theme] .block--now-wait { min-height: 540px; }
 @media (min-width: 800px) { [data-theme] .block--now-wait { min-height: 500px; } }
+/* «Mer om været» at the bottom of the room kept, so it does not move down when the verdict and the cards fill it in. */
+[data-theme] .block--now-wait > .now-details { margin-top: auto; }
 .block--now, .hour-card { --r: var(--wind-no); }
 .block--now[data-rating="ok"], .hour-card--ok { --r: var(--wind-ok); }
 .block--now[data-rating="maybe"], .hour-card--maybe { --r: var(--wind-maybe); }
