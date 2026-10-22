@@ -114,6 +114,10 @@ jobs:
       # service down, «Meld fra», offline. No network: the script answers the data service and Turnstile.
       - run: npm run check:behaviour
 
+      # The performance budget (scripts/check-budget.mjs): bytes by kind, requests, DOM nodes and layout shift per page,
+      # against limits set a little above today's, so a page that gets much heavier fails here.
+      - run: npm run check:budget
+
   # Blocks PRs that add npm packages or Actions with known vulnerabilities (moderate or higher).
   # The data service (workers/data) bundled by wrangler without publishing: a wrong import, a mistake in wrangler.toml or
   # a migration that does not parse is found here, not by the deploy on main (which would roll back). No secrets.
