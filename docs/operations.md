@@ -414,6 +414,7 @@ set in `src/_data/photoCredit.json`.
 | GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites»: Workers Scripts Edit, Workers R2 Storage Edit, Account Settings Read, in HPGT only, made 22.10.2026 with a year's TTL) expires in October 2027: make a new custom token with the same permissions under My Profile → API Tokens, update the secret, run «Data service» once, and delete the old token. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
+| UptimeRobot (free plan; the account is on the maintainer's e-mail, moved by changing it under My Settings → Account) | uptimerobot.com | Two monitors every five minutes: «Flysteder» (`https://flysteder.hpgt.com/` answers) and «Datatjenesten» (`/v1/status.json` contains `"ok":true`). E-mails the alert contacts when either fails and when it is back. |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
 MET and Kartverket require no key. MET requires the client to provide contact details (`USER_AGENT` in
@@ -432,7 +433,9 @@ day or a dataset is over its limit.
 **The schedule has stopped.** GitHub turns the schedule of a public repository off after 60 days without a commit, and
 runs it late when busy. Signs: the monthly airspace PR did not come, or «Data service health» has not run for days
 (Actions → the workflow → the list of runs). Fix: Actions → the workflow → «Enable workflow», then «Run workflow». A
-commit of any kind resets the 60 days. The data service's own schedule runs on Cloudflare and is not affected.
+commit of any kind resets the 60 days. The data service's own schedule runs on Cloudflare and is not affected, and
+UptimeRobot (see [Accounts and secrets](#accounts-and-secrets)) watches the site and the status from outside GitHub
+whatever the schedule does: an e-mail from it is the first sign of a problem in a quiet season.
 
 **The data service does not answer, or answers 503.** The pages still work from the built-in forecast. Look at
 Cloudflare → Workers & Pages → data → Observability (the logs name the source and the error) and at Metrics (the
