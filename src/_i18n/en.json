@@ -344,7 +344,8 @@
     "planTitle": "Planned",
     "planIntro": "This is what we are working on or waiting for. The links go to the issues on GitHub.",
     "issue": "issue #{n}",
-    "wish": "Have a wish, or see something missing? Use {link}."
+    "wish": "Have a wish, or see something missing? Use {link}.",
+    "subscribe": "Subscribe to what's new (Atom feed)"
   },
   "logbook": {
     "title": "From flight logs",

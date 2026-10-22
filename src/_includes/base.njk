@@ -31,6 +31,7 @@
 <meta property="og:url" content="{{ page.url | htmlBaseUrl(site.url) }}">
 {#- The page's own address as the canonical one (the same page can be reached with a query or a fragment). -#}
 {% if not noindex %}<link rel="canonical" href="{{ page.url | htmlBaseUrl(site.url) }}">{% endif %}
+{% if feedUrl %}<link rel="alternate" type="application/atom+xml" title="{{ t.news.title }}" href="{{ feedUrl | htmlBaseUrl(site.url) }}">{% endif %}
 <meta property="og:image" content="{{ shareImage | htmlBaseUrl(site.url) }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4">

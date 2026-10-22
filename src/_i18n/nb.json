@@ -344,7 +344,8 @@
     "planTitle": "Planlagt",
     "planIntro": "Dette er det vi jobber med eller venter på. Lenkene går til sakene på GitHub.",
     "issue": "sak #{n}",
-    "wish": "Har du et ønske, eller ser du noe som mangler? Bruk {link}."
+    "wish": "Har du et ønske, eller ser du noe som mangler? Bruk {link}.",
+    "subscribe": "Abonner på nytt (Atom-feed)"
   },
   "logbook": {
     "title": "Fra turlogger",
