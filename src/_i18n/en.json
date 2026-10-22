@@ -723,6 +723,8 @@
       "legend": "Climb/sink (m/s)",
       "legendSink": "Sink",
       "legendLift": "Lift",
+      "error": "Could not load the pilots in the air.",
+      "retry": "Try again",
       "climb_sink2": "Strong sink, below −3 m/s",
       "climb_sink1": "Sink, −3 to −1.5 m/s",
       "climb_glide": "Glide, −1.5 to +0.5 m/s",
