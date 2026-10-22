@@ -151,7 +151,7 @@ test("the measurements kept in memory answer as SQLite does, also after new ones
   assert.equal(cached.find((r) => r.station === "490" && r.time.endsWith("19:59:00.000Z")).speed, 4);
 });
 
-test("after a publish: done when the stations have succeeded after it, an error before that is reported but not final", async () => {
+test("after a publish: done when one of the quick sources has succeeded after it, an error before that is reported but not final", async () => {
   const { smokeVerdict } = await import("../scripts/data-smoke.mjs");
   const since = "2026-10-20T06:00:10Z";
   assert.equal(smokeVerdict(null, since).done, false);
@@ -160,6 +160,9 @@ test("after a publish: done when the stations have succeeded after it, an error 
   assert.deepEqual([cut.done, cut.errors], [false, ["stations: Network connection lost."]]);
   const ok = smokeVerdict({ sources: { stations: { ok: "2026-10-20T06:02:00.000Z", error: "x", errorAt: "2026-10-20T06:01:00.000Z" } } }, since);
   assert.deepEqual([ok.done, ok.ok], [true, true]);
+  const holfuyDown = smokeVerdict({ sources: { stations: { error: "Holfuy svarte 503", errorAt: "2026-10-20T06:02:00.000Z" }, forecast: { ok: "2026-10-20T06:05:00.000Z" } } }, since);
+  assert.deepEqual([holfuyDown.done, holfuyDown.ok, holfuyDown.reason], [true, true, "forecast kjørte 2026-10-20T06:05:00.000Z"], "Holfuy down is not a failed publish when the forecast ran");
+  assert.equal(smokeVerdict({ sources: { backup: { ok: "2026-10-20T06:05:00.000Z" } } }, since).done, false, "only the sources that run every few minutes count");
 });
 
 test("grid: the close grid around the sites and the wide one over its box, on whole steps from the south", async () => {
