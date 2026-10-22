@@ -723,6 +723,8 @@
       "legend": "Stiger/synker (m/s)",
       "legendSink": "Synk",
       "legendLift": "Løft",
+      "error": "Fikk ikke tak i pilotene i lufta.",
+      "retry": "Prøv igjen",
       "climb_sink2": "Sterk synk, under −3 m/s",
       "climb_sink1": "Synk, −3 til −1,5 m/s",
       "climb_glide": "Glid, −1,5 til +0,5 m/s",

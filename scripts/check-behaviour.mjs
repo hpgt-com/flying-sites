@@ -288,6 +288,10 @@ const scenarios = {
     await page.goto(`${origin}/flysteder/heia/`, { waitUntil: "load" });
     await page.locator("#site-map").scrollIntoViewIfNeeded();
     await page.locator("#site-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("stedssiden har ikke kart"));
+    // «Piloter i lufta» says so when the pilots cannot be fetched, instead of an empty map.
+    await layerOn(page, "Piloter i lufta");
+    await page.locator(".live-status:not([hidden])").waitFor({ timeout: 5000 }).catch(() => problems.push("«Piloter i lufta» sier ikke fra når datatjenesten er nede"));
+    if (!(await page.locator(".live-status [data-retry]").count())) problems.push("ingen «Prøv igjen» for piloter i lufta");
     await context.close();
     return [...problems, ...errors];
   },
