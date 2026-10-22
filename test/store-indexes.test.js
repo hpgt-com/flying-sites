@@ -12,8 +12,8 @@ const { Store } = await import("../workers/data/src/store.js");
 
 const source = readFileSync(new URL("../workers/data/src/store.js", import.meta.url), "utf8");
 const COLUMNS = FIELDS.map((f) => f.key);
-// The SQL of each sql.exec in store.js, with the parts it builds put in. Those built from a table name (the rebuild
-// and the backup) are left out.
+// The SQL of each sql.exec in store.js, with the parts it builds put in. Those built from a table name (the backup)
+// are left out.
 const statements = [...source.matchAll(/sql\.exec\(\s*(?:"([^"]+)"|`([^`]+)`)/g)].map((m) => (m[1] ?? m[2])
   .replace("${SELECT}", `SELECT source, station, time, ${COLUMNS.join(", ")}, extra FROM measurements`)
   .replace(/\s+/g, " ")).filter((s) => !s.includes("${"));
