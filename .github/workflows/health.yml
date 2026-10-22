@@ -1,9 +1,11 @@
 name: Data service health
 
-# Checks the data service from outside once an hour (/v1/status.json, workers/data/src/health.js): that it answers, and
-# that every dataset is within its age limit. Opens an issue when something is wrong (a comment on the open one if it
-# still is), and closes it when all is well again. GitHub may run it late, which is fine for a check like this.
-# Runs no project code and needs no secrets.
+# Checks the data service from outside once an hour (/v1/status.json, workers/data/src/health.js): that it answers, that
+# every dataset is within its age limit, that the backup is not behind, and that no source has been failing for a day.
+# Opens an issue when something is wrong (a comment on the open one when the problems change), and closes it when all
+# is well again; the run fails while there are problems, so they show in the Actions history too. GitHub may run it
+# late, which is fine for a check like this; it also turns the schedule off after 60 days without a commit, so an
+# outside monitor (see SECURITY.md) is the real watch. Runs no project code and needs no secrets.
 
 on:
   schedule:
@@ -27,11 +29,21 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="Datatjenesten: data mangler eller er for gamle"
+          # What counts as a problem: a dataset over its age limit, launches missing from one, the backup behind, and a
+          # source whose last run failed and whose last success is more than a day ago (or never). A source that failed
+          # once and then succeeded is not a problem: the sources talk to other people's servers and fail now and then,
+          # and a dataset that is still fresh shows the service coped. The error texts come from those servers, so
+          # they go in backticks with backticks and line breaks removed.
           if body=$(curl -fsS --max-time 30 --retry 2 "$STATUS_URL") && echo "$body" | jq -e . > /dev/null; then
             problems=$(echo "$body" | jq -r '
+              def t: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601;
+              def clean: gsub("[`\n\r]"; " ");
               [.datasets | to_entries[] | select(.value.ok | not) | "- \(.key): sist skrevet \(.value.updated // "aldri") (\(.value.ageMinutes // "?") min, grense \(.value.maxAgeMinutes) min)"]
               + [.datasets | to_entries[] | select((.value.missing // []) | length > 0) | "- \(.key): mangler \(.value.missing | join(", "))"]
-              + [.sources | to_entries[] | select(.value.errorAt and (.value.ok == null or .value.errorAt > .value.ok)) | "- kilden \(.key) feilet sist: \(.value.error)"]
+              + [.backup // empty | select(.ok | not) | "- backup: siste \(.day // "aldri") (\(.daysAgo // "?") dager siden, grense \(.maxDays) dager)"]
+              + [.sources | to_entries[] | select(.value.errorAt and (.value.ok == null or .value.errorAt > .value.ok))
+                  | select(.value.ok == null or (now - (.value.ok | t)) > 86400)
+                  | "- kilden \(.key) feilet sist \(.value.errorAt), sist vellykket \(.value.ok // "aldri"): `\(.value.error | clean)`"]
               | join("\n")')
           else
             problems="- $STATUS_URL svarte ikke, eller ikke med JSON."
@@ -44,9 +56,16 @@ jobs:
           fi
           echo "$problems"
           if [ -n "$n" ]; then
-            gh issue comment "$n" --body "Fortsatt: $RUN_URL
+            # A comment only when the list of problems has changed since the last one, so the issue is not filled with
+            # one comment an hour saying the same.
+            last=$(gh issue view "$n" --json body,comments --jq '[.body] + (.comments | map(.body)) | last' | grep '^- ' || true)
+            if [ "$last" = "$problems" ]; then
+              echo "Uendret siden forrige melding på #$n."
+            else
+              gh issue comment "$n" --body "Fortsatt ($RUN_URL):
 
           $problems"
+            fi
           else
             gh issue create --title "$title" --label bug --body "Den timevise sjekken av datatjenesten fant dette ($RUN_URL):
 
@@ -54,3 +73,5 @@ jobs:
 
           Se loggene i Cloudflare (Workers → data → Observability) og docs/operations.md. Saken lukkes av seg selv når alt er i orden igjen."
           fi
+          # The run fails, so the problem shows in the Actions history and the badge, not only in the issue.
+          exit 1
