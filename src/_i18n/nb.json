@@ -128,7 +128,13 @@
     "allDirections": "Alle retninger",
     "directionHelp": "Trykk på retningene vinden kommer fra. Du kan velge flere.",
     "tapAgain": "Trykk igjen for å åpne flystedet ›",
-    "now": "Nå"
+    "now": "Nå",
+    "timelineLegend": "Tidslinjen: fargen er beste vurdering blant stedene i lista, time for time. Stripet del: varsel bare hver 6. time, uten kast.",
+    "mapLegendLabel": "Forklaring til kartet",
+    "mapLegendSite": "Flysted, ringen i vurderingens farge",
+    "mapLegendCluster": "Flere flysteder: zoom inn eller trykk",
+    "mapLegendStation": "Klubbens værstasjon: målt vind i m/s, hakket der vinden kommer fra",
+    "mapLegendMet": "METs værstasjon"
   },
   "site": {
     "hazardsTitle": "Før du starter",
@@ -440,7 +446,9 @@
       "reasonRain": "Det er meldt regn.",
       "reasonGust": "Kastene er for kraftige (grensen er {limit} m/s).",
       "reasonWind": "Det er for mye vind (grensen er {limit} m/s, lavere på noen steder).",
-      "reasonDirection": "Vindretningen passer ikke for startene våre."
+      "reasonDirection": "Vindretningen passer ikke for startene våre.",
+      "nextWindow": "Neste vindu: {site} {day} kl. {hour}, {rating}.",
+      "noNextWindow": "Ingen vindu i varselet de neste dagene."
     },
     "home": {
       "levelNotSet": "Nivå ikke satt",
@@ -494,7 +502,11 @@
       "allDirections": "Alle retninger",
       "removeFilter": "Fjern filteret {name}",
       "suggestChip": "Kan passe",
-      "measured": "målt"
+      "measured": "målt",
+      "windowsToday": "I dag",
+      "windowsTomorrow": "I morgen",
+      "windows": "{day}: {list}",
+      "noWindows": "{day}: ingen flyvindu"
     },
     "map": {
       "fullscreenOpen": "Vis kartet i fullskjerm",
@@ -541,7 +553,19 @@
         "wind": "Vindturbin",
         "height": "{m} m høy",
         "source": "Kilde: {source}",
-        "lifts": { "chair_lift": "Stolheis", "drag_lift": "Skitrekk", "t-bar": "Skitrekk", "j-bar": "Skitrekk", "platter": "Skitrekk", "rope_tow": "Tautrekk", "gondola": "Gondol", "cable_car": "Taubane", "mixed_lift": "Heis", "zip_line": "Zipline", "goods": "Godsbane" }
+        "lifts": {
+          "chair_lift": "Stolheis",
+          "drag_lift": "Skitrekk",
+          "t-bar": "Skitrekk",
+          "j-bar": "Skitrekk",
+          "platter": "Skitrekk",
+          "rope_tow": "Tautrekk",
+          "gondola": "Gondol",
+          "cable_car": "Taubane",
+          "mixed_lift": "Heis",
+          "zip_line": "Zipline",
+          "goods": "Godsbane"
+        }
       },
       "layerRadar": "Nedbørsradar",
       "radarLoading": "Laster radar …",

@@ -128,7 +128,13 @@
     "allDirections": "All directions",
     "directionHelp": "Tap the directions the wind comes from. You can choose several.",
     "tapAgain": "Tap again to open the site ›",
-    "now": "Now"
+    "now": "Now",
+    "timelineLegend": "The timeline: the colour is the best rating among the sites in the list, hour by hour. Striped part: forecast only every 6 hours, without gusts.",
+    "mapLegendLabel": "Map legend",
+    "mapLegendSite": "Flying site, the ring in the rating's colour",
+    "mapLegendCluster": "Several sites: zoom in or tap",
+    "mapLegendStation": "The club's weather station: measured wind in m/s, the notch where the wind comes from",
+    "mapLegendMet": "MET's weather station"
   },
   "site": {
     "hazardsTitle": "Before you launch",
@@ -440,7 +446,9 @@
       "reasonRain": "Rain is forecast.",
       "reasonGust": "The gusts are too strong (the limit is {limit} m/s).",
       "reasonWind": "There is too much wind (the limit is {limit} m/s, lower at some sites).",
-      "reasonDirection": "The wind direction does not suit our launches."
+      "reasonDirection": "The wind direction does not suit our launches.",
+      "nextWindow": "Next window: {site} {day} at {hour}, {rating}.",
+      "noNextWindow": "No window in the forecast for the next days."
     },
     "home": {
       "levelNotSet": "Level not set",
@@ -494,7 +502,11 @@
       "allDirections": "All directions",
       "removeFilter": "Remove the filter {name}",
       "suggestChip": "May work",
-      "measured": "measured"
+      "measured": "measured",
+      "windowsToday": "Today",
+      "windowsTomorrow": "Tomorrow",
+      "windows": "{day}: {list}",
+      "noWindows": "{day}: no flying window"
     },
     "map": {
       "fullscreenOpen": "Show the map in full screen",
@@ -541,7 +553,19 @@
         "wind": "Wind turbine",
         "height": "{m} m tall",
         "source": "Source: {source}",
-        "lifts": { "chair_lift": "Chairlift", "drag_lift": "Ski tow", "t-bar": "T-bar", "j-bar": "J-bar", "platter": "Platter lift", "rope_tow": "Rope tow", "gondola": "Gondola", "cable_car": "Cable car", "mixed_lift": "Lift", "zip_line": "Zip line", "goods": "Goods cable" }
+        "lifts": {
+          "chair_lift": "Chairlift",
+          "drag_lift": "Ski tow",
+          "t-bar": "T-bar",
+          "j-bar": "J-bar",
+          "platter": "Platter lift",
+          "rope_tow": "Rope tow",
+          "gondola": "Gondola",
+          "cable_car": "Cable car",
+          "mixed_lift": "Lift",
+          "zip_line": "Zip line",
+          "goods": "Goods cable"
+        }
       },
       "layerRadar": "Precipitation radar",
       "radarLoading": "Loading radar …",

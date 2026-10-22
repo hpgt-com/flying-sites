@@ -223,7 +223,7 @@
       (sum.filtered ? '<p class="wind-summary__scope">' + FS.escapeHtml(FS.t("summary.scope", { places: places(sum.total + sum.missing) })) + "</p>" : "") +
       '<p class="wind-summary__counts">' + chips + "</p>" +
       (sum.missing ? '<p class="wind-summary__missing">' + FS.escapeHtml(FS.t("summary.missing", { places: places(sum.missing) })) + "</p>" : "") +
-      (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">' + FS.escapeHtml(FS.t("summary.noneCanWork") + " " + noneReason(sum)) + "</p>" : "");
+      (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">' + FS.escapeHtml(FS.t("summary.noneCanWork") + " " + noneReason(sum) + (sum.next ? " " + sum.next : "")) + "</p>" : "");
     // The parts' widths set on the elements, not in the HTML: the page allows no inline styles (CSP style-src 'self').
     summaryEl.querySelectorAll(".wind-bar__part").forEach(function (el) { el.style.flexGrow = el.getAttribute("data-grow"); });
   }
@@ -602,6 +602,87 @@
         '<p class="muted">' + FS.escapeHtml(FS.t("home.groupNoLevelText", { level: filter.level })) + "</p>";
   }
 
+  // --- Fly windows per site ---
+  // dayWindows (wind.js) per site, for the strip in the list and «neste vindu». Cached per forecast object, since
+  // update() runs on every move of the timeline and the windows change only with the forecast.
+  var windowsCache = { forecast: null, bySite: {} };
+  function siteWindows(site) {
+    if (windowsCache.forecast !== forecast) windowsCache = { forecast: forecast, bySite: {} };
+    var w = windowsCache.bySite[site.id];
+    if (!w) w = windowsCache.bySite[site.id] = W.dayWindows(forecast, site, rules, site.lat, site.lon);
+    return w;
+  }
+  // The day the strips show: today, or tomorrow from 20:00 in Norway, when today's daylight is over.
+  function stripDate(now) {
+    var p = W.osloParts(now);
+    return p.hour >= 20 ? W.osloParts(now + 86400000).date : p.date;
+  }
+  function windowText(w) {
+    var end = W.osloParts(w.end).hour === 0 ? "24" : hourLabel(w.end);
+    return hourLabel(w.start) + "–" + end + " " + RATINGS[w.rating].label.toLowerCase();
+  }
+  // A strip under the rating in a site's row: the day's 24 hours, coloured where the site can work (green) or is
+  // unsure (yellow) in daylight, with a mark at the hour chosen in the timeline when it is that day. So the list shows
+  // when a site works, not only whether it does at the chosen time. Built with DOM methods; the colours are set on
+  // the element (no inline styles in the HTML).
+  function renderWindowStrip(li, site, windOn) {
+    var el = li.querySelector(".results__windows");
+    if (!windOn || !forecast.sites[site.id]) { if (el) el.remove(); return; }
+    var now = Date.now(), date = stripDate(now), today = W.osloParts(now).date;
+    var windows = siteWindows(site)[date] || [];
+    if (!el) {
+      el = domEl("span", "results__windows");
+      el.appendChild(domEl("span", "results__windows-text"));
+      var bar = el.appendChild(domEl("span", "results__windows-bar"));
+      bar.setAttribute("aria-hidden", "true");
+      // Marks at 06, 12 and 18, so the hours can be read off the bar.
+      [6, 12, 18].forEach(function (h) { var tick = bar.appendChild(domEl("span", "results__windows-tick")); tick.style.left = (h / 24 * 100) + "%"; });
+      bar.appendChild(domEl("span", "results__windows-at"));
+      li.querySelector(".results__body").appendChild(el);
+    }
+    var hourOf = function (ms) { var p = W.osloParts(ms); return p.date === date ? p.hour : p.date < date ? 0 : 24; };
+    var stops = ["transparent 0%"];
+    windows.forEach(function (w) {
+      var a = (hourOf(w.start) / 24 * 100).toFixed(1) + "%", b = (hourOf(w.end) / 24 * 100).toFixed(1) + "%";
+      stops.push("transparent " + a, BAR_COLORS[w.rating] + " " + a, BAR_COLORS[w.rating] + " " + b, "transparent " + b);
+    });
+    stops.push("transparent 100%");
+    var barEl2 = el.querySelector(".results__windows-bar");
+    barEl2.style.backgroundImage = "linear-gradient(90deg, " + stops.join(", ") + ")";
+    // The chosen hour, when the timeline stands on this day.
+    var at = el.querySelector(".results__windows-at");
+    var chosen = windIndex >= 0 ? W.osloParts(Date.parse(forecast.times[windIndex])) : null;
+    at.hidden = !(chosen && chosen.date === date);
+    if (!at.hidden) at.style.left = (chosen.hour / 24 * 100).toFixed(1) + "%";
+    // «I morgen: 08–13 kan passe, 16–17 usikkert», the same for the screen reader and the mouse.
+    var dayWord = date === today ? FS.t("home.windowsToday") : FS.t("home.windowsTomorrow");
+    var text = windows.length ? FS.t("home.windows", { day: dayWord, list: windows.map(windowText).join(", ") }) : FS.t("home.noWindows", { day: dayWord });
+    el.querySelector(".results__windows-text").textContent = text;
+    el.title = text;
+  }
+  // The next window among the sites after the chosen time: the earliest start, «Kan passe» before «Usikkert» at the
+  // same hour, as one sentence («Neste vindu: Dale lørdag kl. 08, kan passe»), or that the forecast has none.
+  function nextWindowText(ids, at) {
+    var best = null;
+    ids.forEach(function (id) {
+      var site = sites.filter(function (s) { return s.id === id; })[0];
+      if (!site || !forecast.sites[id]) return;
+      var days = siteWindows(site);
+      Object.keys(days).forEach(function (date) {
+        days[date].forEach(function (w) {
+          if (w.start <= at) return;
+          if (!best || w.start < best.start || (w.start === best.start && RATINGS[w.rating].order < RATINGS[best.rating].order)) best = { site: site, start: w.start, rating: w.rating };
+        });
+      });
+    });
+    if (!best) return FS.t("summary.noNextWindow");
+    var now = Date.now(), p = W.osloParts(best.start);
+    var day = p.date === W.osloParts(now).date ? FS.t("home.windowsToday").toLowerCase()
+      : p.date === W.osloParts(now + 86400000).date ? FS.t("home.windowsTomorrow").toLowerCase() : weekdayLong.format(best.start);
+    return FS.t("summary.nextWindow", { site: best.site.name, day: day, hour: hourLabel(best.start), rating: RATINGS[best.rating].label.toLowerCase() });
+  }
+  var weekdayLong = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "long", timeZone: "Europe/Oslo" });
+
   function update() {
     applyCategory();
     var assessments = assessAll();
@@ -647,6 +728,7 @@
           ? '<span class="rating-chip rating-chip--' + assessment.rating + '"><span aria-hidden="true">' + ICONS[assessment.rating] + "</span>" +
             FS.escapeHtml(RATINGS[assessment.rating].label) + "</span>" + FS.escapeHtml(windText(assessment.wind))
           : FS.escapeHtml(FS.t("home.noForecast"));
+        renderWindowStrip(li, site, windOn && !!assessments);
       }
       if (site.id === selectedId) showCard(site, assessment, windOn);
     });
@@ -703,12 +785,14 @@
     var scope = assessments ? sites.filter(function (s) { return matches(s, assessments[s.id], true, true) !== "no"; })
       .map(function (s) { return s.id; }) : [];
     var sum = assessments ? summarize(assessments, scope) : null;
+    // When none suit at the chosen time: when the next window is, so the answer is «when», not only «not now».
+    if (sum && sum.counts.ok + sum.counts.maybe === 0) sum.next = nextWindowText(scope, Date.parse(forecast.times[windIndex]));
     renderSummary(sum);
     renderStatus(sum, shownText);
     renderTimeline(scope.length ? scope : sites.filter(function (s) { return matches(s, null, false, true) !== "no"; }).map(function (s) { return s.id; }));
     // Empty result with suggestions on: say why, not just that none suit.
     noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0
-      ? FS.t("home.noneSuggest", { reason: noneReason(sum) })
+      ? FS.t("home.noneSuggest", { reason: noneReason(sum) + (sum.next ? " " + sum.next : "") })
       : filter.q && !sites.some(nameMatches)
         ? FS.t("home.noName", { q: filter.q.trim() })
         : FS.t("home.noResults");
