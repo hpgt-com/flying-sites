@@ -412,7 +412,7 @@ set in `src/_data/photoCredit.json`.
 | `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
 | `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: the robot check (the site key is public, in `src/_data/site.js`) |
 | GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites», Workers, KV and R2 Storage in HPGT only) expires 18.10.2027: make a new one under My Profile → API Tokens → Roll, and update the secret. |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites»: Workers Scripts Edit, Workers R2 Storage Edit, Account Settings Read, in HPGT only, made 22.10.2026 with a year's TTL) expires in October 2027: make a new custom token with the same permissions under My Profile → API Tokens, update the secret, run «Data service» once, and delete the old token. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
@@ -447,8 +447,10 @@ every publish is built from Git.
 **A secret or token may have leaked, or has expired.** Roll it where it lives (the table under
 [Accounts and secrets](#accounts-and-secrets)), and nothing else needs to change:
 
-- `CLOUDFLARE_API_TOKEN`: My Profile → API Tokens → Roll, then the environment `cloudflare` in GitHub. Expires
-  18.10.2027; «Data service» then fails with an authentication error.
+- `CLOUDFLARE_API_TOKEN`: a new custom token under My Profile → API Tokens (Workers Scripts: Edit, Workers R2
+  Storage: Edit, Account Settings: Read, account HPGT only), then the environment `cloudflare` in GitHub, run «Data
+  service» once, and delete the old token. Expires in October 2027; «Data service» then fails with an authentication
+  error.
 - The Worker's secrets (`HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`): new value under
   Variables and Secrets; the running version picks it up at once. For a GitHub App key, make a new key under the app
   and delete the old one. For Turnstile, a new widget under Cloudflare → Turnstile gives a new site key
@@ -484,5 +486,5 @@ is the list of settings to go through afterwards.
 | The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.workers.dev/v1/forecast.json`, and run «Build and deploy» manually. |
 | An issue «Datatjenesten: data mangler eller er for gamle» | See [Data service health](#data-service-health). It closes by itself when the status is in order again. |
 | An issue «Jobben «…» feilet» | A run failed (the job `alert` opens it, or comments on the open one). Open the run from the link, fix the cause, run the workflow again, and close the issue. |
-| «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Roll it and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
+| «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Make a new one (see [Runbook](#runbook)) and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
 | The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |
