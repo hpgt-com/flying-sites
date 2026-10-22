@@ -9,10 +9,13 @@ bodyClass: page-news
 eleventyComputed:
   name: "{{ t.news.title }}"
   description: "{{ t.news.description }}"
+  feedUrl: "{{ '/nytt/feed.xml' | localeUrl(language.code) }}"
+  lastmod: "{{ news.entries[0].date }}"
 ---
 {#- «Nytt på siden»: what is new, for the pilots, and what is planned. Each entry says what it is, where to find it and
     how to read it (src/_data/news.json, in both languages; newest first, grouped by date). The plan links to the issues
-    on GitHub, and asks for wishes through «Meld fra». A new entry goes into news.json with the change. -#}
+    on GitHub, and asks for wishes through «Meld fra». A new entry goes into news.json with the change. The same entries
+    as an Atom feed (feed.njk), linked from the head (base.njk) and under the intro; the sitemap gets the newest date. -#}
 {%- import "macros.njk" as m with context -%}
 {%- set ext = m.external() -%}
 <main class="simple-page news-page">
@@ -25,6 +28,7 @@ eleventyComputed:
     <p class="home__eyebrow">{{ t.home.eyebrow }}</p>
     <h1>{{ t.news.title }}</h1>
     <p class="muted">{{ t.news.intro }}</p>
+    <p class="muted"><a href="{{ feedUrl }}" type="application/atom+xml">{{ t.news.subscribe }}</a></p>
   </div>
 
   {%- set dates = [] -%}

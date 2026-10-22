@@ -13,6 +13,8 @@ eleventyExcludeFromCollections: true
     <loc>{{ p.url | localeUrl(l.code) | htmlBaseUrl(site.url) }}</loc>
     {%- if p.data.derived and p.data.derived.lastModified %}
     <lastmod>{{ p.data.derived.lastModified.date }}</lastmod>
+    {%- elif p.data.lastmod %}
+    <lastmod>{{ p.data.lastmod }}</lastmod>
     {%- endif %}
     {%- if p.data.language %}{% for alt in languages %}
     <xhtml:link rel="alternate" hreflang="{{ alt.code }}" href="{{ p.url | localeUrl(alt.code) | htmlBaseUrl(site.url) }}"/>

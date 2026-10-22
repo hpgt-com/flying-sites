@@ -1,0 +1,35 @@
+---
+pagination:
+  data: languages
+  size: 1
+  alias: language
+permalink: "{{ '/nytt/feed.xml' | localeUrl(language.code) }}"
+eleventyExcludeFromCollections: true
+---
+{#- Atom feed for «Nytt på siden» (src/_data/news.json), one per language (/nytt/feed.xml and /en/whats-new/feed.xml),
+    so pilots can follow what is new in a feed reader. One entry per news entry, newest first as in news.json; the id is
+    the date and the Norwegian title, so it stays the same as long as they do. The entries have a date, not a time, so
+    noon UTC is used. Nunjucks escapes the texts for XML, and the content is XHTML, so nothing is escaped twice. -#}
+{%- set newsUrl = '/nytt/' | localeUrl | htmlBaseUrl(site.url) -%}
+{%- set dates = [] -%}
+{%- for e in news.entries %}{% set dates = (dates.push(e.date), dates) %}{% endfor -%}
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>{{ t.news.title }} – {{ site.title }}</title>
+  <subtitle>{{ t.news.description }}</subtitle>
+  <link rel="alternate" type="text/html" href="{{ newsUrl }}"/>
+  <link rel="self" type="application/atom+xml" href="{{ page.url | htmlBaseUrl(site.url) }}"/>
+  <id>{{ newsUrl }}</id>
+  <updated>{{ dates | sort | last }}T12:00:00Z</updated>
+  <author><name>{{ site.title }}</name><uri>{{ site.hpgtUrl }}/</uri></author>
+  {%- for e in news.entries %}
+  <entry>
+    <title>{{ e.title[lang] or e.title.nb }}</title>
+    <id>{{ newsUrl }}#{{ e.date }}-{{ e.title.nb | slugify }}</id>
+    <link rel="alternate" type="text/html" href="{{ newsUrl }}#news-{{ e.date }}"/>
+    <updated>{{ e.date }}T12:00:00Z</updated>
+    <summary>{{ e.what[lang] or e.what.nb }}</summary>
+    <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>{{ e.what[lang] or e.what.nb }}</p><p><strong>{{ t.news.where }}:</strong> {{ e.where[lang] or e.where.nb }}</p><p><strong>{{ t.news.read }}:</strong> {{ e.read[lang] or e.read.nb }}</p></div></content>
+  </entry>
+  {%- endfor %}
+</feed>
