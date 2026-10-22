@@ -14,10 +14,14 @@ import { bounds, MAX_AGE_SECONDS, PARAGLIDER } from "./live.js";
 export const APRS_HOST = "aprs.glidernet.org";
 // The port for a client's own filter (10152 is the whole world's stream).
 export const APRS_PORT = 14580;
-// Over HTTPS, and over HTTP as OGN's own client asks for it if that fails.
-export const DDB_URLS = ["https://ddb.glidernet.org/download/?j=1", "http://ddb.glidernet.org/download/?j=1"];
+// The device database as CSV (the JSON address, download/?j=1, redirects here since October 2026). Over HTTPS only: a
+// list fetched over HTTP could be changed on the way, and it decides who is shown.
+export const DDB_URL = "https://ddb.glidernet.org/download/ddb-cache.csv";
 // How long the list from the device database is used before it is fetched again.
 export const DDB_MAX_AGE_HOURS = 24;
+// How long a kept list is still used when the database does not answer. After that the reserve gives nothing: a pilot
+// who asked OGN not to be tracked after the list was fetched must not be shown.
+export const DDB_MAX_KEEP_HOURS = 7 * 24;
 // The database has tens of thousands of devices; an answer with far fewer is taken as broken, not as the list.
 const DDB_MIN_DEVICES = 1000;
 const FEET = 0.3048, KNOTS = 0.5144;
@@ -108,22 +112,34 @@ export async function listenAprs(sites, noTrack, { seconds = 20, now = Date.now(
   return [...newest.values()].sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
 }
 
-// From OGN's device database (DDB_URLS, { devices: [{ device_id, tracked, ... }] }): the addresses (upper-case hex) of
-// the devices that must not be tracked. Throws when neither address answers with something that looks like the database.
+// From OGN's device database (DDB_URL): the addresses (upper-case hex) of the devices that must not be tracked. The
+// database is CSV, one device a line, the fields in single quotes:
+//   #DEVICE_TYPE,DEVICE_ID,AIRCRAFT_MODEL,REGISTRATION,CN,TRACKED,IDENTIFIED
+//   'F','DDA5BA','Paraglider','','','N','Y'
+// Only the address and TRACKED are read, from each end of the line, so a comma or a quote in the model or the
+// registration does not matter. The old JSON form ({ devices: [{ device_id, tracked }] }) is still read, should OGN go
+// back to it. Throws when the answer does not look like the database.
 export async function fetchNoTrack(fetchFn = fetch) {
-  let r, error;
-  for (const url of DDB_URLS) {
-    try {
-      r = await fetchFn(url, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(20000) });
-      if (r.ok) break;
-      error = new Error(`OGN-registeret svarte ${r.status}`);
-    } catch (err) { error = err; }
-    r = null;
+  const r = await fetchFn(DDB_URL, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(20000) });
+  if (!r.ok) throw new Error(`OGN-registeret svarte ${r.status}`);
+  const text = await r.text();
+  const devices = parseDdb(text);
+  if (devices.length < DDB_MIN_DEVICES) throw new Error("OGN-registeret ga et uventet svar");
+  return devices.filter((d) => d.tracked !== "Y").map((d) => d.id.toUpperCase());
+}
+
+// The devices in the database's answer, CSV or JSON, as [{ id, tracked }]; [] when it is neither.
+export function parseDdb(text) {
+  const s = String(text).trimStart();
+  if (s.startsWith("{")) {
+    let devices;
+    try { devices = JSON.parse(s)?.devices; } catch { return []; }
+    return Array.isArray(devices) && devices.every((d) => typeof d?.device_id === "string") ? devices.map((d) => ({ id: d.device_id, tracked: d.tracked })) : [];
   }
-  if (!r) throw error;
-  const devices = (await r.json())?.devices;
-  if (!Array.isArray(devices) || devices.length < DDB_MIN_DEVICES || !devices.every((d) => typeof d?.device_id === "string")) {
-    throw new Error("OGN-registeret ga et uventet svar");
+  const out = [];
+  for (const line of s.split("\n")) {
+    const m = /^'[^']*','([0-9A-Fa-f]{6})',.*,'([YN])','[YN]'\s*$/.exec(line);
+    if (m) out.push({ id: m[1], tracked: m[2] });
   }
-  return devices.filter((d) => d.tracked !== "Y").map((d) => d.device_id.toUpperCase());
+  return out;
 }

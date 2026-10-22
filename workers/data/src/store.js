@@ -6,7 +6,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { FIELDS } from "./measurements.js";
 import { mergeTrails } from "./live.js";
-import { fetchNoTrack, DDB_MAX_AGE_HOURS } from "./aprs.js";
+import { fetchNoTrack, DDB_MAX_AGE_HOURS, DDB_MAX_KEEP_HOURS } from "./aprs.js";
 import { INDEXES } from "./indexes.js";
 import { fetchGrid, GRIDS } from "./sources/grid.js";
 import { TABLES, JSON_META, backupPath, latestPath, expiredDay, backupBody, backupRows, restoreSql } from "./backup.js";
@@ -300,8 +300,8 @@ export class Store extends DurableObject {
   // The devices that must not be tracked, from OGN's device database (aprs.js fetchNoTrack), for the APRS reserve: fetched
   // here, where parsing the few MB may take the CPU it needs, once a day on the schedule (refreshNoTrack, so the list is
   // there before OGN goes down, as the database may go down with it) and kept in the state. noTrack: the kept list, or
-  // fetched now when none is kept or it is over DDB_MAX_AGE_HOURS old and the database answers; without any list it
-  // throws, and the reserve gives nothing.
+  // fetched now when none is kept or it is over DDB_MAX_AGE_HOURS old and the database answers; when it does not, the
+  // kept list is used up to DDB_MAX_KEEP_HOURS old. Without a list it throws, and the reserve gives nothing.
   async refreshNoTrack(now) {
     const ids = await fetchNoTrack();
     this.putState("ogn-notrack", { fetched: now, ids });
@@ -314,7 +314,7 @@ export class Store extends DurableObject {
       await this.refreshNoTrack(now);
       return this.getState("ogn-notrack").ids;
     } catch (err) {
-      if (kept) return kept.ids;
+      if (kept && now - kept.fetched < DDB_MAX_KEEP_HOURS * 3600000) return kept.ids;
       throw err;
     }
   }
