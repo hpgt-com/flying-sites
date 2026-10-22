@@ -1,0 +1,42 @@
+name: Browser cache
+
+# Fills the cache of the Playwright browser that the PR check's accessibility job uses (pr-check.yml). A cache made by a
+# PR's own run is seen only by that PR, so without this every PR downloaded Chromium again, and the apt step of the
+# download hung the runner for ten minutes more than once (22.10.2026). A cache made on main is seen by every PR.
+# Runs when the Playwright version may have changed (package-lock.json on main), and by hand. Needs no secrets.
+on:
+  push:
+    branches: [main]
+    paths:
+      - package-lock.json
+      - .github/workflows/browser-cache.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      # The same path and key as in pr-check.yml, so the PR check finds it.
+      - id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
