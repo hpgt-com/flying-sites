@@ -279,3 +279,21 @@ test("forecast grid: every hour for the first 60 hours, then only 06, 12 and 18 
   assert.ok(hours.includes("23T20"), "every hour within 60 hours");
   assert.deepEqual(hours.filter((h) => h >= "24T"), ["24T06", "24T12", "24T18", "25T06", "25T12", "25T18"]);
 });
+
+test("a failure in the store gives a JSON 503 with the CORS headers, never Cloudflare's error page", async () => {
+  const env = { STORE: { idFromName: (n) => n, get: () => ({ getSnapshot: async () => { throw new Error("Durable Object overloaded"); }, getState: async () => { throw new Error("nede"); } }) } };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const res = await worker.fetch(new Request("https://data.test/v1/forecast.json"), env, {});
+    assert.equal(res.status, 503);
+    assert.equal(res.headers.get("access-control-allow-origin"), "*");
+    assert.equal(res.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await res.json(), { error: "unavailable" });
+    const report = await worker.fetch(new Request("https://data.test/v1/report", { method: "POST", headers: { origin: "https://flysteder.hpgt.com", "content-type": "application/json" }, body: "{}" }),
+      { ...env, TURNSTILE_SECRET: "x", GITHUB_ISSUES_TOKEN: "y", REPORTS_APP_ID: "", REPORTS_APP_PRIVATE_KEY: "" }, {});
+    assert.equal(report.status, 400, "a report that is wrong is refused before the store is asked");
+  } finally {
+    console.warn = warn;
+  }
+});

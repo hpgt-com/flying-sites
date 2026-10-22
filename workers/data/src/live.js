@@ -15,6 +15,9 @@ export const DATASET = "live";
 export const SOURCE = "Open Glider Network";
 export const LICENSE = "ODbL, Open Glider Network";
 export const CACHE_SECONDS = 10;
+// After OGN and the APRS reserve have both failed, how long the answer is 503 at once, without asking again: otherwise
+// every request while they are down listens to APRS for APRS_LIVE_SECONDS, and the map asks every few seconds.
+export const FAIL_SECONDS = 20;
 // How long the map's request listens to the APRS stream when the web map is down.
 export const APRS_LIVE_SECONDS = 8;
 export const MAX_AGE_SECONDS = 600;
@@ -104,6 +107,9 @@ export async function handleLive(sites, now = Date.now(), cache = globalThis.cac
   const key = new Request("https://data.hpgt.workers.dev/v1/live.json");
   const hit = cache && (await cache.match(key));
   if (hit) return hit;
+  const failKey = new Request("https://data.hpgt.workers.dev/v1/live.json?failed");
+  const unavailable = () => Response.json({ dataset: DATASET, error: "unavailable" }, { status: 503, headers: { "cache-control": "no-store" } });
+  if (cache && (await cache.match(failKey))) return unavailable();
   let body;
   try {
     // A short listen when the reserve is needed: the map asks again in a few seconds.
@@ -115,7 +121,8 @@ export async function handleLive(sites, now = Date.now(), cache = globalThis.cac
     body = JSON.stringify({ dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), ...(items.via ? { via: items.via } : {}), items });
   } catch (err) {
     console.warn(`live: ${err.message}`);
-    return Response.json({ dataset: DATASET, error: "unavailable" }, { status: 503, headers: { "cache-control": "no-store" } });
+    if (cache) await cache.put(failKey, new Response("failed", { headers: { "cache-control": `public, max-age=${FAIL_SECONDS}` } }));
+    return unavailable();
   }
   const res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${CACHE_SECONDS}` } });
   if (cache) await cache.put(key, res.clone());

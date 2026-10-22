@@ -88,33 +88,53 @@ export default {
     }));
   },
 
+  // Whatever goes wrong (the store overloaded or out of its daily quota, a bug), the answer is still JSON with the CORS
+  // headers, so the page sees a 503 it can handle, not Cloudflare's error page without them (which the browser reports
+  // as a CORS failure).
   async fetch(request, env, ctx) {
-    const { pathname } = new URL(request.url);
-    // «Meld fra om endring» (report.js): only from the site itself (or REPORT_ORIGINS when testing).
-    if (pathname === "/v1/report") {
-      const origin = request.headers.get("origin") || "";
-      const allowed = (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).includes(origin);
-      const cors = { "access-control-allow-origin": allowed ? origin : ORIGINS[0], "access-control-allow-methods": "POST, OPTIONS",
-        "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
-      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-      if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
-      if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
-      const { status, body } = await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])));
-      return Response.json(body, { status, headers: cors });
+    try {
+      return await handle(request, env, ctx);
+    } catch (err) {
+      console.warn(`fetch ${new URL(request.url).pathname}: ${err.message}`);
+      const report = new URL(request.url).pathname === "/v1/report";
+      return Response.json({ error: "unavailable" }, { status: 503, headers: { ...(report ? reportCors(request, env).cors : HEADERS), "cache-control": "no-store" } });
     }
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
-    if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
-    if (pathname === "/v1/live.json") {
-      const res = await handleLive(SITES, Date.now(), globalThis.caches?.default, store(env));
-      const headers = new Headers(res.headers);
-      for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
-      return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
-    }
-    if (pathname !== "/v1/status.json" && !DATASETS[pathname]) return new Response("Not found", { status: 404, headers: HEADERS });
-    const res = await cached(globalThis.caches?.default, request, ctx, () => (pathname === "/v1/status.json" ? status(env) : dataset(env, DATASETS[pathname])));
-    return request.method === "HEAD" ? new Response(null, { status: res.status, headers: res.headers }) : res;
   },
 };
+
+// The CORS headers for /v1/report, and whether the request's origin is allowed: the site itself (or REPORT_ORIGINS when
+// testing).
+function reportCors(request, env) {
+  const origin = request.headers.get("origin") || "";
+  const allowed = (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).includes(origin);
+  const cors = { "access-control-allow-origin": allowed ? origin : ORIGINS[0], "access-control-allow-methods": "POST, OPTIONS",
+    "access-control-allow-headers": "content-type", vary: "origin", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
+  return { allowed, cors };
+}
+
+async function handle(request, env, ctx) {
+  const { pathname } = new URL(request.url);
+  // «Meld fra om endring» (report.js).
+  if (pathname === "/v1/report") {
+    const { allowed, cors } = reportCors(request, env);
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+    if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
+    if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
+    const { status, body } = await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])));
+    return Response.json(body, { status, headers: cors });
+  }
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: HEADERS });
+  if (pathname === "/v1/live.json") {
+    const res = await handleLive(SITES, Date.now(), globalThis.caches?.default, store(env));
+    const headers = new Headers(res.headers);
+    for (const [k, v] of Object.entries(HEADERS)) headers.set(k, v);
+    return new Response(request.method === "HEAD" ? null : res.body, { status: res.status, headers });
+  }
+  if (pathname !== "/v1/status.json" && !DATASETS[pathname]) return new Response("Not found", { status: 404, headers: HEADERS });
+  const res = await cached(globalThis.caches?.default, request, ctx, () => (pathname === "/v1/status.json" ? status(env) : dataset(env, DATASETS[pathname])));
+  return request.method === "HEAD" ? new Response(null, { status: res.status, headers: res.headers }) : res;
+}
 
 const JSON_HEADERS = { ...HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${CACHE_SECONDS}` };
 
