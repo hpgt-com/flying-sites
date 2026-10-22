@@ -158,6 +158,11 @@ scripts:
         {{ m.linkRow("https://flybart.net/", "Flybart", t.home.flybart) }}
         {#- http, not https: xcc.no's certificate is for its web host's own name (checked 22.10.2026), so https fails there. #}
         {{ m.linkRow("http://xcc.no/xccflymet.html", "XCC flymet", t.home.xcc) }}
+        {#- The two of Egil Fonn's Davis stations with a page at WeatherLink (what xcc.no itself reads from). Raudmoldheia
+            and Sjurfjellet had pages there too, but they answer 404 (checked 22.10.2026), so they are left out until a
+            new address is known. -#}
+        {{ m.linkRow("https://www.weatherlink.com/embeddablePage/show/b322510c683a4cd7a2d667e948c42f4e/summary", "Kveøya 260 moh", t.home.weatherlink) }}
+        {{ m.linkRow("https://www.weatherlink.com/embeddablePage/show/39813c46511c42f8b15b230ca9c8dcf8/summary", "Sollifjellet 560 moh", t.home.weatherlink) }}
         {{ m.linkRow(t.home.yrUrl, "Yr", t.home.yrHarstad) }}
         {{ m.linkRow("https://www.windy.com/68.8/16.4?68.8,16.4,9", "Windy", t.home.windyHome) }}
       </nav>
