@@ -41,6 +41,9 @@ jobs:
     if: ${{ !inputs.test_app_token }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # The secrets (OPENAIP_API_KEY here, APP_PRIVATE_KEY in pr and test-app-token) live in the environment
+    # «automation», which only main may use, so a workflow changed on another branch cannot read them.
+    environment: automation
     permissions:
       contents: read
     outputs:
@@ -91,6 +94,7 @@ jobs:
     if: needs.fetch.outputs.changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: automation
     permissions:
       contents: write
       pull-requests: write
@@ -171,6 +175,7 @@ jobs:
     if: ${{ inputs.test_app_token }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment: automation
     permissions: {}
     steps:
       - name: Sjekk at APP_CLIENT_ID er satt

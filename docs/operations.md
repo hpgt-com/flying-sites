@@ -405,8 +405,8 @@ set in `src/_data/photoCredit.json`.
 
 | What | Where | Used for |
 |---|---|---|
-| `OPENAIP_API_KEY` | GitHub → Settings → Secrets | Monthly airspace fetch |
-| GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; flying-sites → Settings → Secrets and variables | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
+| `OPENAIP_API_KEY` | GitHub → Settings → Environments → `automation` (only `main`) | Monthly airspace fetch |
+| GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; the variable under flying-sites → Settings → Secrets and variables, the secret in the environment `automation` (only `main`) | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
 | Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.workers.dev`) and «Meld fra» |
 | `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | The Holfuy stations |
 | `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
@@ -455,7 +455,7 @@ every publish is built from Git.
   Variables and Secrets; the running version picks it up at once. For a GitHub App key, make a new key under the app
   and delete the old one. For Turnstile, a new widget under Cloudflare → Turnstile gives a new site key
   (`src/_data/site.js`) and secret.
-- `OPENAIP_API_KEY` and `APP_PRIVATE_KEY`: new value under Settings → Secrets.
+- `OPENAIP_API_KEY` and `APP_PRIVATE_KEY`: new value under Settings → Environments → `automation`.
 - A GitHub account with admin: change the password, check Settings → Sessions and Applications, and keep two-factor
   with a security key.
 

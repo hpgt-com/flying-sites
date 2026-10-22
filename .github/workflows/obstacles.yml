@@ -73,6 +73,8 @@ jobs:
     if: needs.fetch.outputs.changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # APP_PRIVATE_KEY lives in the environment «automation», which only main may use (see airspace.yml).
+    environment: automation
     permissions:
       contents: write
       pull-requests: write

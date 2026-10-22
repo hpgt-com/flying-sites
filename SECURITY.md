@@ -76,8 +76,9 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   messages from the sources, the launch ids missing and the last archived day.
 - OpenSSF Scorecard (`scorecard.yml`) checks the repository against supply-chain good practice weekly (and
   when the branch rules change). The results are in Code scanning and behind the badge in README.
-- Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored as repository secrets, never in the code. Planned: move
-  them to an environment `automation` that only `main` may use, so a workflow on another branch cannot read them. `.gitignore` blocks `.env` and
+- Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored in the GitHub environment `automation`, which only `main`
+  may use, so a workflow changed on another branch cannot read them; the jobs that use them (`airspace.yml`,
+  `obstacles.yml`) name the environment. `.gitignore` blocks `.env` and
   key files.
 - The data service (`workers/data`) runs in the club's Cloudflare account «HPGT». It is published by
   `data-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
