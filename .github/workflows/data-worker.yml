@@ -41,7 +41,7 @@ jobs:
       # No npm cache here: a job that publishes should not restore files another run could have written.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
 
       # The launches from the site files (js-yaml from the root packages). --ignore-scripts as in the other workflows.
       - run: npm ci --ignore-scripts
