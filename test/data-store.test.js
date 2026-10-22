@@ -50,6 +50,34 @@ test("cache: a dataset is read from the store once a minute, whatever the query 
   assert.equal(cacheKey(new Request("https://data.test/v1/forecast.json?a=1")).url, "https://data.test/v1/forecast.json");
 });
 
+test("cache: when the store fails, the last good answer is served as the reserve, marked and not cached", async () => {
+  const svc = service();
+  svc.store.putSnapshot("forecast", '{"dataset":"forecast","fetched":"2026-10-18T15:00:00Z"}');
+  const cache = fakeCache();
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    await withCache(cache, async () => {
+      const waits = [];
+      assert.equal((await worker.fetch(new Request("https://data.test/v1/forecast.json"), svc.env, { waitUntil: (p) => waits.push(p) })).status, 200);
+      await Promise.all(waits);
+      assert.match(cache.entries.get("https://data.test/v1/forecast.json?stale").headers.get("cache-control"), /max-age=43200/, "the reserve is kept twelve hours");
+      cache.entries.delete("https://data.test/v1/forecast.json");
+      const down = { ...svc.env, STORE: { idFromName: (n) => n, get: () => ({ getSnapshot: async () => { throw new Error("Durable Object overloaded"); } }) } };
+      const res = await worker.fetch(new Request("https://data.test/v1/forecast.json"), down, {});
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get("x-stale"), "1");
+      assert.equal(res.headers.get("cache-control"), "no-store");
+      assert.equal(res.headers.get("access-control-allow-origin"), "*");
+      assert.equal((await res.json()).fetched, "2026-10-18T15:00:00Z", "the last good answer, with its own time");
+      cache.entries.clear();
+      assert.equal((await worker.fetch(new Request("https://data.test/v1/forecast.json"), down, {})).status, 503, "without a reserve the failure is a 503");
+    });
+  } finally {
+    console.warn = warn;
+  }
+});
+
 test("cache: «no data yet» and unknown paths are not cached", async () => {
   const svc = service();
   await withCache(fakeCache(), async () => {
