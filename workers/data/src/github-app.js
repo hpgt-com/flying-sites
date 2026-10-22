@@ -37,7 +37,9 @@ export async function appJwt(appId, pem, now = Date.now()) {
   return `${head}.${claims}.${b64url(sig)}`;
 }
 
-// A token for the app's installation on `repo` ("owner/name"), for one call.
+// A token for the app's installation on `repo` ("owner/name"), for one call. The token is asked for with only that
+// repository and Issues: write, so it can do no more than that even if the app is one day installed on more or given
+// more.
 export async function installationToken(env, repo, now = Date.now()) {
   const api = env.GITHUB_API || API;
   const jwt = await appJwt(env.REPORTS_APP_ID, env.REPORTS_APP_PRIVATE_KEY, now);
@@ -45,7 +47,11 @@ export async function installationToken(env, repo, now = Date.now()) {
   const inst = await fetch(`${api}/repos/${repo}/installation`, { headers: auth, signal: AbortSignal.timeout(10000) });
   if (!inst.ok) throw new Error(`GitHub (installasjon) svarte ${inst.status}`);
   const { id } = await inst.json();
-  const tok = await fetch(`${api}/app/installations/${id}/access_tokens`, { method: "POST", headers: auth, signal: AbortSignal.timeout(10000) });
+  const tok = await fetch(`${api}/app/installations/${id}/access_tokens`, {
+    method: "POST", headers: { ...auth, "content-type": "application/json" },
+    body: JSON.stringify({ repositories: [repo.split("/")[1]], permissions: { issues: "write" } }),
+    signal: AbortSignal.timeout(10000),
+  });
   if (!tok.ok) throw new Error(`GitHub (token) svarte ${tok.status}`);
   return (await tok.json()).token;
 }
