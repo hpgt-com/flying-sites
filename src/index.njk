@@ -183,6 +183,13 @@ scripts:
         <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
         <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
         {{ m.legend() }}
+        {#- What the marks on the map are: a site, a cluster of sites, the club's and MET's weather stations. -#}
+        <ul class="legend map-legend" aria-label="{{ t.home.mapLegendLabel }}">
+          <li><span class="map-legend__site" aria-hidden="true"></span>{{ t.home.mapLegendSite }}</li>
+          <li><span class="map-legend__cluster" aria-hidden="true">3</span>{{ t.home.mapLegendCluster }}</li>
+          <li><span class="map-legend__station" aria-hidden="true">5</span>{{ t.home.mapLegendStation }}</li>
+          <li><span class="map-legend__station map-legend__station--met" aria-hidden="true">5</span>{{ t.home.mapLegendMet }}</li>
+        </ul>
         {% if forecast or site.forecastUrl %}
         <ul class="legend wind-legend" id="wind-legend" aria-label="{{ t.home.windLegendLabel }}">
           <li><span class="wind-dot wind-dot--ok"></span>{{ t.home.ratingOk }}</li>
@@ -190,6 +197,7 @@ scripts:
           <li><span class="wind-dot wind-dot--high"></span>{{ t.home.ratingHigh }}</li>
           <li><span class="wind-dot wind-dot--no"></span>{{ t.home.ratingNo }}</li>
           <li class="wind-legend__arrow">{{ t.home.windLegendArrow }}</li>
+          <li class="wind-legend__arrow" id="timeline-legend">{{ t.home.timelineLegend }}</li>
         </ul>
         <details class="wind-rules">
           <summary>{{ t.home.rulesSummary }}</summary>
@@ -206,7 +214,7 @@ scripts:
       <label class="timeline__time" for="timeline-range" id="timeline-time"></label>
       <div class="timeline__track">
         <div class="timeline__bar" id="timeline-bar" aria-hidden="true"></div>
-        <input type="range" id="timeline-range" min="0" max="47" step="1" value="0">
+        <input type="range" id="timeline-range" min="0" max="47" step="1" value="0" aria-describedby="timeline-legend">
         <div class="timeline__days" id="timeline-days" aria-hidden="true"></div>
       </div>
     </div>
