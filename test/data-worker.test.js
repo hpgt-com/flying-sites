@@ -791,12 +791,18 @@ test("aprs: the reserve when OGN's web map does not answer, only with the list o
   }
 });
 
-test("aprs: the devices that must not be tracked, from OGN's device database, over HTTP when HTTPS fails, a broken answer refused", async () => {
-  const devices = Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" }));
+test("aprs: the devices that must not be tracked, from OGN's device database as CSV (or JSON), a broken answer refused", async () => {
+  const csv = "#DEVICE_TYPE,DEVICE_ID,AIRCRAFT_MODEL,REGISTRATION,CN,TRACKED,IDENTIFIED\n"
+    + Array.from({ length: 1200 }, (_, i) => `'F','${i.toString(16).padStart(6, "0")}','${i === 5 ? "Ventus 2cxM, 18m" : i === 6 ? "L'Hirondelle" : "Unknown"}','D-${i}','','${i % 100 ? "Y" : "N"}','Y'`).join("\r\n") + "\r\n";
   const asked = [];
-  const ids = await aprsMod.fetchNoTrack(async (url) => { asked.push(url.slice(0, 5)); return url.startsWith("https") ? new Response("", { status: 502 }) : Response.json({ devices }); });
-  assert.deepEqual(asked, ["https", "http:"]);
+  const ids = await aprsMod.fetchNoTrack(async (url) => { asked.push(url); return new Response(csv); });
+  assert.deepEqual(asked, [aprsMod.DDB_URL], "over HTTPS only");
   assert.equal(ids.length, 12);
   assert.equal(ids[1], "000064");
+  assert.deepEqual(aprsMod.parseDdb(csv).slice(5, 7), [{ id: "000005", tracked: "Y" }, { id: "000006", tracked: "Y" }], "a comma or a quote in the model does not matter");
+  const devices = Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" }));
+  assert.equal((await aprsMod.fetchNoTrack(async () => Response.json({ devices }))).length, 12, "the old JSON form is still read");
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => Response.json({ devices: devices.slice(0, 10) })), /uventet svar/);
+  await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("<html>down</html>")), /uventet svar/);
+  await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("", { status: 502 })), /svarte 502/);
 });
