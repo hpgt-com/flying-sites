@@ -246,12 +246,16 @@
     arcPane.style.pointerEvents = "none";
     var ll = function (p) { return [p[1], p[0]]; };
     // The arc is kept at least ARC_MIN_PX on screen, and arrow and direction label are computed in pixels, so it
-    // stays readable when zoomed out. Redrawn when the zoom changes.
+    // stays readable when zoomed out a little. Zoomed out further than ARC_MIN_ZOOM (about 28 m per pixel, the
+    // whole mountain a few pixels), the arcs would cover kilometres around a dot, so they are not drawn at all.
+    // Redrawn when the zoom changes.
     var ARC_MIN_PX = 60;
+    var ARC_MIN_ZOOM = 11;
     var arcLayer = L.layerGroup().addTo(map);
     function metersPerPixel() { return 40075016 * Math.cos(data.launch.lat * Math.PI / 180) / (256 * Math.pow(2, map.getZoom())); }
     function drawArcs() {
       arcLayer.clearLayers();
+      if (map.getZoom() < ARC_MIN_ZOOM) return;
       var mpp = metersPerPixel();
       FS.directionArcs(data, { minRadius: ARC_MIN_PX * mpp, arrow: 26 * mpp }).forEach(function (arc) {
         var line = arc.pts.map(ll), stem = [arc.mid, FS.offset(arc.center, arc.bearing, arc.radius + 16 * mpp)].map(ll);
