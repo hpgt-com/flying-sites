@@ -726,6 +726,12 @@ test("status: when each source ran and succeeded, and which datasets are too old
   const later = health.buildStatus({ runs: health.recordRuns(runs, { gridWide: "Open-Meteo svarte 502" }, NOW), snapshots: {}, expected: {}, archive: {}, now: NOW });
   assert.equal(later.datasets["grid-wide"].ok, false, "once it has run, a missing dataset counts");
   assert.equal(s.archive.holfuy, "2026-10-17");
+  assert.equal(s.backup, null, "no archive: nothing to report on");
+  const withBackup = (backup) => health.buildStatus({ runs, snapshots, expected: {}, archive: {}, backup, now: NOW }).backup;
+  assert.deepEqual(withBackup({ day: "2026-10-17", rows: {} }), { day: "2026-10-17", daysAgo: 1, maxDays: 2, ok: true });
+  assert.deepEqual(withBackup({ day: "2026-10-15", rows: {} }), { day: "2026-10-15", daysAgo: 3, maxDays: 2, ok: false }, "three days without a backup is a problem");
+  assert.deepEqual(withBackup(null), { day: null, daysAgo: null, maxDays: 2, ok: false }, "the archive set up but never backed up");
+  assert.equal(health.buildStatus({ runs, snapshots: { forecast: snapshots.forecast }, expected: {}, archive: {}, backup: { day: "2026-10-15" }, now: NOW }).ok, false, "a late backup makes the status not ok");
 });
 
 const aprsMod = await import("../workers/data/src/aprs.js");
