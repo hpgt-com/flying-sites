@@ -68,29 +68,36 @@ export default {
     // When each source last ran, for the ones that are caught up after a missed minute (schedule.js CATCH_UP).
     const last = (await s.getState("health")) ?? {};
     const isDue = (name) => due(name, now, last[name]?.tried);
+    // Each run timed, so the status shows how long each source takes (health.js recordRuns): a source that fails after
+    // twenty seconds has timed out, one that succeeds in eight is slow, and a change over the days is visible.
     const runs = {};
-    if (isDue("forecast")) runs.forecast = forecast.run(s, SITES, now);
-    if (isDue("stations")) runs.stations = holfuy.run(s, env, HOLFUY_STATIONS, now);
-    if (isDue("met")) runs.met = frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE);
-    if (isDue("windgram")) runs.windgram = windgram.run(s, SITES, now);
-    if (isDue("verify")) runs.verify = verify.run(s, siteLinks(), now);
-    if (isDue("flights")) runs.flights = flights.run(s, SITES, now, INTERVALS.flights);
-    if (isDue("grid")) runs.grid = grid.run(s, "grid", SITES, now);
-    if (isDue("gridWide")) runs.gridWide = grid.run(s, "grid-wide", SITES, now);
+    const timed = (name, start) => {
+      if (!isDue(name)) return;
+      const t0 = Date.now();
+      runs[name] = start().then((v) => ({ ms: Date.now() - t0, value: v }), (err) => { throw Object.assign(err instanceof Error ? err : new Error(String(err)), { ms: Date.now() - t0 }); });
+    };
+    timed("forecast", () => forecast.run(s, SITES, now));
+    timed("stations", () => holfuy.run(s, env, HOLFUY_STATIONS, now));
+    timed("met", () => frost.run(s, env, SITES, MET_STATION_SITES, now, MET_EXCLUDE));
+    timed("windgram", () => windgram.run(s, SITES, now));
+    timed("verify", () => verify.run(s, siteLinks(), now));
+    timed("flights", () => flights.run(s, SITES, now, INTERVALS.flights));
+    timed("grid", () => grid.run(s, "grid", SITES, now));
+    timed("gridWide", () => grid.run(s, "grid-wide", SITES, now));
     if (isDue("backup")) {
       const day = new Date(now).toISOString().slice(0, 10);
-      runs.backup = s.backup(day);
+      timed("backup", () => s.backup(day));
       // The salts and address hashes of «Meld fra» from earlier days (report.js): deleted with the day, not only when
       // the next report comes.
       ctx.waitUntil(s.pruneReports(day));
     }
-    if (isDue("ognDdb")) runs.ognDdb = s.refreshNoTrack(now);
+    timed("ognDdb", () => s.refreshNoTrack(now));
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
       Object.keys(runs).forEach((name, i) => {
         const failed = results[i].status === "rejected";
         if (failed) console.warn(`${name}: ${results[i].reason?.message}`);
-        outcome[name] = failed ? results[i].reason?.message || "feil" : null;
+        outcome[name] = { error: failed ? results[i].reason?.message || "feil" : null, ms: failed ? results[i].reason?.ms ?? null : results[i].value.ms };
       });
       // When each source last ran and last succeeded, for /v1/status.json.
       if (Object.keys(outcome).length) await s.putState("health", recordRuns(await s.getState("health"), outcome, now));
