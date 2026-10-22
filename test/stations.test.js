@@ -153,7 +153,8 @@ test("the map thins stations zoomed out: the club's always, then MET's with the 
 test("the marker shows the wind in whole m/s with a notch for the direction, or the temperature", () => {
   globalThis.FlyingSites.formatNumber = (n, d) => Number(n).toFixed(d || 0).replace(".", ",");
   const html = ST.markerHtml(item({ source: "Holfuy" }), NOW, "wind");
-  assert.match(html, /rotate\(225deg\)/);
+  assert.match(html, /station-marker__notch" data-dir="225"/, "the direction as data, the turn is set on the element (no inline style)");
+  assert.doesNotMatch(html, /style=/);
   assert.match(html, /station-marker__dial">4</);
   const temp = ST.markerHtml(item({ source: "MET Norge", temperature: -2.4 }), NOW, "temp");
   assert.match(temp, /station-marker__dial">-2°/);

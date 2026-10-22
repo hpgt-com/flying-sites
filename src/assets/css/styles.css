@@ -2017,3 +2017,9 @@ body.sheet-open { overflow: hidden; }
 .fc-popup td { font-weight: 700; padding: 1px 0; }
 .fc-popup__note { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 @media (max-width: 600px) { .fc-legend { max-width: 190px; } }
+
+/* Reduced motion (a setting in the OS or the browser): no transitions or animations, and no smooth scrolling. Leaflet's
+   zoom and the cluster animation end on a timer as well as on the transition, so they work the same with none. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}

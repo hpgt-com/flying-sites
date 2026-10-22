@@ -156,6 +156,7 @@ scripts:
       <p class="muted">{{ t.home.weatherIntro }}</p>
       <nav class="link-list" aria-label="{{ t.home.weatherLabel }}">
         {{ m.linkRow("https://flybart.net/", "Flybart", t.home.flybart) }}
+        {#- http, not https: xcc.no's certificate is for its web host's own name (checked 22.10.2026), so https fails there. #}
         {{ m.linkRow("http://xcc.no/xccflymet.html", "XCC flymet", t.home.xcc) }}
         {{ m.linkRow(t.home.yrUrl, "Yr", t.home.yrHarstad) }}
         {{ m.linkRow("https://www.windy.com/68.8/16.4?68.8,16.4,9", "Windy", t.home.windyHome) }}

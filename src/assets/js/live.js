@@ -127,7 +127,7 @@
 
     function icon(item) {
       var shape = isNum(item.track)
-        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(' + Math.round(item.track) + 'deg)">' + WING + '</svg>'
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(' + Math.round(item.track) + ' 12 12)">' + WING + '</g></svg>'
         : '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
       return L.divIcon({ className: "live-marker",
         html: '<span class="live-marker__wing">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
