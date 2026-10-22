@@ -164,7 +164,7 @@ the menu and is marked `noindex`. It shows per site:
 - A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
   <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
   Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
-  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 20 a day, and 5 from one address (kept
+  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 50 a day, and 3 from one address (kept
   only as a hash with a salt for the day). Turnstile's answer must be for `flysteder.hpgt.com` (or the hosts in
   `REPORT_ORIGINS` when testing).
 - The issue gets the labels for its kind (`LABELS` in `report.js`): what concerns a site `endringsforslag` and
