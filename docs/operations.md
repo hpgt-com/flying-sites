@@ -522,12 +522,25 @@ within an hour, with no step that needs a developer machine.
 2. **The archive bucket is lost, or emptied.** Create `hpgt-data-archive` again (R2, private), then from any machine with
    rclone and the two keys from the environment `backup`: `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`.
    Then scenario 1 happens by itself. About half an hour for the copy at today's size.
-3. **The Cloudflare account is lost.** New account (on the club's address), R2 and the bucket as under
-   [Weather archive (R2)](#weather-archive-r2), the Worker's secrets as under [Accounts and secrets](#accounts-and-secrets)
-   (the values from the password manager; a lost `REPORTS_APP_PRIVATE_KEY` is replaced by a new key on the app, a lost
-   Turnstile widget by a new one), a new deploy token into the environment `cloudflare`, Actions → «Data service» →
-   «Run workflow», then scenario 2. The pages work from the built-in forecast meanwhile; `src/_data/site.js` names the
-   service's address, which changes with the account. An hour of work plus the copy.
+3. **The Cloudflare account is lost** (or just the archive bucket and the store). In this order, from the checklist
+   under [Accounts and secrets](#accounts-and-secrets) and the club's password manager:
+   1. New account on the club's address, with two-factor sign-in; enable Workers and R2 (a card may be asked for even
+      within the free limits), and create the bucket `hpgt-data-archive` (private).
+   2. A deploy token as under [Runbook](#runbook) «A secret or token may have leaked», and the new token and account
+      id into the GitHub environment `cloudflare`.
+   3. A new Turnstile widget for `flysteder.hpgt.com` (site key into `src/_data/site.js` through a PR, secret into the
+      Worker below), and a new private key on the GitHub App «HPGT Flying Sites Reports».
+   4. Actions → «Recover» → «Run workflow» with `restore_archive` on, `lost_store` on, and `base_url` set to the new
+      account's `workers.dev` address: it fetches the copy from B2, writes the archive back to R2 (one object at a
+      time through the API, minutes for months of files), publishes the data service, waits until it runs, and
+      checks that the store read the history back in with exactly the rows in the copy.
+   5. The Worker's secrets by hand in Cloudflare → Workers & Pages → data → Settings → Variables and Secrets:
+      `HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY`. They are kept
+      out of GitHub on purpose (SECURITY.md): a second copy there would widen what a bad workflow change could reach,
+      for a scenario where two of them must be made anew anyway. Until they are set, the stations, «Meld fra» and
+      MET's stations are off; the rest runs.
+   6. The new address into `src/_data/site.js` (`forecastUrl` and the others) through a PR, and the health check and
+      UptimeRobot pointed at it. An hour of work plus the copy.
 4. **The GitHub repository is lost.** Push any clone, or the bundle from B2, to a new repository (`git clone
    flying-sites.bundle`, add the remote, `git push --all`). Then the settings from the `SECURITY.md` checklist: Pages
    with the domain, the environments `automation`, `cloudflare` and `backup` with their secrets and variables, the
@@ -553,10 +566,9 @@ the schedule is fired once, and the store must read every row back in, compared 
 (`scripts/restore-drill.mjs`, `lib/restore-drill.js`). A failed drill opens the issue «Gjenopprettingsøvelsen feilet»;
 the Actions history of the workflow is the record of the drills.
 
-**Not yet done.** A «Recover» workflow that runs scenario 3's deploy and checks in one go (needs the Worker's secrets
-in the GitHub environment `cloudflare` too). A copy of the repository at another Git host would make scenario 4 a push
-instead of a bundle. A staging Worker (`[env.staging]` in `wrangler.toml`) only if store migrations need trying
-against real Cloudflare before `main`.
+**Not yet done.** A copy of the repository at another Git host would make scenario 4 a push instead of a bundle. A
+staging Worker (`[env.staging]` in `wrangler.toml`) only if store migrations need trying against real Cloudflare before
+`main`.
 
 ## Troubleshooting
 
