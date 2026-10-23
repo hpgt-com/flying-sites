@@ -493,6 +493,64 @@ address if it is still a person's), access to the GoatCounter account and to the
 the two GitHub Apps (the organization owns them). Then remove the people who left. The checklist in `SECURITY.md`
 is the list of settings to go through afterwards.
 
+## Disaster recovery
+
+What is lost when each part goes, what brings it back, and how long it takes. The site is static and built from Git,
+and the data service keeps only data that comes back by itself within the hour, except the history and the archive,
+which are copied every night. Everything below that says «by itself» has been run at least once, with the date.
+
+**Targets.** At most 24 hours of history and archive lost (the copies are nightly). The site and the data service back
+within an hour, with no step that needs a developer machine.
+
+**What lives where, and its copies.**
+
+| What | Lives in | Comes back from | Copy taken |
+|---|---|---|---|
+| Code, site files, images, workflows | GitHub (`hpgt-com/flying-sites`) | Any clone; `git/flying-sites.bundle` in the B2 bucket (`git clone flying-sites.bundle`) | Bundle every Sunday (`backup.yml`); every maintainer's clone |
+| Issues (including «Meld fra») and comments | GitHub | `github/issues.json` and `github/issue-comments.json` in the B2 bucket, as the API gives them | Every night |
+| Forecast, winds aloft, grids, last 7 days of measurements, pilots in the air | The store (Durable Object) | The sources, within the hour; the last 7 days of measurements only as far as the sources' own history goes (Holfuy and Frost give the latest only) | None needed |
+| Flying activity per day, verification history | The store | `backup/<table>/latest.json` in R2, read in by the store itself within a minute of being empty (`store.js` `restore`, since 23.10.2026) | Every night 02:14 UTC to R2, 03:30 UTC on to B2 |
+| Weather archive (CSV per station and day) | R2 `hpgt-data-archive` | `archive/` in the B2 bucket `hpgt-flysteder-backup` (`rclone copy b2:… r2:…`) | Every night 03:30 UTC |
+| Settings outside Git: rulesets, environments, Pages, Turnstile, the GitHub Apps, DNS | GitHub, Cloudflare, the DNS provider | By hand from the checklist in `SECURITY.md` and the table under [Accounts and secrets](#accounts-and-secrets) | None (it is small; the checklist is the copy) |
+| Secrets and keys | Where the table says; the values in the club's password manager | Rolled, never restored: new values where they live | — |
+
+**Scenarios, in the order to work them.**
+
+1. **The store is lost** (a Durable Object migration gone wrong, a Cloudflare incident, a reset). Nothing to do. The
+   next minute the store reads the history back in from R2, the sources fill the rest within the hour, and
+   `/v1/status.json` shows `backup.restored` with the time and rows. Verified 23.10.2026: 274 + 1 rows in 1.1 s.
+2. **The archive bucket is lost, or emptied.** Create `hpgt-data-archive` again (R2, private), then from any machine with
+   rclone and the two keys from the environment `backup`: `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`.
+   Then scenario 1 happens by itself. About half an hour for the copy at today's size.
+3. **The Cloudflare account is lost.** New account (on the club's address), R2 and the bucket as under
+   [Weather archive (R2)](#weather-archive-r2), the Worker's secrets as under [Accounts and secrets](#accounts-and-secrets)
+   (the values from the password manager; a lost `REPORTS_APP_PRIVATE_KEY` is replaced by a new key on the app, a lost
+   Turnstile widget by a new one), a new deploy token into the environment `cloudflare`, Actions → «Data service» →
+   «Run workflow», then scenario 2. The pages work from the built-in forecast meanwhile; `src/_data/site.js` names the
+   service's address, which changes with the account. An hour of work plus the copy.
+4. **The GitHub repository is lost.** Push any clone, or the bundle from B2, to a new repository (`git clone
+   flying-sites.bundle`, add the remote, `git push --all`). Then the settings from the `SECURITY.md` checklist: Pages
+   with the domain, the environments `automation`, `cloudflare` and `backup` with their secrets and variables, the
+   rulesets, the two GitHub Apps' installation. The issues are in `github/issues.json` for reading; they are not
+   imported back. Half a day, mostly settings.
+5. **The B2 account is lost.** Nothing is down. New account and bucket, new key into the environment `backup`, and the
+   next night copies everything again from R2.
+6. **The domain.** See «The domain does not resolve» under [Runbook](#runbook). The DNS of `hpgt.com` is outside this
+   repository.
+7. **The person is unavailable.** See «Handing over to a new board» under [Runbook](#runbook). This is the one scenario
+   nothing here automates: it needs a second owner on the GitHub organization and the Cloudflare account, and the
+   password manager shared, before it is needed.
+
+**What watches it.** `backup.yml` fails and opens an issue when the nightly copy or its check fails, and closes it when
+a night goes through again. `health.yml` opens an issue when the store's own backup is more than two days behind, or
+when the restore keeps failing. UptimeRobot e-mails when the site or the status stops answering. A quiet repository
+turns GitHub's schedules off after 60 days without a commit (see [Runbook](#runbook)); UptimeRobot does not depend on it.
+
+**Not yet done.** A staging Worker (`[env.staging]` in `wrangler.toml` with its own store and bucket) and a monthly run
+that restores there from the copy and compares the row counts, so scenario 2 is proven without touching production;
+and a «Recover» workflow that runs scenario 3's deploy and checks in one go. A copy of the repository at another Git
+host would make scenario 4 a push instead of a bundle.
+
 ## Troubleshooting
 
 | Build message | Fix |
