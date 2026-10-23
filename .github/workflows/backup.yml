@@ -9,8 +9,9 @@ name: Backup
 # old versions, so a bad night cannot destroy a good copy. When something fails an issue is opened (a comment on the
 # open one when the message changes), closed when a night succeeds again. The keys are in the GitHub environment
 # «backup» (docs/operations.md «Accounts and secrets»): secrets R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (read-only, the
-# archive bucket only), B2_KEY_ID, B2_APPLICATION_KEY (the backup bucket only); variables R2_ENDPOINT, R2_BUCKET,
-# B2_ENDPOINT (the bucket's S3 address, s3.<region>.backblazeb2.com), B2_BUCKET.
+# archive bucket only), B2_KEY_ID, B2_APPLICATION_KEY (the backup bucket only); variables R2_ENDPOINT and B2_ENDPOINT
+# (the bucket's S3 address, s3.<region>.backblazeb2.com), and R2_BUCKET and B2_BUCKET only when the names differ from
+# the defaults below.
 
 on:
   schedule:
@@ -46,8 +47,9 @@ jobs:
       RCLONE_CONFIG_B2_ENDPOINT: ${{ vars.B2_ENDPOINT }}
       RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
       RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
-      R2_BUCKET: ${{ vars.R2_BUCKET }}
-      B2_BUCKET: ${{ vars.B2_BUCKET }}
+      # The bucket names are not secret and have defaults here; the variables override them for another account or bucket.
+      R2_BUCKET: ${{ vars.R2_BUCKET || 'hpgt-data-archive' }}
+      B2_BUCKET: ${{ vars.B2_BUCKET || 'hpgt-flysteder-backup' }}
     steps:
       - name: Sjekk at nøklene og adressene er satt
         run: |
