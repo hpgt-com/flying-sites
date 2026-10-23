@@ -10,7 +10,7 @@ import { CACHE_SCHEMA, MAX_PAGES, MAX_TILES, offlineUrl, referencedAssets, route
 const PRECACHE = [
   "/assets/css/fonts.css", "/assets/css/styles.css", "/assets/leaflet/leaflet.css", "/assets/leaflet/leaflet.js",
   "/assets/leaflet-markercluster/leaflet.markercluster.js", "/assets/js/theme-init.js", "/assets/js/goatcounter.js",
-  "/assets/js/common.js", "/assets/js/pwa.js", "/assets/js/wind.js", "/assets/js/home.js", "/assets/js/site.js",
+  "/assets/js/common.js", "/assets/js/pwa.js", "/assets/js/wind.js", "/assets/js/home-logic.js", "/assets/js/home.js", "/assets/js/site.js",
   "/assets/js/site-wind.js", "/assets/js/windgram.js", "/assets/js/lightbox.js",
 ];
 // The fonts are requested from fonts.css without a version number, so they are stored under their plain URL.

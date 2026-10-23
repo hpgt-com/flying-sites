@@ -4,28 +4,16 @@
   "use strict";
 
   var FS = window.FlyingSites;
+  // The logic without the DOM (home-logic.js): search, filters, summary, texts and the hash.
+  var H = window.FlyingSitesHome;
   var sites = FS.readJson("sites-data") || [];
-  var LEVELS = ["PP2", "PP3", "PP4", "PP5"];
   // directions: the wind directions chosen in the filter rose. A site matches when it suits one of them.
   var filter = { directions: [], level: "", category: "", q: "" };
   var MOBILE = window.matchMedia("(max-width: 1099px)");
 
-  // --- Search by name and place ---
-  // Lowercase and without accents. Æ, ø and å can be typed in all common ways without a Norwegian keyboard:
-  // «kvaefjord» and «kvafjord» find Kvæfjord, «hoegfjellet» and «hogfjellet» Høgfjellet, «blaahatten» and
-  // «blahatten» Blåhatten. Name and query are normalised the same way (æ, ae → a; ø, oe → o; å, aa → a),
-  // so it may give an extra hit, but never lose one. Spaces and hyphens do not count. Matches anywhere
-  // in the name («solli» → Sollifjellet), or in the municipality or region («kvæfjord», «lofoten»). Names
-  // and places are checked separately, so a query cannot match across the join between them.
-  function searchKey(s) {
-    return String(s || "").toLowerCase()
-      .replace(/æ/g, "a").replace(/ø/g, "o").replace(/å/g, "a")
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[\s\-–]+/g, "")
-      .replace(/ae/g, "a").replace(/oe/g, "o").replace(/aa/g, "a");
-  }
+  // --- Search by name and place (home-logic.js searchKey) ---
   sites.forEach(function (site) {
-    site.searchKeys = [site.name].concat(site.places || []).map(searchKey);
+    site.searchKeys = H.searchKeys(site);
     site.all = { primary: site.primary, possible: site.possible };
   });
 
@@ -39,30 +27,13 @@
       site.possible = own ? own.possible : site.all.possible;
     });
   }
-  function nameMatches(site) {
-    var q = searchKey(filter.q);
-    return !q || site.searchKeys.some(function (key) { return key.indexOf(q) !== -1; });
-  }
   var selectedId = null;
   var markers = {};
 
-  // "match", "unknown" or "no". The level filter shows sites for the selected level and lower (a PP3 pilot can
-  // fly PP2 sites). Sites without a registered level are not hidden, but get "unknown" and are shown separately, since
-  // most sites do not have a level yet and an empty result would otherwise look like «ingen steder».
-  // With forecast suggestions on («Vis bare steder som kan passe»), sites rated
-  // «Passer ikke» or «For mye vind» are dimmed, as when choosing a direction. «Kan passe» and «Usikkert»
-  // stay. Sites without a forecast (the fetch failed for the site) do not disappear, but get "nowind" and are shown
-  // separately under «Mangler varsel – ikke vurdert», so they do not look assessed.
+  // "match", "unknown", "nowind" or "no" for a site against the filters and the suggestion switch (home-logic.js matchSite).
   var suggest = false;
   function matches(site, assessment, windAssessed, ignoreSuggest) {
-    if (!nameMatches(site)) return "no";
-    if (suggest && !ignoreSuggest && assessment && (assessment.rating === "no" || assessment.rating === "high")) return "no";
-    if (filter.directions.length && !filter.directions.some(function (d) { return site.primary.indexOf(d) !== -1 || site.possible.indexOf(d) !== -1; })) return "no";
-    if (filter.category && site.categories.indexOf(filter.category) === -1) return "no";
-    if (filter.level && site.level && LEVELS.indexOf(site.level) > LEVELS.indexOf(filter.level)) return "no";
-    if (suggest && !ignoreSuggest && windAssessed && !assessment) return "nowind";
-    if (filter.level && !site.level) return "unknown";
-    return "match";
+    return H.matchSite(site, filter, { suggest: suggest, assessment: assessment, windAssessed: windAssessed, ignoreSuggest: ignoreSuggest });
   }
   // Groups shown separately at the bottom of the list and slightly dimmed on the map.
   var WEAK = { unknown: true, nowind: true };
@@ -103,20 +74,10 @@
   var dayShort = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "short", timeZone: "Europe/Oslo" });
   // «nå», «kl. 17.00», «i morgen kl. 09.00» or «søn. kl. 13.00», for the forecast hour at index.
   function whenLabel(index) {
-    if (windSlot === "0") return FS.t("home.whenNow");
-    var ms = Date.parse(forecast.times[index]);
-    var day = W.osloParts(ms).date, today = W.osloParts(Date.now()).date, time = W.formatClock(ms);
-    if (day === today) return FS.t("home.whenToday", { time: time });
-    if (day === W.osloParts(Date.now() + 86400000).date) return FS.t("home.whenTomorrow", { time: time });
-    return FS.t("home.whenDay", { day: dayShort.format(ms).replace(/\.$/, "") + ".", time: time });
+    return windSlot === "0" ? FS.t("home.whenNow") : H.whenLabel(forecast, index, Date.now());
   }
-
   // «i dag kl. 08:47», or «16.10 kl. 23:47» for another day.
-  function whenText(iso) {
-    var ms = Date.parse(iso);
-    var today = W.osloParts(Date.now()).date, day = W.osloParts(ms).date;
-    return (day === today ? FS.t("wind.today") : day.slice(8, 10) + "." + day.slice(5, 7)) + " " + FS.t("wind.at", { time: W.formatClock(ms) });
-  }
+  function whenText(iso) { return H.whenText(iso, Date.now()); }
   function fetchedText() { return whenText(forecast.fetched); }
 
   // Returns true when the forecast has just become too old, so the caller can redraw the page.
@@ -160,29 +121,8 @@
   // each rating, with the most common reason. Explains why no sites suit on a windy day.
   var summaryEl = document.getElementById("wind-summary");
   // ids: the sites the summary covers (those matching the filters).
-  function summarize(assessments, ids) {
-    var list = ids.filter(function (id) { return assessments[id]; }).map(function (id) { return assessments[id]; });
-    if (!list.length) return null;
-    var dirs = {}, speeds = [], maxGust = null;
-    var counts = { ok: 0, maybe: 0, high: 0, no: 0 }, highByGust = 0, highByLocal = 0, noByRain = 0;
-    list.forEach(function (a) {
-      var code = W.directionCode(a.wind.dir);
-      dirs[code] = (dirs[code] || 0) + 1;
-      speeds.push(a.wind.speed);
-      if (a.wind.gust != null && (maxGust == null || a.wind.gust > maxGust)) maxGust = a.wind.gust;
-      counts[a.rating]++;
-      // Reason from the code (wind.js), not the text, so it works in all languages.
-      if (a.rating === "high") {
-        if (a.codes[0] === "gust") highByGust++;
-        else if (a.codes[0] === "overSiteLimit") highByLocal++;
-      }
-      if (a.rating === "no" && a.codes[0] === "rain") noByRain++;
-    });
-    speeds.sort(function (x, y) { return x - y; });
-    var mainDir = Object.keys(dirs).sort(function (x, y) { return dirs[y] - dirs[x]; })[0];
-    return { counts: counts, total: list.length, missing: ids.length - list.length, filtered: ids.length < sites.length, highByGust: highByGust, highByLocal: highByLocal, noByRain: noByRain,
-      dir: mainDir, speed: speeds[Math.floor(speeds.length / 2)], minSpeed: speeds[0], maxSpeed: speeds[speeds.length - 1], gust: maxGust };
-  }
+  // The assessments of the sites in ids summed up (home-logic.js summarize), or null without any.
+  function summarize(assessments, ids) { return H.summarize(assessments, ids, sites.length); }
   function places(n) { return FS.tn("summary.places", n); }
   function maybeLabel(n) { return FS.tn("summary.maybe", n); }
   function renderSummary(sum) {
@@ -273,23 +213,8 @@
   }
 
   // The main reason no sites suit, in one sentence.
-  function noneReason(sum) {
-    var c = sum.counts;
-    if (sum.noByRain >= c.high && sum.noByRain >= c.no - sum.noByRain) return FS.t("summary.reasonRain");
-    if (c.high >= c.no) {
-      return sum.highByGust > c.high / 2
-        ? FS.t("summary.reasonGust", { limit: rules.maxGust })
-        : FS.t("summary.reasonWind", { limit: rules.maxWind });
-    }
-    return FS.t("summary.reasonDirection");
-  }
-
-  function windText(wind) {
-    return FS.DIRECTION_LABELS[W.directionCode(wind.dir)] + " " + Math.round(wind.speed) + " m/s, " +
-      (wind.gust != null ? FS.t("wind.gust", { g: Math.round(wind.gust) }) : FS.t("wind.gustUnknown")) +
-      (wind.rain != null && wind.rain >= rules.rainMaybe ? ", " + FS.t("wind.rain", { rain: W.formatRain(wind.rain) }) : "") +
-      (wind.measured ? " (" + FS.t("home.measured") + ")" : "");
-  }
+  function noneReason(sum) { return H.noneReason(sum, rules); }
+  function windText(wind) { return H.windText(wind, rules, FS.DIRECTION_LABELS); }
 
   // The fresh measurement from a site's weather station (stations.js), or null. stationData is the latest answer from the
   // data service, set by addStations below.
@@ -625,15 +550,7 @@
     if (!w) w = windowsCache.bySite[site.id] = W.dayWindows(forecast, site, rules, site.lat, site.lon);
     return w;
   }
-  // The day the strips show: today, or tomorrow from 20:00 in Norway, when today's daylight is over.
-  function stripDate(now) {
-    var p = W.osloParts(now);
-    return p.hour >= 20 ? W.osloParts(now + 86400000).date : p.date;
-  }
-  function windowText(w) {
-    var end = W.osloParts(w.end).hour === 0 ? "24" : hourLabel(w.end);
-    return hourLabel(w.start) + "–" + end + " " + RATINGS[w.rating].label.toLowerCase();
-  }
+  var stripDate = H.stripDate, windowText = H.windowText;
   // A strip under the rating in a site's row: the day's 24 hours, coloured where the site can work (green) or is
   // unsure (yellow) in daylight, with a mark at the hour chosen in the timeline when it is that day. So the list shows
   // when a site works, not only whether it does at the chosen time. Built with DOM methods; the colours are set on
@@ -673,28 +590,12 @@
     el.querySelector(".results__windows-text").textContent = text;
     el.title = text;
   }
-  // The next window among the sites after the chosen time: the earliest start, «Kan passe» before «Usikkert» at the
-  // same hour, as one sentence («Neste vindu: Dale lørdag kl. 08, kan passe»), or that the forecast has none.
+  // The next window among the sites after the chosen time, as one sentence («Neste vindu: Dale lørdag kl. 08, kan passe»),
+  // or that the forecast has none (home-logic.js nextWindow).
   function nextWindowText(ids, at) {
-    var best = null;
-    ids.forEach(function (id) {
-      var site = sites.filter(function (s) { return s.id === id; })[0];
-      if (!site || !forecast.sites[id]) return;
-      var days = siteWindows(site);
-      Object.keys(days).forEach(function (date) {
-        days[date].forEach(function (w) {
-          if (w.start <= at) return;
-          if (!best || w.start < best.start || (w.start === best.start && RATINGS[w.rating].order < RATINGS[best.rating].order)) best = { site: site, start: w.start, rating: w.rating };
-        });
-      });
-    });
-    if (!best) return FS.t("summary.noNextWindow");
-    var now = Date.now(), p = W.osloParts(best.start);
-    var day = p.date === W.osloParts(now).date ? FS.t("home.windowsToday").toLowerCase()
-      : p.date === W.osloParts(now + 86400000).date ? FS.t("home.windowsTomorrow").toLowerCase() : weekdayLong.format(best.start);
-    return FS.t("summary.nextWindow", { site: best.site.name, day: day, hour: hourLabel(best.start), rating: RATINGS[best.rating].label.toLowerCase() });
+    var list = sites.filter(function (s) { return ids.indexOf(s.id) !== -1 && forecast.sites[s.id]; });
+    return H.nextWindowText(H.nextWindow(list, at, siteWindows), Date.now());
   }
-  var weekdayLong = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "long", timeZone: "Europe/Oslo" });
 
   // The time the forecast layers show: the hour chosen in the timeline, or now when the wind assessment is off.
   function forecastTime() {
@@ -809,7 +710,7 @@
     // Empty result with suggestions on: say why, not just that none suit.
     noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0
       ? FS.t("home.noneSuggest", { reason: noneReason(sum) + (sum.next ? " " + sum.next : "") })
-      : filter.q && !sites.some(nameMatches)
+      : filter.q && !sites.some(function (s) { return H.nameMatches(s, filter.q); })
         ? FS.t("home.noName", { q: filter.q.trim() })
         : FS.t("home.noResults");
     renderSearchHits();
@@ -1008,7 +909,7 @@
     if (text != null) n.textContent = String(text);
     return n;
   }
-  function hourLabel(ms) { var h = W.osloParts(ms).hour; return (h < 10 ? "0" : "") + h; }
+  var hourLabel = H.hourLabel;
   function windowChip(w) {
     var end = W.osloParts(w.end).hour === 0 ? "24" : hourLabel(w.end);
     // «10–18 SV 3–5 (7)»: the period, most common direction, mean wind from–to and highest gust.
@@ -1255,27 +1156,20 @@
   // Filters, search, wind time and selected site are stored in the URL (#direction=W,NW&level=PP3&wind=3&q=solli&site=sollifjellet),
   // so the back button and shared links give the same view. replaceState, so each click does not become a history step.
   function writeHash() {
-    var params = new URLSearchParams();
-    if (filter.directions.length) params.set("direction", filter.directions.join(","));
-    ["level", "category"].forEach(function (type) { if (filter[type]) params.set(type, filter[type]); });
-    if (forecast && !stale && windSlot !== "0") params.set("wind", windSlot);
-    if (suggest && windSlot !== "off") params.set("forslag", "1");
-    if (filter.q.trim()) params.set("q", filter.q.trim());
-    if (selectedId) params.set("site", selectedId);
-    var hash = params.toString();
+    var hash = H.hashFor({ filter: filter, windSlot: windSlot, windOn: !!(forecast && !stale), suggest: suggest, site: selectedId });
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
     saveView();
   }
 
   function readHash() {
-    var params = new URLSearchParams(location.hash.slice(1));
-    setDirections((params.get("direction") || "").split(","));
-    ["level", "category"].forEach(function (type) { setFilter(type, params.get(type) || ""); });
-    setWind(params.get("wind") || "0");
-    setSuggest(params.get("forslag") === "1");
-    setSearch(params.get("q") || "");
-    var site = params.get("site");
-    selectedId = sites.some(function (s) { return s.id === site; }) ? site : null;
+    var state = H.parseHash(location.hash);
+    setDirections(state.directions);
+    setFilter("level", state.level);
+    setFilter("category", state.category);
+    setWind(state.wind);
+    setSuggest(state.suggest);
+    setSearch(state.q);
+    selectedId = sites.some(function (s) { return s.id === state.site; }) ? state.site : null;
     if (!selectedId) {
       resetCard();
     }
