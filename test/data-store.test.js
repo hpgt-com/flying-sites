@@ -94,7 +94,6 @@ test("backup: each table to R2 by day and as latest, the file from 90 days befor
   svc.archive.files.set(`backup/flight_days/${expiredDay("2026-10-19")}.json`, "old");
   const out = await svc.store.backup("2026-10-19");
   assert.deepEqual(out.rows, { flight_days: 1, verify_hours: 1 });
-  assert.deepEqual(out.restored, {});
   assert.equal(expiredDay("2026-10-19"), "2026-07-21");
   assert.ok(!svc.archive.files.has("backup/flight_days/2026-07-21.json"));
   for (const t of ["flight_days", "verify_hours"]) {
@@ -103,24 +102,38 @@ test("backup: each table to R2 by day and as latest, the file from 90 days befor
   assert.deepEqual(backupRows(svc.archive.files.get("backup/flight_days/latest.json"), "flight_days"), [["2026-10-18", "heia", 4, 3, 120, 3.1, 950]]);
 });
 
-test("backup: a new, empty store reads the latest backup back in, keeping the rows it already has", async () => {
+test("restore: a new, empty store reads the latest backup back in, keeping the rows it already has, once", async () => {
   const old = service();
   old.store.putFlightDays([
     { day: "2026-10-18", site: "heia", flights: 4, pilots: 3, minutes: 120, max_dist: 3.1, max_alt: 950 },
     { day: "2026-10-19", site: "heia", flights: 1, pilots: 1, minutes: 20, max_dist: 1, max_alt: 600 },
   ]);
-  await old.store.backup("2026-10-19");
+  const out = await old.store.backup("2026-10-19");
+  assert.deepEqual(out, { day: "2026-10-19", rows: { flight_days: 2, verify_hours: 0 } });
   const fresh = service();
   fresh.archive.files = old.archive.files;
   Object.assign(fresh.archive, { get: old.archive.get, put: old.archive.put, delete: old.archive.delete });
   // Written since the store was lost: newer than the backup's row for the same day, so it stays.
   fresh.store.putFlightDays([{ day: "2026-10-19", site: "heia", flights: 2, pilots: 2, minutes: 45, max_dist: 2, max_alt: 700 }]);
-  const out = await fresh.store.backup("2026-10-20");
-  assert.deepEqual(out.restored, { flight_days: 2, verify_hours: 0 });
+  const at = Date.parse("2026-10-20T08:00:00Z");
+  assert.deepEqual(await fresh.store.restore(at), { flight_days: 2, verify_hours: 0 });
   assert.deepEqual(fresh.store.flightDays().map((r) => [r.day, r.flights]), [["2026-10-18", 4], ["2026-10-19", 2]]);
-  // Once it has made a backup it never reads one in again.
-  const again = await fresh.store.backup("2026-10-21");
-  assert.deepEqual(again.restored, {});
+  assert.deepEqual(fresh.store.getState("restore"), { at: "2026-10-20T08:00:00.000Z", rows: { flight_days: 2, verify_hours: 0 } });
+  // Once done it never reads one in again, and the nightly backup never does.
+  assert.equal(await fresh.store.restore(at + 60000), null);
+  assert.equal("restored" in (await fresh.store.backup("2026-10-21")), false);
+});
+
+test("restore: an archive without a backup counts as done; one that does not answer is tried again", async () => {
+  const empty = service();
+  assert.deepEqual(await empty.store.restore(0), {});
+  assert.deepEqual(empty.store.getState("restore").rows, {});
+  const down = service();
+  down.archive.get = async () => { throw new Error("R2 nede"); };
+  await assert.rejects(down.store.restore(0), /R2 nede/);
+  assert.equal(down.store.getState("restore"), null);
+  down.archive.get = async () => null;
+  assert.deepEqual(await down.store.restore(0), {});
 });
 
 test("backup: a file for another table or with other columns is refused", () => {

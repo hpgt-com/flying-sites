@@ -94,6 +94,9 @@ export default {
       ctx.waitUntil(s.pruneReports(day));
     }
     timed("ognDdb", () => s.refreshNoTrack(now));
+    // A store without a successful restore in its health state is new (or lost): the latest backup is read back in,
+    // every minute until it succeeds (store.js restore). A store that has done it once, or has no archive, is left alone.
+    if (env.ARCHIVE && !last.restore?.ok) timed("restore", () => s.restore(now));
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
       Object.keys(runs).forEach((name, i) => {
@@ -159,9 +162,9 @@ const JSON_HEADERS = { ...HEADERS, "content-type": "application/json; charset=ut
 // How the sources and datasets are doing (health.js).
 async function status(env) {
   const s = store(env);
-  const [runs, snapshots, holfuyArchive, metArchive, backup] = await Promise.all([
+  const [runs, snapshots, holfuyArchive, metArchive, backup, restore] = await Promise.all([
     s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
-    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`), s.getState("backup"),
+    s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`), s.getState("backup"), s.getState("restore"),
   ]);
   // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
   const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
@@ -170,7 +173,7 @@ async function status(env) {
     expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
     archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null },
     // Without the archive (no R2 binding) there is no backup to report on.
-    backup: env.ARCHIVE ? backup ?? null : undefined });
+    backup: env.ARCHIVE ? backup ?? null : undefined, restore });
   return Response.json(body, { headers: JSON_HEADERS });
 }
 

@@ -132,9 +132,11 @@ the menu and is marked `noindex`. It shows per site:
   of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses
   the days not yet archived), the verification from then on. The flying activity per day (`flight_days`) and the
   verification history (`verify_hours`) are backed up to R2 every night at 02:14 UTC (`backup.js`:
-  `backup/<table>/<day>.json` and `latest.json`, 90 days kept). A new, empty store reads `latest.json` back in on its
-  first backup run, so after a lost store the history is back the following night, with nothing to do by hand. The
-  archive in R2 has the measurements of every finished day.
+  `backup/<table>/<day>.json` and `latest.json`, 90 days kept). A new, empty store reads `latest.json` back in within a
+  minute of starting (`store.js` `restore`, tried every minute until it has succeeded once, shown in `/v1/status.json`
+  as `backup.restored` and as the source `restore`), so after a lost store the history is back with nothing to do by
+  hand, and a restore that keeps failing shows in the health check. The archive in R2 has the measurements of every
+  finished day.
 
 ## Weather stations (Holfuy)
 
