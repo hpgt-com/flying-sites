@@ -143,19 +143,25 @@
       if (this._needed[k.key]) { delete this._waiting[k.key]; this._load(w.tile, w.coords, w.done); }
       else if (this._opaque[k.key] >= k.covers) { delete this._waiting[k.key]; w.done(null, w.tile); }
     },
+    // The tile is a <div>, empty until needed: an <img> without a source draws a thin frame in Chrome, which showed
+    // as a grid over the map. The image is put inside it when the tile is to be loaded.
     createTile: function (coords, done) {
-      var tile = document.createElement("img");
-      tile.alt = "";
-      tile.setAttribute("role", "presentation");
+      var tile = document.createElement("div");
       var key = this._tileCoordsToKey(coords);
       if (this._needed[key]) this._load(tile, coords, done);
       else this._waiting[key] = { tile: tile, coords: coords, done: done };
       return tile;
     },
     _load: function (tile, coords, done) {
-      L.DomEvent.on(tile, "load", function () { done(null, tile); });
-      L.DomEvent.on(tile, "error", function (err) { done(err, tile); });
-      tile.src = this.getTileUrl(coords);
+      var img = document.createElement("img");
+      img.alt = "";
+      img.setAttribute("role", "presentation");
+      img.style.display = "block";
+      img.style.width = img.style.height = "100%";
+      L.DomEvent.on(img, "load", function () { done(null, tile); });
+      L.DomEvent.on(img, "error", function (err) { done(err, tile); });
+      img.src = this.getTileUrl(coords);
+      tile.appendChild(img);
     },
   };
 
