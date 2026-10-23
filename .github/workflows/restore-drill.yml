@@ -1,0 +1,104 @@
+name: Restore drill
+
+# The monthly proof that the off-site copy can be restored (docs/operations.md «Disaster recovery»): the data service's
+# own code is run here on the runner (wrangler dev, local workerd: its own empty store and its own local R2, nothing
+# in Cloudflare is touched), the latest backup of each table is fetched from the copy in B2 and put in that local R2,
+# the schedule is fired once, and the store must read every row back in (workers/data/src/store.js restore), as
+# /v1/status.json reports. So what is proven each month is the copy, the files, and the restore code, together. The
+# schedule's other sources run too and fetch from MET, Holfuy and OGN once, as a deploy would. Fails and opens an
+# issue when the restore does not happen or the rows differ; the issue closes when a drill succeeds again. Needs the
+# B2 key from the environment «backup» (read only is enough here).
+
+on:
+  schedule:
+    - cron: "30 4 1 * *" # the 1st of the month at 04:30 UTC, after the night's copy
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: restore-drill
+  cancel-in-progress: false
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: backup
+    permissions:
+      contents: read
+      issues: write
+    env:
+      RCLONE_CONFIG_B2_TYPE: s3
+      RCLONE_CONFIG_B2_PROVIDER: Other
+      RCLONE_CONFIG_B2_NO_CHECK_BUCKET: "true"
+      RCLONE_CONFIG_B2_ENDPOINT: ${{ vars.B2_ENDPOINT }}
+      RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_BUCKET: ${{ vars.B2_BUCKET || 'hpgt-flysteder-backup' }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - name: Sjekk at nøkkelen og adressen er satt
+        run: |
+          for v in RCLONE_CONFIG_B2_ENDPOINT RCLONE_CONFIG_B2_ACCESS_KEY_ID RCLONE_CONFIG_B2_SECRET_ACCESS_KEY; do
+            [ -n "${!v}" ] || { echo "Mangler i miljøet backup: $v"; exit 1; }
+          done
+          region=$(echo "$RCLONE_CONFIG_B2_ENDPOINT" | sed -E 's#^https?://##; s#/.*$##; s#^s3\.([a-z0-9-]+)\.backblazeb2\.com$#\1#')
+          echo "RCLONE_CONFIG_B2_REGION=$region" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node scripts/data-sites.mjs
+      - run: npm ci --ignore-scripts
+        working-directory: workers/data
+      - name: Installer rclone
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone > /dev/null
+
+      - name: Hent siste sikkerhetskopi fra kopien i B2
+        run: |
+          for t in flight_days verify_hours; do
+            rclone copyto "b2:$B2_BUCKET/archive/backup/$t/latest.json" "files/$t.json"
+          done
+          expected=$(node scripts/restore-drill.mjs expected files)
+          echo "Forventet: $expected"
+          echo "EXPECTED=$expected" >> "$GITHUB_ENV"
+
+      - name: Legg kopien i det lokale arkivet og start datatjenesten lokalt
+        working-directory: workers/data
+        run: |
+          for t in flight_days verify_hours; do
+            npx wrangler r2 object put "hpgt-data-archive/backup/$t/latest.json" --file "../files/$t.json" --local --persist-to "$RUNNER_TEMP/persist" > /dev/null
+          done
+          nohup npx wrangler dev --local --test-scheduled --persist-to "$RUNNER_TEMP/persist" --port 8787 --inspector-port 0 > "$RUNNER_TEMP/dev.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8787/v1/status.json && break; sleep 2; done
+          curl -sf "http://127.0.0.1:8787/__scheduled?cron=*+*+*+*+*"; echo
+
+      - name: Vent på at lageret har lest kopien inn, og sammenlign radene
+        run: node scripts/restore-drill.mjs verdict http://127.0.0.1:8787 "$EXPECTED" 300
+
+      - name: Loggen fra datatjenesten
+        if: always()
+        run: pkill -f "wrangler dev" || true; tail -40 "$RUNNER_TEMP/dev.log" || true
+
+      - name: Si fra når det feiler, og lukk saken når det går igjen
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OUTCOME: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Gjenopprettingsøvelsen feilet"
+          n=$(gh issue list --state open --label bug --search "in:title \"$title\"" --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -n "$n" ]; then gh issue close "$n" --comment "I orden igjen: $RUN_URL"; fi
+            exit 0
+          fi
+          body="Den månedlige øvelsen som gjenoppretter historikken fra kopien i B2 i en lokal datatjeneste feilet ($RUN_URL). Se loggen for om det er kopien, filene eller innlesingen, og docs/operations.md «Disaster recovery». Saken lukkes av seg selv når en øvelse går gjennom igjen."
+          if [ -n "$n" ]; then gh issue comment "$n" --body "Fortsatt: $RUN_URL"; else gh issue create --title "$title" --label bug --body "$body"; fi

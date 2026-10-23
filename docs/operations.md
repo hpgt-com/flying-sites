@@ -546,10 +546,17 @@ a night goes through again. `health.yml` opens an issue when the store's own bac
 when the restore keeps failing. UptimeRobot e-mails when the site or the status stops answering. A quiet repository
 turns GitHub's schedules off after 60 days without a commit (see [Runbook](#runbook)); UptimeRobot does not depend on it.
 
-**Not yet done.** A staging Worker (`[env.staging]` in `wrangler.toml` with its own store and bucket) and a monthly run
-that restores there from the copy and compares the row counts, so scenario 2 is proven without touching production;
-and a «Recover» workflow that runs scenario 3's deploy and checks in one go. A copy of the repository at another Git
-host would make scenario 4 a push instead of a bundle.
+**The monthly drill** (`restore-drill.yml`, the 1st at 04:30 UTC and by hand): scenarios 1 and 2 proven together
+without touching production. The data service's own code runs on the runner (`wrangler dev`, local workerd, with its
+own empty store and local R2), the latest backup of each table is fetched from the copy in B2 and put in that local R2,
+the schedule is fired once, and the store must read every row back in, compared with the rows in the files
+(`scripts/restore-drill.mjs`, `lib/restore-drill.js`). A failed drill opens the issue «Gjenopprettingsøvelsen feilet»;
+the Actions history of the workflow is the record of the drills.
+
+**Not yet done.** A «Recover» workflow that runs scenario 3's deploy and checks in one go (needs the Worker's secrets
+in the GitHub environment `cloudflare` too). A copy of the repository at another Git host would make scenario 4 a push
+instead of a bundle. A staging Worker (`[env.staging]` in `wrangler.toml`) only if store migrations need trying
+against real Cloudflare before `main`.
 
 ## Troubleshooting
 
