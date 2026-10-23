@@ -1,0 +1,117 @@
+name: Backup
+
+# The off-site copy, every night after the data service's own backup (02:14 UTC, workers/data/src/backup.js): the
+# whole archive bucket in R2 (measurements by day, the nightly backups of the history) is copied to a bucket at
+# another provider (Backblaze B2), so a lost Cloudflare account or bucket does not lose the data. The copy is then
+# checked (scripts/check-backup.mjs): the latest backup of each table must be there, parse, and be from today or
+# yesterday. The code and the issues go too: the issues as JSON every night, the whole Git history as a bundle on
+# Sundays (and when run by hand). Nothing is ever deleted from the copy (rclone copy, not sync), and the bucket keeps
+# old versions, so a bad night cannot destroy a good copy. When something fails an issue is opened (a comment on the
+# open one when the message changes), closed when a night succeeds again. The keys are in the GitHub environment
+# «backup» (docs/operations.md «Accounts and secrets»): secrets R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (read-only, the
+# archive bucket only), B2_KEY_ID, B2_APPLICATION_KEY (the backup bucket only); variables R2_ENDPOINT, R2_BUCKET,
+# B2_ENDPOINT (the bucket's S3 address, s3.<region>.backblazeb2.com), B2_BUCKET.
+
+on:
+  schedule:
+    - cron: "30 3 * * *" # 03:30 UTC, after the data service's backup at 02:14
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: backup
+    permissions:
+      contents: read
+      issues: write
+    env:
+      # rclone reads its remotes from the environment: «r2» (Cloudflare) and «b2» (Backblaze), both over the S3 API.
+      RCLONE_CONFIG_R2_TYPE: s3
+      RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+      RCLONE_CONFIG_R2_REGION: auto
+      RCLONE_CONFIG_R2_NO_CHECK_BUCKET: "true"
+      RCLONE_CONFIG_R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_B2_TYPE: s3
+      RCLONE_CONFIG_B2_PROVIDER: Other
+      RCLONE_CONFIG_B2_NO_CHECK_BUCKET: "true"
+      RCLONE_CONFIG_B2_ENDPOINT: ${{ vars.B2_ENDPOINT }}
+      RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      B2_BUCKET: ${{ vars.B2_BUCKET }}
+    steps:
+      - name: Sjekk at nøklene og adressene er satt
+        run: |
+          missing=""
+          for v in RCLONE_CONFIG_R2_ENDPOINT RCLONE_CONFIG_R2_ACCESS_KEY_ID RCLONE_CONFIG_R2_SECRET_ACCESS_KEY RCLONE_CONFIG_B2_ENDPOINT RCLONE_CONFIG_B2_ACCESS_KEY_ID RCLONE_CONFIG_B2_SECRET_ACCESS_KEY R2_BUCKET B2_BUCKET; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then echo "Mangler i miljøet backup:$missing (se docs/operations.md «Accounts and secrets»)"; exit 1; fi
+          # B2 signs with the region in the address (s3.<region>.backblazeb2.com), so rclone is told which it is.
+          region=$(echo "$RCLONE_CONFIG_B2_ENDPOINT" | sed -E 's#^https?://##; s#/.*$##; s#^s3\.([a-z0-9-]+)\.backblazeb2\.com$#\1#')
+          echo "RCLONE_CONFIG_B2_REGION=$region" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Installer rclone
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone > /dev/null && rclone version | head -1
+
+      - name: Kopier arkivet fra R2 til B2
+        # copy, never sync: nothing is deleted from the copy. Files already there with the same size and time are skipped.
+        run: rclone copy "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --transfers 8 --checkers 16 --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -20
+
+      - name: Sjekk kopien av sikkerhetskopien
+        # The latest backup of each table is read back from the copy (not from R2), so what is checked is what a restore would use.
+        run: |
+          for t in flight_days verify_hours; do
+            rclone copyto "b2:$B2_BUCKET/archive/backup/$t/latest.json" "copy/$t/latest.json" || true
+          done
+          node scripts/check-backup.mjs copy
+
+      - name: Kopier sakene og koden
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p out/github out/git
+          # Every issue and pull request with its comments, as the API gives them: «Meld fra» ends up here, and nowhere else.
+          gh api --paginate "repos/$GH_REPO/issues?state=all&per_page=100" > out/github/issues.json
+          gh api --paginate "repos/$GH_REPO/issues/comments?per_page=100" > out/github/issue-comments.json
+          echo "saker: $(jq length out/github/issues.json), kommentarer: $(jq length out/github/issue-comments.json)"
+          # The whole history as one file, on Sundays and when run by hand: it is 50 MB and the bucket keeps old versions.
+          if [ "$(date -u +%u)" = "7" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            git bundle create out/git/flying-sites.bundle --all
+            git bundle verify out/git/flying-sites.bundle
+          fi
+          rclone copy out "b2:$B2_BUCKET" --stats-one-line --stats 0 -v 2>&1 | tail -5
+
+      - name: Si fra når det feiler, og lukk saken når det går igjen
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OUTCOME: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Backup: den nattlige kopien feilet"
+          n=$(gh issue list --state open --label bug --search "in:title \"$title\"" --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -n "$n" ]; then gh issue close "$n" --comment "I orden igjen: $RUN_URL"; fi
+            exit 0
+          fi
+          body="Den nattlige kopien av arkivet og sikkerhetskopien til B2 feilet ($RUN_URL). Se loggen for hvilket steg, og docs/operations.md «Weather archive (R2)» for nøklene og miljøet «backup». Saken lukkes av seg selv når en natt går gjennom igjen."
+          if [ -n "$n" ]; then gh issue comment "$n" --body "Fortsatt: $RUN_URL"; else gh issue create --title "$title" --label bug --body "$body"; fi

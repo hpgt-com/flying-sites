@@ -305,6 +305,18 @@ the menu and is marked `noindex`. It shows per site:
      Only after steps 1 and 2: a deploy with the binding and no bucket fails.
 - Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
   S3 address `https://<account id>.r2.cloudflarestorage.com`.
+- **Off-site copy** (`.github/workflows/backup.yml`, every night at 03:30 UTC and by hand with «Run workflow»): the whole
+  bucket is copied with rclone to the bucket `hpgt-flysteder-backup` at Backblaze B2 (another provider, so a lost
+  Cloudflare account or bucket does not lose the data) under `archive/`, never deleting anything there (the B2 bucket
+  keeps old versions too). The copy's `latest.json` of each table is then checked (`scripts/check-backup.mjs`,
+  `lib/backup-check.js`): present, parses as that table, from today or yesterday. The issues and their comments go to
+  `github/` every night (the only copy of «Meld fra» outside GitHub) and the whole Git history as a bundle to
+  `git/flying-sites.bundle` on Sundays (`git clone flying-sites.bundle` restores it). A failed night opens the issue
+  «Backup: den nattlige kopien feilet», closed by the next good night. The keys are in the GitHub environment `backup`
+  (see [Accounts and secrets](#accounts-and-secrets)). **Restoring R2 from the copy** (a lost bucket): create the
+  bucket, then from a machine with rclone and both keys: `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`;
+  the data service then reads the history back in by itself within a minute of its store being empty (`store.js`
+  `restore`).
 - If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), or comes from a MET
   model run more than 12 hours old (`maxModelAgeHours`), the wind assessment
   is turned off and the site says so.
@@ -417,6 +429,8 @@ set in `src/_data/photoCredit.json`.
 | GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites»: Workers Scripts Edit, Workers R2 Storage Edit, Account Settings Read, in HPGT only, made 22.10.2026 with a year's TTL) expires in October 2027: make a new custom token with the same permissions under My Profile → API Tokens, update the secret, run «Data service» once, and delete the old token. |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
+| Backblaze B2 (free plan; the account is on the club's address) with the bucket `hpgt-flysteder-backup` and the key `github-backup` (that bucket only, read and write, no expiry) | backblaze.com | The off-site copy of the archive, the backups, the issues and the code (`backup.yml`) |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (secrets); `B2_ENDPOINT`, `B2_BUCKET`, `R2_ENDPOINT`, `R2_BUCKET` (variables) | flying-sites → Settings → Environments → `backup` (only `main`) | `backup.yml`. The R2 token («github-backup-read», account token, Object Read only, `hpgt-data-archive` only, no expiry) is made under R2 → Manage R2 API Tokens |
 | UptimeRobot (free plan; the account is on the maintainer's e-mail, moved by changing it under My Settings → Account) | uptimerobot.com | Three monitors every five minutes: `https://flysteder.hpgt.com/` answers, `https://hpgt.com/` (the club's site) answers, and `/v1/status.json` on the data service contains `"ok":true`. E-mails the alert contacts when one fails and when it is back. |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
