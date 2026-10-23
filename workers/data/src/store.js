@@ -224,24 +224,33 @@ export class Store extends DurableObject {
     return this.sql.exec("SELECT day, site, flights, pilots, minutes, max_dist, max_alt FROM flight_days ORDER BY day").toArray();
   }
 
-  // The nightly backup (backup.js) to the archive (R2). A store that has never made one (a new, empty Durable Object)
-  // first reads the latest backup back in, so the history survives a lost store. Returns the rows written per table,
-  // and those read back in.
+  // A new, empty store (a lost or recreated Durable Object) reads the latest backup (backup.js) back in from the archive
+  // (R2), so the history is back within a minute of starting, not the night after. Run every minute from index.js until
+  // it has succeeded once (recorded in the health state, which a new store has not got either). Rows written since the
+  // store was lost are kept (INSERT OR IGNORE). An archive that does not answer throws, so the next minute tries again;
+  // an archive with no backup yet counts as done. Returns the rows read in per table, or null when done before.
+  async restore(now) {
+    const bucket = this.env.ARCHIVE;
+    if (!bucket || this.getState("restore")) return null;
+    const restored = {};
+    for (const table of Object.keys(TABLES)) {
+      const latest = await bucket.get(latestPath(table));
+      if (!latest) continue;
+      const rows = backupRows(await latest.text(), table);
+      const sql = restoreSql(table);
+      this.ctx.storage.transactionSync(() => { for (const r of rows) this.sql.exec(sql, ...r); });
+      restored[table] = rows.length;
+    }
+    this.putState("restore", { at: new Date(now).toISOString(), rows: restored });
+    return restored;
+  }
+
+  // The nightly backup (backup.js) to the archive (R2). Returns the rows written per table.
   async backup(day) {
     const bucket = this.env.ARCHIVE;
     if (!bucket) return null;
-    const fresh = !this.getState("backup");
-    const out = { day, rows: {}, restored: {} };
+    const out = { day, rows: {} };
     for (const table of Object.keys(TABLES)) {
-      if (fresh) {
-        const latest = await bucket.get(latestPath(table));
-        if (latest) {
-          const rows = backupRows(await latest.text(), table);
-          const sql = restoreSql(table);
-          this.ctx.storage.transactionSync(() => { for (const r of rows) this.sql.exec(sql, ...r); });
-          out.restored[table] = rows.length;
-        }
-      }
       const rows = this.sql.exec(`SELECT ${TABLES[table].join(", ")} FROM ${table}`).toArray();
       const body = backupBody(table, rows, day);
       await bucket.put(backupPath(table, day), body, JSON_META);

@@ -782,10 +782,13 @@ test("status: when each source ran and succeeded, and which datasets are too old
   assert.equal(later.datasets["grid-wide"].ok, false, "once it has run, a missing dataset counts");
   assert.equal(s.archive.holfuy, "2026-10-17");
   assert.equal(s.backup, null, "no archive: nothing to report on");
-  const withBackup = (backup) => health.buildStatus({ runs, snapshots, expected: {}, archive: {}, backup, now: NOW }).backup;
-  assert.deepEqual(withBackup({ day: "2026-10-17", rows: {} }), { day: "2026-10-17", daysAgo: 1, maxDays: 2, ok: true });
-  assert.deepEqual(withBackup({ day: "2026-10-15", rows: {} }), { day: "2026-10-15", daysAgo: 3, maxDays: 2, ok: false }, "three days without a backup is a problem");
-  assert.deepEqual(withBackup(null), { day: null, daysAgo: null, maxDays: 2, ok: false }, "the archive set up but never backed up");
+  const withBackup = (backup, restore) => health.buildStatus({ runs, snapshots, expected: {}, archive: {}, backup, restore, now: NOW }).backup;
+  assert.deepEqual(withBackup({ day: "2026-10-17", rows: {} }), { day: "2026-10-17", daysAgo: 1, maxDays: 2, ok: true, restored: null });
+  assert.deepEqual(withBackup({ day: "2026-10-15", rows: {} }), { day: "2026-10-15", daysAgo: 3, maxDays: 2, ok: false, restored: null }, "three days without a backup is a problem");
+  assert.deepEqual(withBackup(null), { day: null, daysAgo: null, maxDays: 2, ok: false, restored: null }, "the archive set up but never backed up");
+  // A store that read the latest backup in at its start says so, with the rows per table.
+  const restore = { at: "2026-10-18T06:01:00.000Z", rows: { flight_days: 40, verify_hours: 900 } };
+  assert.deepEqual(withBackup({ day: "2026-10-17", rows: {} }, restore).restored, restore);
   assert.equal(health.buildStatus({ runs, snapshots: { forecast: snapshots.forecast }, expected: {}, archive: {}, backup: { day: "2026-10-15" }, now: NOW }).ok, false, "a late backup makes the status not ok");
 });
 
