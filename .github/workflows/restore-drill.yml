@@ -73,7 +73,7 @@ jobs:
         working-directory: workers/data
         run: |
           for t in flight_days verify_hours; do
-            npx wrangler r2 object put "hpgt-data-archive/backup/$t/latest.json" --file "../files/$t.json" --local --persist-to "$RUNNER_TEMP/persist" > /dev/null
+            npx wrangler r2 object put "hpgt-data-archive/backup/$t/latest.json" --file "$GITHUB_WORKSPACE/files/$t.json" --local --persist-to "$RUNNER_TEMP/persist" > /dev/null
           done
           nohup npx wrangler dev --local --test-scheduled --persist-to "$RUNNER_TEMP/persist" --port 8787 --inspector-port 0 > "$RUNNER_TEMP/dev.log" 2>&1 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8787/v1/status.json && break; sleep 2; done
