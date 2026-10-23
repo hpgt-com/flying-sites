@@ -1,0 +1,157 @@
+name: Recover
+
+# Scenario 3 in docs/operations.md «Disaster recovery», a lost Cloudflare account (or a lost archive bucket, or just a
+# lost store): everything that can be done from here, in one run, by hand from Actions → «Recover» → «Run workflow».
+# Before it: the new account's deploy token and account id in the environment «cloudflare», the bucket
+# hpgt-data-archive created, and the Worker's own secrets (HOLFUY_KEY, FROST_CLIENT_ID, TURNSTILE_SECRET,
+# REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY) set in Cloudflare from the password manager: they are deliberately not in
+# GitHub (SECURITY.md). Then this run: fetches the off-site copy from B2 (the environment «backup»), writes the
+# archive back to R2 when asked (restore_archive), publishes the data service from main, waits until it runs, and
+# when the store is new (lost_store) checks that it read the history back in with exactly the rows in the copy.
+# Nothing here changes GitHub settings or the site; the site is republished by «Build and deploy».
+
+on:
+  workflow_dispatch:
+    inputs:
+      restore_archive:
+        description: "Skriv arkivet fra kopien i B2 tilbake til R2 (bare når bøtta er ny eller tom)"
+        type: boolean
+        default: false
+      lost_store:
+        description: "Lageret er nytt eller tomt: sjekk at historikken ble lest inn fra kopien"
+        type: boolean
+        default: true
+      base_url:
+        description: "Datatjenestens adresse (en ny konto gir et nytt workers.dev-navn)"
+        type: string
+        default: "https://data.hpgt.workers.dev"
+
+permissions: {}
+
+concurrency:
+  group: data-worker
+  cancel-in-progress: false
+
+jobs:
+  # The copy from B2, as a run artifact for the next job (the two environments cannot share a job).
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: backup
+    permissions:
+      contents: read
+    outputs:
+      expected: ${{ steps.expected.outputs.expected }}
+    env:
+      RCLONE_CONFIG_B2_TYPE: s3
+      RCLONE_CONFIG_B2_PROVIDER: Other
+      RCLONE_CONFIG_B2_NO_CHECK_BUCKET: "true"
+      RCLONE_CONFIG_B2_ENDPOINT: ${{ vars.B2_ENDPOINT }}
+      RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_BUCKET: ${{ vars.B2_BUCKET || 'hpgt-flysteder-backup' }}
+    steps:
+      - name: Sjekk at nøkkelen og adressen er satt
+        run: |
+          for v in RCLONE_CONFIG_B2_ENDPOINT RCLONE_CONFIG_B2_ACCESS_KEY_ID RCLONE_CONFIG_B2_SECRET_ACCESS_KEY; do
+            [ -n "${!v}" ] || { echo "Mangler i miljøet backup: $v"; exit 1; }
+          done
+          region=$(echo "$RCLONE_CONFIG_B2_ENDPOINT" | sed -E 's#^https?://##; s#/.*$##; s#^s3\.([a-z0-9-]+)\.backblazeb2\.com$#\1#')
+          echo "RCLONE_CONFIG_B2_REGION=$region" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Installer rclone
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone > /dev/null
+
+      - name: Hent kopien fra B2
+        env:
+          RESTORE_ARCHIVE: ${{ inputs.restore_archive }}
+        run: |
+          mkdir -p copy
+          if [ "$RESTORE_ARCHIVE" = "true" ]; then
+            rclone copy "b2:$B2_BUCKET/archive" copy/archive --transfers 8 --checkers 16 --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -3
+            echo "filer i arkivet: $(find copy/archive -type f | wc -l)"
+          else
+            for t in flight_days verify_hours; do rclone copyto "b2:$B2_BUCKET/archive/backup/$t/latest.json" "copy/archive/backup/$t/latest.json"; done
+          fi
+      - name: Tell radene i kopien
+        id: expected
+        run: |
+          mkdir -p files
+          for t in flight_days verify_hours; do cp "copy/archive/backup/$t/latest.json" "files/$t.json"; done
+          expected=$(node scripts/restore-drill.mjs expected files)
+          echo "Forventet etter innlesing: $expected"
+          echo "expected=$expected" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: copy
+          path: copy
+          retention-days: 1
+          if-no-files-found: error
+
+  recover:
+    needs: [fetch]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: cloudflare
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+      - run: node scripts/data-sites.mjs
+      - run: npm ci --ignore-scripts
+        working-directory: workers/data
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: copy
+          path: copy
+
+      - name: Skriv arkivet tilbake til R2
+        if: inputs.restore_archive
+        working-directory: workers/data
+        run: |
+          # One object at a time through Cloudflare's API with the deploy token (no S3 key with write access exists, by
+          # design); an afternoon's work for years of files, minutes for months. Skips nothing: a file already there is
+          # written again with the same content.
+          n=0
+          while IFS= read -r f; do
+            key="${f#../copy/archive/}"
+            npx wrangler r2 object put "hpgt-data-archive/$key" --file "$f" --remote > /dev/null
+            n=$((n + 1))
+            if [ $((n % 100)) -eq 0 ]; then echo "$n filer skrevet"; fi
+          done < <(find ../copy/archive -type f | sort)
+          echo "$n filer skrevet til R2"
+
+      - name: Publiser datatjenesten
+        id: deploy
+        working-directory: workers/data
+        run: |
+          npx wrangler deploy
+          echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Vent til den kjører
+        env:
+          PUBLISHED_AT: ${{ steps.deploy.outputs.at }}
+          BASE_URL: ${{ inputs.base_url }}
+        run: node scripts/data-smoke.mjs "$PUBLISHED_AT" "$BASE_URL"
+
+      - name: Sjekk at historikken ble lest inn fra kopien
+        if: inputs.lost_store
+        env:
+          EXPECTED: ${{ needs.fetch.outputs.expected }}
+          BASE_URL: ${{ inputs.base_url }}
+        run: node scripts/restore-drill.mjs verdict "$BASE_URL" "$EXPECTED" 600
