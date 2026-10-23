@@ -98,6 +98,9 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   pilot's last position in the air, and asks Kartverket for the terrain height at it; nothing that names a device or
   pilot is kept longer. The weather archive is a private R2 bucket
   (`hpgt-data-archive`), written only by the service; read access for reports is a separate read-only R2 token.
+- The off-site copy (`backup.yml`) runs in the environment `backup`, which only `main` may use: a read-only R2 token for
+  the archive bucket and a Backblaze key for the backup bucket only, so a PR branch cannot read the archive or write to
+  the copy, and the keys can at most read measurements that are open data.
 
 ## Verifying a publish
 
