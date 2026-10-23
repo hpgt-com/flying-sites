@@ -82,26 +82,82 @@
     return svg + "</svg>";
   }
 
-  // A tile in the lower layer is shown only once the tile above at the same spot has loaded. OpenTopoMap often loads faster
-  // than Kartverket, so without this OpenTopoMap flashes up before Kartverket covers it. The lower layer has
-  // maxNativeZoom 17, so at zoom 18 one lower tile covers four upper tiles.
-  function showUnderlayAfter(top, under) {
-    var native = under.options.maxNativeZoom;
-    var ready = {};
-    function underKey(c) {
-      var dz = Math.max(0, c.z - native);
-      return (c.x >> dz) + ":" + (c.y >> dz) + ":" + (c.z - dz);
+  // Whether a loaded tile has see-through parts: any pixel below half opacity, read on a canvas (Kartverket allows
+  // cross-origin reads; the tile layer asks with crossOrigin). Kartverket's tiles inside Norway have a few antialiased
+  // pixels a little under full opacity, which do not count; outside Norway they are fully transparent, and at the
+  // border partly. A tile that cannot be read (no CORS after all) counts as see-through, so the lower layer shows as
+  // before rather than leaving a hole. About a millisecond per tile.
+  var probe = null;
+  function tileIsTransparent(img) {
+    if (!img || !img.naturalWidth) return true;
+    try {
+      var n = img.naturalWidth;
+      if (!probe) probe = document.createElement("canvas");
+      if (probe.width !== n) probe.width = probe.height = n;
+      var ctx = probe.getContext("2d", { willReadFrequently: true });
+      ctx.clearRect(0, 0, n, n);
+      ctx.drawImage(img, 0, 0);
+      var d = ctx.getImageData(0, 0, n, n).data;
+      for (var i = 3; i < d.length; i += 4) if (d[i] < 128) return true;
+      return false;
+    } catch (err) {
+      return true;
     }
-    top.on("tileload tileerror", function (ev) {
-      var key = underKey(ev.coords);
-      ready[key] = true;
-      var tile = under._tiles && under._tiles[key];
-      if (tile) tile.el.style.visibility = "";
-    });
-    under.on("tileloadstart", function (ev) {
-      if (!ready[under._tileCoordsToKey(ev.coords)]) ev.tile.style.visibility = "hidden";
-    });
   }
+
+  // The lower layer (OpenTopoMap) under Kartverket's, loaded only where the upper tile has nothing: Kartverket's tiles
+  // are transparent outside Norway (and at the border, partly), and its servers can fail. Each lower tile is made empty
+  // and gets its image only when the upper tile at the same spot has loaded with transparent parts, or failed. Inside
+  // Norway, where the lower tiles were fully covered anyway, none are fetched (a third of the requests on the front
+  // page); outside, and with Kartverket down, the map is filled in as before. The lower layer has maxNativeZoom 17, so
+  // at zoom 18 one lower tile covers four upper tiles: it is loaded when any of them needs it, and left empty only
+  // once all four have loaded opaque.
+  // Made when first needed: common.js also runs on pages without Leaflet.
+  var UnderlayLayer = null;
+  function underlayLayer(url, options, top) {
+    UnderlayLayer = UnderlayLayer || L.TileLayer.extend(underlayMethods);
+    return new UnderlayLayer(url, options, top);
+  }
+  var underlayMethods = {
+    initialize: function (url, options, top) {
+      L.TileLayer.prototype.initialize.call(this, url, options);
+      this._needed = {}; // key → true: the upper tiles there have shown the lower one is needed
+      this._opaque = {}; // key → how many upper tiles there have loaded opaque
+      this._waiting = {}; // key → { tile, coords, done } for a lower tile made before the upper one had loaded
+      var self = this;
+      top.on("tileload", function (ev) { self._decide(ev.coords, tileIsTransparent(ev.tile)); });
+      top.on("tileerror", function (ev) { self._decide(ev.coords, true); });
+      this.on("tileunload", function (ev) { delete self._waiting[self._tileCoordsToKey(ev.coords)]; });
+    },
+    // The lower tile's key for an upper tile's coords (the same below zoom 18).
+    _keyFor: function (c) {
+      var dz = Math.max(0, c.z - this.options.maxNativeZoom);
+      return { key: (c.x >> dz) + ":" + (c.y >> dz) + ":" + (c.z - dz), covers: 1 << (2 * dz) };
+    },
+    _decide: function (coords, needed) {
+      var k = this._keyFor(coords);
+      if (needed) this._needed[k.key] = true;
+      else this._opaque[k.key] = (this._opaque[k.key] || 0) + 1;
+      var w = this._waiting[k.key];
+      if (!w) return;
+      if (this._needed[k.key]) { delete this._waiting[k.key]; this._load(w.tile, w.coords, w.done); }
+      else if (this._opaque[k.key] >= k.covers) { delete this._waiting[k.key]; w.done(null, w.tile); }
+    },
+    createTile: function (coords, done) {
+      var tile = document.createElement("img");
+      tile.alt = "";
+      tile.setAttribute("role", "presentation");
+      var key = this._tileCoordsToKey(coords);
+      if (this._needed[key]) this._load(tile, coords, done);
+      else this._waiting[key] = { tile: tile, coords: coords, done: done };
+      return tile;
+    },
+    _load: function (tile, coords, done) {
+      L.DomEvent.on(tile, "load", function () { done(null, tile); });
+      L.DomEvent.on(tile, "error", function (err) { done(err, tile); });
+      tile.src = this.getTileUrl(coords);
+    },
+  };
 
   // Hillshade from Kartverket's national elevation model (hoydedata.no, open data), on top of the base map. Shows
   // the mountainsides and which way they face. The service renders images for an extent, not ready-made tiles, so each
@@ -226,34 +282,27 @@
     }, true);
   }
 
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
     useTwoFingers(map);
+    // crossOrigin: the tiles are read on a canvas to see where they are transparent (UnderlayLayer).
     var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
       className: "base-tiles",
+      crossOrigin: true,
       attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
     });
-    function openTopoLayer(zIndex) {
-      return L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-        maxNativeZoom: 17,
-        maxZoom: 18,
-        subdomains: "abc",
-        className: "base-tiles",
-        attribution: t("map.openTopoAttribution"),
-        zIndex: zIndex,
-      });
+    var OPEN_TOPO_URL = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+    function openTopoOptions(zIndex) {
+      return { maxNativeZoom: 17, maxZoom: 18, subdomains: "abc", className: "base-tiles", attribution: t("map.openTopoAttribution"), zIndex: zIndex };
     }
-    // Kartverket's tiles are transparent outside Norway, so OpenTopoMap below fills in the rest of the world. It is
-    // added only once Kartverket's first tiles have loaded, so its tiles (from slower servers) do not compete with the
-    // ones that matter when the page opens; it stays below them (zIndex 0).
+    // Kartverket's tiles are transparent outside Norway, so OpenTopoMap below fills in the rest of the world, fetched
+    // only where it shows (UnderlayLayer); it stays below Kartverket's tiles (zIndex 0).
     function withUnderlay(top) {
-      var under = openTopoLayer(0), group = L.layerGroup([top]);
-      showUnderlayAfter(top, under);
-      top.once("load", function () { group.addLayer(under); });
-      return group;
+      return L.layerGroup([top, underlayLayer(OPEN_TOPO_URL, openTopoOptions(0), top)]);
     }
-    var openTopo = openTopoLayer();
+    var openTopo = L.tileLayer(OPEN_TOPO_URL, openTopoOptions());
     var topo = withUnderlay(kartverket);
     // Satellite imagery from Sentinel-2 cloudless (EOX), free for non-commercial use (CC BY-NC-SA 4.0) without a key.
     // 10 m resolution, so tiles exist only up to zoom 14 and are enlarged beyond that. Not inverted in the dark theme.
@@ -267,6 +316,7 @@
     var grayTiles = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
       className: "base-tiles",
+      crossOrigin: true,
       attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>',
     });
     var gray = withUnderlay(grayTiles);
