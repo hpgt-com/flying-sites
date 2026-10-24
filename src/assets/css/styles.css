@@ -1879,6 +1879,10 @@ body.sheet-open { overflow: hidden; }
 .report__status:empty { display: none; }
 .report__status--ok { font-weight: 600; }
 .report__status--error { color: var(--hazard-text); font-weight: 600; }
+/* «Registrer tur» (/registrer-tur/): the «Meld fra» form with a file field; the note that it is a prototype. */
+.logflight__prototype { font-size: 14px; }
+.report__field input[type="file"] { padding: 6px 0; font-weight: 400; }
+.activity-logged { margin-top: 18px; }
 
 /* «Slik leser du dette» (windgram.js, stations.js, flights.js): a small folded explanation next to the drawing or the
    numbers, closed at first so it is not in the way. */

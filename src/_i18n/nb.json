@@ -331,7 +331,30 @@
     "menuLink": "Flyaktivitet",
     "menuSub": "Turer per sted",
     "loading": "Henter tallene …",
-    "noScript": "Tallene hentes med JavaScript. Slå det på for å se dem."
+    "noScript": "Tallene hentes med JavaScript. Slå det på for å se dem.",
+    "loggedTitle": "Registrerte turer",
+    "loggedIntro": "Turer piloter har registrert selv, fra turloggen eller for hånd (prototype).",
+    "loggedLink": "Registrer en tur"
+  },
+  "logFlight": {
+    "title": "Registrer tur",
+    "description": "Registrer en tur fra et flysted i HPGTs område: fra turloggen din eller for hånd. Bare summene lagres.",
+    "intro": "Legg inn turloggen (IGC eller KML fra varioen eller appen), så fylles feltene ut her i nettleseren. Eller skriv inn turen selv. Fila og sporet sendes aldri; bare sted, dato, minutter, høyde og avstand.",
+    "prototype": "Dette er en prototype: tallene kan bli nullstilt mens vi prøver den ut.",
+    "file": "Turlogg (IGC eller KML)",
+    "fileHint": "Leses her i nettleseren. Starten må være innen 500 m fra et kjent flysted for at stedet skal fylles ut.",
+    "site": "Flysted",
+    "chooseSite": "Velg flysted",
+    "date": "Dato",
+    "minutes": "Minutter i lufta",
+    "maxAlt": "Høyeste punkt (moh)",
+    "maxDist": "Lengst fra start (km)",
+    "category": "Vinge",
+    "categoryNone": "Ikke oppgitt",
+    "send": "Registrer turen",
+    "privacy": "Ingen navn, ingen enhet, intet spor. Summene vises for alle på Flyaktivitet. Robotsjekken er Cloudflare Turnstile.",
+    "noScript": "Skjemaet trenger JavaScript.",
+    "notReady": "Registrering er ikke slått på ennå."
   },
   "news": {
     "title": "Nytt på siden",
@@ -734,6 +757,19 @@
       "failed": "Fikk ikke hentet målingene. Prøver igjen om litt.",
       "roughMeasured": "Vurdert fra målingen nå, med samme regler som varselet. Grov vurdering, sjekk alltid selv."
     },
+    "logFlight": {
+      "found": "Fant en tur i fila: {site}, {date}, {minutes} min, høyest {alt} moh, {km} km fra start. Sjekk feltene og send.",
+      "foundNoSite": "Fant en tur i fila ({date}, {minutes} min), men starten er ikke nær et kjent flysted. Velg stedet selv.",
+      "notFound": "Fant ingen tur i fila: ingen bevegelse over 4 m/s i 20 sekunder, eller ingen tider i fila.",
+      "readFailed": "Kunne ikke lese fila.",
+      "invalid": "Fyll ut flysted, dato og minutter.",
+      "sending": "Sender …",
+      "sent": "Takk! Turen er registrert. {site} har nå {n} registrerte turer.",
+      "failed": "Kunne ikke sende. Prøv igjen senere.",
+      "limit": "Mange turer er registrert i dag. Prøv igjen i morgen.",
+      "checkFailed": "Robotsjekken feilet. Last siden på nytt og prøv igjen.",
+      "waitCheck": "Vent til robotsjekken er ferdig."
+    },
     "report": {
       "sending": "Sender …",
       "sent": "Takk! Meldingen er sendt til klubben.",
@@ -847,6 +883,11 @@
       "barTitle": "{month}: turer {flights}",
       "none": "Ingen turer er registrert ennå.",
       "noneRecent": "Ingen turer de siste 30 dagene.",
+      "loggedNone": "Ingen registrerte turer ennå. Bli den første.",
+      "loggedFlights": "registrerte turer",
+      "loggedHours": "timer i lufta",
+      "loggedSites": "steder",
+      "colLongest": "Lengste",
       "failed": "Fikk ikke hentet tallene. Prøv igjen senere."
     },
     "help": {

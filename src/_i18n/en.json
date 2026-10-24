@@ -332,6 +332,30 @@
     "menuSub": "Flights per site",
     "loading": "Fetching the numbers …",
     "noScript": "The numbers are fetched with JavaScript. Turn it on to see them."
+,
+    "loggedTitle": "Logged flights",
+    "loggedIntro": "Flights pilots have logged themselves, from a flight log or by hand (prototype).",
+    "loggedLink": "Log a flight"
+  },
+  "logFlight": {
+    "title": "Log a flight",
+    "description": "Log a flight from a site in HPGT's area: from your flight log or by hand. Only the sums are stored.",
+    "intro": "Add your flight log (IGC or KML from the vario or the app), and the fields are filled in here in the browser. Or type the flight in. The file and the track are never sent; only site, date, minutes, height and distance.",
+    "prototype": "This is a prototype: the numbers may be reset while we try it out.",
+    "file": "Flight log (IGC or KML)",
+    "fileHint": "Read here in the browser. The takeoff must be within 500 m of a known site for the site to be filled in.",
+    "site": "Flying site",
+    "chooseSite": "Choose a site",
+    "date": "Date",
+    "minutes": "Minutes in the air",
+    "maxAlt": "Highest point (m a.s.l.)",
+    "maxDist": "Farthest from launch (km)",
+    "category": "Wing",
+    "categoryNone": "Not given",
+    "send": "Log the flight",
+    "privacy": "No name, no device, no track. The sums are shown to everyone on Flying activity. The robot check is Cloudflare Turnstile.",
+    "noScript": "The form needs JavaScript.",
+    "notReady": "Logging is not switched on yet."
   },
   "news": {
     "title": "What's new",
@@ -734,6 +758,19 @@
       "failed": "Could not fetch the measurements. Trying again shortly.",
       "roughMeasured": "Assessed from the measurement now, with the same rules as the forecast. Rough assessment, always check for yourself."
     },
+    "logFlight": {
+      "found": "Found a flight in the file: {site}, {date}, {minutes} min, highest {alt} m a.s.l., {km} km from launch. Check the fields and send.",
+      "foundNoSite": "Found a flight in the file ({date}, {minutes} min), but the takeoff is not near a known site. Choose the site yourself.",
+      "notFound": "No flight found in the file: no movement over 4 m/s for 20 seconds, or no times in the file.",
+      "readFailed": "Could not read the file.",
+      "invalid": "Fill in the site, the date and the minutes.",
+      "sending": "Sending …",
+      "sent": "Thanks! The flight is logged. {site} now has {n} logged flights.",
+      "failed": "Could not send. Try again later.",
+      "limit": "Many flights have been logged today. Try again tomorrow.",
+      "checkFailed": "The robot check failed. Reload the page and try again.",
+      "waitCheck": "Wait until the robot check is done."
+    },
     "report": {
       "sending": "Sending …",
       "sent": "Thank you! The report has been sent to the club.",
@@ -847,6 +884,11 @@
       "barTitle": "{month}: flights {flights}",
       "none": "No flights have been recorded yet.",
       "noneRecent": "No flights in the last 30 days.",
+      "loggedNone": "No logged flights yet. Be the first.",
+      "loggedFlights": "logged flights",
+      "loggedHours": "hours in the air",
+      "loggedSites": "sites",
+      "colLongest": "Longest",
       "failed": "Could not fetch the numbers. Try again later."
     },
     "help": {

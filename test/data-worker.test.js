@@ -6,6 +6,7 @@ import { buildStations, holfuyUrl, parseHolfuy } from "../workers/data/src/sourc
 import { due } from "../workers/data/src/schedule.js";
 import { dayPath, daysToArchive, measurementsCsv, pruneBefore, stationsCsv } from "../workers/data/src/archive.js";
 import { extraValues } from "../workers/data/src/measurements.js";
+import * as logbookMod from "../workers/data/src/logbook.js";
 
 const NOW = Date.parse("2026-10-18T15:20:00Z");
 const ago = (min) => new Date(NOW - min * 60000).toISOString();
@@ -886,4 +887,83 @@ test("aprs: the devices that must not be tracked, from OGN's device database as 
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => Response.json({ devices: devices.slice(0, 10) })), /uventet svar/);
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("<html>down</html>")), /uventet svar/);
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("", { status: 502 })), /svarte 502/);
+});
+
+test("logbook: the checks on a logged flight", () => {
+  const now = Date.parse("2026-10-19T10:00:00Z");
+  const sites = ["heia", "sollia"];
+  const ok = { site: "heia", day: "2026-10-18", minutes: 15, maxAlt: 1200, maxDistKm: 5.34, category: "PG", source: "igc", key: "2026-10-18|601", token: "t" };
+  assert.deepEqual(logbookMod.checkFlight(ok, sites, now), { site: "heia", day: "2026-10-18", minutes: 15, maxAlt: 1200, maxDistKm: 5.3, category: "PG", source: "igc", key: "heia|2026-10-18|601", token: "t" });
+  const manual = logbookMod.checkFlight({ site: "sollia", day: "2026-10-19", minutes: 45, source: "manual", key: "2026-10-19|m|ab12cd34", token: "t" }, sites, now);
+  assert.deepEqual([manual.maxAlt, manual.maxDistKm, manual.category, manual.key], [null, null, null, "sollia|2026-10-19|m|ab12cd34"], "what is not given is null");
+  for (const bad of [
+    { ...ok, site: "elsewhere" }, { ...ok, day: "18.10.2026" }, { ...ok, day: "2026-10-21" }, { ...ok, day: "2025-01-01" },
+    { ...ok, minutes: 0 }, { ...ok, minutes: 721 }, { ...ok, minutes: 1.5 }, { ...ok, maxAlt: 6001 }, { ...ok, maxAlt: -1 },
+    { ...ok, maxDistKm: 501 }, { ...ok, category: "HG" }, { ...ok, source: "web" }, { ...ok, key: "x" }, { ...ok, key: "a b c d" },
+    { ...ok, token: "" }, null, "igc",
+  ]) assert.ok(logbookMod.checkFlight(bad, sites, now).error, JSON.stringify(bad));
+  assert.equal(logbookMod.checkFlight({ ...ok, token: "" }, sites, now).error, "no-token");
+  assert.equal(logbookMod.checkFlight({ ...ok, day: "2026-10-20" }, sites, now).day, "2026-10-20", "a day ahead is allowed, for a log from another time zone");
+});
+
+test("logbook: the dataset sums the flights per site and month, with the longest, highest and farthest", () => {
+  const now = Date.parse("2026-10-19T10:00:00Z");
+  const rows = [
+    { site: "heia", day: "2026-09-30", minutes: 40, max_alt: 900, max_dist_km: 2, category: "PG" },
+    { site: "heia", day: "2026-10-18", minutes: 15, max_alt: 1200, max_dist_km: 5.3, category: "PG" },
+    { site: "heia", day: "2026-10-18", minutes: 90, max_alt: null, max_dist_km: null, category: null },
+    { site: "sollia", day: "2026-10-19", minutes: 20, max_alt: 700, max_dist_km: 1.1, category: "SPG" },
+  ];
+  const out = logbookMod.buildLogbook(rows, now);
+  assert.equal(out.dataset, "logbook");
+  assert.equal(out.fetched, "2026-10-19T10:00:00.000Z");
+  assert.deepEqual([out.flights, out.minutes, out.first, out.last], [4, 165, "2026-09-30", "2026-10-19"]);
+  assert.deepEqual(out.months, { "2026-09": 1, "2026-10": 3 });
+  assert.deepEqual(out.sites.heia, {
+    flights: 3, minutes: 145, first: "2026-09-30", last: "2026-10-18", months: { "2026-09": 1, "2026-10": 2 },
+    longest: { value: 90, date: "2026-10-18" }, highest: { value: 1200, date: "2026-10-18" }, farthest: { value: 5.3, date: "2026-10-18" },
+    categories: { PG: 2 },
+  });
+  assert.deepEqual(out.sites.sollia.categories, { SPG: 1 });
+  assert.deepEqual(logbookMod.buildLogbook([], now).sites, {});
+  assert.equal(logbookMod.buildLogbook([], now).first, null);
+});
+
+test("logbook: Turnstile, the limits, the flight stored and the dataset written", async () => {
+  const store = reportStore();
+  const flights = [], snapshots = {};
+  store.putLoggedFlight = async (f) => { flights.push(f); };
+  store.loggedFlights = async () => flights.map((f) => ({ site: f.site, day: f.day, minutes: f.minutes, max_alt: f.maxAlt, max_dist_km: f.maxDistKm, category: f.category }));
+  store.putSnapshot = async (name, body) => { snapshots[name] = JSON.parse(body); };
+  const req = (body, ip = "203.0.113.7", headers = {}) => new Request("https://data.test/v1/logbook", {
+    method: "POST", body: typeof body === "string" ? body : JSON.stringify(body),
+    headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...headers },
+  });
+  const body = { site: "heia", day: "2026-10-18", minutes: 15, maxAlt: 1200, maxDistKm: 5.3, category: "PG", source: "igc", key: "2026-10-18|601", token: "t" };
+  const sites = ["heia", "sollia"];
+  assert.equal((await logbookMod.handleLogbook(req(body), {}, store, sites, NOW)).status, 503);
+  const env = { TURNSTILE_SECRET: "s" };
+  const realFetch = globalThis.fetch;
+  let turnstile = true;
+  globalThis.fetch = async () => Response.json({ success: turnstile, hostname: "flysteder.hpgt.com" });
+  try {
+    const sent = await logbookMod.handleLogbook(req(body), env, store, sites, NOW);
+    assert.equal(sent.status, 200);
+    assert.deepEqual(sent.body, { ok: true, flights: 1, site: 1 });
+    assert.equal(flights[0].key, "heia|2026-10-18|601");
+    assert.equal(snapshots.logbook.sites.heia.flights, 1, "the dataset is written at once");
+    assert.equal((await logbookMod.handleLogbook(req({ ...body, minutes: 0 }), env, store, sites, NOW)).status, 400);
+    assert.equal((await logbookMod.handleLogbook(req(body, "1.2.3.4", { "content-type": "text/plain" }), env, store, sites, NOW)).status, 415);
+    assert.equal((await logbookMod.handleLogbook(req(JSON.stringify({ ...body, key: "x".repeat(logbookMod.MAX_BODY) })), env, store, sites, NOW)).status, 413);
+    turnstile = false;
+    assert.equal((await logbookMod.handleLogbook(req(body), env, store, sites, NOW)).status, 403);
+    turnstile = true;
+    for (let i = 1; i < logbookMod.PER_IP_LIMIT; i++) assert.equal((await logbookMod.handleLogbook(req(body), env, store, sites, NOW)).status, 200);
+    assert.equal((await logbookMod.handleLogbook(req(body), env, store, sites, NOW)).status, 429, "one address at most PER_IP_LIMIT a day");
+    assert.equal((await logbookMod.handleLogbook(req(body, "198.51.100.9"), env, store, sites, NOW)).status, 200);
+    store.counts["2026-10-18"].n = logbookMod.DAILY_LIMIT;
+    assert.equal((await logbookMod.handleLogbook(req(body, "192.0.2.1"), env, store, sites, NOW)).status, 429, "the daily limit for all");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

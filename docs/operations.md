@@ -209,6 +209,26 @@ the menu and is marked `noindex`. It shows per site:
   `src/_data/logbook.json`, so the box is hidden: one pilot's logs were too few, and the records did not match Flightlog.
   Commit the file again when more pilots have added logs (or Flightlog or pgpilot get an API, #105).
 
+## «Registrer tur» (pilots log their own flights, prototype)
+
+- `/registrer-tur/` (not in the menu, `noindex`; linked from `/flyaktivitet/`): a pilot drops an IGC or KML file, which
+  is read in the browser with the same code as the logbook script (`lib/igc.js`, copied to `/assets/js/igc.js` and
+  imported by the module `src/assets/js/logbook-form.mjs`), and the flight fills the form; or the fields are typed in.
+  Only the sums go to the data service (`POST /v1/logbook`, `workers/data/src/logbook.js`): site, day, minutes, highest
+  point, farthest from launch, wing (PG/SPG), source (igc/kml/manual) and a key. The track, the file and the pilot never
+  leave the browser; no name, no device.
+- Turnstile and the limits as for «Meld fra» (200 flights a day, 20 from one address, counted apart from the reports,
+  `reserveReport(..., "logbook")`), the checks in `checkFlight` (a known site, a day up to 400 days back and one day
+  ahead, 1–720 minutes, 0–6000 m, 0–500 km). The key is `<site>|<day>|<takeoff minute>` for a log file, so the same
+  file sent twice counts once, and `<site>|<day>|m|<random>` for a typed-in flight.
+- Stored in the Durable Object table `logged_flights`, backed up nightly with the other tables and restored with them
+  (`backup.js`). The sums for everyone are written to the dataset `/v1/logbook.json` on each flight (`buildLogbook`:
+  flights, minutes, months and per site the longest, highest and farthest) and shown on `/flyaktivitet/` under
+  «Registrerte turer» (`activity.js`). A wrong flight is removed by deleting its row in the Durable Object
+  (`wrangler` → the store's SQL) and the dataset is rebuilt by the next flight logged.
+- Prototype: not in the menu until pilots have tried it and the fields have settled (a name per pilot, an XC score, a
+  link to a Flightlog/pgpilot entry are open questions). The texts say the numbers may be reset.
+
 ## Pilots in the air (OGN)
 
 - The map layer «Piloter i lufta» asks the data service every 10 seconds while it is on; the data service asks OGN's live

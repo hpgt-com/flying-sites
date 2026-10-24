@@ -79,7 +79,7 @@ jobs:
       - name: Sjekk kopien av sikkerhetskopien
         # The latest backup of each table is read back from the copy (not from R2), so what is checked is what a restore would use.
         run: |
-          for t in flight_days verify_hours; do
+          for t in flight_days verify_hours logged_flights; do
             rclone copyto "b2:$B2_BUCKET/archive/backup/$t/latest.json" "copy/$t/latest.json" || true
           done
           node scripts/check-backup.mjs copy
