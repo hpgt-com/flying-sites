@@ -141,6 +141,11 @@ test("backup: a file for another table or with other columns is refused", () => 
   assert.throws(() => backupRows(body, "verify_hours"), /feil format/);
   assert.throws(() => backupRows(JSON.stringify({ ...JSON.parse(body), columns: ["day"] }), "flight_days"), /feil format/);
   assert.throws(() => backupRows(JSON.stringify({ ...JSON.parse(body), rows: [["x"]] }), "flight_days"), /feil rad/);
+  // A file from before the temperature and pressure columns (24.10.2026) is read in with those as null.
+  const oldColumns = ["site", "station", "time", "f_dir", "f_speed", "f_gust", "m_dir", "m_speed", "m_gust", "n"];
+  const oldFile = JSON.stringify({ table: "verify_hours", day: "2026-10-19", columns: oldColumns, rows: [["heia", "490", "2026-10-19T10:00:00.000Z", 230, 5, 9, 225, 4, 7, 6]] });
+  assert.deepEqual(backupRows(oldFile, "verify_hours")[0], ["heia", "490", "2026-10-19T10:00:00.000Z", 230, 5, 9, 225, 4, 7, 6, null, null, null, null]);
+  assert.throws(() => backupRows(JSON.stringify({ ...JSON.parse(oldFile), columns: oldColumns.slice(0, 9) }), "verify_hours"), /feil format/, "fewer than the original columns");
 });
 
 

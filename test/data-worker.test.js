@@ -326,24 +326,32 @@ test("verification: the hour's measurements, the pairs for finished hours, and t
   const at = (min) => new Date(H + min * 60000).toISOString();
   const rows = [
     { source: "holfuy", station: "490", time: at(0), dir: 200, speed: 9, gust: 20 },
-    { source: "holfuy", station: "490", time: at(20), dir: 200, speed: 4, gust: 6 },
-    { source: "holfuy", station: "490", time: at(40), dir: 220, speed: 6, gust: 9 },
+    { source: "holfuy", station: "490", time: at(20), dir: 200, speed: 4, gust: 6, temperature: 7.6, pressure: 1008 },
+    { source: "holfuy", station: "490", time: at(40), dir: 220, speed: 6, gust: 9, temperature: 8, pressure: 1009 },
     { source: "met", station: "SN1", time: at(60), dir: 270, speed: 8, gust: 12 },
   ];
   const m = verifyMod.measuredHour(rows.filter((r) => r.source === "holfuy"), H);
   assert.equal(m.n, 2, "the row exactly at the start belongs to the hour before");
   assert.equal(m.speed, 5);
   assert.equal(m.gust, 9);
-  assert.equal(verifyMod.measuredHour(rows.filter((r) => r.source === "met"), H).speed, 8, "MET's value at the end of the hour");
+  assert.deepEqual([m.temp, m.pressure], [7.8, 1008.5], "the hour's mean temperature and pressure");
+  const met = verifyMod.measuredHour(rows.filter((r) => r.source === "met"), H);
+  assert.equal(met.speed, 8, "MET's value at the end of the hour");
+  assert.deepEqual([met.temp, met.pressure], [null, null], "a station without them");
   const links = [{ site: "heia", source: "holfuy", station: "490" }, { site: "saetertinden", source: "met", station: "SN1" }];
   const hours = [
-    { site: "heia", time: at(0), dir: 210, speed: 4, gust: 7 },
+    { site: "heia", time: at(0), dir: 210, speed: 4, gust: 7, temp: 6, pressure: 1006.5 },
     { site: "saetertinden", time: at(0), dir: 260, speed: 10, gust: 15 },
     { site: "heia", time: at(60), dir: 210, speed: 4, gust: 7 },
   ];
   const p = verifyMod.pairs(links, hours, rows, H - 3600000, H + 61 * 60000);
   assert.deepEqual(p.map((x) => [x.site, x.m_speed, x.f_speed]), [["heia", 5, 4], ["saetertinden", 8, 10]], "the unfinished hour is left out");
+  assert.deepEqual([p[0].f_temp, p[0].m_temp, p[0].f_pressure, p[0].m_pressure], [6, 7.8, 1006.5, 1008.5]);
+  assert.deepEqual([p[1].f_temp, p[1].m_temp], [null, null]);
   const sum = verifyMod.summarize([...Array(5)].map(() => p[0]).concat([p[1]]));
+  assert.deepEqual([sum.tempHours, sum.tempBias, sum.tempMae], [5, 1.8, 1.8], "measured minus forecast, over the hours that have both");
+  assert.deepEqual([sum.pressureHours, sum.pressureBias, sum.pressureMae], [5, 2, 2]);
+  assert.deepEqual([verifyMod.summarize([p[1]]).tempHours, verifyMod.summarize([p[1]]).tempBias], [0, null]);
   assert.equal(sum.hours, 6);
   assert.equal(sum.bias, 0.5, "(5 × +1 − 2) / 6, measured minus forecast");
   assert.equal(sum.mae, 1.2);

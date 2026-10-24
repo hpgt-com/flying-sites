@@ -824,6 +824,11 @@
     if (Math.abs(v) < 0.3) return text("stations.vAbout");
     return text(v > 0 ? "stations.vStronger" : "stations.vWeaker", { v: value(Math.abs(v)) });
   }
+  // «1,2 °C varmere enn varslet», «0,8 hPa lavere enn varslet», or about as forecast within half a unit.
+  function verifyDiff(v, more, less) {
+    if (Math.abs(v) < 0.5) return text("stations.vAbout");
+    return text(v > 0 ? more : less, { v: value(Math.abs(v)) });
+  }
   // The lines for one site's summary (workers/data/src/sources/verify.js), as plain text: [] without one.
   function verifyLines(s, days) {
     if (!s || !isNum(s.hours)) return [];
@@ -831,6 +836,9 @@
     var lines = [text("stations.vMean", { days: days, hours: s.hours, strength: verifyStrength(s.bias), mae: value(s.mae) })];
     if (isNum(s.gustBias)) lines.push(text("stations.vGust", { strength: verifyStrength(s.gustBias) }));
     if (isNum(s.dirHit)) lines.push(text("stations.vDir", { pct: Math.round(s.dirHit * 100) }));
+    // The temperature and the pressure, where the station measures them (Heia both, most stations neither).
+    if (isNum(s.tempBias) && isNum(s.tempMae) && s.tempHours >= VERIFY_MIN_HOURS) lines.push(text("stations.vTemp", { strength: verifyDiff(s.tempBias, "stations.vWarmer", "stations.vColder"), mae: value(s.tempMae) }));
+    if (isNum(s.pressureBias) && isNum(s.pressureMae) && s.pressureHours >= VERIFY_MIN_HOURS) lines.push(text("stations.vPressure", { strength: verifyDiff(s.pressureBias, "stations.vHigher", "stations.vLower"), mae: value(s.pressureMae) }));
     var worst = Object.keys(s.sectors || {}).sort(function (a, b) { return Math.abs(s.sectors[b].bias) - Math.abs(s.sectors[a].bias); })[0];
     if (worst && Math.abs(s.sectors[worst].bias) >= 1) lines.push(text("stations.vSector", { dir: globalThis.FlyingSites.DIRECTION_LABELS[worst], v: signed(s.sectors[worst].bias) }));
     return lines;

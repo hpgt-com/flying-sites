@@ -1,7 +1,9 @@
 // How well the forecast hit (dataset «verification»): for each flying site with its own station (stations.js), every
 // finished hour the forecast for that hour (forecast_hours, as it stood during the hour, sources/forecast.js) is set
-// against what the station measured in it: the mean wind, the highest gust and the direction. The pairs are kept for a
-// year (store.js verify_hours), and the dataset sums up the last DAYS days per site. Tested in test/data-worker.test.js.
+// against what the station measured in it: the mean wind, the highest gust and the direction, and, where the station
+// measures them, the temperature and the air pressure (both at sea level: MET's forecast gives it so, and the stations
+// report it so). The pairs are kept for a year (store.js verify_hours), and the dataset sums up the last DAYS days per
+// site. Tested in test/data-worker.test.js.
 
 export const DATASET = "verification";
 export const DAYS = 30;
@@ -22,17 +24,21 @@ export function sector(dir) { return CODES[Math.round((((dir % 360) + 360) % 360
 export function angle(a, b) { return Math.abs(((a - b + 540) % 360) - 180); }
 
 // What a station measured in the hour from `start` (ms): rows with a time after the start up to and including the end of
-// the hour (MET stamps its hourly value at the end). { speed (mean), gust (highest), dir (vector mean), n }, or null.
+// the hour (MET stamps its hourly value at the end). { speed (mean), gust (highest), dir (vector mean), temp and pressure
+// (means, null without), n }, or null.
 export function measuredHour(rows, start) {
   const part = rows.filter((r) => { const t = Date.parse(r.time); return t > start && t <= start + HOUR && num(r.speed) !== null; });
   if (!part.length) return null;
   let u = 0, v = 0, withDir = 0;
   for (const r of part) if (num(r.dir) !== null) { u += Math.sin(r.dir * rad) * r.speed; v += Math.cos(r.dir * rad) * r.speed; withDir++; }
   const gusts = part.map((r) => num(r.gust)).filter((g) => g !== null);
+  const meanOf = (key) => { const xs = part.map((r) => num(r[key])).filter((x) => x !== null); return xs.length ? round1(xs.reduce((t, x) => t + x, 0) / xs.length) : null; };
   return {
     speed: round1(part.reduce((t, r) => t + r.speed, 0) / part.length),
     gust: gusts.length ? Math.max(...gusts) : null,
     dir: withDir && (u || v) ? Math.round((Math.atan2(u, v) / rad + 360) % 360) : null,
+    temp: meanOf("temperature"),
+    pressure: meanOf("pressure"),
     n: part.length,
   };
 }
@@ -49,7 +55,8 @@ export function pairs(links, hours, rows, from, now) {
       const m = measuredHour(own, start);
       if (!m) continue;
       out.push({ site: link.site, station: String(link.station), time: h.time, f_dir: num(h.dir), f_speed: h.speed, f_gust: num(h.gust),
-        m_dir: m.dir, m_speed: m.speed, m_gust: m.gust, n: m.n });
+        m_dir: m.dir, m_speed: m.speed, m_gust: m.gust, n: m.n,
+        f_temp: num(h.temp), m_temp: m.temp, f_pressure: num(h.pressure), m_pressure: m.pressure });
     }
   }
   return out;
@@ -57,7 +64,8 @@ export function pairs(links, hours, rows, from, now) {
 
 // One site's pairs summed up: the mean error of the mean wind and the gust (measured − forecast, so + means stronger than
 // forecast), the mean absolute error, the share of hours the direction was within 45° (in DIR_MIN_SPEED or more), and the
-// error of the mean wind per sector the wind came from. null without pairs.
+// error of the mean wind per sector the wind came from. The temperature and the pressure the same way (bias and mean
+// absolute error, measured − forecast), over the hours that have both, null without any. null without pairs.
 export function summarize(list) {
   if (!list.length) return null;
   const mean = (xs) => xs.reduce((t, x) => t + x, 0) / xs.length;
@@ -68,6 +76,8 @@ export function summarize(list) {
   for (const p of list) if (num(p.m_dir) !== null) (bySector[sector(p.m_dir)] ??= []).push(p.m_speed - p.f_speed);
   const sectors = Object.fromEntries(Object.entries(bySector).filter(([, xs]) => xs.length >= SECTOR_MIN_HOURS)
     .map(([code, xs]) => [code, { hours: xs.length, bias: round1(mean(xs)) }]));
+  const errors = (m, f) => list.filter((p) => num(p[m]) !== null && num(p[f]) !== null).map((p) => p[m] - p[f]);
+  const temps = errors("m_temp", "f_temp"), pressures = errors("m_pressure", "f_pressure");
   return {
     hours: list.length,
     bias: round1(mean(err)),
@@ -75,6 +85,8 @@ export function summarize(list) {
     gustBias: gusts.length ? round1(mean(gusts)) : null,
     dirHit: dirs.length ? Math.round((dirs.filter((p) => angle(p.m_dir, p.f_dir) <= 45).length / dirs.length) * 100) / 100 : null,
     sectors,
+    tempHours: temps.length, tempBias: temps.length ? round1(mean(temps)) : null, tempMae: temps.length ? round1(mean(temps.map(Math.abs))) : null,
+    pressureHours: pressures.length, pressureBias: pressures.length ? round1(mean(pressures)) : null, pressureMae: pressures.length ? round1(mean(pressures.map(Math.abs))) : null,
   };
 }
 
