@@ -32,6 +32,13 @@ eleventyComputed:
   <section class="activity" id="activity" data-url="{{ site.flightsUrl }}" aria-live="polite">
     <p class="muted">{{ t.activity.loading }}</p>
   </section>
+  {#- «Registrerte turer» (prototype): the flights pilots have logged themselves on /registrer-tur/, from the data
+      service (/v1/logbook.json), filled by activity.js; the link to the form stays whatever the data service answers. -#}
+  <section class="activity activity-logged" id="activity-logged" data-url="{{ site.logbookUrl }}" data-form-url="{{ '/registrer-tur/' | localeUrl }}">
+    <h2>{{ t.activity.loggedTitle }}</h2>
+    <p class="muted">{{ t.activity.loggedIntro }} <a href="{{ '/registrer-tur/' | localeUrl }}">{{ t.activity.loggedLink }}</a></p>
+    <div id="activity-logged-body"></div>
+  </section>
   <noscript><p>{{ t.activity.noScript }}</p></noscript>
 </main>
 <script type="application/json" id="sites-data">{{ collections.sites | stationSites(lang) | json | safe }}</script>

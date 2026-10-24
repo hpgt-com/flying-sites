@@ -50,6 +50,11 @@ export default [
     files: ["src/assets/js/**/*.js"],
     languageOptions: { ecmaVersion: 2020, sourceType: "script", globals: browserGlobals },
   },
+  // The browser modules (a page's own script that imports shared code, such as logbook-form.mjs → igc.js).
+  {
+    files: ["src/assets/js/**/*.mjs"],
+    languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: { ...browserGlobals, FileReader: "readonly" } },
+  },
   // The service worker (assembled by src/sw.11ty.js with the values it needs): a plain script in the worker's scope.
   {
     files: ["lib/service-worker.js"],

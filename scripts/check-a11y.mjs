@@ -12,7 +12,7 @@ import { createRequire } from "node:module";
 import { chromium } from "playwright";
 import { serveSite } from "./site-server.mjs";
 
-const PAGES = ["/", "/en/", "/flysteder/sollifjellet/", "/tarn/", "/om/", "/status/", "/vaer/", "/flyaktivitet/", "/nytt/"];
+const PAGES = ["/", "/en/", "/flysteder/sollifjellet/", "/tarn/", "/om/", "/status/", "/vaer/", "/flyaktivitet/", "/nytt/", "/registrer-tur/"];
 const FAIL_ON = new Set(["serious", "critical"]);
 const axeSource = fs.readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
