@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { metRows, metUpdated, mergeSites, fetchSite } from "../lib/weather/met.js";
+import { metRows, metExtras, metUpdated, mergeSites, fetchSite } from "../lib/weather/met.js";
 import { loadWeather, readWeather, writeWeather } from "../lib/weather/index.js";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "weather-"));
@@ -16,6 +16,14 @@ const hour = (time, dir, speed, gust, rain) => ({
 test("the MET response becomes one row per hour with direction, wind, gust and rain", () => {
   const rows = metRows({ properties: { timeseries: [hour("2026-10-17T10:00:00Z", 271.6, 4.2, 7.1, 0.3), hour("2026-10-17T11:00:00Z", 90, 2, undefined, null)] } });
   assert.deepEqual(rows, [["2026-10-17T10:00:00Z", 272, 4.2, 7.1, 0.3], ["2026-10-17T11:00:00Z", 90, 2, null, null]]);
+});
+
+test("the temperature and the sea-level pressure per hour, apart from the rows", () => {
+  const withExtras = (time, temp, pressure) => ({ time, data: { instant: { details: { wind_from_direction: 180, wind_speed: 3, air_temperature: temp, air_pressure_at_sea_level: pressure } } } });
+  const series = [withExtras("2026-10-17T10:00:00Z", 6.4, 1006.5), withExtras("2026-10-17T11:00:00Z", undefined, 1006.1)];
+  assert.deepEqual(metExtras({ properties: { timeseries: series } }), [["2026-10-17T10:00:00Z", 6.4, 1006.5], ["2026-10-17T11:00:00Z", null, 1006.1]]);
+  assert.equal(metExtras({ properties: { timeseries: series } }, 1).length, 1, "only the first hours");
+  assert.deepEqual(metRows({ properties: { timeseries: series } })[0].length, 5, "the rows every page fetches are unchanged");
 });
 
 test("the hours as long as MET gives them, then the 6-hour steps without gust and with the rain per hour, up to five days", () => {

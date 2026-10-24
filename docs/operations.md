@@ -248,7 +248,8 @@ the menu and is marked `noindex`. It shows per site:
 
 - The data service pairs the forecast for each finished hour (as it stood during the hour, `forecast_hours`) with what
   the flying site's own station measured in it (`workers/data/src/sources/verify.js`): the mean wind, the highest gust
-  and the direction. Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
+  and the direction, and where the station measures them the temperature and the air pressure (the forecast's are kept
+  per hour in `forecast_hours` too; both pressures are at sea level). Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
   summed up in `https://data.hpgt.workers.dev/v1/verification.json`.
 - Which sites: those with a station of their own (`site` in `HOLFUY_STATIONS`, and `MET_STATION_SITES`), now Heia and
   Sætertinden, and those with one nearby at about the same height (`near` in `HOLFUY_STATIONS`), now Hinnstein against

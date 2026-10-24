@@ -6,8 +6,11 @@
 
 export const TABLES = {
   flight_days: ["day", "site", "flights", "pilots", "minutes", "max_dist", "max_alt"],
-  verify_hours: ["site", "station", "time", "f_dir", "f_speed", "f_gust", "m_dir", "m_speed", "m_gust", "n"],
+  verify_hours: ["site", "station", "time", "f_dir", "f_speed", "f_gust", "m_dir", "m_speed", "m_gust", "n", "f_temp", "m_temp", "f_pressure", "m_pressure"],
 };
+// A file made before columns were added (at the end) is still read in: its columns must be the first of the table's,
+// at least this many, and the rest become null.
+export const MIN_COLUMNS = { flight_days: 7, verify_hours: 10 };
 export const KEEP_DAYS = 90;
 export const JSON_META = { httpMetadata: { contentType: "application/json; charset=utf-8" } };
 
@@ -25,16 +28,18 @@ export function backupBody(table, rows, day) {
   return JSON.stringify({ table, day, columns, rows: rows.map((r) => columns.map((c) => r[c] ?? null)) });
 }
 
-// The rows of a backup file, checked: the table is one of TABLES, the columns are its columns, and each row has one
-// value per column. Throws otherwise, so a wrong file is never read in.
+// The rows of a backup file, checked: the table is one of TABLES, the columns are its columns (or the first of them,
+// MIN_COLUMNS or more, from before the later ones were added: those become null), and each row has one value per
+// column. Throws otherwise, so a wrong file is never read in.
 export function backupRows(text, table) {
   const body = JSON.parse(text);
   const columns = TABLES[table];
-  if (body?.table !== table || !Array.isArray(body.columns) || body.columns.join() !== columns.join() || !Array.isArray(body.rows)) {
-    throw new Error(`backup: ${table}: feil format`);
-  }
-  if (body.rows.some((r) => !Array.isArray(r) || r.length !== columns.length)) throw new Error(`backup: ${table}: feil rad`);
-  return body.rows;
+  const own = Array.isArray(body?.columns) ? body.columns : [];
+  const known = own.length >= (MIN_COLUMNS[table] ?? columns.length) && own.length <= columns.length && own.join() === columns.slice(0, own.length).join();
+  if (body?.table !== table || !known || !Array.isArray(body.rows)) throw new Error(`backup: ${table}: feil format`);
+  if (body.rows.some((r) => !Array.isArray(r) || r.length !== own.length)) throw new Error(`backup: ${table}: feil rad`);
+  const missing = columns.length - own.length;
+  return missing ? body.rows.map((r) => r.concat(Array(missing).fill(null))) : body.rows;
 }
 
 // The statement that reads a row back in. A row already there (written since the store was lost) is kept: it is newer.

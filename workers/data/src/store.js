@@ -33,6 +33,9 @@ export class Store extends DurableObject {
     // Forecast against measured, per site and finished hour (sources/verify.js), kept for a year.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS verify_hours (site TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
       f_dir REAL, f_speed REAL, f_gust REAL, m_dir REAL, m_speed REAL, m_gust REAL, n INTEGER, PRIMARY KEY (site, station, time))`);
+    // The temperature and the pressure came later (24.10.2026): added to stores made before.
+    const verifyHave = new Set(this.sql.exec("PRAGMA table_info(verify_hours)").toArray().map((c) => c.name));
+    for (const c of ["f_temp", "m_temp", "f_pressure", "m_pressure"]) if (!verifyHave.has(c)) this.sql.exec(`ALTER TABLE verify_hours ADD COLUMN ${c} REAL`);
     // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, flights INTEGER NOT NULL, pilots INTEGER NOT NULL,
       minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
@@ -48,6 +51,8 @@ export class Store extends DurableObject {
     // pruned by time.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS forecast_hours (site TEXT NOT NULL, time TEXT NOT NULL, dir REAL, speed REAL, gust REAL,
       rain REAL, fetched TEXT NOT NULL, PRIMARY KEY (time, site)) WITHOUT ROWID`);
+    const forecastHave = new Set(this.sql.exec("PRAGMA table_info(forecast_hours)").toArray().map((c) => c.name));
+    for (const c of ["temp", "pressure"]) if (!forecastHave.has(c)) this.sql.exec(`ALTER TABLE forecast_hours ADD COLUMN ${c} REAL`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS measurements (source TEXT NOT NULL, station TEXT NOT NULL, time TEXT NOT NULL,
       ${COLUMNS.map((c) => `${c} REAL`).join(", ")}, extra TEXT, PRIMARY KEY (source, time, station)) WITHOUT ROWID`);
     const have = new Set(this.sql.exec("PRAGMA table_info(measurements)").toArray().map((c) => c.name));
@@ -178,14 +183,15 @@ export class Store extends DurableObject {
   // The latest fetch during an hour replaces what an earlier one said for it.
   putForecastHours(hours) {
     for (const h of hours) {
-      this.sql.exec(`INSERT INTO forecast_hours (site, time, dir, speed, gust, rain, fetched) VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT (site, time) DO UPDATE SET dir = excluded.dir, speed = excluded.speed, gust = excluded.gust, rain = excluded.rain, fetched = excluded.fetched`,
-        h.site, h.time, h.dir ?? null, h.speed ?? null, h.gust ?? null, h.rain ?? null, h.fetched);
+      this.sql.exec(`INSERT INTO forecast_hours (site, time, dir, speed, gust, rain, temp, pressure, fetched) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT (site, time) DO UPDATE SET dir = excluded.dir, speed = excluded.speed, gust = excluded.gust, rain = excluded.rain,
+        temp = excluded.temp, pressure = excluded.pressure, fetched = excluded.fetched`,
+        h.site, h.time, h.dir ?? null, h.speed ?? null, h.gust ?? null, h.rain ?? null, h.temp ?? null, h.pressure ?? null, h.fetched);
     }
   }
 
   forecastHoursSince(since) {
-    return this.sql.exec("SELECT site, time, dir, speed, gust, rain FROM forecast_hours WHERE time >= ? ORDER BY time", since).toArray();
+    return this.sql.exec("SELECT site, time, dir, speed, gust, rain, temp, pressure FROM forecast_hours WHERE time >= ? ORDER BY time", since).toArray();
   }
 
   pruneForecastHours(before) {
@@ -195,15 +201,18 @@ export class Store extends DurableObject {
   // An hour paired again (a late measurement) replaces what was stored for it.
   putVerifyHours(rows) {
     for (const r of rows) {
-      this.sql.exec(`INSERT INTO verify_hours (site, station, time, f_dir, f_speed, f_gust, m_dir, m_speed, m_gust, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      this.sql.exec(`INSERT INTO verify_hours (site, station, time, f_dir, f_speed, f_gust, m_dir, m_speed, m_gust, n, f_temp, m_temp, f_pressure, m_pressure)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (site, station, time) DO UPDATE SET f_dir = excluded.f_dir, f_speed = excluded.f_speed, f_gust = excluded.f_gust,
-        m_dir = excluded.m_dir, m_speed = excluded.m_speed, m_gust = excluded.m_gust, n = excluded.n`,
-        r.site, r.station, r.time, r.f_dir, r.f_speed, r.f_gust, r.m_dir, r.m_speed, r.m_gust, r.n);
+        m_dir = excluded.m_dir, m_speed = excluded.m_speed, m_gust = excluded.m_gust, n = excluded.n,
+        f_temp = excluded.f_temp, m_temp = excluded.m_temp, f_pressure = excluded.f_pressure, m_pressure = excluded.m_pressure`,
+        r.site, r.station, r.time, r.f_dir, r.f_speed, r.f_gust, r.m_dir, r.m_speed, r.m_gust, r.n,
+        r.f_temp ?? null, r.m_temp ?? null, r.f_pressure ?? null, r.m_pressure ?? null);
     }
   }
 
   verifyHoursSince(since) {
-    return this.sql.exec("SELECT site, station, time, f_dir, f_speed, f_gust, m_dir, m_speed, m_gust, n FROM verify_hours WHERE time >= ? ORDER BY time", since).toArray();
+    return this.sql.exec("SELECT site, station, time, f_dir, f_speed, f_gust, m_dir, m_speed, m_gust, n, f_temp, m_temp, f_pressure, m_pressure FROM verify_hours WHERE time >= ? ORDER BY time", since).toArray();
   }
 
   pruneVerifyHours(before) {

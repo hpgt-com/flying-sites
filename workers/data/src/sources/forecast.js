@@ -7,7 +7,8 @@
 // test/data-worker.test.js.
 //
 // Each fetch also stores the forecast for the hour going on then (store.js forecast_hours), the latest fetch during the
-// hour winning, so it is known afterwards what the forecast said for each hour. The dataset carries the last PAST_HOURS of
+// hour winning, so it is known afterwards what the forecast said for each hour; with the hour's temperature and pressure
+// (met.js metExtras, kept per launch as extras), which the verification compares with the stations' own. The dataset carries the last PAST_HOURS of
 // them as past, for «Målt mot varslet» on the weather page; they are kept for KEEP_DAYS.
 
 import { fetchSite, mergeSites } from "../../../../lib/weather/met.js";
@@ -78,9 +79,11 @@ export async function run(store, sites, now = Date.now()) {
       const prev = state.sites[site.id] ?? {};
       const r = await fetchSite({ lat: site.lat, lon: site.lon }, site.altitude, { expires: prev.expires, lastModified: prev.rows ? prev.lastModified : null, now });
       const rows = r.notModified ? prev.rows : r.rows;
-      state.sites[site.id] = { fetched: new Date(now).toISOString(), updated: r.notModified ? prev.updated : r.updated, rows, expires: r.expires ?? null, lastModified: r.lastModified ?? null };
+      const extras = (r.notModified ? prev.extras : r.extras) ?? [];
+      state.sites[site.id] = { fetched: new Date(now).toISOString(), updated: r.notModified ? prev.updated : r.updated, rows, extras, expires: r.expires ?? null, lastModified: r.lastModified ?? null };
       const h = hourNow(rows, now);
-      if (h) hours.push({ site: site.id, time: h[0], dir: h[1], speed: h[2], gust: h[3], rain: h[4], fetched: new Date(now).toISOString() });
+      const x = h && extras.find((e) => e[0] === h[0]);
+      if (h) hours.push({ site: site.id, time: h[0], dir: h[1], speed: h[2], gust: h[3], rain: h[4], temp: x?.[1] ?? null, pressure: x?.[2] ?? null, fetched: new Date(now).toISOString() });
     } catch (err) {
       state.sites[site.id] = { ...state.sites[site.id], tried: new Date(now).toISOString() };
       console.warn(`MET: ${site.id}: ${err.message}`);
