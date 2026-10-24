@@ -36,10 +36,6 @@ export class Store extends DurableObject {
     // The temperature and the pressure came later (24.10.2026): added to stores made before.
     const verifyHave = new Set(this.sql.exec("PRAGMA table_info(verify_hours)").toArray().map((c) => c.name));
     for (const c of ["f_temp", "m_temp", "f_pressure", "m_pressure"]) if (!verifyHave.has(c)) this.sql.exec(`ALTER TABLE verify_hours ADD COLUMN ${c} REAL`);
-    // Flights pilots log themselves (logbook.js, prototype): the sums of a flight, no name, device or track. The key
-    // is the site, the day and the takeoff minute from the log, so the same file sent twice counts once.
-    this.sql.exec(`CREATE TABLE IF NOT EXISTS logged_flights (key TEXT PRIMARY KEY, site TEXT NOT NULL, day TEXT NOT NULL, minutes INTEGER NOT NULL,
-      max_alt INTEGER, max_dist_km REAL, category TEXT, source TEXT NOT NULL, created TEXT NOT NULL)`);
     // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, flights INTEGER NOT NULL, pilots INTEGER NOT NULL,
       minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
@@ -115,15 +111,13 @@ export class Store extends DurableObject {
   // Deletes the salts and counts (with the address hashes) of every day but `day`. Called with each report, and once a
   // day on the schedule (index.js), so no hash outlives its day by more than the time to the next run.
   pruneReports(day) {
-    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'logbook-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?, ?)",
-      `reports-${day}`, `logbook-${day}`, `report-salt-${day}`);
+    this.sql.exec("DELETE FROM state WHERE (key LIKE 'reports-%' OR key LIKE 'report-salt-%') AND key NOT IN (?, ?)", `reports-${day}`, `report-salt-${day}`);
   }
 
   // Counts one report for the day and the sender, if both are under their limits: "ok", "limit" or "ip-limit". One
-  // synchronous method in the Durable Object, so the read and the write cannot be split by another request. kind:
-  // "reports" («Meld fra») or "logbook" (a flight logged), counted apart.
-  reserveReport(day, who, dailyLimit, perIpLimit, kind = "reports") {
-    const key = `${kind}-${day}`;
+  // synchronous method in the Durable Object, so the read and the write cannot be split by another request.
+  reserveReport(day, who, dailyLimit, perIpLimit) {
+    const key = `reports-${day}`;
     const c = this.getState(key) ?? { n: 0, ips: {} };
     if (c.n >= dailyLimit) return "limit";
     if (who && (c.ips[who] ?? 0) >= perIpLimit) return "ip-limit";
@@ -134,8 +128,8 @@ export class Store extends DurableObject {
   }
 
   // Gives a reservation back (GitHub failed, so no issue was made).
-  releaseReport(day, who, kind = "reports") {
-    const key = `${kind}-${day}`;
+  releaseReport(day, who) {
+    const key = `reports-${day}`;
     const c = this.getState(key);
     if (!c || typeof c !== "object") return;
     c.n = Math.max(0, c.n - 1);
@@ -237,18 +231,6 @@ export class Store extends DurableObject {
 
   flightDays() {
     return this.sql.exec("SELECT day, site, flights, pilots, minutes, max_dist, max_alt FROM flight_days ORDER BY day").toArray();
-  }
-
-  // A flight a pilot logged (logbook.js): the same key (the site, the day and the takeoff minute) replaces what was stored.
-  putLoggedFlight(f, now = Date.now()) {
-    this.sql.exec(`INSERT INTO logged_flights (key, site, day, minutes, max_alt, max_dist_km, category, source, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (key) DO UPDATE SET site = excluded.site, day = excluded.day, minutes = excluded.minutes, max_alt = excluded.max_alt,
-      max_dist_km = excluded.max_dist_km, category = excluded.category, source = excluded.source`,
-      f.key, f.site, f.day, f.minutes, f.maxAlt ?? null, f.maxDistKm ?? null, f.category ?? null, f.source, new Date(now).toISOString());
-  }
-
-  loggedFlights() {
-    return this.sql.exec("SELECT key, site, day, minutes, max_alt, max_dist_km, category, source, created FROM logged_flights ORDER BY day").toArray();
   }
 
   // A new, empty store (a lost or recreated Durable Object) reads the latest backup (backup.js) back in from the archive

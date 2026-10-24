@@ -77,7 +77,7 @@ export function reportHosts(env) {
 
 // Whether Turnstile accepts the token, for one of our hostnames (a token solved on another site is refused). A timeout or
 // an error from Turnstile counts as not accepted.
-export async function turnstileOk(env, token, ip) {
+async function turnstileOk(env, token, ip) {
   const form = new FormData();
   form.append("secret", env.TURNSTILE_SECRET);
   form.append("response", token);

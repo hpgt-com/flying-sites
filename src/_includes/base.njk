@@ -79,8 +79,6 @@
 {#- The service worker, for offline use (src/assets/js/pwa.js). The URLs are given here, so they follow the path prefix. -#}
 <script defer src="{{ "/assets/js/pwa.js" | asset }}" data-sw="{{ '/sw.js' | url }}" data-scope="{{ '/' | url }}"></script>
 {% for script in scripts %}<script defer src="{{ script | asset }}"></script>
-{% endfor %}{#- modules: ES modules (deferred by nature), for a page that imports shared code (logbook-form.mjs → igc.js). -#}
-{% for module in modules %}<script type="module" src="{{ module | asset }}"></script>
 {% endfor %}
 </body>
 </html>

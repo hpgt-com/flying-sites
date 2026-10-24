@@ -1,7 +1,6 @@
 // Tests for the flight logs (lib/igc.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { parseIgc, parseKml, analyzeFlight, launchPoints, aggregate, flightKey } from "../lib/igc.js";
 
 // An IGC B record: time (s), position and height.
@@ -93,11 +92,4 @@ test("the sums per site: months and records", () => {
   assert.deepEqual(s.longest, { value: 95, date: "2024-07-10" });
   assert.deepEqual(s.highest, { value: 1200, date: "2020-06-01" });
   assert.deepEqual(s.farthest, { value: 12.5, date: "2024-07-10" });
-});
-
-test("the fixture flight (test/fixtures/flight.igc, used by check:behaviour for «Registrer tur») is a Heia flight", () => {
-  const log = parseIgc(readFileSync(new URL("./fixtures/flight.igc", import.meta.url), "utf8"));
-  const f = analyzeFlight(log, launchPoints([{ id: "heia", launch: { lat: 68.75889, lon: 16.51028 } }]));
-  assert.deepEqual(f, { date: "2026-10-18", takeoff: 36055, site: "heia", minutes: 15, maxAlt: 1200, maxDistKm: 5.3 });
-  assert.equal(flightKey(f), "2026-10-18|601");
 });

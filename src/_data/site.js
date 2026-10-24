@@ -22,9 +22,6 @@ export default {
   // «Meld fra om endring» on the site pages (report.js, workers/data/src/report.js). The form is shown only when the
   // Turnstile site key is set (public; the secret is TURNSTILE_SECRET in Cloudflare), see docs/operations.md.
   reportUrl: "https://data.hpgt.workers.dev/v1/report",
-  // «Registrer tur» (prototype): where a logged flight is sent, and the sums everyone can read.
-  logbookPostUrl: "https://data.hpgt.workers.dev/v1/logbook",
-  logbookUrl: "https://data.hpgt.workers.dev/v1/logbook.json",
   turnstileSiteKey: "0x4AAAAAAFbKpuCOckRpqREy",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",

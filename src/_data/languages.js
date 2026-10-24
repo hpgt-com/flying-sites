@@ -4,5 +4,5 @@
 // first URL segment (keyed by the Norwegian names): /flysteder/ryten/ becomes /en/sites/ryten/, /tarn/ becomes /en/towers/, /om/ becomes /en/about/, /vaer/ becomes /en/weather/, /meld-fra/ becomes /en/report/, /flyaktivitet/ becomes /en/flying-activity/, /nytt/ becomes /en/whats-new/.
 export default [
   { code: "nb", name: "Norsk", locale: "nb_NO", prefix: "", slugs: {} },
-  { code: "en", name: "English", locale: "en_GB", prefix: "/en", slugs: { flysteder: "sites", tarn: "towers", om: "about", vaer: "weather", "meld-fra": "report", flyaktivitet: "flying-activity", nytt: "whats-new", "registrer-tur": "log-flight" } },
+  { code: "en", name: "English", locale: "en_GB", prefix: "/en", slugs: { flysteder: "sites", tarn: "towers", om: "about", vaer: "weather", "meld-fra": "report", flyaktivitet: "flying-activity", nytt: "whats-new" } },
 ];

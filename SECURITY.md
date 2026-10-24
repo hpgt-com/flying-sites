@@ -34,10 +34,6 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   links, images or @mentions. The issues are made by the club's GitHub App, installed only on this repository with
   only Issues: read and write; its private key is a Cloudflare secret, and each report gets a token that lasts an hour
   (`workers/data/src/github-app.js`).
-- «Registrer tur» (`POST /v1/logbook`, `workers/data/src/logbook.js`, prototype) works the same way: the same
-  origin, Turnstile, JSON up to 4 KB, only known sites and values within limits (`checkFlight`), at most 200 flights
-  a day and 20 from one address, counted apart from the reports. The log file is read in the browser and never sent;
-  only the sums are. The dataset is used only in the expected shape (`isLogbookData` in `activity.js`).
 - The forecast from the data service is only used when it has the expected shape (times as strings, rows of numbers
   or null; `isNewerForecast` in `wind.js`), and it is never parsed as HTML.
 - The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles

@@ -81,7 +81,7 @@ function forecastNow() {
 
 // The answers from outside: the data service (stations and pilots from the fixtures, the rest as «no data yet», so the
 // pages use what is built in, or everything 503 when down), Turnstile as a stand-in that passes at once, and nothing else.
-async function answer(context, origin, { down = false, reports = [], logged = [], forecast = false } = {}) {
+async function answer(context, origin, { down = false, reports = [], forecast = false } = {}) {
   await context.route("**/*", async (route) => {
     const req = route.request();
     // Compared by origin, not as text: «https://data.hpgt.workers.dev.example» is another host.
@@ -91,11 +91,6 @@ async function answer(context, origin, { down = false, reports = [], logged = []
       if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type", "access-control-allow-methods": "POST" } });
       reports.push(JSON.parse(req.postData() ?? "{}"));
       return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify({ ok: true, issue: 200, url: "https://github.com/hpgt-com/flying-sites/issues/200" }) });
-    }
-    if (url.origin === DATA && url.pathname === "/v1/logbook") {
-      if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type", "access-control-allow-methods": "POST" } });
-      logged.push(JSON.parse(req.postData() ?? "{}"));
-      return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify({ ok: true, flights: logged.length, site: logged.length }) });
     }
     if (url.origin === DATA) {
       const path = url.pathname;
@@ -385,39 +380,6 @@ const scenarios = {
     }
     const href = await page.locator(".report__status--ok a").getAttribute("href").catch(() => null);
     if (href && href !== "https://github.com/hpgt-com/flying-sites/issues/200") problems.push(`lenken går til ${href}`);
-    await context.close();
-    return [...problems, ...errors];
-  },
-
-  async "«Registrer tur»: en IGC-fil leses i nettleseren og fyller skjemaet, og bare summene sendes"(browser, origin) {
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-    const logged = [];
-    await answer(context, origin, { logged });
-    const page = await context.newPage();
-    const errors = [];
-    watchErrors(page, errors);
-    await page.goto(`${origin}/registrer-tur/`, { waitUntil: "load" });
-    const problems = [];
-    const form = page.locator("#logflight-form");
-    await form.locator(".report__send").click();
-    if (!(await page.locator("#logflight-status.report__status--error").count())) problems.push("et tomt skjema ga ingen feilmelding");
-    await form.locator("input[name=file]").setInputFiles(new URL("../test/fixtures/flight.igc", import.meta.url).pathname);
-    await page.locator("#logflight-found.report__status--ok").waitFor({ timeout: 5000 }).catch(() => problems.push("fila ga ingen tur"));
-    const found = await page.locator("#logflight-found").textContent();
-    if (!found?.includes("Heia")) problems.push(`turen fra fila nevner ikke Heia: ${found}`);
-    const values = await form.evaluate((f) => ({ site: f.elements.site.value, day: f.elements.day.value, minutes: f.elements.minutes.value, maxAlt: f.elements.maxAlt.value, maxDistKm: f.elements.maxDistKm.value }));
-    if (values.site !== "heia" || values.day !== "2026-10-18" || values.minutes !== "15" || values.maxAlt !== "1200" || values.maxDistKm !== "5.3") problems.push(`feltene fra fila: ${JSON.stringify(values)}`);
-    await page.waitForTimeout(200);
-    await form.locator(".report__send").click();
-    await page.locator("#logflight-status.report__status--ok").waitFor({ timeout: 5000 }).catch(() => problems.push("ingen takk etter sending"));
-    const sent = logged[0];
-    if (!sent) problems.push("ingenting ble sendt");
-    else {
-      if (sent.token !== "test-token") problems.push(`Turnstile-svaret ble ikke sendt med (${sent.token})`);
-      if (sent.site !== "heia" || sent.minutes !== 15 || sent.maxAlt !== 1200 || sent.maxDistKm !== 5.3 || sent.source !== "igc" || sent.key !== "2026-10-18|601") problems.push(`det som ble sendt: ${JSON.stringify(sent)}`);
-      const keys = Object.keys(sent).sort().join(",");
-      if (keys !== "category,day,key,maxAlt,maxDistKm,minutes,site,source,token") problems.push(`mer enn summene ble sendt: ${keys}`);
-    }
     await context.close();
     return [...problems, ...errors];
   },
