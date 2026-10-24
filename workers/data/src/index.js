@@ -22,7 +22,6 @@
 // - live: the aircraft the Open Glider Network hears in the area now (live.js), fetched on demand and cached a few
 //   seconds, for the map layer «Piloter i lufta» (src/assets/js/live.js).
 // - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
-// - POST /v1/logbook: a flight a pilot logs from /registrer-tur/ (logbook.js, prototype); the sums as /v1/logbook.json.
 // - status: how the sources and datasets are doing (health.js), for the hourly check in .github/workflows/health.yml.
 //
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
@@ -38,8 +37,6 @@ import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE, siteLinks } from "./st
 import { due, INTERVALS } from "./schedule.js";
 import { mergeStations } from "./merge.js";
 import { handleReport, ORIGINS } from "./report.js";
-import * as logbook from "./logbook.js";
-const { handleLogbook } = logbook;
 import { handleLive } from "./live.js";
 import { recordRuns, buildStatus, MAX_AGE } from "./health.js";
 import { cached, CACHE_SECONDS } from "./cache.js";
@@ -49,7 +46,7 @@ import SITES from "./sites.json";
 export { Store } from "./store.js";
 
 const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET, "/v1/windgram.json": windgram.DATASET, "/v1/verification.json": verify.DATASET,
-  "/v1/flights.json": flights.DATASET, "/v1/grid.json": "grid", "/v1/grid-wide.json": "grid-wide", "/v1/logbook.json": logbook.DATASET };
+  "/v1/flights.json": flights.DATASET, "/v1/grid.json": "grid", "/v1/grid-wide.json": "grid-wide" };
 
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 
@@ -120,7 +117,7 @@ export default {
       return await handle(request, env, ctx);
     } catch (err) {
       console.warn(`fetch ${new URL(request.url).pathname}: ${err.message}`);
-      const report = ["/v1/report", "/v1/logbook"].includes(new URL(request.url).pathname);
+      const report = new URL(request.url).pathname === "/v1/report";
       return Response.json({ error: "unavailable" }, { status: 503, headers: { ...(report ? reportCors(request, env).cors : HEADERS), "cache-control": "no-store" } });
     }
   },
@@ -139,14 +136,12 @@ function reportCors(request, env) {
 async function handle(request, env, ctx) {
   const { pathname } = new URL(request.url);
   // «Meld fra om endring» (report.js).
-  if (pathname === "/v1/report" || pathname === "/v1/logbook") {
+  if (pathname === "/v1/report") {
     const { allowed, cors } = reportCors(request, env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: cors });
     if (!allowed) return Response.json({ error: "origin" }, { status: 403, headers: cors });
-    const { status, body } = pathname === "/v1/report"
-      ? await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])))
-      : await handleLogbook(request, env, store(env), SITES.map((s) => s.id));
+    const { status, body } = await handleReport(request, env, store(env), Object.fromEntries(SITES.map((s) => [s.id, s.name ?? s.id])));
     return Response.json(body, { status, headers: cors });
   }
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });

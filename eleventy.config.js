@@ -19,9 +19,6 @@ export default function (eleventyConfig) {
   // Walking routes sit next to the site pages: src/sites/<id>/*.gpx becomes /flysteder/<id>/*.gpx.
   eleventyConfig.addPassthroughCopy({ "src/sites": "flysteder" }, { filter: ["**/*.gpx"] });
   eleventyConfig.addPassthroughCopy("src/assets");
-  // The flight-log reader, the same code the logbook script runs on a pilot's machine, for the browser on /registrer-tur/
-  // (an ES module without imports; src/assets/js/logbook-form.mjs imports it).
-  eleventyConfig.addPassthroughCopy({ "lib/igc.js": "assets/js/igc.js" });
   // Only what the pages load: leaflet-src.js and leaflet-src.esm.js (about 0.9 MB with their maps) are left out.
   eleventyConfig.addPassthroughCopy({
     "node_modules/leaflet/dist/leaflet.js": "assets/leaflet/leaflet.js",

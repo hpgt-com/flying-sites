@@ -131,46 +131,7 @@
     return out;
   }
 
-  // The logged flights (/v1/logbook.json, workers/data/src/logbook.js): three numbers and a table per site, or that
-  // there are none yet. Nothing when the data service does not answer (the heading and the link stay).
-  function isLogbookData(d) {
-    return !!(d && d.dataset === "logbook" && Number.isInteger(d.flights) && d.sites && typeof d.sites === "object");
-  }
-  function renderLogged(data, sites) {
-    var FS = globalThis.FlyingSites, info = {};
-    (sites || []).forEach(function (s) { info[s.id] = s; });
-    if (!data.flights) return [make("p", "muted", text("activity.loggedNone"))];
-    var rows = Object.keys(data.sites).map(function (id) {
-      var s = data.sites[id];
-      return { id: id, name: (info[id] && info[id].name) || id, url: info[id] ? info[id].url : null, flights: s.flights, minutes: s.minutes,
-        longest: s.longest ? s.longest.value : null, maxAlt: s.highest ? s.highest.value : null, maxDist: s.farthest ? s.farthest.value : null, last: s.last };
-    }).sort(function (a, b) { return b.flights - a.flights; });
-    var stats = make("div", "access-stats activity-stats");
-    stats.setAttribute("role", "group");
-    stats.setAttribute("aria-label", text("activity.loggedTitle"));
-    stats.appendChild(stat(data.flights, text("activity.loggedFlights")));
-    stats.appendChild(stat(hoursText(data.minutes), text("activity.loggedHours")));
-    stats.appendChild(stat(rows.length, text("activity.loggedSites")));
-    return [stats, table(rows, [
-      ["colFlights", function (r) { return r.flights; }], ["colHours", function (r) { return hoursText(r.minutes); }],
-      ["colLongest", function (r) { return r.longest != null ? hoursText(r.longest) : "–"; }],
-      ["colFarthest", function (r) { return r.maxDist != null && r.maxDist > 0 ? FS.formatNumber(r.maxDist, 1) + " km" : "–"; }],
-      ["colHighest", function (r) { return r.maxAlt != null ? text("activity.masl", { m: r.maxAlt }) : "–"; }],
-      ["colLast", function (r) { return dateText(r.last); }],
-    ], text("activity.loggedTitle"))];
-  }
-  function initLogged() {
-    var box = document.getElementById("activity-logged"), body = document.getElementById("activity-logged-body");
-    var FS = globalThis.FlyingSites;
-    if (!box || !body || !FS || typeof fetch !== "function") return;
-    fetch(box.getAttribute("data-url"), { credentials: "omit" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (isLogbookData(d)) body.replaceChildren.apply(body, renderLogged(d, FS.readJson("sites-data") || [])); })
-      .catch(function () {});
-  }
-
   function init() {
-    initLogged();
     var box = document.getElementById("activity");
     var FS = globalThis.FlyingSites, FL = globalThis.FlyingSitesFlights;
     if (!box || !FS || !FL || typeof fetch !== "function") return;
@@ -183,6 +144,6 @@
       .catch(function () { box.replaceChildren(make("p", null, text("activity.failed"))); });
   }
 
-  globalThis.FlyingSitesActivity = { summarize: summarize, renderLogged: renderLogged, isLogbookData: isLogbookData, useText: useText };
+  globalThis.FlyingSitesActivity = { summarize: summarize, useText: useText };
   if (typeof document !== "undefined" && document.getElementById) init();
 })();
