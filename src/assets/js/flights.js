@@ -121,9 +121,10 @@
   }
 
   // «Siste turer herfra»: the last flights from this site in the flight log (/v1/flight-log.json), each linking to the
-  // flight on /flyaktivitet/ (#tur-<id>), where it is drawn on a map. Only counted flights; at most RECENT_SHOWN.
+  // flight on /flyaktivitet/ (#tur-<id>), where it is drawn on a map. Only counted flights; at most RECENT_SHOWN. The
+  // link comes from the page (#flights-recent-link); only the hash is set, from an id checked to be hex.
   var RECENT_SHOWN = 8;
-  function recentList(log, siteId, activityUrl) {
+  function recentList(log, siteId, linkTemplate) {
     var FS = globalThis.FlyingSites;
     var mine = (log.flights || []).filter(function (f) { return f.site === siteId && f.counted !== false && typeof f.id === "string" && /^[0-9a-f]{6,16}$/.test(f.id); }).slice(0, RECENT_SHOWN);
     if (!mine.length) return null;
@@ -133,12 +134,13 @@
     var ul = wrap.appendChild(make("ul", "flights-recent-list"));
     mine.forEach(function (f) {
       var li = ul.appendChild(make("li"));
-      var a = li.appendChild(make("a", null, text("flights.recentRow", {
+      var a = li.appendChild(linkTemplate.content.firstElementChild.cloneNode(true));
+      a.textContent = text("flights.recentRow", {
         date: new Intl.DateTimeFormat(lang, { day: "numeric", month: "short", timeZone: "Europe/Oslo" }).format(new Date(f.start)),
         time: new Intl.DateTimeFormat(lang, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Oslo" }).format(new Date(f.start)),
         minutes: f.minutes, alt: f.maxAlt != null ? number(f.maxAlt) : "?", km: f.maxDist != null ? number(f.maxDist, 1) : "?",
-      })));
-      a.href = activityUrl + "#tur-" + f.id;
+      });
+      a.hash = "tur-" + f.id;
     });
     return wrap;
   }
@@ -153,11 +155,11 @@
         if (!isFlightsData(d)) return;
         render(d, box.getAttribute("data-site"), Date.now()).forEach(function (n) { body.appendChild(n); });
         box.hidden = false;
-        var logUrl = box.getAttribute("data-log-url");
-        if (!logUrl) return;
+        var logUrl = box.getAttribute("data-log-url"), linkTemplate = document.getElementById("flights-recent-link");
+        if (!logUrl || !linkTemplate || !linkTemplate.content) return;
         return fetch(logUrl, { credentials: "omit" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (log) {
           if (!log || log.dataset !== "flight-log" || !Array.isArray(log.flights)) return;
-          var list = recentList(log, box.getAttribute("data-site"), box.getAttribute("data-activity-url") || "/flyaktivitet/");
+          var list = recentList(log, box.getAttribute("data-site"), linkTemplate);
           var help = body.querySelector(".help-fold");
           if (list) body.insertBefore(list, help || null);
         });
