@@ -379,9 +379,10 @@ const scenarios = {
     const link = page.locator(".flights-recent a").first();
     await link.waitFor({ timeout: 5000 }).catch(() => problems.push("stedssiden har ingen «Siste turer herfra»"));
     const href = await link.getAttribute("href").catch(() => null);
-    if (href && !href.endsWith("/flyaktivitet/#tur-f1e2d3c4b5a6")) problems.push(`lenken fra stedssiden går til ${href}`);
-    if (href) {
-      await page.goto(`${origin}${href}`, { waitUntil: "load" });
+    const target = href ? new URL(href, origin) : null;
+    if (target && target.pathname + target.hash !== "/flyaktivitet/#tur-f1e2d3c4b5a6") problems.push(`lenken fra stedssiden går til ${href}`);
+    if (target) {
+      await page.goto(target.href, { waitUntil: "load" });
       await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("lenken åpnet ikke turen"));
     }
     await context.close();
