@@ -379,6 +379,18 @@ the menu and is marked `noindex`. It shows per site:
   kundesenter@kartverket.no). What is known locally belongs in the site's hazards.
 - A missing lift, line or mast is best added in OpenStreetMap; it comes with the next monthly fetch.
 
+## Map tiles
+
+- Kartverket's tiles (`cache.kartverket.no`) come ready for land, but tiles that are mostly sea or outside Norway
+  (most of a wide view, from about the 30 km scale out) are made anew for each request and take 0.5–1 s each, so a
+  zoom out waits for them. On a PC (fine pointer, window at least 900 px wide, no data saving) the home map fetches
+  the tiles for the next two zoom levels out in the background (`warmZoomOut` in `common.js`): 1.5 s after the first
+  tiles have shown, and 0.4 s after each zoom out, at most 160 tiles a page view, four at a time. The step out is then
+  drawn from the browser's cache. Phones are left alone (data).
+- The service worker (`lib/service-worker.js`) keeps the last `MAX_TILES` (500) Kartverket tiles for use without
+  net, hands a tile to the map as soon as it arrives and stores it afterwards, and trims the store only every 20th
+  tile, so a zoom that brings twenty new tiles is not held up by twenty trims.
+
 ## Images
 
 ```bash

@@ -81,7 +81,8 @@ function cacheStorage() {
       delete: async (r) => m.delete(key(r)),
     };
   };
-  return { all, api: { open, keys: async () => [...all.keys()], delete: async (n) => all.delete(n), match: async () => undefined } };
+  const match = async (r, o) => (o && o.cacheName ? (await open(o.cacheName)).match(r) : undefined);
+  return { all, api: { open, keys: async () => [...all.keys()], delete: async (n) => all.delete(n), match } };
 }
 
 test("after a deploy, a page stored before it still has its CSS and JS offline; files nobody uses go", async () => {
@@ -96,7 +97,7 @@ test("after a deploy, a page stored before it still has its CSS and JS offline; 
   // The new service worker, as src/sw.11ty.js builds it.
   const precache = ["/assets/css/styles.css?v=new", "/assets/js/site.js?v=new"];
   const src = [`var VERSION = "new"; var SCHEMA = ${JSON.stringify(CACHE_SCHEMA)}; var BASE = "/"; var PRECACHE = ${JSON.stringify(precache)};`,
-    "var MAX_TILES = 300; var MAX_PAGES = 120;", String(routeFor), String(offlineUrl), String(referencedAssets), String(staticToKeep),
+    "var MAX_TILES = 500; var MAX_PAGES = 120;", String(routeFor), String(offlineUrl), String(referencedAssets), String(staticToKeep),
     fs.readFileSync(new URL("../lib/service-worker.js", import.meta.url), "utf8")].join("\n");
   const listeners = {};
   const self = { addEventListener: (t, f) => { listeners[t] = f; }, registration: { scope }, skipWaiting: async () => {}, clients: { claim: async () => {} } };
@@ -109,4 +110,45 @@ test("after a deploy, a page stored before it still has its CSS and JS offline; 
     "en/offline/", "offline/"], "the old page's files, the new ones and the offline pages; not the unused file or the image");
   assert.ok(!all.has("fs-static-1a2b3c4d5e6f"), "the old per-version cache is gone");
   assert.ok(all.has("fs-pages-" + CACHE_SCHEMA), "the stored pages stay");
+});
+
+test("a map tile goes to the map as soon as it arrives; it is stored afterwards, and the store is trimmed now and then", async () => {
+  const { all, api } = cacheStorage();
+  const src = [`var VERSION = "v"; var SCHEMA = ${JSON.stringify(CACHE_SCHEMA)}; var BASE = "/"; var PRECACHE = [];`,
+    "var MAX_TILES = 25; var MAX_PAGES = 120;", String(routeFor), String(offlineUrl), String(referencedAssets), String(staticToKeep),
+    fs.readFileSync(new URL("../lib/service-worker.js", import.meta.url), "utf8")].join("\n");
+  const listeners = {};
+  const self = { addEventListener: (t, f) => { listeners[t] = f; }, registration: { scope }, skipWaiting: async () => {}, clients: { claim: async () => {} } };
+  const fetched = [];
+  const tile = (n) => `https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/8/58/${n}.png`;
+  vm.runInNewContext(src, { self, caches: api, URL, Response, Promise, setTimeout, fetch: async (url, init) => {
+    fetched.push([String(url), init]);
+    // Node's Response has type "default"; the service worker stores only "basic" or "cors" ones, as a real fetch gives.
+    const res = new Response("png " + url, { status: 200 });
+    Object.defineProperty(res, "type", { value: "cors" });
+    const clone = res.clone.bind(res);
+    res.clone = () => { const c = clone(); Object.defineProperty(c, "type", { value: "cors" }); return c; };
+    return res;
+  } });
+  const waits = [];
+  const ask = (url) => new Promise((resolve) => { listeners.fetch({ request: { method: "GET", url, mode: "no-cors" }, respondWith: (p) => resolve(p), waitUntil: (p) => waits.push(p) }); });
+  const first = await ask(tile(1));
+  assert.equal(await first.text(), "png " + tile(1), "the tile itself, from the network");
+  assert.equal(fetched[0][1].mode, "cors", "fetched as CORS");
+  assert.equal(fetched[0][1].credentials, "omit", "without cookies");
+  assert.equal(waits.length, 1, "storing it is registered with waitUntil, not awaited");
+  await Promise.all(waits);
+  const store = all.get("fs-tiles-" + CACHE_SCHEMA);
+  assert.ok(store && store.has(tile(1)), "stored once the response has been handed over");
+  assert.equal(await (await ask(tile(1))).text(), "png " + tile(1), "the second time it comes from the store");
+  assert.equal(fetched.length, 1, "without another fetch");
+  // 30 more tiles: the store passes MAX_TILES (25) between trims and is cut back to it at the 20th tile stored.
+  for (let i = 2; i <= 31; i++) await ask(tile(i));
+  await Promise.all(waits);
+  // 31 stored; the trim at the 20th left 20, then 11 more came: 31 in all is never cut, 25 is the limit at the next trim.
+  assert.equal(store.size, 31, "no trim since the 20th tile");
+  for (let i = 32; i <= 40; i++) await ask(tile(i));
+  await Promise.all(waits);
+  assert.equal(store.size, 25, "trimmed to MAX_TILES at the 40th tile");
+  assert.ok(!store.has(tile(1)) && store.has(tile(40)), "the oldest go first");
 });
