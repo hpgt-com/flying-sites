@@ -233,6 +233,11 @@ export class Store extends DurableObject {
     return this.sql.exec("SELECT day, site, flights, pilots, minutes, max_dist, max_alt FROM flight_days ORDER BY day").toArray();
   }
 
+  // A day's row for a site removed (a flight that was not one, see flights.js CLEANUP).
+  deleteFlightDay(day, site) {
+    this.sql.exec("DELETE FROM flight_days WHERE day = ? AND site = ?", day, site);
+  }
+
   // A new, empty store (a lost or recreated Durable Object) reads the latest backup (backup.js) back in from the archive
   // (R2), so the history is back within a minute of starting, not the night after. Run every minute from index.js until
   // it has succeeded once (recorded in the health state, which a new store has not got either). Rows written since the

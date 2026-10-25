@@ -217,8 +217,11 @@ the menu and is marked `noindex`. It shows per site:
   track and climb over the last 10 minutes, kept in the store's memory
   only (never written down; gone when the store is evicted). No key.
 - **Flyaktivitet** (`workers/data/src/sources/flights.js`): every other minute the data service asks OGN the same way and
-  counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s). A flight
-  counts for the site nearest where first seen in the air (within 5 km); a new one begins when the pilot has landed:
+  counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s, and never
+  over 80 km/h: that is a car with the app on). A flight counts for the site nearest where first seen in the air (within
+  5 km), but only once the pilot has been seen 50 m or more over the ground (a car, a bike or a walk with the app on
+  never is; until then the flight is pending with its minutes, and dropped if the pilot lands first; without the
+  ground's height it counts after three runs); a new one begins when the pilot has landed:
   standing still two runs in a row, or not heard for 15 minutes, and in both cases less than 100 m over the ground
   where last seen. The ground's height comes from Kartverket's elevation model (`ws.geonorge.no/hoydedata/v1/punkt`,
   no key), asked only for those few pilots, in one request per run; without an answer a stop or a gap counts as a
