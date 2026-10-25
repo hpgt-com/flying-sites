@@ -253,7 +253,7 @@
 
   // --- Map ---
   var mapEl = document.getElementById("home-map");
-  var map = FS.createMap(mapEl);
+  var map = FS.createMap(mapEl, { warmZoomOut: true });
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
   FS.addObstacleLayer(map, mapEl.getAttribute("data-obstacles-url"));
   FS.addRadarLayer(map);

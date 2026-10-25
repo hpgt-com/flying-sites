@@ -226,8 +226,62 @@
     }, true);
   }
 
+  // Zooming out waits for Kartverket: the tiles for a wide view are mostly sea and outside Norway, which their server
+  // makes anew for each request (about a second each), and nothing is shown before they arrive. On a PC (fine pointer,
+  // wide window, no data saving) the tiles for the next WARM_LEVELS zoom levels out are fetched in the background,
+  // once the first tiles have shown and after each zoom out, so the next step out is drawn from the browser's cache
+  // (and the service worker's tile store). WARM_MAX tiles a page view, a few at a time, never while a zoom is on.
+  var WARM_LEVELS = 2, WARM_MAX = 160, WARM_AT_ONCE = 4;
+  function warmZoomOut(map, layer) {
+    if (!window.matchMedia || !window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 900px)").matches) return;
+    if (navigator.connection && navigator.connection.saveData) return;
+    var seen = {}, count = 0, queue = [], busy = 0, timer = null;
+    function next() {
+      while (busy < WARM_AT_ONCE && queue.length) {
+        var url = queue.shift();
+        busy++;
+        var img = new Image();
+        img.onload = img.onerror = function () { busy--; next(); };
+        img.src = url;
+      }
+    }
+    function plan() {
+      timer = null;
+      if (!map.hasLayer(layer) || !layer._url) return;
+      var zoom = map.getZoom(), size = map.getSize();
+      for (var z = zoom - 1; z >= Math.max(zoom - WARM_LEVELS, map.getMinZoom(), 0); z--) {
+        var center = map.project(map.getCenter(), z), tiles = Math.pow(2, z);
+        var nw = center.subtract(size.divideBy(2)).divideBy(256).floor(), se = center.add(size.divideBy(2)).divideBy(256).ceil();
+        for (var y = Math.max(0, nw.y); y < Math.min(tiles, se.y); y++) {
+          for (var x = nw.x; x < se.x; x++) {
+            var url = L.Util.template(layer._url, { z: z, x: ((x % tiles) + tiles) % tiles, y: y, s: "" });
+            if (seen[url] || count >= WARM_MAX) continue;
+            seen[url] = true;
+            count++;
+            queue.push(url);
+          }
+        }
+      }
+      next();
+    }
+    function schedule(delay) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(plan, delay);
+    }
+    layer.once("load", function () { schedule(1500); });
+    var last = map.getZoom();
+    map.on("zoomstart", function () { if (timer) { clearTimeout(timer); timer = null; } queue.length = 0; });
+    map.on("zoomend", function () {
+      var zoom = map.getZoom();
+      if (zoom < last) schedule(400);
+      last = zoom;
+    });
+  }
+
   function createMap(element, options) {
     var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
+    var warm = options && options.warmZoomOut;
+    if (warm) delete options.warmZoomOut;
     useTwoFingers(map);
     var kartverket = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
       maxZoom: 18,
@@ -255,6 +309,7 @@
     }
     var openTopo = openTopoLayer();
     var topo = withUnderlay(kartverket);
+    if (warm) warmZoomOut(map, kartverket);
     // Satellite imagery from Sentinel-2 cloudless (EOX), free for non-commercial use (CC BY-NC-SA 4.0) without a key.
     // 10 m resolution, so tiles exist only up to zoom 14 and are enlarged beyond that. Not inverted in the dark theme.
     var satellite = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {
