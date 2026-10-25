@@ -17,9 +17,17 @@ import { fetchLive, SOURCE, LICENSE } from "../live.js";
 export const DATASET = "flights";
 export const RADIUS_KM = 5;
 // Flying: moving at MIN_SPEED m/s over the ground, or climbing or sinking at MIN_CLIMB m/s (soaring against the wind
-// can be slow over the ground). A pilot standing at launch with the app on is neither.
+// can be slow over the ground), but never faster than MAX_SPEED m/s (80 km/h): that is a car with the app on. A pilot
+// standing at launch with the app on is neither.
 export const MIN_SPEED = 3;
 export const MIN_CLIMB = 0.5;
+export const MAX_SPEED = 22;
+// A flight counts only once the pilot has been seen AIRBORNE_START_M or more over the ground (Kartverket's elevation
+// model, as for landing): a car, a bike or a walk with the app on moves, but stays on the ground. Until then the flight
+// is pending, with its minutes, and is dropped if the pilot lands first. Without the ground's height (no answer from
+// Kartverket, outside Norway, no height from the device) it counts after PENDING_RUNS runs, as before.
+export const AIRBORNE_START_M = 50;
+export const PENDING_RUNS = 3;
 // Positions older than this are left out, so a pilot who landed is not counted on as flying.
 export const FRESH_SECONDS = 180;
 // Landed: seen on the ground this many runs in a row (one could be a moment of slow, level flight), or not heard for
@@ -54,6 +62,7 @@ export function nearestSite(sites, pos) {
 }
 
 export function isFlying(item) {
+  if (isNum(item.speed) && item.speed > MAX_SPEED) return false;
   return (isNum(item.speed) && item.speed >= MIN_SPEED) || (isNum(item.climb) && Math.abs(item.climb) >= MIN_CLIMB);
 }
 
@@ -64,14 +73,16 @@ export async function pilotKey(salt, id) {
 }
 
 // The pilots whose height over the ground is needed this run, as [key, lat, lon]: those who have stood still long
-// enough to be landed (where they stand), and those heard again after a gap (where they were last seen in the air).
+// enough to be landed (where they stand), those heard again after a gap (where they were last seen in the air), and
+// those whose flight is pending (where they are now, under the key with ":now", since the gap may ask for the same pilot).
 export function needsGround(day, items, now) {
   const out = [];
   for (const item of items) {
     const p = day.pilots[item.key], t = Date.parse(item.time);
     if (!p || !p.flying || t <= p.last || now - t > FRESH_SECONDS * 1000) continue;
-    if (!isFlying(item)) { if (p.still + 1 >= LANDED_RUNS) out.push([item.key, item.lat, item.lon]); }
-    else if (t - p.last > GAP_MINUTES * 60000 && t - p.last <= MAX_GAP_MINUTES * 60000 && p.pos) out.push([item.key, p.pos[0], p.pos[1]]);
+    if (!isFlying(item)) { if (p.still + 1 >= LANDED_RUNS) out.push([item.key, item.lat, item.lon]); continue; }
+    if (t - p.last > GAP_MINUTES * 60000 && t - p.last <= MAX_GAP_MINUTES * 60000 && p.pos) out.push([item.key, p.pos[0], p.pos[1]]);
+    if (p.pending) out.push([item.key + ":now", item.lat, item.lon]);
   }
   return out;
 }
@@ -80,11 +91,12 @@ export function needsGround(day, items, now) {
 const airborne = (alt, ground) => isNum(alt) && isNum(ground) && alt - ground >= AIRBORNE_M;
 
 // Adds what is seen now (items with key, from parseLive) to the day ({ pilots: { key: { last, flying, still, pos, site,
-// minutes, dist, alt, flights } } }): a pilot seen flying after landing begins a new flight, for the site nearest where it
-// is first seen; each new position in the air counts `minutes` (the time between runs) to that flight's site, with the
-// farthest from it and the highest. pos: the last position in the air ([lat, lon, alt]), only for the day. ground: { key:
-// the ground's height in m } for the pilots needsGround named. flights: { site: n }, minutes/dist/alt: { site: … }.
-// Returns whether anything changed.
+// minutes, dist, alt, flights, pending } } }): a pilot seen flying after landing begins a new flight, for the site nearest
+// where it is first seen; each new position in the air counts `minutes` (the time between runs) to that flight's site,
+// with the farthest from it and the highest. The flight is pending ({ minutes, dist, alt, runs }) until the pilot is seen
+// AIRBORNE_START_M over the ground (see above); then it and its minutes are counted. pos: the last position in the air
+// ([lat, lon, alt]), only for the day. ground: { key: the ground's height in m } for the pilots needsGround named.
+// flights: { site: n }, minutes/dist/alt: { site: … }. Returns whether anything changed.
 export function observe(day, items, sites, now, minutes, ground = {}) {
   let changed = false;
   for (const item of items) {
@@ -94,20 +106,20 @@ export function observe(day, items, sites, now, minutes, ground = {}) {
     if (p && t <= p.last) continue;
     if (!isFlying(item)) {
       // On the ground: only those who have flown today are followed, until they are seen landed. Standing still high
-      // over the ground is hovering in the wind, and counting starts again.
+      // over the ground is hovering in the wind, and counting starts again. Landed while pending: never in the air.
       if (p && p.flying && ++p.still >= LANDED_RUNS) {
         if (airborne(item.alt, ground[item.key])) p.still = 0;
-        else p.flying = false;
+        else { p.flying = false; p.pending = null; }
       }
       if (p) { p.last = t; changed = true; }
       continue;
     }
-    if (!p) p = day.pilots[item.key] = { last: 0, flying: false, still: 0, pos: null, site: null, flights: {}, minutes: {}, dist: {}, alt: {} };
+    if (!p) p = day.pilots[item.key] = { last: 0, flying: false, still: 0, pos: null, site: null, flights: {}, minutes: {}, dist: {}, alt: {}, pending: null };
     const gap = t - p.last;
     const sameFlight = p.flying && (gap <= GAP_MINUTES * 60000 || (gap <= MAX_GAP_MINUTES * 60000 && p.pos && airborne(p.pos[2], ground[item.key])));
     if (!sameFlight) {
       p.site = nearestSite(sites, item)?.id ?? null;
-      if (p.site) p.flights[p.site] = (p.flights[p.site] ?? 0) + 1;
+      p.pending = p.site ? { minutes: 0, dist: 0, alt: null, runs: 0 } : null;
     }
     p.flying = true;
     p.still = 0;
@@ -115,9 +127,25 @@ export function observe(day, items, sites, now, minutes, ground = {}) {
     p.pos = [item.lat, item.lon, isNum(item.alt) ? Math.round(item.alt) : null];
     const site = p.site && sites.find((s) => s.id === p.site);
     if (site) {
-      p.minutes[site.id] = (p.minutes[site.id] ?? 0) + minutes;
-      p.dist[site.id] = Math.max(p.dist[site.id] ?? 0, round1(distanceKm(site, item)));
-      if (isNum(item.alt)) p.alt[site.id] = Math.max(p.alt[site.id] ?? 0, Math.round(item.alt));
+      const sums = p.pending ?? { minutes: p.minutes[site.id] ?? 0, dist: p.dist[site.id] ?? 0, alt: p.alt[site.id] ?? null };
+      sums.minutes += minutes;
+      sums.dist = Math.max(sums.dist, round1(distanceKm(site, item)));
+      if (isNum(item.alt)) sums.alt = Math.max(sums.alt ?? 0, Math.round(item.alt));
+      if (p.pending) {
+        const g = ground[item.key + ":now"];
+        const known = isNum(g) && isNum(item.alt);
+        if ((known && item.alt - g >= AIRBORNE_START_M) || (!known && ++p.pending.runs >= PENDING_RUNS)) {
+          p.flights[site.id] = (p.flights[site.id] ?? 0) + 1;
+          p.minutes[site.id] = (p.minutes[site.id] ?? 0) + sums.minutes;
+          p.dist[site.id] = Math.max(p.dist[site.id] ?? 0, sums.dist);
+          if (isNum(sums.alt)) p.alt[site.id] = Math.max(p.alt[site.id] ?? 0, sums.alt);
+          p.pending = null;
+        }
+      } else {
+        p.minutes[site.id] = sums.minutes;
+        p.dist[site.id] = sums.dist;
+        if (isNum(sums.alt)) p.alt[site.id] = sums.alt;
+      }
     }
     changed = true;
   }
@@ -181,6 +209,23 @@ export function buildFlights(rows, since, now = Date.now()) {
   return { dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), since, sites };
 }
 
+// One-off: a car on the E6 past Bjerkvik with the app on was counted as Haugfjellet's first flight on 25 October 2026
+// (27 km in 18 minutes, 179 m above the sea), before the rules above. Removed once (the state flag records it). Delete
+// this and its use in run() after it has run on the service.
+export const CLEANUP = { day: "2026-10-25", site: "haugfjellet", flag: "flights-cleanup-2026-10-25" };
+async function cleanup(store, day) {
+  if (await store.getState(CLEANUP.flag)) return false;
+  await store.deleteFlightDay(CLEANUP.day, CLEANUP.site);
+  if (day.day === CLEANUP.day) {
+    for (const p of Object.values(day.pilots)) {
+      for (const k of ["flights", "minutes", "dist", "alt"]) delete p[k][CLEANUP.site];
+      if (p.site === CLEANUP.site) p.pending = null;
+    }
+  }
+  await store.putState(CLEANUP.flag, { at: new Date().toISOString() });
+  return true;
+}
+
 // One run: what OGN hears now is added to the day; when something changed (or a new day began), the day's sums and the
 // dataset are stored. minutes: the time between runs (schedule.js).
 export async function run(store, sites, now = Date.now(), minutes = 2) {
@@ -193,6 +238,7 @@ export async function run(store, sites, now = Date.now(), minutes = 2) {
     day = { day: today, salt: crypto.randomUUID(), pilots: {} };
     changed = true;
   }
+  if (await cleanup(store, day)) changed = true;
   const keyed = await Promise.all(items.map(async (i) => ({ ...i, key: await pilotKey(day.salt, i.id) })));
   const ground = await groundAt(needsGround(day, keyed, now));
   if (observe(day, keyed, sites, now, minutes, ground)) {

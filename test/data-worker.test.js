@@ -595,7 +595,7 @@ test("flights: each flight counted for the site nearest where first seen, a new 
     { key: "c", lat: 69.5, lon: 18.0, alt: 900, speed: 9, climb: 0, time: at(10) },
     { key: "d", lat: 68.80, lon: 16.50, alt: 700, speed: 9, climb: 0, time: at(400) },
   ];
-  assert.equal(flightsMod.observe(day, seen, sites, NOW, 2), true);
+  assert.equal(flightsMod.observe(day, seen, sites, NOW, 2, { "a:now": 400 }), true);
   assert.deepEqual(Object.keys(day.pilots).sort(), ["a", "c"], "standing at launch and old positions are not flying");
   assert.deepEqual(day.pilots.c.flights, {}, "first seen far from every site: counted for none");
   assert.equal(flightsMod.observe(day, [seen[0]], sites, NOW, 2), false, "the same position is not counted twice");
@@ -611,9 +611,9 @@ test("flights: each flight counted for the site nearest where first seen, a new 
   assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "one run on the ground is not a landing");
   flightsMod.observe(day, [ground(360)], sites, NOW + 360000, 2);
   flightsMod.observe(day, [ground(480)], sites, NOW + 480000, 2);
-  flightsMod.observe(day, [air(1800)], sites, NOW + 1800000, 2);
+  flightsMod.observe(day, [air(1800)], sites, NOW + 1800000, 2, { "a:now": 400 });
   assert.deepEqual(day.pilots.a.flights, { heia: 2 }, "a new flight after landing");
-  flightsMod.observe(day, [air(1800 + 20 * 60)], sites, NOW + (1800 + 20 * 60) * 1000, 2);
+  flightsMod.observe(day, [air(1800 + 20 * 60)], sites, NOW + (1800 + 20 * 60) * 1000, 2, { "a:now": 400 });
   assert.deepEqual(day.pilots.a.flights, { heia: 3 }, "not heard for 20 minutes: a new flight");
 
   const rows = flightsMod.dayRows(day);
@@ -639,9 +639,10 @@ test("flights: high over the ground is still flying, after a gap or standing sti
   const hover = (s) => ({ key: "a", lat: 68.80, lon: 16.50, alt: 900, speed: 0, climb: 0, time: at(s) });
   const day = { day: "2026-10-18", pilots: {} };
   flightsMod.observe(day, [air(0)], sites, NOW, 2);
-  // Out of reach for 40 minutes, last seen 900 m up where the ground is 400 m: the same flight.
-  assert.deepEqual(flightsMod.needsGround(day, [air(2400)], NOW + 2400000), [["a", 68.80, 16.50]]);
-  flightsMod.observe(day, [air(2400)], sites, NOW + 2400000, 2, { a: 400 });
+  // Out of reach for 40 minutes, last seen 900 m up where the ground is 400 m: the same flight. The flight is still
+  // pending, so the height where the pilot is now is asked too.
+  assert.deepEqual(flightsMod.needsGround(day, [air(2400)], NOW + 2400000), [["a", 68.80, 16.50], ["a:now", 68.80, 16.50]]);
+  flightsMod.observe(day, [air(2400)], sites, NOW + 2400000, 2, { a: 400, "a:now": 400 });
   assert.deepEqual(day.pilots.a.flights, { heia: 1 }, "out of reach high up: the same flight");
   // Standing still in the wind 500 m over the ground: not landed.
   flightsMod.observe(day, [hover(2520)], sites, NOW + 2520000, 2);
@@ -652,10 +653,10 @@ test("flights: high over the ground is still flying, after a gap or standing sti
   assert.deepEqual(day.pilots.a.flights, { heia: 1 });
   // Last seen 50 m over the ground, heard again 30 minutes later in the air: landed and a new flight.
   flightsMod.observe(day, [air(2880, 450)], sites, NOW + 2880000, 2);
-  flightsMod.observe(day, [air(4680)], sites, NOW + 4680000, 2, { a: 400 });
+  flightsMod.observe(day, [air(4680)], sites, NOW + 4680000, 2, { a: 400, "a:now": 400 });
   assert.deepEqual(day.pilots.a.flights, { heia: 2 }, "a gap after being low: a new flight");
-  // Without the ground's height a gap means landed, and after MAX_GAP_MINUTES whatever the height.
-  flightsMod.observe(day, [air(4680 + 1200)], sites, NOW + (4680 + 1200) * 1000, 2);
+  // Without the ground's height where the pilot was, a gap means landed, and after MAX_GAP_MINUTES whatever the height.
+  flightsMod.observe(day, [air(4680 + 1200)], sites, NOW + (4680 + 1200) * 1000, 2, { "a:now": 400 });
   assert.deepEqual(day.pilots.a.flights, { heia: 3 });
   assert.deepEqual(flightsMod.needsGround(day, [air(5880 + 3 * 3600)], NOW + (5880 + 3 * 3600) * 1000), [], "after two hours the height is not asked");
 
@@ -680,24 +681,87 @@ test("flights: a run keeps only the day's keys, made with a salt that is thrown 
     getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = structuredClone(v); },
     putFlightDays: async (rows) => { for (const r of rows) days.set(`${r.day}|${r.site}`, r); },
     flightDays: async () => [...days.values()], putSnapshot: async (d, b) => { snaps[d] = JSON.parse(b); },
+    deleteFlightDay: async (day, site) => { days.delete(`${day}|${site}`); },
   };
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response('<markers><m a="68.801,16.501,P,Pilot,900,09:00:00,5,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>');
+  const ogn = '<markers><m a="68.801,16.501,P,Pilot,900,09:00:00,5,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>';
+  globalThis.fetch = async (url) => (String(url).includes("geonorge") ? Response.json({ punkter: [{ z: 400 }] }) : new Response(ogn));
   try {
     const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
     await flightsMod.run(store, sites, NOW, 2);
     const today = state["flights-today"];
     assert.equal(Object.keys(today.pilots).length, 1);
     assert.ok(!JSON.stringify(today).includes("dd1234ab"), "the device id is not stored, only a key");
-    assert.equal(snaps.flights.sites.heia.flights, 1);
+    assert.equal(snaps.flights.sites.heia, undefined, "first seen: pending until known to be in the air");
+    assert.ok(state[flightsMod.CLEANUP.flag], "the one-off cleanup ran and is recorded");
     await flightsMod.run(store, sites, NOW + 120000, 2);
-    assert.equal(snaps.flights.sites.heia.flights, 1, "still in the air: the same flight");
+    assert.equal(snaps.flights.sites.heia.flights, 1, "500 m over the ground: counted, with the first run's minutes");
     assert.equal(snaps.flights.sites.heia.pilots, 1);
     assert.equal(snaps.flights.sites.heia.minutes, 4);
     globalThis.fetch = async () => new Response("<markers></markers>");
     await flightsMod.run(store, sites, NOW + 86400000, 2);
     assert.notEqual(state["flights-today"].salt, today.salt, "a new salt each day");
     assert.equal(snaps.flights.sites.heia.days, 1, "the old day's pilots are gone; a new day with nobody flying adds nothing");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("flights: a car with the app on is not a flight; a pilot low over the ground is pending until airborne", () => {
+  const sites = [{ id: "haugfjellet", lat: 68.562, lon: 17.503 }];
+  const at = (s) => new Date(NOW + s * 1000).toISOString();
+  const day = { day: "2026-10-25", pilots: {} };
+  // 90 km/h on the E6: not flying at all.
+  assert.equal(flightsMod.isFlying({ speed: 25, climb: 0 }), false);
+  assert.equal(flightsMod.isFlying({ speed: 15, climb: 0 }), true);
+  flightsMod.observe(day, [{ key: "car", lat: 68.56, lon: 17.50, alt: 60, speed: 25, climb: 0, time: at(0) }], sites, NOW, 2);
+  assert.deepEqual(day.pilots, {}, "too fast: never a pilot");
+  // 50 km/h through Bjerkvik, 5 m over the ground, for five runs, then parked: nothing is counted.
+  for (let i = 0; i < 5; i++) {
+    const item = { key: "car", lat: 68.56 + i * 0.005, lon: 17.50, alt: 65, speed: 14, climb: 0, time: at(120 * (i + 1)) };
+    assert.deepEqual(flightsMod.needsGround(day, [item], NOW + 120000 * (i + 1)), i ? [["car:now", item.lat, item.lon]] : [], "a pending pilot's height is asked");
+    flightsMod.observe(day, [item], sites, NOW + 120000 * (i + 1), 2, { "car:now": 60 });
+  }
+  assert.ok(day.pilots.car.pending, "still pending: never 50 m over the ground");
+  assert.deepEqual(day.pilots.car.flights, {});
+  assert.deepEqual(flightsMod.dayRows(day), [], "nothing counted while pending");
+  for (let i = 6; i < 8; i++) flightsMod.observe(day, [{ key: "car", lat: 68.59, lon: 17.50, alt: 65, speed: 0, climb: 0, time: at(120 * i) }], sites, NOW + 120000 * i, 2, { car: 60 });
+  assert.equal(day.pilots.car.flying, false);
+  assert.equal(day.pilots.car.pending, null, "parked: the pending flight is dropped");
+  assert.deepEqual(flightsMod.dayRows(day), []);
+  // A real pilot: low at first (the launch), then 200 m up: counted with the minutes since takeoff.
+  const pilot = (s, alt) => ({ key: "p", lat: 68.563, lon: 17.504, alt, speed: 9, climb: 1, time: at(s) });
+  flightsMod.observe(day, [pilot(0, 540)], sites, NOW, 2);
+  flightsMod.observe(day, [pilot(120, 560)], sites, NOW + 120000, 2, { "p:now": 523 });
+  assert.deepEqual(day.pilots.p.flights, {}, "37 m over the launch: not yet");
+  flightsMod.observe(day, [pilot(240, 730)], sites, NOW + 240000, 2, { "p:now": 523 });
+  assert.deepEqual(day.pilots.p.flights, { haugfjellet: 1 });
+  assert.equal(day.pilots.p.minutes.haugfjellet, 6, "the minutes while pending count");
+  assert.equal(day.pilots.p.alt.haugfjellet, 730);
+  // Without an answer from Kartverket the flight counts after PENDING_RUNS runs, as before.
+  const q = (s) => ({ key: "q", lat: 68.563, lon: 17.504, alt: null, speed: 9, climb: 1, time: at(s) });
+  for (let i = 0; i < flightsMod.PENDING_RUNS; i++) flightsMod.observe(day, [q(120 * i)], sites, NOW + 120000 * i, 2);
+  assert.deepEqual(day.pilots.q.flights, { haugfjellet: 1 });
+  assert.deepEqual(flightsMod.dayRows(day), [{ day: "2026-10-25", site: "haugfjellet", flights: 2, pilots: 2, minutes: 12, max_dist: 0.1, max_alt: 730 }]);
+});
+
+test("flights: the one-off cleanup removes the car's day on Haugfjellet from the store and from the day, once", async () => {
+  const state = { "flights-today": { day: "2026-10-25", salt: "s", pilots: { x: { last: 0, flying: false, still: 0, pos: null, site: "haugfjellet", flights: { haugfjellet: 1 }, minutes: { haugfjellet: 18 }, dist: { haugfjellet: 27.4 }, alt: { haugfjellet: 179 }, pending: null } } } };
+  const deleted = [], days = new Map([["2026-10-25|haugfjellet", { day: "2026-10-25", site: "haugfjellet", flights: 1, pilots: 1, minutes: 18, max_dist: 27.4, max_alt: 179 }]]);
+  const store = {
+    getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = structuredClone(v); },
+    putFlightDays: async (rows) => { for (const r of rows) days.set(`${r.day}|${r.site}`, r); }, flightDays: async () => [...days.values()],
+    putSnapshot: async () => {}, deleteFlightDay: async (day, site) => { deleted.push([day, site]); days.delete(`${day}|${site}`); },
+  };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("<markers></markers>");
+  try {
+    await flightsMod.run(store, [{ id: "haugfjellet", lat: 68.562, lon: 17.503 }], Date.parse("2026-10-25T13:00:00Z"), 2);
+    assert.deepEqual(deleted, [["2026-10-25", "haugfjellet"]]);
+    assert.deepEqual(state["flights-today"].pilots.x.flights, {}, "the day's counts for the site are gone too");
+    assert.equal(days.size, 0);
+    await flightsMod.run(store, [{ id: "haugfjellet", lat: 68.562, lon: 17.503 }], Date.parse("2026-10-25T13:02:00Z"), 2);
+    assert.equal(deleted.length, 1, "only once");
   } finally {
     globalThis.fetch = realFetch;
   }
