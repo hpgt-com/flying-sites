@@ -39,6 +39,10 @@ export class Store extends DurableObject {
     // Flying activity per site and day (sources/flights.js): only sums, no pilot or device.
     this.sql.exec(`CREATE TABLE IF NOT EXISTS flight_days (day TEXT NOT NULL, site TEXT NOT NULL, flights INTEGER NOT NULL, pilots INTEGER NOT NULL,
       minutes INTEGER NOT NULL, max_dist REAL, max_alt REAL, PRIMARY KEY (day, site))`);
+    // Each flight on its own (sources/flights.js): a random id, the sums, whether it was counted, and OGN's positions
+    // as JSON. No device or key.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS flights (id TEXT PRIMARY KEY, day TEXT NOT NULL, site TEXT NOT NULL, start TEXT NOT NULL, end TEXT NOT NULL,
+      minutes INTEGER NOT NULL, max_alt INTEGER, max_dist REAL, max_speed REAL, counted INTEGER NOT NULL, points TEXT NOT NULL)`);
     for (const index of INDEXES) this.sql.exec(index);
   }
 
@@ -236,6 +240,21 @@ export class Store extends DurableObject {
   // A day's row for a site removed (a flight that was not one, see flights.js CLEANUP).
   deleteFlightDay(day, site) {
     this.sql.exec("DELETE FROM flight_days WHERE day = ? AND site = ?", day, site);
+  }
+
+  // One flight (flights.js finish): the positions as JSON. The same id again replaces it.
+  putFlight(f) {
+    this.sql.exec(`INSERT OR REPLACE INTO flights (id, day, site, start, end, minutes, max_alt, max_dist, max_speed, counted, points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      f.id, f.day, f.site, f.start, f.end, f.minutes, f.max_alt ?? null, f.max_dist ?? null, f.max_speed ?? null, f.counted ? 1 : 0, typeof f.points === "string" ? f.points : JSON.stringify(f.points));
+  }
+
+  flightsSince(day) {
+    return this.sql.exec("SELECT id, day, site, start, end, minutes, max_alt, max_dist, max_speed, counted, points FROM flights WHERE day >= ? ORDER BY start DESC", day).toArray();
+  }
+
+  // Counted flights older than countedBefore and dropped ones older than droppedBefore (YYYY-MM-DD) go.
+  pruneFlights(countedBefore, droppedBefore) {
+    this.sql.exec("DELETE FROM flights WHERE (counted = 1 AND day < ?) OR (counted = 0 AND day < ?)", countedBefore, droppedBefore);
   }
 
   // A new, empty store (a lost or recreated Durable Object) reads the latest backup (backup.js) back in from the archive

@@ -46,7 +46,7 @@ import SITES from "./sites.json";
 export { Store } from "./store.js";
 
 const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": holfuy.DATASET, "/v1/windgram.json": windgram.DATASET, "/v1/verification.json": verify.DATASET,
-  "/v1/flights.json": flights.DATASET, "/v1/grid.json": "grid", "/v1/grid-wide.json": "grid-wide" };
+  "/v1/flights.json": flights.DATASET, "/v1/flight-log.json": flights.LOG_DATASET, "/v1/grid.json": "grid", "/v1/grid-wide.json": "grid-wide" };
 
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 

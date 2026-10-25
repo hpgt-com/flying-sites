@@ -332,6 +332,9 @@
     "menuSub": "Flights per site",
     "loading": "Fetching the numbers …",
     "noScript": "The numbers are fetched with JavaScript. Turn it on to see them."
+,
+    "logTitle": "Latest flights",
+    "logIntro": "Every flight OGN has seen in the last 30 days, with the positions heard (one every other minute). Choose a flight to see it on the map. Flights that were never in the air, such as a car or a walk with the app on, are listed as not counted. No device or pilot is stored."
   },
   "news": {
     "title": "What's new",
@@ -808,6 +811,8 @@
     },
     "flights": {
       "statsLabel": "Flying activity in numbers",
+      "recentTitle": "Latest flights from here",
+      "recentRow": "{date} at {time}: {minutes} min, {alt} m a.s.l., {km} km from launch",
       "flights": {
         "one": "flight",
         "other": "flights"
@@ -828,6 +833,20 @@
     },
     "activity": {
       "statsLabel": "Flying activity in numbers",
+      "logTitle": "Latest flights",
+      "colStart": "Start",
+      "colMinutes": "Min",
+      "colCounted": "Counted",
+      "counted": "yes",
+      "notCounted": "no",
+      "logNone": "No flights in the last 30 days.",
+      "logDetail": "{site} {date} at {time}: {minutes} min, highest {alt} m a.s.l., {km} km from launch, top speed {kmh} km/h, {n} positions.",
+      "logNotCounted": "Not counted as a flight: never seen 50 m over the ground. Probably a car or a walk with the app on.",
+      "logClose": "Close",
+      "curveLabel": "Height through the flight",
+      "curveNote": "Height against time since takeoff, from the positions OGN heard. Point or drag on the curve to see where you were.",
+      "mapLabel": "The flight on the map",
+      "pointTitle": "at {time}, {alt} m a.s.l., {kmh} km/h",
       "today": "flights today",
       "recent": "flights in the last 30 days",
       "recentSites": "sites used in the last 30 days",

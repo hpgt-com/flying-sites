@@ -37,3 +37,15 @@ test("the next day, today is empty and the window moves on", () => {
   assert.deepEqual(s.today, []);
   assert.equal(s.totals.recent, 9);
 });
+
+test("the flight log: only the expected shape is used, and the rows carry the site's name", () => {
+  const log = { dataset: "flight-log", flights: [
+    { id: "ab12cd34ef56", day: "2026-10-19", site: "heia", start: "2026-10-19T10:04:00.000Z", end: "2026-10-19T10:22:00.000Z", minutes: 18, maxAlt: 1200, maxDist: 5.3, maxSpeed: 12.5, counted: true, points: [["2026-10-19T10:04:00.000Z", 68.8, 16.5, 500, 8, 1]] },
+    { id: "0123456789ab", day: "2026-10-18", site: "ukjent", start: "2026-10-18T09:00:00.000Z", end: "2026-10-18T09:10:00.000Z", minutes: 10, maxAlt: 70, maxDist: 27.4, maxSpeed: 25, counted: false, points: [] },
+  ] };
+  assert.equal(AC.isFlightLog(log), true);
+  assert.equal(AC.isFlightLog({ dataset: "flight-log", flights: [{ id: "<script>", site: "heia", start: "x", minutes: 1, points: [] }] }), false, "an id that is not hex is refused");
+  assert.equal(AC.isFlightLog({ dataset: "flights", flights: [] }), false);
+  const rows = AC.logRows(log, sites);
+  assert.deepEqual(rows.map((r) => [r.id, r.name, r.day, r.minutes, r.counted]), [["ab12cd34ef56", "Heia", "2026-10-19", 18, true], ["0123456789ab", "ukjent", "2026-10-18", 10, false]]);
+});
