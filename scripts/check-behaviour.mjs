@@ -41,6 +41,24 @@ function liveNow() {
 
 // A forecast grid (/v1/grid.json, /v1/grid-wide.json) over the home region from the hour going on, for 30 hours: land
 // with thermals inland, sea in the west, wind from the south-west getting stronger to the north, rain in one corner.
+// The flight log: a counted Heia flight with five positions, and a dropped one (a car) from Haugfjellet.
+function flightLogNow() {
+  const start = Date.now() - 3 * 3600000;
+  const t = (m) => new Date(start + m * 60000).toISOString();
+  const heia = [[t(0), 68.7589, 16.5103, 480, 8, 1.2], [t(2), 68.7620, 16.5050, 700, 9, 1.5], [t(4), 68.7680, 16.4980, 950, 10, 0.8], [t(6), 68.7720, 16.4900, 900, 11, -0.5], [t(8), 68.7760, 16.4830, 640, 9, -1.2]];
+  const car = [[t(60), 68.5600, 17.5000, 60, 14, 0], [t(62), 68.5750, 17.4700, 55, 20, 0]];
+  return { dataset: "flight-log", source: "OGN", license: "ODbL", fetched: new Date().toISOString(), days: 31, flights: [
+    { id: "f1e2d3c4b5a6", day: t(0).slice(0, 10), site: "heia", start: t(0), end: t(8), minutes: 10, maxAlt: 950, maxDist: 2.3, maxSpeed: 11, counted: true, points: heia },
+    { id: "0a1b2c3d4e5f", day: t(60).slice(0, 10), site: "haugfjellet", start: t(60), end: t(62), minutes: 4, maxAlt: 60, maxDist: 2.1, maxSpeed: 20, counted: false, points: car },
+  ] };
+}
+// The flight sums: three flights from Heia, one of them today, so the site page shows its flights box.
+function flightsNow() {
+  const today = new Date().toISOString().slice(0, 10), month = today.slice(0, 7);
+  return { dataset: "flights", source: "OGN", license: "ODbL", fetched: new Date().toISOString(), since: "2026-08-01", sites: {
+    heia: { flights: 3, days: 2, pilots: 2, minutes: 60, maxDist: 2.3, maxAlt: 950, last: today, months: { [month]: { flights: 3, days: 2, pilots: 2, minutes: 60 } }, recent: { [today]: { flights: 1, minutes: 10 } } },
+  } };
+}
 function gridNow(name) {
   const wide = name === "grid-wide", dLat = wide ? 0.2 : 0.1, dLon = wide ? 0.5 : 0.25;
   const lat0 = wide ? 67.8 : 68.4, lon0 = wide ? 14 : 15.5, rows = 9, cols = 9;
@@ -95,7 +113,8 @@ async function answer(context, origin, { down = false, reports = [], forecast = 
     if (url.origin === DATA) {
       const path = url.pathname;
       const body = down ? null : path === "/v1/stations.json" ? stationsNow() : path === "/v1/live.json" ? liveNow()
-        : path === "/v1/forecast.json" && forecast ? forecastNow() : path === "/v1/grid.json" ? gridNow("grid") : path === "/v1/grid-wide.json" ? gridNow("grid-wide") : null;
+        : path === "/v1/forecast.json" && forecast ? forecastNow() : path === "/v1/grid.json" ? gridNow("grid") : path === "/v1/grid-wide.json" ? gridNow("grid-wide")
+        : path === "/v1/flight-log.json" ? flightLogNow() : path === "/v1/flights.json" ? flightsNow() : null;
       return route.fulfill({ status: body ? 200 : 503, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(body ?? { error: "no data yet" }) });
     }
     if (url.origin === "https://challenges.cloudflare.com" && url.pathname.startsWith("/turnstile/")) {
@@ -325,6 +344,46 @@ const scenarios = {
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowLeft");
     if (Number(await range.inputValue()) !== 56) problems.push("tilbake med piltastene kom ikke til siste time");
+    await context.close();
+    return [...problems, ...errors];
+  },
+
+  async "Flyaktivitet: «Siste turer» viser turene, en valgt tur tegnes på kartet med høydekurve, og stedssiden lenker til den"(browser, origin) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await answer(context, origin);
+    const page = await context.newPage();
+    const errors = [];
+    watchErrors(page, errors);
+    const problems = [];
+    await page.goto(`${origin}/flyaktivitet/`, { waitUntil: "load" });
+    await page.locator("#activity-log:not([hidden])").waitFor({ timeout: 5000 }).catch(() => problems.push("«Siste turer» kom ikke"));
+    const rows = page.locator("#activity-log tbody tr");
+    if ((await rows.count()) !== 2) problems.push(`${await rows.count()} rader i «Siste turer», ventet 2`);
+    if (!(await page.locator("#activity-log tr.activity-log-row--dropped").count())) problems.push("bilturen er ikke merket som ikke telt");
+    await rows.first().click();
+    await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("turen fikk ikke kart"));
+    if ((await page.locator("#tur-f1e2d3c4b5a6 .leaflet-interactive").count()) < 5) problems.push("sporet er ikke tegnet på kartet");
+    const curve = page.locator("#tur-f1e2d3c4b5a6 svg.activity-curve");
+    if (!(await curve.count())) problems.push("ingen høydekurve");
+    else {
+      await curve.scrollIntoViewIfNeeded();
+      const box = await curve.boundingBox();
+      await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+      await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.5);
+      if ((await curve.locator(".activity-curve__cursor").getAttribute("visibility")) !== "visible") problems.push("pekeren på høydekurven viser ingenting");
+      const label = await curve.locator(".activity-curve__label").last().textContent();
+      if (!/moh/.test(label || "")) problems.push(`høydekurven viser ikke høyden: ${label}`);
+    }
+    // Opened by its link from the site page.
+    await page.goto(`${origin}/flysteder/heia/`, { waitUntil: "load" });
+    const link = page.locator(".flights-recent a").first();
+    await link.waitFor({ timeout: 5000 }).catch(() => problems.push("stedssiden har ingen «Siste turer herfra»"));
+    const href = await link.getAttribute("href").catch(() => null);
+    if (href && !href.endsWith("/flyaktivitet/#tur-f1e2d3c4b5a6")) problems.push(`lenken fra stedssiden går til ${href}`);
+    if (href) {
+      await page.goto(`${origin}${href}`, { waitUntil: "load" });
+      await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("lenken åpnet ikke turen"));
+    }
     await context.close();
     return [...problems, ...errors];
   },

@@ -1921,6 +1921,26 @@ body.sheet-open { overflow: hidden; }
 .activity-today { font-weight: 600; }
 .activity-note { font-size: 13px; color: var(--muted); }
 .activity-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+/* «Siste turer»: the rows open the flight; the chosen one is drawn on a map below the table. */
+.activity-log-row { cursor: pointer; }
+.activity-log-row:hover, .activity-log-row:focus-visible { background: var(--surface); }
+.activity-log-row--dropped { color: var(--muted); }
+.activity-log-detail { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); padding: 12px 14px; }
+.activity-log-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
+.activity-log-head h3 { margin: 0; font-size: 17px; }
+.activity-log-dropped { color: var(--hazard-text); font-weight: 600; font-size: 14px; }
+.activity-log-map { height: 340px; border-radius: var(--radius); overflow: hidden; }
+.activity-curve { width: 100%; height: auto; display: block; cursor: crosshair; touch-action: none; }
+.activity-curve text { font-size: 11px; fill: var(--muted); }
+.activity-curve__grid { stroke: var(--line); }
+.activity-curve__area { fill: var(--fjord); fill-opacity: .15; }
+.activity-curve__line { fill: none; stroke: var(--fjord); stroke-width: 2; stroke-linejoin: round; }
+.activity-curve__top { fill: var(--fjord); }
+.activity-curve__cursor { stroke: var(--text); }
+.activity-curve__label { font-size: 12px; font-weight: 700; fill: var(--text); }
+.btn--small { padding: 4px 10px; font-size: 14px; }
+.flights-recent h3 { margin: 10px 0 4px; font-size: 17px; }
+.flights-recent-list { margin: 0; padding-left: 18px; font-size: 15px; display: grid; gap: 3px; }
 .activity-table { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
 .activity-table th, .activity-table td { padding: 9px 12px; border-top: 1px solid var(--line); text-align: right; white-space: nowrap; }
 .activity-table thead th { border-top: none; font-size: 13px; color: var(--muted); font-weight: 600; }

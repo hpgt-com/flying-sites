@@ -16,6 +16,7 @@ export default {
   verificationUrl: "https://data.hpgt.workers.dev/v1/verification.json",
   liveUrl: "https://data.hpgt.workers.dev/v1/live.json",
   flightsUrl: "https://data.hpgt.workers.dev/v1/flights.json",
+  flightLogUrl: "https://data.hpgt.workers.dev/v1/flight-log.json",
   // The forecast grids for the map layers «Prognose» on the home page (forecast-layer.js).
   gridUrl: "https://data.hpgt.workers.dev/v1/grid.json",
   gridWideUrl: "https://data.hpgt.workers.dev/v1/grid-wide.json",

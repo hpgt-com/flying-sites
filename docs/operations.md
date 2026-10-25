@@ -230,6 +230,14 @@ the menu and is marked `noindex`. It shows per site:
   (`flight_days` in the store: flights, pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
   salt for the day (state `flights-today`), which is replaced at the first run of a new day, so no device id is kept.
   Served as `/v1/flights.json`, shown on the site page and on /flyaktivitet/ (`activity.js`). Counting began when this was deployed (`flights-since`).
+- **The flight log** (`flights` in the store, `/v1/flight-log.json`): each flight on its own as well, once it has ended
+  (landed, a gap, or the sweep after two hours without a word): the site, the start and the end, the minutes, the
+  highest, the farthest, the top speed, whether it was counted (a flight never seen 50 m over the ground is kept as
+  dropped, so a car or a walk with the app on can be seen for what it was), and OGN's positions, one per run
+  ([time, lat, lon, alt, speed m/s, climb m/s]). A random id, no device and no key. Counted flights are kept 120 days,
+  dropped ones 14; the sums per site and day stay for ever. Shown on /flyaktivitet/ under «Siste turer» (the chosen
+  flight on a map, with its height curve: point on the curve to see where the pilot was) and on the site page as
+  «Siste turer herfra», each linking to `/flyaktivitet/#tur-<id>`. Backed up with the other tables.
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
   on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
   unidentified a random name, shown here as «Ukjent».

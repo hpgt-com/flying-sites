@@ -6,6 +6,7 @@ pagination:
   alias: language
 permalink: "{{ '/flyaktivitet/' | localeUrl(language.code) }}"
 bodyClass: page-activity
+map: true
 scripts:
   - /assets/js/flights.js
   - /assets/js/activity.js
@@ -31,6 +32,13 @@ eleventyComputed:
 
   <section class="activity" id="activity" data-url="{{ site.flightsUrl }}" aria-live="polite">
     <p class="muted">{{ t.activity.loading }}</p>
+  </section>
+  {#- «Siste turer»: each flight of the last 30 days from the data service (/v1/flight-log.json), with OGN's positions,
+      drawn on a map when chosen (activity.js). Hidden until the data has come. -#}
+  <section class="activity activity-log" id="activity-log" data-url="{{ site.flightLogUrl }}" aria-labelledby="h-log" hidden>
+    <h2 id="h-log">{{ t.activity.logTitle }}</h2>
+    <p class="muted">{{ t.activity.logIntro }}</p>
+    <div id="activity-log-body"></div>
   </section>
   <noscript><p>{{ t.activity.noScript }}</p></noscript>
 </main>

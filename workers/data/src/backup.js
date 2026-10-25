@@ -7,10 +7,11 @@
 export const TABLES = {
   flight_days: ["day", "site", "flights", "pilots", "minutes", "max_dist", "max_alt"],
   verify_hours: ["site", "station", "time", "f_dir", "f_speed", "f_gust", "m_dir", "m_speed", "m_gust", "n", "f_temp", "m_temp", "f_pressure", "m_pressure"],
+  flights: ["id", "day", "site", "start", "end", "minutes", "max_alt", "max_dist", "max_speed", "counted", "points"],
 };
 // A file made before columns were added (at the end) is still read in: its columns must be the first of the table's,
 // at least this many, and the rest become null.
-export const MIN_COLUMNS = { flight_days: 7, verify_hours: 10 };
+export const MIN_COLUMNS = { flight_days: 7, verify_hours: 10, flights: 11 };
 export const KEEP_DAYS = 90;
 export const JSON_META = { httpMetadata: { contentType: "application/json; charset=utf-8" } };
 

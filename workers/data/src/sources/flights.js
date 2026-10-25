@@ -28,6 +28,13 @@ export const MAX_SPEED = 22;
 // Kartverket, outside Norway, no height from the device) it counts after PENDING_RUNS runs, as before.
 export const AIRBORNE_START_M = 50;
 export const PENDING_RUNS = 3;
+// Each flight is also kept on its own (store flights, dataset «flight-log»): the site, the start and the end, the sums,
+// whether it was counted (dropped: never seen in the air, a car or a walk with the app on), and the positions OGN gave,
+// one per run. No device, no key: a random id. Shown on /flyaktivitet/ and the site page, so a flight that looks wrong
+// can be seen for what it was. Counted flights are kept TRACK_DAYS, dropped ones DROPPED_DAYS, the sums for ever.
+export const LOG_DATASET = "flight-log";
+export const TRACK_DAYS = 120;
+export const DROPPED_DAYS = 14;
 // Positions older than this are left out, so a pilot who landed is not counted on as flying.
 export const FRESH_SECONDS = 180;
 // Landed: seen on the ground this many runs in a row (one could be a moment of slow, level flight), or not heard for
@@ -90,6 +97,30 @@ export function needsGround(day, items, now) {
 // Whether a height (m above the sea) is AIRBORNE_M or more over the ground's (m), when both are known.
 const airborne = (alt, ground) => isNum(alt) && isNum(ground) && alt - ground >= AIRBORNE_M;
 
+const flightId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+// The pilot's open flight ended: it goes to the day's finished list (written to the store by run), counted when it was
+// seen in the air (not pending any more). A flight far from every site has no track and is not kept.
+function finish(day, p) {
+  const t = p.track;
+  p.track = null;
+  if (!t || !t.points.length) return;
+  (day.finished ??= []).push({ id: t.id, day: day.day, site: t.site, start: t.start, end: t.points[t.points.length - 1][0], minutes: t.minutes,
+    max_alt: t.maxAlt, max_dist: t.maxDist, max_speed: t.maxSpeed, counted: p.pending ? 0 : 1, points: t.points });
+}
+// Pilots not heard for MAX_GAP_MINUTES have landed (observe only sees those heard): their flights are finished. With
+// now = Infinity (the day is over) every open flight is finished. Returns whether anything changed.
+export function sweep(day, now) {
+  let changed = false;
+  for (const p of Object.values(day.pilots)) {
+    if (!p.flying || now - p.last <= MAX_GAP_MINUTES * 60000) continue;
+    finish(day, p);
+    p.flying = false;
+    p.pending = null;
+    changed = true;
+  }
+  return changed;
+}
+
 // Adds what is seen now (items with key, from parseLive) to the day ({ pilots: { key: { last, flying, still, pos, site,
 // minutes, dist, alt, flights, pending } } }): a pilot seen flying after landing begins a new flight, for the site nearest
 // where it is first seen; each new position in the air counts `minutes` (the time between runs) to that flight's site,
@@ -109,23 +140,33 @@ export function observe(day, items, sites, now, minutes, ground = {}) {
       // over the ground is hovering in the wind, and counting starts again. Landed while pending: never in the air.
       if (p && p.flying && ++p.still >= LANDED_RUNS) {
         if (airborne(item.alt, ground[item.key])) p.still = 0;
-        else { p.flying = false; p.pending = null; }
+        else { finish(day, p); p.flying = false; p.pending = null; }
       }
       if (p) { p.last = t; changed = true; }
       continue;
     }
-    if (!p) p = day.pilots[item.key] = { last: 0, flying: false, still: 0, pos: null, site: null, flights: {}, minutes: {}, dist: {}, alt: {}, pending: null };
+    if (!p) p = day.pilots[item.key] = { last: 0, flying: false, still: 0, pos: null, site: null, flights: {}, minutes: {}, dist: {}, alt: {}, pending: null, track: null };
     const gap = t - p.last;
     const sameFlight = p.flying && (gap <= GAP_MINUTES * 60000 || (gap <= MAX_GAP_MINUTES * 60000 && p.pos && airborne(p.pos[2], ground[item.key])));
     if (!sameFlight) {
+      if (p.flying) finish(day, p);
       p.site = nearestSite(sites, item)?.id ?? null;
       p.pending = p.site ? { minutes: 0, dist: 0, alt: null, runs: 0 } : null;
+      p.track = p.site ? { id: flightId(), site: p.site, start: item.time, minutes: 0, maxAlt: null, maxDist: 0, maxSpeed: 0, points: [] } : null;
     }
     p.flying = true;
     p.still = 0;
     p.last = t;
     p.pos = [item.lat, item.lon, isNum(item.alt) ? Math.round(item.alt) : null];
     const site = p.site && sites.find((s) => s.id === p.site);
+    if (site && p.track) {
+      const tr = p.track;
+      tr.points.push([item.time, Number(item.lat.toFixed(5)), Number(item.lon.toFixed(5)), isNum(item.alt) ? Math.round(item.alt) : null, isNum(item.speed) ? item.speed : null, isNum(item.climb) ? item.climb : null]);
+      tr.minutes += minutes;
+      tr.maxDist = Math.max(tr.maxDist, round1(distanceKm(site, item)));
+      if (isNum(item.alt)) tr.maxAlt = Math.max(tr.maxAlt ?? 0, Math.round(item.alt));
+      if (isNum(item.speed)) tr.maxSpeed = Math.max(tr.maxSpeed, item.speed);
+    }
     if (site) {
       const sums = p.pending ?? { minutes: p.minutes[site.id] ?? 0, dist: p.dist[site.id] ?? 0, alt: p.alt[site.id] ?? null };
       sums.minutes += minutes;
@@ -209,6 +250,23 @@ export function buildFlights(rows, since, now = Date.now()) {
   return { dataset: DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), since, sites };
 }
 
+// The flights of the last RECENT_DAYS, newest first, each with its positions ([time, lat, lon, alt, speed m/s, climb m/s]).
+export function buildFlightLog(rows, now = Date.now()) {
+  const flights = rows.map((r) => ({ id: r.id, day: r.day, site: r.site, start: r.start, end: r.end, minutes: r.minutes, maxAlt: r.max_alt ?? null,
+    maxDist: r.max_dist ?? null, maxSpeed: r.max_speed ?? null, counted: r.counted === 1, points: typeof r.points === "string" ? JSON.parse(r.points) : r.points }))
+    .sort((a, b) => (a.start < b.start ? 1 : a.start > b.start ? -1 : 0));
+  return { dataset: LOG_DATASET, source: SOURCE, license: LICENSE, fetched: new Date(now).toISOString(), days: RECENT_DAYS, flights };
+}
+
+// The day's finished flights written to the store, and the old ones pruned. Returns how many were written.
+async function flushFinished(store, day, now) {
+  const list = day.finished ?? [];
+  for (const f of list) await store.putFlight(f);
+  day.finished = [];
+  if (list.length) await store.pruneFlights(osloDay(now - TRACK_DAYS * 86400000), osloDay(now - DROPPED_DAYS * 86400000));
+  return list.length;
+}
+
 // One-off: a car on the E6 past Bjerkvik with the app on was counted as Haugfjellet's first flight on 25 October 2026
 // (27 km in 18 minutes, 179 m above the sea), before the rules above. Removed once (the state flag records it). Delete
 // this and its use in run() after it has run on the service.
@@ -233,21 +291,29 @@ export async function run(store, sites, now = Date.now(), minutes = 2) {
   if (items.via) console.log(`flights: ${items.length} fra OGNs APRS-strøm (kartet svarte ikke)`);
   const today = osloDay(now);
   let day = await store.getState(STATE);
-  let changed = false;
+  let changed = false, written = 0;
   if (!day || day.day !== today) {
-    day = { day: today, salt: crypto.randomUUID(), pilots: {} };
+    // The old day is over: its open flights end now and are written with its date.
+    if (day) { sweep(day, Infinity); written += await flushFinished(store, day, now); }
+    day = { day: today, salt: crypto.randomUUID(), pilots: {}, finished: [] };
     changed = true;
   }
   if (await cleanup(store, day)) changed = true;
   const keyed = await Promise.all(items.map(async (i) => ({ ...i, key: await pilotKey(day.salt, i.id) })));
   const ground = await groundAt(needsGround(day, keyed, now));
-  if (observe(day, keyed, sites, now, minutes, ground)) {
+  const seen = observe(day, keyed, sites, now, minutes, ground);
+  if (sweep(day, now) || seen) {
     await store.putFlightDays(dayRows(day));
     changed = true;
   }
+  written += await flushFinished(store, day, now);
   let since = await store.getState("flights-since");
   if (!since) { since = today; await store.putState("flights-since", since); changed = true; }
   if (!changed) return;
   await store.putState(STATE, day);
   await store.putSnapshot(DATASET, JSON.stringify(buildFlights(await store.flightDays(), since, now)));
+  if (written || !(await store.getState("flight-log-built"))) {
+    await store.putSnapshot(LOG_DATASET, JSON.stringify(buildFlightLog(await store.flightsSince(osloDay(now - (RECENT_DAYS - 1) * 86400000)), now)));
+    await store.putState("flight-log-built", { at: new Date(now).toISOString() });
+  }
 }

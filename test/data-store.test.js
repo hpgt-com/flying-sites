@@ -93,10 +93,10 @@ test("backup: each table to R2 by day and as latest, the file from 90 days befor
   svc.store.putVerifyHours([{ site: "heia", station: "490", time: "2026-10-19T10:00:00.000Z", f_dir: 230, f_speed: 5, f_gust: 9, m_dir: 225, m_speed: 4, m_gust: 7, n: 6 }]);
   svc.archive.files.set(`backup/flight_days/${expiredDay("2026-10-19")}.json`, "old");
   const out = await svc.store.backup("2026-10-19");
-  assert.deepEqual(out.rows, { flight_days: 1, verify_hours: 1 });
+  assert.deepEqual(out.rows, { flight_days: 1, verify_hours: 1, flights: 0 });
   assert.equal(expiredDay("2026-10-19"), "2026-07-21");
   assert.ok(!svc.archive.files.has("backup/flight_days/2026-07-21.json"));
-  for (const t of ["flight_days", "verify_hours"]) {
+  for (const t of ["flight_days", "verify_hours", "flights"]) {
     assert.equal(svc.archive.files.get(`backup/${t}/2026-10-19.json`), svc.archive.files.get(`backup/${t}/latest.json`));
   }
   assert.deepEqual(backupRows(svc.archive.files.get("backup/flight_days/latest.json"), "flight_days"), [["2026-10-18", "heia", 4, 3, 120, 3.1, 950]]);
@@ -109,16 +109,16 @@ test("restore: a new, empty store reads the latest backup back in, keeping the r
     { day: "2026-10-19", site: "heia", flights: 1, pilots: 1, minutes: 20, max_dist: 1, max_alt: 600 },
   ]);
   const out = await old.store.backup("2026-10-19");
-  assert.deepEqual(out, { day: "2026-10-19", rows: { flight_days: 2, verify_hours: 0 } });
+  assert.deepEqual(out, { day: "2026-10-19", rows: { flight_days: 2, verify_hours: 0, flights: 0 } });
   const fresh = service();
   fresh.archive.files = old.archive.files;
   Object.assign(fresh.archive, { get: old.archive.get, put: old.archive.put, delete: old.archive.delete });
   // Written since the store was lost: newer than the backup's row for the same day, so it stays.
   fresh.store.putFlightDays([{ day: "2026-10-19", site: "heia", flights: 2, pilots: 2, minutes: 45, max_dist: 2, max_alt: 700 }]);
   const at = Date.parse("2026-10-20T08:00:00Z");
-  assert.deepEqual(await fresh.store.restore(at), { flight_days: 2, verify_hours: 0 });
+  assert.deepEqual(await fresh.store.restore(at), { flight_days: 2, verify_hours: 0, flights: 0 });
   assert.deepEqual(fresh.store.flightDays().map((r) => [r.day, r.flights]), [["2026-10-18", 4], ["2026-10-19", 2]]);
-  assert.deepEqual(fresh.store.getState("restore"), { at: "2026-10-20T08:00:00.000Z", rows: { flight_days: 2, verify_hours: 0 } });
+  assert.deepEqual(fresh.store.getState("restore"), { at: "2026-10-20T08:00:00.000Z", rows: { flight_days: 2, verify_hours: 0, flights: 0 } });
   // Once done it never reads one in again, and the nightly backup never does.
   assert.equal(await fresh.store.restore(at + 60000), null);
   assert.equal("restored" in (await fresh.store.backup("2026-10-21")), false);
@@ -313,4 +313,25 @@ test("a failure in the store gives a JSON 503 with the CORS headers, never Cloud
   } finally {
     console.warn = warn;
   }
+});
+
+test("flights: each flight kept with its positions, listed newest first from a day, pruned by age and whether counted, backed up", async () => {
+  const svc = service();
+  const f = (id, day, start, counted) => ({ id, day, site: "heia", start, end: start.replace("T10", "T11"), minutes: 60, max_alt: 1200, max_dist: 5.3, max_speed: 12.5, counted, points: [[start, 68.8, 16.5, 500, 8, 1.2]] });
+  svc.store.putFlight(f("a1", "2026-10-18", "2026-10-18T10:00:00.000Z", 1));
+  svc.store.putFlight(f("b2", "2026-10-19", "2026-10-19T10:00:00.000Z", 0));
+  svc.store.putFlight(f("c3", "2026-06-01", "2026-06-01T10:00:00.000Z", 1));
+  svc.store.putFlight(f("d4", "2026-10-01", "2026-10-01T10:00:00.000Z", 0));
+  const rows = svc.store.flightsSince("2026-09-19");
+  assert.deepEqual(rows.map((r) => r.id), ["b2", "a1", "d4"]);
+  assert.deepEqual(JSON.parse(rows[1].points), [["2026-10-18T10:00:00.000Z", 68.8, 16.5, 500, 8, 1.2]]);
+  assert.equal(rows[1].counted, 1);
+  svc.store.pruneFlights("2026-06-22", "2026-10-05");
+  assert.deepEqual(svc.store.flightsSince("2000-01-01").map((r) => r.id), ["b2", "a1"], "old counted and older dropped flights go");
+  assert.equal((await svc.store.backup("2026-10-19")).rows.flights, 2);
+  const fresh = service();
+  fresh.archive.files = svc.archive.files;
+  Object.assign(fresh.archive, { get: svc.archive.get, put: svc.archive.put, delete: svc.archive.delete });
+  assert.deepEqual(await fresh.store.restore(Date.parse("2026-10-20T08:00:00Z")), { flight_days: 0, verify_hours: 0, flights: 2 });
+  assert.equal(fresh.store.flightsSince("2000-01-01").length, 2);
 });

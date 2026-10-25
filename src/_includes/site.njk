@@ -364,7 +364,7 @@ scripts:
       </section>
       {#- Flyaktivitet: how many paragliders the Open Glider Network has seen in the air from this site (flights.js, the
           data service's /v1/flights.json). Hidden until the data has come. -#}
-      <section class="block block--flights" id="flights" data-url="{{ site.flightsUrl }}" data-site="{{ id }}" aria-labelledby="h-flights" hidden>
+      <section class="block block--flights" id="flights" data-url="{{ site.flightsUrl }}" data-log-url="{{ site.flightLogUrl }}" data-activity-url="{{ '/flyaktivitet/' | localeUrl }}" data-site="{{ id }}" aria-labelledby="h-flights" hidden>
         <h2 id="h-flights">{{ t.site.flightsTitle }}</h2>
         <div class="flights"></div>
       </section>

@@ -682,7 +682,9 @@ test("flights: a run keeps only the day's keys, made with a salt that is thrown 
     putFlightDays: async (rows) => { for (const r of rows) days.set(`${r.day}|${r.site}`, r); },
     flightDays: async () => [...days.values()], putSnapshot: async (d, b) => { snaps[d] = JSON.parse(b); },
     deleteFlightDay: async (day, site) => { days.delete(`${day}|${site}`); },
+    putFlight: async (f) => { tracks.set(f.id, f); }, flightsSince: async (day) => [...tracks.values()].filter((f) => f.day >= day), pruneFlights: async () => {},
   };
+  const tracks = new Map();
   const realFetch = globalThis.fetch;
   const ogn = '<markers><m a="68.801,16.501,P,Pilot,900,09:00:00,5,90,30,1.2,7,AVX970,DD1234,dd1234ab"/></markers>';
   globalThis.fetch = async (url) => (String(url).includes("geonorge") ? Response.json({ punkter: [{ z: 400 }] }) : new Response(ogn));
@@ -698,9 +700,17 @@ test("flights: a run keeps only the day's keys, made with a salt that is thrown 
     assert.equal(snaps.flights.sites.heia.flights, 1, "500 m over the ground: counted, with the first run's minutes");
     assert.equal(snaps.flights.sites.heia.pilots, 1);
     assert.equal(snaps.flights.sites.heia.minutes, 4);
+    assert.equal(tracks.size, 0, "still in the air: not written yet");
     globalThis.fetch = async () => new Response("<markers></markers>");
     await flightsMod.run(store, sites, NOW + 86400000, 2);
     assert.notEqual(state["flights-today"].salt, today.salt, "a new salt each day");
+    assert.equal(tracks.size, 1, "the day is over: the open flight is written with the old day's date");
+    const written = [...tracks.values()][0];
+    assert.equal(written.day, today.day);
+    assert.deepEqual([written.site, written.minutes, written.counted, written.points.length, written.max_alt], ["heia", 4, 1, 2, 900]);
+    assert.ok(!JSON.stringify(written).includes("dd1234ab") && !("key" in written), "no device id, no key in the flight");
+    assert.equal(snaps["flight-log"].flights.length, 1);
+    assert.equal(snaps["flight-log"].flights[0].id, written.id);
     assert.equal(snaps.flights.sites.heia.days, 1, "the old day's pilots are gone; a new day with nobody flying adds nothing");
   } finally {
     globalThis.fetch = realFetch;
@@ -745,6 +755,48 @@ test("flights: a car with the app on is not a flight; a pilot low over the groun
   assert.deepEqual(flightsMod.dayRows(day), [{ day: "2026-10-25", site: "haugfjellet", flights: 2, pilots: 2, minutes: 12, max_dist: 0.1, max_alt: 730 }]);
 });
 
+test("flights: each flight keeps its positions; a landing, a gap or the sweep ends it, counted or not", () => {
+  const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
+  const at = (s) => new Date(NOW + s * 1000).toISOString();
+  const day = { day: "2026-10-18", pilots: {} };
+  const air = (s, alt, speed) => ({ key: "a", lat: 68.80 + s / 100000, lon: 16.50, alt, speed: speed ?? 9, climb: 1, time: at(s) });
+  flightsMod.observe(day, [air(0, 600)], sites, NOW, 2, { "a:now": 400 });
+  flightsMod.observe(day, [air(120, 800, 14.2)], sites, NOW + 120000, 2);
+  const t = day.pilots.a.track;
+  assert.equal(t.points.length, 2);
+  assert.deepEqual(t.points[1], [at(120), 68.8012, 16.5, 800, 14.2, 1]);
+  assert.deepEqual([t.site, t.start, t.minutes, t.maxAlt, t.maxSpeed], ["heia", at(0), 4, 800, 14.2]);
+  assert.equal(day.finished, undefined, "nothing finished yet");
+  // Landed: the flight is finished and counted.
+  const ground = (s) => ({ key: "a", lat: 68.80, lon: 16.50, alt: 60, speed: 0, climb: 0, time: at(s) });
+  flightsMod.observe(day, [ground(240)], sites, NOW + 240000, 2);
+  flightsMod.observe(day, [ground(360)], sites, NOW + 360000, 2);
+  assert.equal(day.finished.length, 1);
+  const f = day.finished[0];
+  assert.deepEqual([f.day, f.site, f.start, f.end, f.minutes, f.max_alt, f.max_dist, f.max_speed, f.counted, f.points.length], ["2026-10-18", "heia", at(0), at(120), 4, 800, 0.1, 14.2, 1, 2]);
+  assert.match(f.id, /^[0-9a-f]{12}$/);
+  assert.equal(day.pilots.a.track, null);
+  // A walk with the app on: pending all along, parked after three runs: finished but not counted.
+  const walk = (s) => ({ key: "w", lat: 68.801, lon: 16.501, alt: 490, speed: 1.5, climb: 0.6, time: at(s) });
+  for (let i = 0; i < 3; i++) flightsMod.observe(day, [walk(60 + 120 * i)], sites, NOW + 60000 + 120000 * i, 2, { "w:now": 480 });
+  flightsMod.observe(day, [{ ...walk(420), speed: 0, climb: 0 }], sites, NOW + 420000, 2);
+  flightsMod.observe(day, [{ ...walk(540), speed: 0, climb: 0 }], sites, NOW + 540000, 2);
+  assert.equal(day.finished.length, 2);
+  assert.equal(day.finished[1].counted, 0, "never in the air: kept as dropped");
+  assert.deepEqual(day.pilots.w.flights, {});
+  // Not heard for more than two hours: the sweep ends the flight.
+  flightsMod.observe(day, [{ ...air(600, 700), key: "s" }], sites, NOW + 600000, 2, { "s:now": 400 });
+  assert.equal(flightsMod.sweep(day, NOW + 600000 + 60 * 60000), false, "an hour: still in the air");
+  assert.equal(flightsMod.sweep(day, NOW + 600000 + 121 * 60000), true);
+  assert.equal(day.finished.length, 3);
+  assert.equal(day.pilots.s.flying, false);
+  // The log dataset, newest first, with the positions parsed.
+  const log = flightsMod.buildFlightLog(day.finished.map((x) => ({ ...x, counted: x.counted, points: JSON.stringify(x.points) })), NOW);
+  assert.equal(log.dataset, "flight-log");
+  assert.deepEqual(log.flights.map((x) => x.id), [day.finished[2].id, day.finished[1].id, day.finished[0].id]);
+  assert.deepEqual([log.flights[2].counted, log.flights[1].counted, log.flights[2].maxAlt, log.flights[2].points[0][3]], [true, false, 800, 600]);
+});
+
 test("flights: the one-off cleanup removes the car's day on Haugfjellet from the store and from the day, once", async () => {
   const state = { "flights-today": { day: "2026-10-25", salt: "s", pilots: { x: { last: 0, flying: false, still: 0, pos: null, site: "haugfjellet", flights: { haugfjellet: 1 }, minutes: { haugfjellet: 18 }, dist: { haugfjellet: 27.4 }, alt: { haugfjellet: 179 }, pending: null } } } };
   const deleted = [], days = new Map([["2026-10-25|haugfjellet", { day: "2026-10-25", site: "haugfjellet", flights: 1, pilots: 1, minutes: 18, max_dist: 27.4, max_alt: 179 }]]);
@@ -752,6 +804,7 @@ test("flights: the one-off cleanup removes the car's day on Haugfjellet from the
     getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = structuredClone(v); },
     putFlightDays: async (rows) => { for (const r of rows) days.set(`${r.day}|${r.site}`, r); }, flightDays: async () => [...days.values()],
     putSnapshot: async () => {}, deleteFlightDay: async (day, site) => { deleted.push([day, site]); days.delete(`${day}|${site}`); },
+    putFlight: async () => {}, flightsSince: async () => [], pruneFlights: async () => {},
   };
   const realFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response("<markers></markers>");

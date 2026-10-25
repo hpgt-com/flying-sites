@@ -331,7 +331,9 @@
     "menuLink": "Flyaktivitet",
     "menuSub": "Turer per sted",
     "loading": "Henter tallene …",
-    "noScript": "Tallene hentes med JavaScript. Slå det på for å se dem."
+    "noScript": "Tallene hentes med JavaScript. Slå det på for å se dem.",
+    "logTitle": "Siste turer",
+    "logIntro": "Hver tur OGN har sett de siste 30 dagene, med posisjonene som ble hørt (én annethvert minutt). Trykk på en tur for å se den på kartet. Turer som aldri var i lufta, som en bil eller en gåtur med appen på, står som ikke telt. Ingen enhet eller pilot lagres."
   },
   "news": {
     "title": "Nytt på siden",
@@ -808,6 +810,8 @@
     },
     "flights": {
       "statsLabel": "Flyaktivitet i tall",
+      "recentTitle": "Siste turer herfra",
+      "recentRow": "{date} kl. {time}: {minutes} min, {alt} moh, {km} km fra start",
       "flights": {
         "one": "tur",
         "other": "turer"
@@ -828,6 +832,20 @@
     },
     "activity": {
       "statsLabel": "Flyaktivitet i tall",
+      "logTitle": "Siste turer",
+      "colStart": "Start",
+      "colMinutes": "Min",
+      "colCounted": "Telt",
+      "counted": "ja",
+      "notCounted": "nei",
+      "logNone": "Ingen turer de siste 30 dagene.",
+      "logDetail": "{site} {date} kl. {time}: {minutes} min, høyest {alt} moh, {km} km fra start, toppfart {kmh} km/t, {n} posisjoner.",
+      "logNotCounted": "Ikke telt som tur: aldri sett 50 m over bakken. Trolig en bil eller en gåtur med appen på.",
+      "logClose": "Lukk",
+      "curveLabel": "Høyde gjennom turen",
+      "curveNote": "Høyde mot tid siden start, fra posisjonene OGN hørte. Pek eller dra på kurven for å se hvor du var.",
+      "mapLabel": "Turen på kartet",
+      "pointTitle": "kl. {time}, {alt} moh, {kmh} km/t",
       "today": "turer i dag",
       "recent": "turer siste 30 dager",
       "recentSites": "steder brukt siste 30 dager",
