@@ -776,25 +776,25 @@ test("flights: each flight keeps its positions; a landing, a gap or the sweep en
   assert.deepEqual([f.day, f.site, f.start, f.end, f.minutes, f.max_alt, f.max_dist, f.max_speed, f.counted, f.points.length], ["2026-10-18", "heia", at(0), at(120), 4, 800, 0.1, 14.2, 1, 2]);
   assert.match(f.id, /^[0-9a-f]{12}$/);
   assert.equal(day.pilots.a.track, null);
-  // A walk with the app on: pending all along, parked after three runs: finished but not counted.
+  // A walk with the app on: pending all along, parked after three runs: not kept at all.
   const walk = (s) => ({ key: "w", lat: 68.801, lon: 16.501, alt: 490, speed: 1.5, climb: 0.6, time: at(s) });
   for (let i = 0; i < 3; i++) flightsMod.observe(day, [walk(60 + 120 * i)], sites, NOW + 60000 + 120000 * i, 2, { "w:now": 480 });
   flightsMod.observe(day, [{ ...walk(420), speed: 0, climb: 0 }], sites, NOW + 420000, 2);
   flightsMod.observe(day, [{ ...walk(540), speed: 0, climb: 0 }], sites, NOW + 540000, 2);
-  assert.equal(day.finished.length, 2);
-  assert.equal(day.finished[1].counted, 0, "never in the air: kept as dropped");
+  assert.equal(day.finished.length, 1, "never in the air: not kept");
+  assert.equal(day.pilots.w.track, null);
   assert.deepEqual(day.pilots.w.flights, {});
   // Not heard for more than two hours: the sweep ends the flight.
   flightsMod.observe(day, [{ ...air(600, 700), key: "s" }], sites, NOW + 600000, 2, { "s:now": 400 });
   assert.equal(flightsMod.sweep(day, NOW + 600000 + 60 * 60000), false, "an hour: still in the air");
   assert.equal(flightsMod.sweep(day, NOW + 600000 + 121 * 60000), true);
-  assert.equal(day.finished.length, 3);
+  assert.equal(day.finished.length, 2);
   assert.equal(day.pilots.s.flying, false);
   // The log dataset, newest first, with the positions parsed.
   const log = flightsMod.buildFlightLog(day.finished.map((x) => ({ ...x, counted: x.counted, points: JSON.stringify(x.points) })), NOW);
   assert.equal(log.dataset, "flight-log");
-  assert.deepEqual(log.flights.map((x) => x.id), [day.finished[2].id, day.finished[1].id, day.finished[0].id]);
-  assert.deepEqual([log.flights[2].counted, log.flights[1].counted, log.flights[2].maxAlt, log.flights[2].points[0][3]], [true, false, 800, 600]);
+  assert.deepEqual(log.flights.map((x) => x.id), [day.finished[1].id, day.finished[0].id]);
+  assert.deepEqual([log.flights[1].counted, log.flights[1].maxAlt, log.flights[1].points[0][3]], [true, 800, 600]);
 });
 
 test("flights: the one-off cleanup removes the car's day on Haugfjellet from the store and from the day, once", async () => {
@@ -1003,4 +1003,26 @@ test("aprs: the devices that must not be tracked, from OGN's device database as 
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => Response.json({ devices: devices.slice(0, 10) })), /uventet svar/);
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("<html>down</html>")), /uventet svar/);
   await assert.rejects(() => aprsMod.fetchNoTrack(async () => new Response("", { status: 502 })), /svarte 502/);
+});
+
+test("flights: once after the change the not-counted flights are pruned and the log made anew, then only when written", async () => {
+  const state = { "flight-log-built": { at: "2026-10-26T00:00:00.000Z" } }, pruned = [], snaps = {};
+  const store = {
+    getState: async (k) => state[k] ?? null, putState: async (k, v) => { state[k] = structuredClone(v); },
+    putFlightDays: async () => {}, flightDays: async () => [], putSnapshot: async (d, b) => { snaps[d] = JSON.parse(b); },
+    deleteFlightDay: async () => {}, putFlight: async () => {}, flightsSince: async () => [], pruneFlights: async (before) => { pruned.push(before); },
+  };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("<markers></markers>");
+  try {
+    const sites = [{ id: "heia", lat: 68.80, lon: 16.50 }];
+    await flightsMod.run(store, sites, Date.parse("2026-10-27T10:00:00Z"), 1);
+    assert.deepEqual(pruned, ["2026-06-29"], "pruned once, with the age limit");
+    assert.equal(state["flight-log-built"].version, 2);
+    assert.equal(snaps["flight-log"].flights.length, 0);
+    await flightsMod.run(store, sites, Date.parse("2026-10-27T10:01:00Z"), 1);
+    assert.equal(pruned.length, 1, "not again");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

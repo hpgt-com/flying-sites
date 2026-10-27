@@ -1924,12 +1924,10 @@ body.sheet-open { overflow: hidden; }
 /* «Siste turer»: the rows open the flight; the chosen one is drawn on a map below the table. */
 .activity-log-row { cursor: pointer; }
 .activity-log-row:hover, .activity-log-row:focus-visible { background: var(--surface); }
-.activity-log-row--dropped { color: var(--muted); }
 .activity-log-detail { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); padding: 12px 14px; }
 .activity-log-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
 .activity-log-head h3 { margin: 0; font-size: 17px; }
 .activity-log-head .btn { width: auto; flex: 0 0 auto; }
-.activity-log-dropped { color: var(--hazard-text); font-weight: 600; font-size: 14px; }
 .activity-log-map { height: 340px; border-radius: var(--radius); overflow: hidden; }
 .activity-curve { width: 100%; height: auto; display: block; cursor: crosshair; touch-action: none; }
 .activity-curve text { font-size: 11px; fill: var(--muted); }

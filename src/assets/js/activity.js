@@ -132,8 +132,7 @@
   }
 
   // «Siste turer»: the flight log (/v1/flight-log.json), one row per flight, newest first; a chosen flight is drawn on
-  // a map (Leaflet, common.js createMap) with OGN's positions, below the table. A flight that was never in the air (a
-  // car or a walk with the app on) is listed as not counted. A link #tur-<id> opens that flight.
+  // a map (Leaflet, common.js createMap) with OGN's positions, below the table. A link #tur-<id> opens that flight.
   function isFlightLog(d) {
     return !!(d && d.dataset === "flight-log" && Array.isArray(d.flights) && d.flights.every(function (f) {
       return f && typeof f.id === "string" && /^[0-9a-f]{6,16}$/.test(f.id) && typeof f.site === "string" && typeof f.start === "string" && typeof f.minutes === "number" && Array.isArray(f.points);
@@ -146,7 +145,7 @@
   function logRows(data, sites) {
     var info = {};
     (sites || []).forEach(function (s) { info[s.id] = s; });
-    return data.flights.map(function (f) {
+    return data.flights.filter(function (f) { return f.counted !== false; }).map(function (f) {
       return { id: f.id, name: (info[f.site] && info[f.site].name) || f.site, url: null, site: f.site, day: f.day || f.start.slice(0, 10), start: f.start, minutes: f.minutes,
         maxAlt: f.maxAlt, maxDist: f.maxDist, maxSpeed: f.maxSpeed, counted: f.counted !== false, points: f.points };
     });
@@ -241,7 +240,6 @@
     var close = head.appendChild(make("button", "btn btn--small", text("activity.logClose")));
     close.type = "button";
     close.addEventListener("click", function () { holder.replaceChildren(); });
-    if (!f.counted) card.appendChild(make("p", "activity-log-dropped", text("activity.logNotCounted")));
     flightMap(card, f);
     card.scrollIntoView({ block: "nearest" });
   }
@@ -252,13 +250,12 @@
       ["colStart", function (r) { return dateText(r.day) + " " + timeText(r.start); }], ["colMinutes", function (r) { return r.minutes; }],
       ["colHighest", function (r) { return r.maxAlt != null ? text("activity.masl", { m: r.maxAlt }) : "–"; }],
       ["colFarthest", function (r) { return r.maxDist != null ? FS.formatNumber(r.maxDist, 1) + " km" : "–"; }],
-      ["colCounted", function (r) { return text(r.counted ? "activity.counted" : "activity.notCounted"); }],
     ], text("activity.logTitle"));
     var detail = make("div", "activity-log-holder");
     var trs = wrap.querySelectorAll("tbody tr");
     rows.slice(0, 60).forEach(function (r, i) {
       var tr = trs[i];
-      tr.className = "activity-log-row" + (r.counted ? "" : " activity-log-row--dropped");
+      tr.className = "activity-log-row";
       tr.tabIndex = 0;
       tr.setAttribute("role", "button");
       var open = function () { renderLogDetail(detail, r); };
