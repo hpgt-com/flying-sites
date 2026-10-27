@@ -315,7 +315,7 @@ test("a failure in the store gives a JSON 503 with the CORS headers, never Cloud
   }
 });
 
-test("flights: each flight kept with its positions, listed newest first from a day, pruned by age and whether counted, backed up", async () => {
+test("flights: each flight kept with its positions, listed newest first from a day, pruned by age (and any not counted), backed up", async () => {
   const svc = service();
   const f = (id, day, start, counted) => ({ id, day, site: "heia", start, end: start.replace("T10", "T11"), minutes: 60, max_alt: 1200, max_dist: 5.3, max_speed: 12.5, counted, points: [[start, 68.8, 16.5, 500, 8, 1.2]] });
   svc.store.putFlight(f("a1", "2026-10-18", "2026-10-18T10:00:00.000Z", 1));
@@ -326,12 +326,12 @@ test("flights: each flight kept with its positions, listed newest first from a d
   assert.deepEqual(rows.map((r) => r.id), ["b2", "a1", "d4"]);
   assert.deepEqual(JSON.parse(rows[1].points), [["2026-10-18T10:00:00.000Z", 68.8, 16.5, 500, 8, 1.2]]);
   assert.equal(rows[1].counted, 1);
-  svc.store.pruneFlights("2026-06-22", "2026-10-05");
-  assert.deepEqual(svc.store.flightsSince("2000-01-01").map((r) => r.id), ["b2", "a1"], "old counted and older dropped flights go");
-  assert.equal((await svc.store.backup("2026-10-19")).rows.flights, 2);
+  svc.store.pruneFlights("2026-06-22");
+  assert.deepEqual(svc.store.flightsSince("2000-01-01").map((r) => r.id), ["a1"], "old flights and every one not counted go");
+  assert.equal((await svc.store.backup("2026-10-19")).rows.flights, 1);
   const fresh = service();
   fresh.archive.files = svc.archive.files;
   Object.assign(fresh.archive, { get: svc.archive.get, put: svc.archive.put, delete: svc.archive.delete });
-  assert.deepEqual(await fresh.store.restore(Date.parse("2026-10-20T08:00:00Z")), { flight_days: 0, verify_hours: 0, flights: 2 });
-  assert.equal(fresh.store.flightsSince("2000-01-01").length, 2);
+  assert.deepEqual(await fresh.store.restore(Date.parse("2026-10-20T08:00:00Z")), { flight_days: 0, verify_hours: 0, flights: 1 });
+  assert.equal(fresh.store.flightsSince("2000-01-01").length, 1);
 });

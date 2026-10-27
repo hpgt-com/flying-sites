@@ -252,9 +252,9 @@ export class Store extends DurableObject {
     return this.sql.exec("SELECT id, day, site, start, end, minutes, max_alt, max_dist, max_speed, counted, points FROM flights WHERE day >= ? ORDER BY start DESC", day).toArray();
   }
 
-  // Counted flights older than countedBefore and dropped ones older than droppedBefore (YYYY-MM-DD) go.
-  pruneFlights(countedBefore, droppedBefore) {
-    this.sql.exec("DELETE FROM flights WHERE (counted = 1 AND day < ?) OR (counted = 0 AND day < ?)", countedBefore, droppedBefore);
+  // Flights older than before (YYYY-MM-DD) go, and any not counted (kept before 27.10.2026: cars and walks).
+  pruneFlights(before) {
+    this.sql.exec("DELETE FROM flights WHERE counted = 0 OR day < ?", before);
   }
 
   // A new, empty store (a lost or recreated Durable Object) reads the latest backup (backup.js) back in from the archive

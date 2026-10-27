@@ -3,10 +3,10 @@
 // about once an hour, and each run fetches 6 launches (sources/forecast.js). MET's stations report every ten minutes
 // (sources/frost.js). The winds aloft: 2 launches every 10 minutes (sources/windgram.js). How well the forecast hit is
 // worked out twice an hour from what is already stored (sources/verify.js). The paragliders in the air are counted every
-// other minute (sources/flights.js), so a short flight is seen too.
+// minute (sources/flights.js), so a short flight is seen too and a flight's track has a point a minute.
 // The restore of a new, empty store from the latest backup (store.js restore) is tried every minute until it has
 // succeeded once, which index.js reads from the health state.
-export const INTERVALS = { forecast: 5, stations: 1, met: 10, windgram: 10, verify: 30, flights: 2, backup: 1440, grid: 180, gridWide: 360, ognDdb: 1440, restore: 1 };
+export const INTERVALS = { forecast: 5, stations: 1, met: 10, windgram: 10, verify: 30, flights: 1, backup: 1440, grid: 180, gridWide: 360, ognDdb: 1440, restore: 1 };
 // Minute within the interval each source runs on. All sources run in the same invocation, and the free plan gives one
 // invocation 10 ms of CPU in all, so the heavier ones (the forecast, MET, the winds aloft) never share a minute: the
 // forecast at :00 and :05, MET at :03, the winds aloft at :07 (and so on every ten minutes), the verification at :09 and :39.

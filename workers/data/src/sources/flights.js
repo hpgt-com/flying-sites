@@ -28,13 +28,14 @@ export const MAX_SPEED = 22;
 // Kartverket, outside Norway, no height from the device) it counts after PENDING_RUNS runs, as before.
 export const AIRBORNE_START_M = 50;
 export const PENDING_RUNS = 3;
-// Each flight is also kept on its own (store flights, dataset «flight-log»): the site, the start and the end, the sums,
-// whether it was counted (dropped: never seen in the air, a car or a walk with the app on), and the positions OGN gave,
-// one per run. No device, no key: a random id. Shown on /flyaktivitet/ and the site page, so a flight that looks wrong
-// can be seen for what it was. Counted flights are kept TRACK_DAYS, dropped ones DROPPED_DAYS, the sums for ever.
+// Each counted flight is also kept on its own (store flights, dataset «flight-log»): the site, the start and the end,
+// the sums and the positions OGN gave, one per run. No device, no key: a random id. Shown on /flyaktivitet/ and the
+// site page. A flight never seen AIRBORNE_START_M over the ground (a car, a bike or a walk with the app on) is not kept
+// at all. Flights are kept TRACK_DAYS, the sums for ever.
 export const LOG_DATASET = "flight-log";
 export const TRACK_DAYS = 120;
-export const DROPPED_DAYS = 14;
+// Bumped when the stored flights must be pruned and the dataset made anew once (2: the cars kept before as dropped go).
+const LOG_VERSION = 2;
 // Positions older than this are left out, so a pilot who landed is not counted on as flying.
 export const FRESH_SECONDS = 180;
 // Landed: seen on the ground this many runs in a row (one could be a moment of slow, level flight), or not heard for
@@ -98,14 +99,14 @@ export function needsGround(day, items, now) {
 const airborne = (alt, ground) => isNum(alt) && isNum(ground) && alt - ground >= AIRBORNE_M;
 
 const flightId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
-// The pilot's open flight ended: it goes to the day's finished list (written to the store by run), counted when it was
-// seen in the air (not pending any more). A flight far from every site has no track and is not kept.
+// The pilot's open flight ended: it goes to the day's finished list (written to the store by run) when it was seen in
+// the air (not pending any more). A flight that never was, or far from every site (no track), is not kept.
 function finish(day, p) {
   const t = p.track;
   p.track = null;
-  if (!t || !t.points.length) return;
+  if (!t || !t.points.length || p.pending) return;
   (day.finished ??= []).push({ id: t.id, day: day.day, site: t.site, start: t.start, end: t.points[t.points.length - 1][0], minutes: t.minutes,
-    max_alt: t.maxAlt, max_dist: t.maxDist, max_speed: t.maxSpeed, counted: p.pending ? 0 : 1, points: t.points });
+    max_alt: t.maxAlt, max_dist: t.maxDist, max_speed: t.maxSpeed, counted: 1, points: t.points });
 }
 // Pilots not heard for MAX_GAP_MINUTES have landed (observe only sees those heard): their flights are finished. With
 // now = Infinity (the day is over) every open flight is finished. Returns whether anything changed.
@@ -263,7 +264,7 @@ async function flushFinished(store, day, now) {
   const list = day.finished ?? [];
   for (const f of list) await store.putFlight(f);
   day.finished = [];
-  if (list.length) await store.pruneFlights(osloDay(now - TRACK_DAYS * 86400000), osloDay(now - DROPPED_DAYS * 86400000));
+  if (list.length) await store.pruneFlights(osloDay(now - TRACK_DAYS * 86400000));
   return list.length;
 }
 
@@ -312,8 +313,10 @@ export async function run(store, sites, now = Date.now(), minutes = 2) {
   if (!changed) return;
   await store.putState(STATE, day);
   await store.putSnapshot(DATASET, JSON.stringify(buildFlights(await store.flightDays(), since, now)));
-  if (written || !(await store.getState("flight-log-built"))) {
+  const built = await store.getState("flight-log-built");
+  if (written || built?.version !== LOG_VERSION) {
+    if (built?.version !== LOG_VERSION) await store.pruneFlights(osloDay(now - TRACK_DAYS * 86400000));
     await store.putSnapshot(LOG_DATASET, JSON.stringify(buildFlightLog(await store.flightsSince(osloDay(now - (RECENT_DAYS - 1) * 86400000)), now)));
-    await store.putState("flight-log-built", { at: new Date(now).toISOString() });
+    await store.putState("flight-log-built", { at: new Date(now).toISOString(), version: LOG_VERSION });
   }
 }

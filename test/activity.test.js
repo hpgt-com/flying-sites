@@ -47,5 +47,5 @@ test("the flight log: only the expected shape is used, and the rows carry the si
   assert.equal(AC.isFlightLog({ dataset: "flight-log", flights: [{ id: "<script>", site: "heia", start: "x", minutes: 1, points: [] }] }), false, "an id that is not hex is refused");
   assert.equal(AC.isFlightLog({ dataset: "flights", flights: [] }), false);
   const rows = AC.logRows(log, sites);
-  assert.deepEqual(rows.map((r) => [r.id, r.name, r.day, r.minutes, r.counted]), [["ab12cd34ef56", "Heia", "2026-10-19", 18, true], ["0123456789ab", "ukjent", "2026-10-18", 10, false]]);
+  assert.deepEqual(rows.map((r) => [r.id, r.name, r.day, r.minutes]), [["ab12cd34ef56", "Heia", "2026-10-19", 18]], "a flight not counted (from before) is left out");
 });

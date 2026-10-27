@@ -41,7 +41,8 @@ function liveNow() {
 
 // A forecast grid (/v1/grid.json, /v1/grid-wide.json) over the home region from the hour going on, for 30 hours: land
 // with thermals inland, sea in the west, wind from the south-west getting stronger to the north, rain in one corner.
-// The flight log: a counted Heia flight with five positions, and a dropped one (a car) from Haugfjellet.
+// The flight log: a counted Heia flight with five positions, and a car from before 27.10.2026 kept as not counted,
+// which the page leaves out.
 function flightLogNow() {
   const start = Date.now() - 3 * 3600000;
   const t = (m) => new Date(start + m * 60000).toISOString();
@@ -348,7 +349,7 @@ const scenarios = {
     return [...problems, ...errors];
   },
 
-  async "Flyaktivitet: «Siste turer» viser turene, en valgt tur tegnes på kartet med høydekurve, og stedssiden lenker til den"(browser, origin) {
+  async "Flyaktivitet: «Siste turer» viser turene (ikke bilturer), en valgt tur tegnes på kartet med høydekurve, og stedssiden lenker til den"(browser, origin) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     await answer(context, origin);
     const page = await context.newPage();
@@ -358,8 +359,7 @@ const scenarios = {
     await page.goto(`${origin}/flyaktivitet/`, { waitUntil: "load" });
     await page.locator("#activity-log:not([hidden])").waitFor({ timeout: 5000 }).catch(() => problems.push("«Siste turer» kom ikke"));
     const rows = page.locator("#activity-log tbody tr");
-    if ((await rows.count()) !== 2) problems.push(`${await rows.count()} rader i «Siste turer», ventet 2`);
-    if (!(await page.locator("#activity-log tr.activity-log-row--dropped").count())) problems.push("bilturen er ikke merket som ikke telt");
+    if ((await rows.count()) !== 1) problems.push(`${await rows.count()} rader i «Siste turer», ventet 1 (bilturen skal ikke vises)`);
     await rows.first().click();
     await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("turen fikk ikke kart"));
     if ((await page.locator("#tur-f1e2d3c4b5a6 .leaflet-interactive").count()) < 5) problems.push("sporet er ikke tegnet på kartet");

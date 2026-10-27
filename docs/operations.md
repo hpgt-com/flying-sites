@@ -216,7 +216,7 @@ the menu and is marked `noindex`. It shows per site:
   it gets for paragliders (`workers/data/src/live.js`; hang gliders and other aircraft are left out), with each pilot's
   track and climb over the last 10 minutes, kept in the store's memory
   only (never written down; gone when the store is evicted). No key.
-- **Flyaktivitet** (`workers/data/src/sources/flights.js`): every other minute the data service asks OGN the same way and
+- **Flyaktivitet** (`workers/data/src/sources/flights.js`): every minute the data service asks OGN the same way and
   counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s, and never
   over 80 km/h: that is a car with the app on). A flight counts for the site nearest where first seen in the air (within
   5 km), but only once the pilot has been seen 50 m or more over the ground (a car, a bike or a walk with the app on
@@ -232,10 +232,10 @@ the menu and is marked `noindex`. It shows per site:
   Served as `/v1/flights.json`, shown on the site page and on /flyaktivitet/ (`activity.js`). Counting began when this was deployed (`flights-since`).
 - **The flight log** (`flights` in the store, `/v1/flight-log.json`): each flight on its own as well, once it has ended
   (landed, a gap, or the sweep after two hours without a word): the site, the start and the end, the minutes, the
-  highest, the farthest, the top speed, whether it was counted (a flight never seen 50 m over the ground is kept as
-  dropped, so a car or a walk with the app on can be seen for what it was), and OGN's positions, one per run
-  ([time, lat, lon, alt, speed m/s, climb m/s]). A random id, no device and no key. Counted flights are kept 120 days,
-  dropped ones 14; the sums per site and day stay for ever. Shown on /flyaktivitet/ under «Siste turer» (the chosen
+  highest, the farthest, the top speed, and OGN's positions, one per run (a minute apart)
+  ([time, lat, lon, alt, speed m/s, climb m/s]). A random id, no device and no key. A flight never seen 50 m over the
+  ground (a car, a bike or a walk with the app on) is not kept at all. Flights are kept 120 days; the sums per site
+  and day stay for ever. Shown on /flyaktivitet/ under «Siste turer» (the chosen
   flight on a map, with its height curve: point on the curve to see where the pilot was) and on the site page as
   «Siste turer herfra», each linking to `/flyaktivitet/#tur-<id>`. Backed up with the other tables.
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
