@@ -236,7 +236,9 @@ the menu and is marked `noindex`. It shows per site:
   ([time, lat, lon, alt, speed m/s, climb m/s]). A random id, no device and no key. A flight never seen 50 m over the
   ground (a car, a bike or a walk with the app on) is not kept at all. Flights are kept 120 days; the sums per site
   and day stay for ever. Shown on /flyaktivitet/ under «Siste turer» (the chosen
-  flight on a map, with its height curve: point on the curve to see where the pilot was) and on the site page as
+  flight on a map, with its height curve: point on the curve to see where the pilot was; «‹ Forrige» and «Neste ›» go
+  through the flights in time, and «Alle turer denne dagen» shows the day's flights on one map, each in its own colour,
+  with their height curves against the clock; `#tur-<id>` and `#dag-<YYYY-MM-DD>` open them) and on the site page as
   «Siste turer herfra», each linking to `/flyaktivitet/#tur-<id>`. Backed up with the other tables.
 - OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
   on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
