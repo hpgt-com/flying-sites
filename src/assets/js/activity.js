@@ -229,42 +229,173 @@
       if (!map.hasLayer(cursor)) cursor.addTo(map);
     });
   }
-  function renderLogDetail(holder, f) {
+  // The address of what is open (#tur-<id> or #dag-<date>), so it can be shared; cleared when closed.
+  function setHash(hash) {
+    try { history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search); } catch (e) { /* not allowed: fine */ }
+  }
+  function smallButton(parent, label, onClick, disabled) {
+    var b = parent.appendChild(make("button", "btn btn--small", label));
+    b.type = "button";
+    if (disabled) b.disabled = true; else b.addEventListener("click", onClick);
+    return b;
+  }
+  // One flight: its numbers, «‹ Forrige» (the one before in time) and «Neste ›» (the one after), «Alle turer denne
+  // dagen» when there were others that day, the map and the height curve. rows: the list, newest first.
+  function renderLogDetail(holder, f, rows) {
     var FS = globalThis.FlyingSites;
+    rows = rows || [f];
+    var i = rows.indexOf(f), sameDay = rows.filter(function (r) { return r.day === f.day; }).length;
     holder.replaceChildren();
     var card = holder.appendChild(make("div", "activity-log-detail"));
     card.id = "tur-" + f.id;
     var head = card.appendChild(make("div", "activity-log-head"));
     head.appendChild(make("h3", null, text("activity.logDetail", { site: f.name, date: dateText(f.day, true), time: timeText(f.start), minutes: f.minutes,
       alt: f.maxAlt != null ? FS.formatNumber(f.maxAlt) : "?", km: f.maxDist != null ? FS.formatNumber(f.maxDist, 1) : "?", kmh: f.maxSpeed != null ? FS.formatNumber(Math.round(f.maxSpeed * 3.6)) : "?", n: f.points.length })));
-    var close = head.appendChild(make("button", "btn btn--small", text("activity.logClose")));
-    close.type = "button";
-    close.addEventListener("click", function () { holder.replaceChildren(); });
+    var nav = head.appendChild(make("div", "activity-log-nav"));
+    smallButton(nav, text("activity.logPrev"), function () { renderLogDetail(holder, rows[i + 1], rows); }, i < 0 || i >= rows.length - 1);
+    smallButton(nav, text("activity.logNext"), function () { renderLogDetail(holder, rows[i - 1], rows); }, i <= 0);
+    if (sameDay > 1) smallButton(nav, text("activity.logDay", { n: sameDay }), function () { renderDayDetail(holder, f.day, rows); });
+    smallButton(nav, text("activity.logClose"), function () { holder.replaceChildren(); setHash(null); });
     flightMap(card, f);
+    setHash("tur-" + f.id);
     card.scrollIntoView({ block: "nearest" });
   }
+
+  // All the flights of one day on one map, each in its own colour, and their height curves on one clock-time axis, so
+  // flights at the same time can be compared. The pointer on the curves marks where each one was at that time.
+  var DAY_COLOURS = ["#FFD23F", "#4FB3BF", "#E8743A", "#B57EDC", "#7BC86C", "#F06292", "#90A4AE", "#FFB74D"];
+  function renderDayDetail(holder, day, rows) {
+    var FS = globalThis.FlyingSites, L = globalThis.L;
+    var flights = rows.filter(function (r) { return r.day === day; }).slice().reverse();
+    var days = rows.map(function (r) { return r.day; }).filter(function (d, k, a) { return a.indexOf(d) === k; });
+    var di = days.indexOf(day);
+    holder.replaceChildren();
+    var card = holder.appendChild(make("div", "activity-log-detail"));
+    card.id = "dag-" + day;
+    var head = card.appendChild(make("div", "activity-log-head"));
+    head.appendChild(make("h3", null, text("activity.dayTitle", { date: dateText(day, true), n: flights.length })));
+    var nav = head.appendChild(make("div", "activity-log-nav"));
+    smallButton(nav, text("activity.dayPrev"), function () { renderDayDetail(holder, days[di + 1], rows); }, di < 0 || di >= days.length - 1);
+    smallButton(nav, text("activity.dayNext"), function () { renderDayDetail(holder, days[di - 1], rows); }, di <= 0);
+    smallButton(nav, text("activity.logClose"), function () { holder.replaceChildren(); setHash(null); });
+    // The flights, each with its colour, opening the flight on its own.
+    var list = card.appendChild(make("ul", "activity-day-list"));
+    flights.forEach(function (f, k) {
+      var li = list.appendChild(make("li"));
+      var sw = li.appendChild(make("span", "activity-day-swatch activity-day-swatch--" + (k % DAY_COLOURS.length)));
+      sw.setAttribute("aria-hidden", "true");
+      var b = li.appendChild(make("button", "activity-day-open", text("activity.dayRow", { site: f.name, time: timeText(f.start), minutes: f.minutes,
+        alt: f.maxAlt != null ? FS.formatNumber(f.maxAlt) : "?" })));
+      b.type = "button";
+      b.addEventListener("click", function () { renderLogDetail(holder, f, rows); });
+    });
+    var cursors = [];
+    if (L && FS.createMap) {
+      var el = card.appendChild(make("div", "activity-log-map"));
+      el.setAttribute("role", "img");
+      el.setAttribute("aria-label", text("activity.dayMapLabel", { n: flights.length }));
+      var map = FS.createMap(el, { scrollWheelZoom: false });
+      var all = [];
+      flights.forEach(function (f, k) {
+        var colour = DAY_COLOURS[k % DAY_COLOURS.length];
+        var ll = f.points.filter(function (p) { return typeof p[1] === "number" && typeof p[2] === "number"; }).map(function (p) { return [p[1], p[2]]; });
+        if (!ll.length) { cursors.push(null); return; }
+        all = all.concat(ll);
+        L.polyline(ll, { color: "#1C2B33", weight: 5, opacity: 0.85 }).addTo(map);
+        L.polyline(ll, { color: colour, weight: 2.5 }).bindTooltip(f.name + " " + timeText(f.start)).addTo(map);
+        L.circleMarker(ll[0], { radius: 5, color: "#fff", weight: 1.5, fillColor: colour, fillOpacity: 1 }).addTo(map);
+        cursors.push({ map: map, marker: L.circleMarker(ll[0], { radius: 8, color: "#fff", weight: 3, fillColor: colour, fillOpacity: 1 }) });
+      });
+      if (all.length > 1) map.fitBounds(all, { padding: [24, 24], maxZoom: 14 }); else if (all.length) map.setView(all[0], 13);
+    }
+    dayCurve(card, flights, function (spots) {
+      cursors.forEach(function (c, k) {
+        if (!c) return;
+        var p = spots && spots[k];
+        if (!p) { c.map.removeLayer(c.marker); return; }
+        c.marker.setLatLng([p[1], p[2]]);
+        if (!c.map.hasLayer(c.marker)) c.marker.addTo(c.map);
+      });
+    });
+    setHash("dag-" + day);
+    card.scrollIntoView({ block: "nearest" });
+  }
+  // The day's height curves against the clock. onSpots(spots): for each flight the position nearest the pointer's
+  // time, or null when that flight was not in the air then (or the pointer left).
+  function dayCurve(holder, flights, onSpots) {
+    var FS = globalThis.FlyingSites;
+    var series = flights.map(function (f) { return f.points.filter(function (p) { return typeof p[3] === "number" && typeof p[0] === "string"; }).map(function (p) { return { t: Date.parse(p[0]), p: p }; }); });
+    var pts = series.reduce(function (a, s) { return a.concat(s); }, []);
+    if (pts.length < 2) return;
+    var t0 = Math.min.apply(null, pts.map(function (x) { return x.t; })), t1 = Math.max.apply(null, pts.map(function (x) { return x.t; }));
+    if (t1 - t0 < 60000) t1 = t0 + 60000;
+    var alts = pts.map(function (x) { return x.p[3]; });
+    var aMin = Math.min.apply(null, alts), aMax = Math.max.apply(null, alts), pad = Math.max(50, (aMax - aMin) * 0.1);
+    aMin = Math.max(0, Math.floor((aMin - pad) / 50) * 50); aMax = Math.ceil((aMax + pad) / 50) * 50;
+    var W = 600, H = 200, Lm = 46, R = 10, Tp = 14, B = 24;
+    var PX = function (t) { return Lm + (W - Lm - R) * (t - t0) / (t1 - t0); }, PY = function (a) { return Tp + (H - Tp - B) * (1 - (a - aMin) / (aMax - aMin)); };
+    var wrap = holder.appendChild(make("div", "activity-log-curve"));
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "activity-curve", role: "img", "aria-label": text("activity.dayCurveLabel") }, wrap);
+    var step = aMax - aMin <= 400 ? 100 : aMax - aMin <= 1000 ? 200 : 500;
+    for (var a = Math.ceil(aMin / step) * step; a <= aMax; a += step) {
+      svgEl("line", { x1: Lm, x2: W - R, y1: PY(a).toFixed(1), y2: PY(a).toFixed(1), class: "activity-curve__grid" }, svg);
+      svgEl("text", { x: Lm - 6, y: (PY(a) + 4).toFixed(1), "text-anchor": "end" }, svg).textContent = FS.formatNumber(a);
+    }
+    var span = (t1 - t0) / 60000, tick = span <= 30 ? 5 : span <= 90 ? 15 : span <= 240 ? 30 : 60;
+    for (var m = Math.ceil(t0 / (tick * 60000)) * tick * 60000; m <= t1; m += tick * 60000) {
+      svgEl("text", { x: PX(m).toFixed(1), y: H - 6, "text-anchor": "middle" }, svg).textContent = timeText(new Date(m).toISOString());
+    }
+    series.forEach(function (s, k) {
+      if (s.length < 2) return;
+      svgEl("path", { d: "M" + s.map(function (x) { return PX(x.t).toFixed(1) + " " + PY(x.p[3]).toFixed(1); }).join("L"), class: "activity-curve__day activity-curve__day--" + (k % DAY_COLOURS.length) }, svg);
+    });
+    var cursor = svgEl("line", { x1: 0, x2: 0, y1: Tp, y2: H - B, class: "activity-curve__cursor", visibility: "hidden" }, svg);
+    var label = svgEl("text", { x: 0, y: Tp + 10, class: "activity-curve__label", visibility: "hidden" }, svg);
+    svgEl("rect", { x: Lm, y: Tp, width: W - Lm - R, height: H - Tp - B, fill: "transparent" }, svg);
+    function at(clientX) {
+      var box = svg.getBoundingClientRect(), x = (clientX - box.left) / box.width * W;
+      var t = t0 + Math.max(0, Math.min(1, (x - Lm) / (W - Lm - R))) * (t1 - t0);
+      var spots = series.map(function (s) {
+        if (!s.length || t < s[0].t - 60000 || t > s[s.length - 1].t + 60000) return null;
+        var best = s[0];
+        s.forEach(function (q) { if (Math.abs(q.t - t) < Math.abs(best.t - t)) best = q; });
+        return best.p;
+      });
+      var px = PX(t);
+      cursor.setAttribute("x1", px.toFixed(1)); cursor.setAttribute("x2", px.toFixed(1)); cursor.setAttribute("visibility", "visible");
+      var inAir = spots.filter(Boolean).length;
+      label.textContent = timeText(new Date(t).toISOString()) + " · " + text("activity.dayInAir", { n: inAir });
+      label.setAttribute("x", (px > W * 0.7 ? px - 6 : px + 6).toFixed(1)); label.setAttribute("text-anchor", px > W * 0.7 ? "end" : "start"); label.setAttribute("visibility", "visible");
+      onSpots(spots);
+    }
+    svg.addEventListener("pointermove", function (e) { at(e.clientX); });
+    svg.addEventListener("pointerdown", function (e) { at(e.clientX); });
+    svg.addEventListener("pointerleave", function () { cursor.setAttribute("visibility", "hidden"); label.setAttribute("visibility", "hidden"); onSpots(null); });
+    wrap.appendChild(make("p", "activity-note", text("activity.dayCurveNote")));
+  }
   function renderLog(data, sites) {
-    var FS = globalThis.FlyingSites, rows = logRows(data, sites), out = [];
+    var FS = globalThis.FlyingSites, rows = logRows(data, sites).slice(0, 60), out = [];
     if (!rows.length) { out.push(make("p", "muted", text("activity.logNone"))); return out; }
-    var wrap = table(rows.slice(0, 60), [
+    var wrap = table(rows, [
       ["colStart", function (r) { return dateText(r.day) + " " + timeText(r.start); }], ["colMinutes", function (r) { return r.minutes; }],
       ["colHighest", function (r) { return r.maxAlt != null ? text("activity.masl", { m: r.maxAlt }) : "–"; }],
       ["colFarthest", function (r) { return r.maxDist != null ? FS.formatNumber(r.maxDist, 1) + " km" : "–"; }],
     ], text("activity.logTitle"));
     var detail = make("div", "activity-log-holder");
     var trs = wrap.querySelectorAll("tbody tr");
-    rows.slice(0, 60).forEach(function (r, i) {
+    rows.forEach(function (r, i) {
       var tr = trs[i];
       tr.className = "activity-log-row";
       tr.tabIndex = 0;
       tr.setAttribute("role", "button");
-      var open = function () { renderLogDetail(detail, r); };
+      var open = function () { renderLogDetail(detail, r, rows); };
       tr.addEventListener("click", open);
       tr.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); open(); } });
     });
     out.push(wrap, detail);
-    var wanted = /^#tur-([0-9a-f]+)$/.exec(location.hash || "");
-    if (wanted) { var f = rows.filter(function (r) { return r.id === wanted[1]; })[0]; if (f) setTimeout(function () { renderLogDetail(detail, f); }, 0); }
+    var wanted = /^#tur-([0-9a-f]+)$/.exec(location.hash || ""), wantedDay = /^#dag-(\d{4}-\d{2}-\d{2})$/.exec(location.hash || "");
+    if (wanted) { var f = rows.filter(function (r) { return r.id === wanted[1]; })[0]; if (f) setTimeout(function () { renderLogDetail(detail, f, rows); }, 0); }
+    if (wantedDay && rows.some(function (r) { return r.day === wantedDay[1]; })) setTimeout(function () { renderDayDetail(detail, wantedDay[1], rows); }, 0);
     return out;
   }
   function initLog() {

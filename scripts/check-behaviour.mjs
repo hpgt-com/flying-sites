@@ -48,7 +48,11 @@ function flightLogNow() {
   const t = (m) => new Date(start + m * 60000).toISOString();
   const heia = [[t(0), 68.7589, 16.5103, 480, 8, 1.2], [t(2), 68.7620, 16.5050, 700, 9, 1.5], [t(4), 68.7680, 16.4980, 950, 10, 0.8], [t(6), 68.7720, 16.4900, 900, 11, -0.5], [t(8), 68.7760, 16.4830, 640, 9, -1.2]];
   const car = [[t(60), 68.5600, 17.5000, 60, 14, 0], [t(62), 68.5750, 17.4700, 55, 20, 0]];
+  // Two more from Heia at the same time, so the day view has three flights to show together.
+  const shift = (pts, dm, dlon, dalt) => pts.map((p) => [new Date(Date.parse(p[0]) + dm * 60000).toISOString(), p[1], p[2] + dlon, p[3] + dalt, p[4], p[5]]);
   return { dataset: "flight-log", source: "OGN", license: "ODbL", fetched: new Date().toISOString(), days: 31, flights: [
+    { id: "a1b2c3d4e5f6", day: t(5).slice(0, 10), site: "heia", start: t(5), end: t(13), minutes: 9, maxAlt: 1010, maxDist: 2.5, maxSpeed: 12, counted: true, points: shift(heia, 5, 0.004, 60) },
+    { id: "b2c3d4e5f6a7", day: t(3).slice(0, 10), site: "heia", start: t(3), end: t(11), minutes: 9, maxAlt: 900, maxDist: 2.0, maxSpeed: 10, counted: true, points: shift(heia, 3, -0.004, -50) },
     { id: "f1e2d3c4b5a6", day: t(0).slice(0, 10), site: "heia", start: t(0), end: t(8), minutes: 10, maxAlt: 950, maxDist: 2.3, maxSpeed: 11, counted: true, points: heia },
     { id: "0a1b2c3d4e5f", day: t(60).slice(0, 10), site: "haugfjellet", start: t(60), end: t(62), minutes: 4, maxAlt: 60, maxDist: 2.1, maxSpeed: 20, counted: false, points: car },
   ] };
@@ -359,8 +363,30 @@ const scenarios = {
     await page.goto(`${origin}/flyaktivitet/`, { waitUntil: "load" });
     await page.locator("#activity-log:not([hidden])").waitFor({ timeout: 5000 }).catch(() => problems.push("«Siste turer» kom ikke"));
     const rows = page.locator("#activity-log tbody tr");
-    if ((await rows.count()) !== 1) problems.push(`${await rows.count()} rader i «Siste turer», ventet 1 (bilturen skal ikke vises)`);
+    if ((await rows.count()) !== 3) problems.push(`${await rows.count()} rader i «Siste turer», ventet 3 (bilturen skal ikke vises)`);
+    // Previous and next: from the newest, «Forrige» goes back in time; the newest has no «Neste».
     await rows.first().click();
+    await page.locator("#tur-a1b2c3d4e5f6").waitFor({ timeout: 5000 }).catch(() => problems.push("den nyeste turen åpnet seg ikke"));
+    if (!(await page.locator(".activity-log-nav button", { hasText: "Neste" }).isDisabled())) problems.push("«Neste» er ikke slått av på den nyeste turen");
+    await page.locator(".activity-log-nav button", { hasText: "Forrige" }).click();
+    await page.locator("#tur-b2c3d4e5f6a7").waitFor({ timeout: 5000 }).catch(() => problems.push("«Forrige» gikk ikke til turen før"));
+    if (!page.url().endsWith("#tur-b2c3d4e5f6a7")) problems.push(`adressen følger ikke turen: ${page.url()}`);
+    // All three that day on one map, with three curves; the pointer marks where they were.
+    await page.locator(".activity-log-nav button", { hasText: "Alle 3 turer" }).click();
+    const dayCard = page.locator("[id^='dag-']");
+    await dayCard.locator(".activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("dagsvisningen fikk ikke kart"));
+    if ((await dayCard.locator(".activity-day-list li").count()) !== 3) problems.push("dagsvisningen lister ikke tre turer");
+    if ((await dayCard.locator("path.activity-curve__day").count()) !== 3) problems.push("dagsvisningen har ikke tre høydekurver");
+    const dc = dayCard.locator("svg.activity-curve");
+    await dc.scrollIntoViewIfNeeded();
+    const db = await dc.boundingBox();
+    await page.mouse.move(db.x + db.width * 0.55, db.y + db.height * 0.5);
+    await page.mouse.move(db.x + db.width * 0.6, db.y + db.height * 0.5);
+    const dl = await dc.locator(".activity-curve__label").textContent();
+    if (!/i lufta/.test(dl || "")) problems.push(`dagskurven viser ikke hvor mange som var i lufta: ${dl}`);
+    // Back to one flight from the list in the day view.
+    await dayCard.locator(".activity-day-open").last().click();
+    await rows.nth(2).click();
     await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("turen fikk ikke kart"));
     if ((await page.locator("#tur-f1e2d3c4b5a6 .leaflet-interactive").count()) < 5) problems.push("sporet er ikke tegnet på kartet");
     const curve = page.locator("#tur-f1e2d3c4b5a6 svg.activity-curve");
@@ -374,16 +400,16 @@ const scenarios = {
       const label = await curve.locator(".activity-curve__label").last().textContent();
       if (!/moh/.test(label || "")) problems.push(`høydekurven viser ikke høyden: ${label}`);
     }
-    // Opened by its link from the site page.
+    // Opened by its link from the site page (the newest flight from Heia is first).
     await page.goto(`${origin}/flysteder/heia/`, { waitUntil: "load" });
     const link = page.locator(".flights-recent a").first();
     await link.waitFor({ timeout: 5000 }).catch(() => problems.push("stedssiden har ingen «Siste turer herfra»"));
     const href = await link.getAttribute("href").catch(() => null);
     const target = href ? new URL(href, origin) : null;
-    if (target && target.pathname + target.hash !== "/flyaktivitet/#tur-f1e2d3c4b5a6") problems.push(`lenken fra stedssiden går til ${href}`);
+    if (target && target.pathname + target.hash !== "/flyaktivitet/#tur-a1b2c3d4e5f6") problems.push(`lenken fra stedssiden går til ${href}`);
     if (target) {
       await page.goto(target.href, { waitUntil: "load" });
-      await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("lenken åpnet ikke turen"));
+      await page.locator("#tur-a1b2c3d4e5f6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("lenken åpnet ikke turen"));
     }
     await context.close();
     return [...problems, ...errors];

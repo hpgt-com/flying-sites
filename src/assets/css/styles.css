@@ -1928,6 +1928,22 @@ body.sheet-open { overflow: hidden; }
 .activity-log-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
 .activity-log-head h3 { margin: 0; font-size: 17px; }
 .activity-log-head .btn { width: auto; flex: 0 0 auto; }
+.activity-log-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.activity-log-nav .btn:disabled { opacity: .45; cursor: default; }
+/* «Alle turer denne dagen»: one colour per flight, the same on the map, the list and the curves. */
+.activity-day-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.activity-day-list li { display: flex; align-items: center; gap: 8px; }
+.activity-day-open { background: none; border: 0; padding: 2px 0; color: var(--link, var(--fjord)); text-decoration: underline; cursor: pointer; font: inherit; text-align: left; }
+.activity-day-swatch { width: 22px; height: 6px; border-radius: 3px; border: 1px solid #1C2B33; flex: 0 0 auto; }
+.activity-curve__day { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+.activity-day-swatch--0 { background: #FFD23F; } .activity-curve__day--0 { stroke: #C9A000; }
+.activity-day-swatch--1 { background: #4FB3BF; } .activity-curve__day--1 { stroke: #2E8F9B; }
+.activity-day-swatch--2 { background: #E8743A; } .activity-curve__day--2 { stroke: #C85A20; }
+.activity-day-swatch--3 { background: #B57EDC; } .activity-curve__day--3 { stroke: #9157BD; }
+.activity-day-swatch--4 { background: #7BC86C; } .activity-curve__day--4 { stroke: #4E9E40; }
+.activity-day-swatch--5 { background: #F06292; } .activity-curve__day--5 { stroke: #D03E70; }
+.activity-day-swatch--6 { background: #90A4AE; } .activity-curve__day--6 { stroke: #6A808A; }
+.activity-day-swatch--7 { background: #FFB74D; } .activity-curve__day--7 { stroke: #D98E20; }
 .activity-log-map { height: 340px; border-radius: var(--radius); overflow: hidden; }
 .activity-curve { width: 100%; height: auto; display: block; cursor: crosshair; touch-action: none; }
 .activity-curve text { font-size: 11px; fill: var(--muted); }
