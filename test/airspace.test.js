@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { applyManualAirspace } from "../lib/airspace.js";
+import { fetchRegion } from "../lib/airspace.js";
 
 const fetched = [
   { name: "Evenes TMA", type: "TMA", lower: { value: 4500, unit: "FT", ref: "MSL" } },
@@ -23,4 +24,16 @@ test("a line with only name and note matches the airspace with the same name", (
 test("a line with a type does not match on name alone", () => {
   const out = applyManualAirspace(fetched, [{ name: "Evenes CTR", type: "TMA", lower: { value: 2500, unit: "FT" }, note: "x" }]);
   assert.equal(out[1].note, undefined);
+});
+
+test("openAIP: a refused key gives openAIP's own reason and a hint about OPENAIP_API_KEY", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("Forbidden: API key expired", { status: 403 });
+  try {
+    await assert.rejects(() => fetchRegion(68.9, 17.3, 1000, "k"), /openAIP svarte 403: Forbidden: API key expired\. Sjekk at OPENAIP_API_KEY/);
+    globalThis.fetch = async () => new Response("", { status: 500 });
+    await assert.rejects(() => fetchRegion(68.9, 17.3, 1000, "k"), (e) => e.message === "openAIP svarte 500.");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
