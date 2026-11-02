@@ -31,6 +31,8 @@ test("openAIP: a refused key gives openAIP's own reason and a hint about OPENAIP
   globalThis.fetch = async () => new Response("Forbidden: API key expired", { status: 403 });
   try {
     await assert.rejects(() => fetchRegion(68.9, 17.3, 1000, "k"), /openAIP svarte 403: Forbidden: API key expired\. Sjekk at OPENAIP_API_KEY/);
+    globalThis.fetch = async () => new Response('<!doctype html><title>403</title>403 Forbidden<a href="https://api.core.openaip.net/cdn-cgi/content?id=x">', { status: 403 });
+    await assert.rejects(() => fetchRegion(68.9, 17.3, 1000, "k"), /fra Cloudflare foran openAIP: .*ikke på grunn av nøkkelen/, "a Cloudflare block is told apart from a bad key");
     globalThis.fetch = async () => new Response("", { status: 500 });
     await assert.rejects(() => fetchRegion(68.9, 17.3, 1000, "k"), (e) => e.message === "openAIP svarte 500.");
   } finally {
