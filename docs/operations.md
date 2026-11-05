@@ -5,7 +5,7 @@ Practical how-tos for those who maintain the site. How the site fits together is
 
 ## Running the site locally
 
-Requires Node.js 22.22 or later (html-validate needs it).
+Requires Node.js 26 or later (the version in `.nvmrc`, which CI uses; Node 26 is LTS until April 2029).
 
 ```bash
 npm ci          # install the packages

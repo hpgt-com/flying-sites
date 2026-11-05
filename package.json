@@ -23,7 +23,7 @@
     "check:budget": "node scripts/check-budget.mjs"
   },
   "engines": {
-    "node": ">=22.22"
+    "node": ">=26"
   },
   "license": "MIT",
   "devDependencies": {
