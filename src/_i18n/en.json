@@ -331,8 +331,7 @@
     "menuLink": "Flying activity",
     "menuSub": "Flights per site",
     "loading": "Fetching the numbers …",
-    "noScript": "The numbers are fetched with JavaScript. Turn it on to see them."
-,
+    "noScript": "The numbers are fetched with JavaScript. Turn it on to see them.",
     "logTitle": "Latest flights",
     "logIntro": "Every flight OGN has seen in the last 30 days, with the positions heard (one a minute). Choose a flight to see it on the map. Flights that were never in the air, such as a car or a walk with the app on, are left out. No device or pilot is stored."
   },
@@ -909,12 +908,15 @@
     "privacyThirdParty": "Maps, satellite imagery, thermals, radar and the Yr meteogram are loaded from the services that make them, and they see your IP address, as with any website. The fonts are served from the site itself.",
     "privacyReport": "«Report a change» on the site pages sends what you write to the club as a public issue on GitHub, with your name only if you write it. Cloudflare Turnstile checks that it is not a robot, and is loaded only when you open the form. The data service counts the reports per day, and per sender as a code made from the IP address (a hash, not the address itself). The code is deleted the next day.",
     "privacyData": "The forecast and the measurements are fetched from the club's own data service on Cloudflare, which sees your IP address like other websites. It stores only weather data (the measurements for 7 days, older ones in an archive), nothing about you.",
-    "privacyNoAccount": "The site has no login or account. Apart from what you send yourself with «Report a change», it stores no personal data about you.",
+    "privacyNoAccount": "The site has no login or account. Apart from what you send yourself with «Report a change», and the OGN tracks above, it stores no data about you.",
     "dataTitle": "Open data",
     "changesTitle": "Errors or new information?",
     "changes": "Use the form at the bottom of the site's page, or {form} in the menu for what does not concern one site. It becomes an issue for the club, without you needing an account. You can also tell someone in the club, or open an issue yourself on {github}.",
-    "sourceOgn": "an open network that collects positions from flying equipment (ODbL). The map layer «Pilots in the air» shows paraglider and speed-flying pilots who share their position with OGN from their app or vario while they fly. We only fetch data from OGN: if you use an app such as pgpilot, XCTrack or Flyskyhy, or a vario, you are only included if it shares your position with OGN. Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory. For «Flying activity» on the site pages, the flights from each site are counted; only the sums per site and day are stored. To tell the day's pilots apart, a random code per device and the last position in the air are kept until the next day, and then deleted. To see whether a pilot is still in the air, Kartverket is asked for the terrain height where the pilot was last seen.",
-    "news": "See {link} for what is new, how to use it, and what is planned."
+    "sourceOgn": "an open network that collects positions from flying equipment (ODbL). The map layer «Pilots in the air» shows paraglider and speed-flying pilots who share their position with OGN from their app or vario while they fly. We only fetch data from OGN: if you use an app such as pgpilot, XCTrack or Flyskyhy, or a vario, you are only included if it shares your position with OGN. Pilots who have opted out in OGN are not shown, and those who do not want to be identified are shown as «Unknown». The track over the last 10 minutes is only held in memory. For «Flying activity», the flights from each site are counted and kept as described under Privacy below. To tell the day's pilots apart, a random code per device and the last position in the air are kept until the next day, and then deleted. To see whether a pilot is still in the air, Kartverket is asked for the terrain height where the pilot was last seen.",
+    "news": "See {link} for what is new, how to use it, and what is planned.",
+    "privacyFlights": "Flying activity is built on the positions the Open Glider Network (OGN) shows openly. The data service keeps each flight from our flying sites with the site, time, height and the positions heard (one a minute) for 120 days, and the sums per site and day. It keeps no device id, name or anything else that says who flew, and trips that never got 50 m above the ground (a car, a bike, a walk) are not kept. If you do not want to be included, turn off sharing with OGN in your app or vario, or mark your device «no tracking» in {ddb}. We follow that, as {rules} require.",
+    "ognDdb": "OGN's device database",
+    "ognRules": "OGN's data usage rules"
   },
   "report": {
     "title": "Report a change",
