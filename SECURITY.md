@@ -135,7 +135,10 @@ GitHub in autumn 2026.
   - Require a pull request before merging, Required approvals = 0 as long as one person merges alone.
   - Require status checks to pass: `build`, `dependency-review`, `workflow-security`, `accessibility` and `worker`
     (the data service's dry run), with source GitHub Actions.
-    «Require branches to be up to date» off. A check can only be selected once it has run recently.
+    «Require branches to be up to date before merging» on (from 16.11.2026; OpenSSF Scorecard asks for it): a PR is
+    tested against the latest `main` before it is merged, so two PRs that are green on their own cannot break `main`
+    together. The price: when another PR has been merged in the meantime, press «Update branch» and wait for the checks
+    again. A check can only be selected once it has run recently.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
     (once CodeQL has run on `main`).
   - Bypass list: Repository admin, «For pull requests only». Without the GitHub App (see docs/operations.md),
