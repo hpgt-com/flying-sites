@@ -60,6 +60,8 @@ eleventyComputed:
       <li>{{ t.about.privacyThirdParty }}</li>
       <li>{{ t.about.privacyReport }}</li>
       <li>{{ t.about.privacyData }}</li>
+      {#- Flyaktivitet: what is kept from OGN (sources/flights.js), and how a pilot avoids being counted. -#}
+      <li>{{ t.about.privacyFlights | fmt({ ddb: '<a href="https://ddb.glidernet.org/" target="_blank" rel="noopener">' ~ t.about.ognDdb ~ ext ~ '</a>', rules: '<a href="https://www.glidernet.org/ogn-data-usage/" target="_blank" rel="noopener">' ~ t.about.ognRules ~ ext ~ '</a>' }) | safe }}</li>
       <li>{{ t.about.privacyNoAccount }}</li>
     </ul>
   </section>
