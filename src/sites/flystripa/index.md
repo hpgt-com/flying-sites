@@ -8,7 +8,7 @@ external:
   flightlog_id: null
   yr_id: 1-294034
 level: null
-training_site: false
+training_site: true
 categories:
 - WINCH
 - PPG
@@ -67,7 +67,7 @@ links:
   url: https://hpgt-web.hpgt.workers.dev/for-piloter/flystripa/
 ---
 
-Flystripa på Åsegarden, på Reinmoen øvingsområde, er klubbens sted for vinsjing og paramotor. Klubben har avtale med Forsvarsbygg om bruken.
+Flystripa på Åsegarden, på Reinmoen øvingsområde, er klubbens sted for vinsjing og paramotor, og brukes også som skoleplass for vinsjopptrekk og paramotor. Klubben har avtale med Forsvarsbygg om bruken.
 
 ## Start
 
