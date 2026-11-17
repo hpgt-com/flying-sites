@@ -95,8 +95,8 @@ scripts:
         <div class="filter">
           <span class="filter__title" id="f-category">{{ t.home.category }}</span>
           <div class="pills" role="group" aria-labelledby="f-category">
-            {% for value in ["", "PG", "SPG", "PPG"] %}
-            <button type="button" class="pill" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ value or t.home.all }}</button>
+            {% for value in ["", "PG", "SPG", "PPG", "WINCH"] %}
+            <button type="button" class="pill" data-filter="category" data-value="{{ value }}" aria-pressed="{{ 'true' if not value else 'false' }}">{{ (t.js.categories[value] or value) if value else t.home.all }}</button>
             {% endfor %}
           </div>
         </div>
