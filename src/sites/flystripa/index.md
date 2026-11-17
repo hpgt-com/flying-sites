@@ -12,7 +12,7 @@ training_site: true
 categories:
 - WINCH
 - PPG
-season: null
+season: Vår til høst, når stripa er bar
 wind_directions:
   primary:
   - E
