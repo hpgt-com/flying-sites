@@ -50,7 +50,7 @@ elevation:
 airspace: []
 hazards:
 - title: Militært øvingsområde
-  text: Flystripa ligger på Reinmoen øvingsområde. Forsvaret går alltid foran, og all bruk skal varsles og avklares med Forsvaret senest to dager før. Les reglene for Flystripa før du flyr.
+  text: Flystripa ligger på Reinmoen øvingsområde. Bruken avklares med Forsvaret på forhånd, senest to dager før, men Forsvaret går alltid foran om det likevel er aktivitet på stedet. Les reglene for Flystripa før du flyr.
 - title: Elva og skogen
   text: Elva og skogen langs stripa er det du må passe deg for ved avgang. Ellers er det få farer på stedet.
 launches:
