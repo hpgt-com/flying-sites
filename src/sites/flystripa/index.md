@@ -64,7 +64,7 @@ launches:
 links:
 - title: Regler for Flystripa
   text: Avtalen med Forsvarsbygg, varsling og regler for vinsj og paramotor.
-  url: https://hpgt-web.hpgt.workers.dev/for-piloter/flystripa/
+  url: https://hpgt.com/for-piloter/flystripa/
 ---
 
 Flystripa på Åsegarden, på Reinmoen øvingsområde, er klubbens sted for vinsjing og paramotor, og brukes også som skoleplass for vinsjopptrekk og paramotor. Klubben har avtale med Forsvarsbygg om bruken.
