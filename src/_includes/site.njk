@@ -48,7 +48,7 @@ scripts:
         {% if elevation and elevation.launch_masl %}<li>{{ elevation.launch_masl }} {{ t.units.masl }}</li>{% endif %}
         {% if elevation and elevation.difference_m %}<li>{{ t.site.heightDown | fmt({ m: elevation.difference_m }) }}</li>{% endif %}
         {% if level %}<li>{{ level }}</li>{% else %}<li class="hero__chip--muted">{{ t.site.levelNotSet }}</li>{% endif %}
-        {% if categories.length %}<li>{{ categories | join(" · ") }}</li>{% endif %}
+        {% if categories.length %}<li>{% for c in categories %}{{ t.js.categories[c] or c }}{% if not loop.last %} · {% endif %}{% endfor %}</li>{% endif %}
         {% if training_site %}<li>{{ t.common.trainingSite }}</li>{% endif %}
         {% if season %}<li>{{ local.season }}</li>{% endif %}
         {% if notReviewed %}<li class="hero__chip--warn">{{ t.common.notReviewed }}</li>{% endif %}
@@ -230,7 +230,7 @@ scripts:
             <span class="launch-list__badges">
               {% for code in group.directions %}{{ m.directionBadge(code, wind_directions) }}{% endfor %}
             </span>
-            {% if hasLaunchCategories %}<span class="launch-list__categories">{% for c in group.categories %}{{ m.tag(c) }}{% endfor %}</span>{% endif %}
+            {% if hasLaunchCategories %}<span class="launch-list__categories">{% for c in group.categories %}{{ m.tag(t.js.categories[c] or c) }}{% endfor %}</span>{% endif %}
             <span class="launch-list__texts">{% for t in group.texts %}<span>{{ t }}</span>{% endfor %}</span>
           </li>
           {% endfor %}

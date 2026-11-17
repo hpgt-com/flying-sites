@@ -29,7 +29,7 @@ Keys are in English; values and text are in Norwegian. Empty fields are written 
 | `external` | `flightlog_id`, `yr_id` (the Yr location nearest the launch). |
 | `level` | `PP2`–`PP5`. See [Level](#level). |
 | `training_site` | `true` for a training site. |
-| `categories` | `PG`, `SPG`, `PPG`. |
+| `categories` | `PG`, `SPG`, `PPG`, `WINCH` (vinsj). Shown as «Vinsj» / «Winch». |
 | `season` | Free text, for example «Vår til høst». |
 | `wind_directions` | `primary` (main directions), `possible` and `source`. Codes: `N NE E SE S SW W NW`. |
 | `wind_limits` | `max_wind` in m/s, when the site tolerates less than the shared limit (7 m/s). Used in the wind assessment. `soar_min_wind` in m/s: about how much wind it takes to stay up (soar) at the site, for example a coastal ridge. Never changes the rating, since the site can be flown without it (a flight down): below it the assessment only adds «Under 4 m/s: nok til en tur ned, men trolig for lite til å henge her», and the site page says how much it takes. Must be below `max_wind` (or 7). |

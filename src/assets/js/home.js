@@ -50,7 +50,7 @@
     var e = FS.escapeHtml;
     var html = site.level ? '<span class="tag">' + site.level + "</span>" : '<span class="tag tag--missing">' + e(FS.t("home.levelNotSet")) + "</span>";
     if (site.trainingSite) html += '<span class="tag">' + e(FS.t("home.trainingSite")) + "</span>";
-    site.categories.forEach(function (c) { html += '<span class="tag">' + c + "</span>"; });
+    site.categories.forEach(function (c) { html += '<span class="tag">' + e(FS.t("categories." + c)) + "</span>"; });
     if (!site.reviewed) html += '<span class="tag tag--warning">' + e(FS.t("home.notReviewed")) + "</span>";
     return html;
   }
@@ -778,7 +778,7 @@
       return chip(FS.DIRECTION_LABELS[d], function () { FS.track("filter/chip/direction"); setFilter("direction", d); });
     });
     ["level", "category"].forEach(function (type) {
-      if (filter[type]) chips.push(chip(filter[type], function () { FS.track("filter/chip/" + type); setFilter(type, ""); }));
+      if (filter[type]) chips.push(chip(type === "category" ? FS.t("categories." + filter[type]) : filter[type], function () { FS.track("filter/chip/" + type); setFilter(type, ""); }));
     });
     if (suggest) chips.push(chip(FS.t("home.suggestChip"), function () { FS.track("filter/chip/suggest"); setSuggest(false); }));
     chipsEl.replaceChildren.apply(chipsEl, chips);

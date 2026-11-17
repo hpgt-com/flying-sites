@@ -877,6 +877,12 @@
     "help": {
       "howToRead": "How to read this",
       "howCounted": "How the flights are counted"
+    },
+    "categories": {
+      "PG": "PG",
+      "SPG": "SPG",
+      "PPG": "PPG",
+      "WINCH": "Winch"
     }
   },
   "about": {

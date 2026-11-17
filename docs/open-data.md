@@ -92,7 +92,7 @@ build) and `license`.
 | `directions_primary` | Main wind directions, in compass order. |
 | `directions_possible` | Directions that can work but are less ideal. |
 | `launch_groups` | `[{ categories, directions }]`, one entry per distinct launch type. |
-| `categories` | `PG` (paragliding), `SPG` (speedflying), `PPG` (paramotor). |
+| `categories` | `PG` (paragliding), `SPG` (speedflying), `PPG` (paramotor), `WINCH` (winch towing). |
 | `level` | Required Norwegian pilot rating: `PP2`, `PP3`, `PP4` or `PP5`. `null` when not set. |
 | `training_site` | `true` when the site is used for training. |
 | `elevation_m` | Launch height above sea level, in metres (mostly from Kartverket's terrain model). |
