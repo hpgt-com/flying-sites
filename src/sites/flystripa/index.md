@@ -47,7 +47,10 @@ elevation:
   landing_masl: 99
   difference_m: 0
   source: kartverket
-airspace: []
+airspace:
+- name: Evenes TMA2
+  nearby: true
+  note: Over stripa er nedre grense 4500 fot (Evenes TMA1), som for Kilhusåsen. TMA2, med nedre grense 2500 fot, begynner bare 0,6 km unna.
 hazards:
 - title: Militært øvingsområde
   text: Flystripa ligger på Reinmoen øvingsområde. Bruken avklares med Forsvaret på forhånd, senest to dager før, men Forsvaret går alltid foran om det likevel er aktivitet på stedet. Les reglene for Flystripa før du flyr.

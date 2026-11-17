@@ -16,6 +16,8 @@ access:
 links:
   - title: Rules for the airstrip
     text: The agreement with Forsvarsbygg, notification and rules for winch and paramotor (in Norwegian).
+airspace:
+  - note: Over the strip the floor is 4500 ft (Evenes TMA1), as at Kilhusåsen. TMA2, with a floor of 2500 ft, starts only 0.6 km away.
 season: Spring to autumn, when the strip is free of snow
 ---
 
