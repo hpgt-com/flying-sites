@@ -51,6 +51,8 @@ airspace: []
 hazards:
 - title: Militært øvingsområde
   text: Flystripa ligger på Reinmoen øvingsområde. Forsvaret går alltid foran, og all bruk skal varsles og avklares med Forsvaret senest to dager før. Les reglene for Flystripa før du flyr.
+- title: Elva og skogen
+  text: Elva og skogen langs stripa er det du må passe deg for ved avgang. Ellers er det få farer på stedet.
 launches:
 - directions:
   - E
@@ -58,7 +60,7 @@ launches:
   categories:
   - WINCH
   - PPG
-  text: Opptrekk med elektrisk vinsj, og start med paramotor. Bare etter avtalen klubben har med Forsvarsbygg.
+  text: Opptrekk med elektrisk vinsj, og start med paramotor, mot vinden langs stripa. Med paramotor kan det også startes i andre retninger når det er lite vind. Bare etter avtalen klubben har med Forsvarsbygg.
 links:
 - title: Regler for Flystripa
   text: Avtalen med Forsvarsbygg, varsling og regler for vinsj og paramotor.
@@ -69,7 +71,7 @@ Flystripa på Åsegarden, på Reinmoen øvingsområde, er klubbens sted for vins
 
 ## Start
 
-Opptrekk med elektrisk vinsj og start med paramotor skjer fra stripa. Det er bare lov etter avtalen med Forsvarsbygg, og bruken skal varsles til Forsvaret senest to dager før. Stripa brukes i begge retninger. Ved østlig vind starter vinsjingen fra motsatt ende. Vinsjing krever også NOTAM.
+Opptrekk med elektrisk vinsj og start med paramotor skjer fra stripa. Det er bare lov etter avtalen med Forsvarsbygg, og bruken skal varsles til Forsvaret senest to dager før. Hovedretningen er mot vinden langs stripa, og stripa brukes begge veier: ved østlig vind starter vinsjingen fra motsatt ende. Med paramotor kan det også startes i andre retninger når det er lite vind. Pass på elva og skogen ved avgang. Vinsjing krever også NOTAM.
 
 ## Landing
 
