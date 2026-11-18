@@ -324,7 +324,10 @@ the menu and is marked `noindex`. It shows per site:
   bucket is copied with rclone to the bucket `hpgt-flysteder-backup` at Backblaze B2 (another provider, so a lost
   Cloudflare account or bucket does not lose the data) under `archive/`, never deleting anything there (the B2 bucket
   keeps old versions too). The copy's `latest.json` of each table is then checked (`scripts/check-backup.mjs`,
-  `lib/backup-check.js`): present, parses as that table, from today or yesterday. The issues and their comments go to
+  `lib/backup-check.js`): present, parses as that table, from today or yesterday. Before that, `rclone check` confirms
+  that every file in R2 is in the copy with the same checksum, and after the upload the issues and the Git bundle are
+  checked in B2 too (the bundle at most 8 days old). Every step runs with `shell: bash` (pipefail), so a failing
+  rclone turns the run red instead of being hidden by `| tail`. The issues and their comments go to
   `github/` every night (the only copy of «Meld fra» outside GitHub) and the whole Git history as a bundle to
   `git/flying-sites.bundle` on Sundays (`git clone flying-sites.bundle` restores it). A failed night opens the issue
   «Backup: den nattlige kopien feilet», closed by the next good night. The keys are in the GitHub environment `backup`
@@ -463,6 +466,7 @@ set in `src/_data/photoCredit.json`.
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | Backblaze B2 (free plan; the account is on the club's address) with the bucket `hpgt-flysteder-backup` (private, EU region, lifecycle «keep prior versions for 90 days»: a file written again keeps its old version 90 days, files written once are kept for good) and the key `github-backup` (that bucket only, read and write, no expiry) | backblaze.com | The off-site copy of the archive, the backups, the issues and the code (`backup.yml`) |
 | `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (secrets); `B2_ENDPOINT`, `R2_ENDPOINT` (variables; `B2_BUCKET` and `R2_BUCKET` only when the names differ from the defaults in `backup.yml`) | flying-sites → Settings → Environments → `backup` (only `main`) | `backup.yml`. The R2 token (an account token, Object Read only, `hpgt-data-archive` only; made 18.11.2026 in place of the user token «github-backup-read») is made under R2 → Manage R2 API Tokens → Create Account API token |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY` (secrets, a read-only key); `B2_ENDPOINT` (variable; `B2_BUCKET` only when the name differs) | flying-sites → Settings → Environments → `backup-read` (only `main`) | `restore-drill.yml` and the fetch in `recover.yml`. A Backblaze application key with **Read Only** access to `hpgt-flysteder-backup` only, so the drill and a recovery cannot change or delete the copy |
 | UptimeRobot (free plan; the account is on the maintainer's e-mail, moved by changing it under My Settings → Account) | uptimerobot.com | Three monitors every five minutes: `https://flysteder.hpgt.com/` answers, `https://hpgt.com/` (the club's site) answers, and `/v1/status.json` on the data service contains `"ok":true`. E-mails the alert contacts when one fails and when it is back. |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 

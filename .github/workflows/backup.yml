@@ -3,8 +3,8 @@ name: Backup
 # The off-site copy, every night after the data service's own backup (02:14 UTC, workers/data/src/backup.js): the
 # whole archive bucket in R2 (measurements by day, the nightly backups of the history) is copied to a bucket at
 # another provider (Backblaze B2), so a lost Cloudflare account or bucket does not lose the data. The copy is then
-# checked (scripts/check-backup.mjs): the latest backup of each table must be there, parse, and be from today or
-# yesterday. The code and the issues go too: the issues as JSON every night, the whole Git history as a bundle on
+# checked: every file in R2 must be in the copy with the same checksum (rclone check), and the latest backup of each
+# table must be there, parse, and be from today or yesterday (scripts/check-backup.mjs). The code and the issues go too: the issues as JSON every night, the whole Git history as a bundle on
 # Sundays (and when run by hand). Nothing is ever deleted from the copy (rclone copy, not sync), and the bucket keeps
 # old versions, so a bad night cannot destroy a good copy. When something fails an issue is opened (a comment on the
 # open one when the message changes), closed when a night succeeds again. The keys are in the GitHub environment
@@ -29,6 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: backup
+    # shell: bash adds pipefail, so a failing rclone is not hidden by «| tail» (GitHub's default shell has no pipefail).
+    defaults:
+      run:
+        shell: bash
     permissions:
       contents: read
       issues: write
@@ -79,6 +83,10 @@ jobs:
         # 20 files a day: on 18.11.2026 two runs reached B2's free daily cap of 2 500. Now a run costs a few listings.
         run: rclone copy "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --checksum --transfers 8 --checkers 16 --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -20
 
+      - name: Sjekk at hele arkivet er kopiert
+        # Every file in R2 must be in the copy with the same checksum. Compares the listings only (Class C at B2).
+        run: rclone check "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --one-way --checksum --fast-list 2>&1 | tail -5
+
       - name: Sjekk kopien av sikkerhetskopien
         # The latest backup of each table is read back from the copy (not from R2), so what is checked is what a restore would use.
         run: |
@@ -103,6 +111,18 @@ jobs:
             git bundle verify out/git/flying-sites.bundle
           fi
           rclone copy out "b2:$B2_BUCKET" --checksum --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -5
+
+      - name: Sjekk sakene og koden i kopien
+        # What was just uploaded must be in B2 with the same checksum, and the Git bundle must be at most 8 days old
+        # (it is written on Sundays), so a missing week is noticed.
+        run: |
+          rclone check out "b2:$B2_BUCKET" --one-way --checksum --fast-list 2>&1 | tail -5
+          for f in issues.json issue-comments.json; do jq -e 'type == "array"' "out/github/$f" > /dev/null; done
+          modtime=$(rclone lsjson "b2:$B2_BUCKET/git/" --files-only --fast-list --use-server-modtime | jq -r '.[] | select(.Name == "flying-sites.bundle") | .ModTime')
+          [ -n "$modtime" ] || { echo "git/flying-sites.bundle mangler i kopien"; exit 1; }
+          age=$(( ( $(date -u +%s) - $(date -u -d "$modtime" +%s) ) / 86400 ))
+          echo "git/flying-sites.bundle: $age dager gammel"
+          [ "$age" -le 8 ] || { echo "git/flying-sites.bundle er $age dager gammel (grense 8)"; exit 1; }
 
       - name: Si fra når det feiler, og lukk saken når det går igjen
         if: always()
