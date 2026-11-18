@@ -73,8 +73,11 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone > /dev/null && rclone version | head -1
 
       - name: Kopier arkivet fra R2 til B2
-        # copy, never sync: nothing is deleted from the copy. Files already there with the same size and time are skipped.
-        run: rclone copy "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --transfers 8 --checkers 16 --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -20
+        # copy, never sync: nothing is deleted from the copy. Files already there with the same checksum are skipped.
+        # --checksum compares the MD5 (ETag) from the listings, so rclone never asks B2 for each file's modification time.
+        # Without it every run made one HEAD per file in the copy (a Class B transaction), and the archive grows by about
+        # 20 files a day: on 18.11.2026 two runs reached B2's free daily cap of 2 500. Now a run costs a few listings.
+        run: rclone copy "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --checksum --transfers 8 --checkers 16 --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -20
 
       - name: Sjekk kopien av sikkerhetskopien
         # The latest backup of each table is read back from the copy (not from R2), so what is checked is what a restore would use.
@@ -99,7 +102,7 @@ jobs:
             git bundle create out/git/flying-sites.bundle --all
             git bundle verify out/git/flying-sites.bundle
           fi
-          rclone copy out "b2:$B2_BUCKET" --stats-one-line --stats 0 -v 2>&1 | tail -5
+          rclone copy out "b2:$B2_BUCKET" --checksum --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -5
 
       - name: Si fra når det feiler, og lukk saken når det går igjen
         if: always()

@@ -328,7 +328,11 @@ the menu and is marked `noindex`. It shows per site:
   `github/` every night (the only copy of «Meld fra» outside GitHub) and the whole Git history as a bundle to
   `git/flying-sites.bundle` on Sundays (`git clone flying-sites.bundle` restores it). A failed night opens the issue
   «Backup: den nattlige kopien feilet», closed by the next good night. The keys are in the GitHub environment `backup`
-  (see [Accounts and secrets](#accounts-and-secrets)). **Restoring R2 from the copy** (a lost bucket): create the
+  (see [Accounts and secrets](#accounts-and-secrets)). The copy compares checksums from the listings
+  (`--checksum`), so a night costs a few Class C listings at B2 and no per-file Class B calls; B2's free daily caps
+  (2 500 Class B and 2 500 Class C transactions, under Caps & Alerts) are then far away. A full restore downloads every
+  file once, which is one Class B call per file: raise the Class B cap for that day (it costs fractions of a cent per 10 000) before running
+  «Recover» with `restore_archive`. **Restoring R2 from the copy** (a lost bucket): create the
   bucket, then from a machine with rclone and both keys: `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`;
   the data service then reads the history back in by itself within a minute of its store being empty (`store.js`
   `restore`).
@@ -619,3 +623,7 @@ staging Worker (`[env.staging]` in `wrangler.toml`) only if store migrations nee
 | An issue «Jobben «…» feilet» | A run failed (the job `alert` opens it, or comments on the open one). Open the run from the link, fix the cause, run the workflow again, and close the issue. |
 | «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Make a new one (see [Runbook](#runbook)) and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
 | The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |
+
+| Other message | Fix |
+|---|---|
+| E-mail from Backblaze: «Daily Class B Transactions Cap reached» | Something read many single files from B2 the same day (a restore, or several backup runs before `--checksum` was added on 18.11.2026). Transfers that need Class B fail until the cap resets at 00:00 UTC; the nightly copy runs after that. Raise the cap under Caps & Alerts if a restore is under way. |
