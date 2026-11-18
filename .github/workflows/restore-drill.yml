@@ -7,7 +7,8 @@ name: Restore drill
 # /v1/status.json reports. So what is proven each month is the copy, the files, and the restore code, together. The
 # schedule's other sources run too and fetch from MET, Holfuy and OGN once, as a deploy would. Fails and opens an
 # issue when the restore does not happen or the rows differ; the issue closes when a drill succeeds again. Needs the
-# B2 key from the environment «backup» (read only is enough here).
+# B2 key from the environment «backup-read»: a key that can only read the backup bucket, so the drill cannot change
+# the copy.
 
 on:
   schedule:
@@ -24,7 +25,10 @@ jobs:
   drill:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: backup
+    environment: backup-read
+    defaults:
+      run:
+        shell: bash
     permissions:
       contents: read
       issues: write

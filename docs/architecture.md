@@ -382,13 +382,15 @@ flowchart TB
     automation["automation<br/>openAIP key, GitHub App<br/>«HPGT Flying Sites»"]
     cloudflare["cloudflare<br/>token: publish Worker «data» only"]
     backupenv["backup<br/>R2 read-only + B2 bucket key"]
+    backupread["backup-read<br/>B2 read-only key"]
     recovery["recovery<br/>required reviewer<br/>token only during a recovery"]
   end
 
   subgraph wf["Workflows"]
     air["airspace.yml / obstacles.yml"]
     dw["data-worker.yml"]
-    bk["backup.yml / restore-drill.yml"]
+    bk["backup.yml"]
+    drillwf["restore-drill.yml"]
     rc["recover.yml"]
     dep["deploy.yml<br/>(no secrets: GitHub Pages)"]
   end
@@ -400,7 +402,8 @@ flowchart TB
   automation --> air
   cloudflare --> dw
   backupenv --> bk
-  backupenv --> rc
+  backupread --> drillwf
+  backupread --> rc
   recovery --> rc
   dw -. "publishes the Worker,<br/>never sees its secrets" .-> s
 ```

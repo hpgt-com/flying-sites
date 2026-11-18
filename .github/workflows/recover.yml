@@ -5,7 +5,7 @@ name: Recover
 # Before it: a recovery token and the account id in the environment «recovery» (see below), the bucket
 # hpgt-data-archive created, and the Worker's own secrets (HOLFUY_KEY, FROST_CLIENT_ID, TURNSTILE_SECRET,
 # REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY) set in Cloudflare from the password manager: they are deliberately not in
-# GitHub (SECURITY.md). Then this run: fetches the off-site copy from B2 (the environment «backup»), writes the
+# GitHub (SECURITY.md). Then this run: fetches the off-site copy from B2 (the environment «backup-read», a read-only key), writes the
 # archive back to R2 when asked (restore_archive), publishes the data service from main, waits until it runs, and
 # when the store is new (lost_store) checks that it read the history back in with exactly the rows in the copy.
 # Nothing here changes GitHub settings or the site; the site is republished by «Build and deploy».
@@ -42,7 +42,10 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: backup
+    environment: backup-read
+    defaults:
+      run:
+        shell: bash # pipefail, so a failing rclone is not hidden by «| tail»
     permissions:
       contents: read
     outputs:
@@ -103,6 +106,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: recovery
+    defaults:
+      run:
+        shell: bash
     permissions:
       contents: read
     env:
