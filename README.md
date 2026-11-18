@@ -27,9 +27,15 @@ Do you have corrections, photos or new information about a site?
 | [docs/open-data.md](docs/open-data.md) | The open data files (GeoJSON and KML): how each site is structured, the fields and the licence. For apps and other data users. |
 | [docs/architecture.md](docs/architecture.md) | How the site fits together, with diagrams: sources, build, browser, languages, publishing, what has been built and what is planned. |
 | [docs/site-files.md](docs/site-files.md) | The site file format: all fields, text, level, images, drawing and translation. |
+| [docs/adr/](docs/adr/README.md) | Architecture Decision Records: the important choices, why they were made and what was chosen instead. |
 | [docs/operations.md](docs/operations.md) | How-tos: new site, review, status page, wind forecast, airspace, images, statistics, new language, accounts and secrets, runbook, disaster recovery, troubleshooting. |
 | [SPEC.md](SPEC.md) | The specification: what the site shows, and how. |
 | [SECURITY.md](SECURITY.md) | Security: CSP, code scanning and GitHub settings. |
+
+The documentation is kept as code: it lives here, next to what it describes, the diagrams are Mermaid (text that
+GitHub renders), and it is changed in the same pull request as the code. Settings made in a dashboard (Cloudflare,
+GitHub, Backblaze) are written into [docs/operations.md](docs/operations.md) the same day. Larger choices get an ADR.
+Secrets are never written down, only where they live.
 
 ## Repository layout
 
