@@ -453,10 +453,11 @@ set in `src/_data/photoCredit.json`.
 | `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
 | `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: the robot check (the site key is public, in `src/_data/site.js`) |
 | GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token («GitHub – flying-sites»: Workers Scripts Edit, Workers R2 Storage Edit, Account Settings Read, in HPGT only, made 22.10.2026 with a year's TTL) expires in October 2027: make a new custom token with the same permissions under My Profile → API Tokens, update the secret, run «Data service» once, and delete the old token. |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token is an account token that can only publish the Worker `data`, made under Workers & Pages → data → Settings → Builds → «API token for external CI/CD» (listed under Manage Account → Account API Tokens). To roll it: make a new one there, update the secret, run «Data service» once, and delete the old token. |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `recovery` (only `main`, a required reviewer) | Only «Recover». Empty normally: the token (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, account HPGT only, a short TTL) is made when a recovery needs it and deleted afterwards. See [Disaster recovery](#disaster-recovery). |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | Backblaze B2 (free plan; the account is on the club's address) with the bucket `hpgt-flysteder-backup` (private, EU region, lifecycle «keep prior versions for 90 days»: a file written again keeps its old version 90 days, files written once are kept for good) and the key `github-backup` (that bucket only, read and write, no expiry) | backblaze.com | The off-site copy of the archive, the backups, the issues and the code (`backup.yml`) |
-| `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (secrets); `B2_ENDPOINT`, `R2_ENDPOINT` (variables; `B2_BUCKET` and `R2_BUCKET` only when the names differ from the defaults in `backup.yml`) | flying-sites → Settings → Environments → `backup` (only `main`) | `backup.yml`. The R2 token («github-backup-read», account token, Object Read only, `hpgt-data-archive` only, no expiry) is made under R2 → Manage R2 API Tokens |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (secrets); `B2_ENDPOINT`, `R2_ENDPOINT` (variables; `B2_BUCKET` and `R2_BUCKET` only when the names differ from the defaults in `backup.yml`) | flying-sites → Settings → Environments → `backup` (only `main`) | `backup.yml`. The R2 token (an account token, Object Read only, `hpgt-data-archive` only; made 18.11.2026 in place of the user token «github-backup-read») is made under R2 → Manage R2 API Tokens → Create Account API token |
 | UptimeRobot (free plan; the account is on the maintainer's e-mail, moved by changing it under My Settings → Account) | uptimerobot.com | Three monitors every five minutes: `https://flysteder.hpgt.com/` answers, `https://hpgt.com/` (the club's site) answers, and `/v1/status.json` on the data service contains `"ok":true`. E-mails the alert contacts when one fails and when it is back. |
 | GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
 
@@ -493,10 +494,12 @@ every publish is built from Git.
 **A secret or token may have leaked, or has expired.** Roll it where it lives (the table under
 [Accounts and secrets](#accounts-and-secrets)), and nothing else needs to change:
 
-- `CLOUDFLARE_API_TOKEN`: a new custom token under My Profile → API Tokens (Workers Scripts: Edit, Workers R2
-  Storage: Edit, Account Settings: Read, account HPGT only), then the environment `cloudflare` in GitHub, run «Data
-  service» once, and delete the old token. Expires in October 2027; «Data service» then fails with an authentication
+- `CLOUDFLARE_API_TOKEN` in `cloudflare`: a new token from the Worker (Workers & Pages → data → Settings → Builds →
+  «API token for external CI/CD»), then the environment `cloudflare` in GitHub, run «Data service» once, and delete the
+  old token under Manage Account → Account API Tokens. When it expires, «Data service» fails with an authentication
   error.
+- `CLOUDFLARE_API_TOKEN` in `recovery`: normally there is none. If one was left after a recovery, delete it in
+  Cloudflare and remove the secret.
 - The Worker's secrets (`HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`): new value under
   Variables and Secrets; the running version picks it up at once. For a GitHub App key, make a new key under the app
   and delete the old one. For Turnstile, a new widget under Cloudflare → Turnstile gives a new site key
@@ -552,8 +555,12 @@ within an hour, with no step that needs a developer machine.
    under [Accounts and secrets](#accounts-and-secrets) and the club's password manager:
    1. New account on the club's address, with two-factor sign-in; enable Workers and R2 (a card may be asked for even
       within the free limits), and create the bucket `hpgt-data-archive` (private).
-   2. A deploy token as under [Runbook](#runbook) «A secret or token may have leaked», and the new token and account
-      id into the GitHub environment `cloudflare`.
+   2. Two tokens on the new account: the everyday deploy token from the Worker (as under [Runbook](#runbook) «A secret
+      or token may have leaked») into the GitHub environment `cloudflare`, and a recovery token (Manage Account →
+      Account API Tokens → Create: Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, a TTL of a
+      few days) into the environment `recovery`, both with the account id. Delete the recovery token when «Recover» has
+      run. (The Worker does not exist yet on a new account, so the first publish here uses the recovery token; make the
+      Worker's own token afterwards.)
    3. A new Turnstile widget for `flysteder.hpgt.com` (site key into `src/_data/site.js` through a PR, secret into the
       Worker below), and a new private key on the GitHub App «HPGT Flying Sites Reports».
    4. Actions → «Recover» → «Run workflow» with `restore_archive` on, `lost_store` on, and `base_url` set to the new
@@ -569,7 +576,7 @@ within an hour, with no step that needs a developer machine.
       UptimeRobot pointed at it. An hour of work plus the copy.
 4. **The GitHub repository is lost.** Push any clone, or the bundle from B2, to a new repository (`git clone
    flying-sites.bundle`, add the remote, `git push --all`). Then the settings from the `SECURITY.md` checklist: Pages
-   with the domain, the environments `automation`, `cloudflare` and `backup` with their secrets and variables, the
+   with the domain, the environments `automation`, `cloudflare`, `recovery` and `backup` with their secrets and variables, the
    rulesets, the two GitHub Apps' installation. The issues are in `github/issues.json` for reading; they are not
    imported back. Half a day, mostly settings.
 5. **The B2 account is lost.** Nothing is down. New account and bucket, new key into the environment `backup`, and the
