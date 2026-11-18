@@ -262,6 +262,10 @@ sequenceDiagram
 | `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
 | `health.yml` | Every hour, manually | Checks the data service from outside (`/v1/status.json`) and opens an issue when a dataset is too old or the service does not answer; closes it when all is well again. |
 | `scorecard.yml` | Push to `main`, Mondays, branch protection changes | OpenSSF Scorecard (supply-chain good practice). Results in Code scanning and behind the README badge. |
+| `backup.yml` | Every night at 03:30 UTC, manually | Copies the whole archive bucket in R2 to Backblaze B2, checks the copy, and saves the issues (nightly) and the Git history (Sundays). Environment `backup`. |
+| `restore-drill.yml` | The 1st of each month, manually | Proves that the copy in B2 can be restored: runs the data service locally on the runner and checks that it reads every row back in. Touches nothing in Cloudflare. |
+| `recover.yml` | Manually only | Disaster recovery: writes the archive back to R2, publishes the data service and checks the restore. Environment `recovery` (required reviewer, normally no token). |
+| `browser-cache.yml` | `package-lock.json` changes on `main`, manually | Fills the Playwright browser cache that the PR check's accessibility job uses. No secrets. |
 | Dependabot | Monthly | PRs with updated packages and Actions. |
 
 ## Data modules
@@ -318,6 +322,93 @@ it fetches (a workflow today, a backend later) without the site noticing.
   in the page and replaces it with the service's when that is newer, so the section also works when the build has none.
 - **No scheduled builds:** both weather sources are in the data service, so `deploy.yml` has no schedule, and the site
   is built only when the content changes. The `weather` job stays, so each build starts from a fresh forecast.
+
+## Data service, archive and backup
+
+The data service keeps what must be fresh (forecast, stations, flights) in a Durable Object, archives the measurements
+in R2, and backs up the history every night. A copy of everything goes to another provider, and a monthly drill proves
+that it can be restored.
+
+```mermaid
+flowchart LR
+  subgraph sources["Sources"]
+    met["MET Locationforecast<br/>and Frost"]
+    holfuy["Holfuy"]
+    om["Open-Meteo"]
+    ogn["Open Glider Network"]
+  end
+
+  subgraph cf["Cloudflare (account HPGT)"]
+    cron["Worker «data»<br/>scheduled runs"]
+    store[("Durable Object<br/>SQLite store")]
+    r2[("R2 hpgt-data-archive<br/>holfuy/ … CSV per day<br/>backup/ … nightly JSON")]
+    api["/v1/*.json"]
+  end
+
+  subgraph gh["GitHub Actions"]
+    backup["backup.yml<br/>nightly 03:30"]
+    drill["restore-drill.yml<br/>monthly, local only"]
+    recover["recover.yml<br/>by hand, reviewer"]
+  end
+
+  b2[("Backblaze B2<br/>hpgt-flysteder-backup<br/>old versions kept")]
+  browser["The browser<br/>flysteder.hpgt.com"]
+
+  met & holfuy & om & ogn --> cron --> store
+  store --> api --> browser
+  store -- "archive from 03:00<br/>backup 02:14" --> r2
+  r2 -- "read-only key" --> backup --> b2
+  b2 --> drill
+  b2 --> recover -- "recovery token,<br/>made when needed" --> r2
+  r2 -. "empty store reads<br/>latest.json back in" .-> store
+```
+
+| Scenario | What happens | Where it is described |
+|---|---|---|
+| The store is lost | A new, empty store reads `backup/<table>/latest.json` from R2 by itself | [operations.md](operations.md#disaster-recovery), scenario 1 |
+| The R2 bucket is lost | Copy B2 back to R2 (rclone or `recover.yml`), then as above | Scenario 2 |
+| The Cloudflare account is lost | New account, tokens, then `recover.yml` | Scenario 3 |
+| The GitHub repository is lost | Push a clone or the bundle in B2 to a new repository | Scenario 4 |
+
+## Environments and secrets
+
+Each job gets only the keys it needs, and every environment is limited to `main`. The Worker's own secrets are set in
+Cloudflare and never in GitHub. Values are never written down here; see
+[operations.md](operations.md#accounts-and-secrets) for where each one lives.
+
+```mermaid
+flowchart TB
+  subgraph envs["GitHub environments (only main)"]
+    automation["automation<br/>openAIP key, GitHub App<br/>«HPGT Flying Sites»"]
+    cloudflare["cloudflare<br/>token: publish Worker «data» only"]
+    backupenv["backup<br/>R2 read-only + B2 bucket key"]
+    recovery["recovery<br/>required reviewer<br/>token only during a recovery"]
+  end
+
+  subgraph wf["Workflows"]
+    air["airspace.yml / obstacles.yml"]
+    dw["data-worker.yml"]
+    bk["backup.yml / restore-drill.yml"]
+    rc["recover.yml"]
+    dep["deploy.yml<br/>(no secrets: GitHub Pages)"]
+  end
+
+  subgraph cfsecrets["Cloudflare: Worker «data» secrets"]
+    s["HOLFUY_KEY, FROST_CLIENT_ID,<br/>TURNSTILE_SECRET,<br/>REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY"]
+  end
+
+  automation --> air
+  cloudflare --> dw
+  backupenv --> bk
+  backupenv --> rc
+  recovery --> rc
+  dw -. "publishes the Worker,<br/>never sees its secrets" .-> s
+```
+
+## Decisions
+
+Why the site is built this way, and what was chosen instead of what, is recorded as Architecture Decision Records in
+[adr/](adr/README.md).
 
 ## What has been built
 

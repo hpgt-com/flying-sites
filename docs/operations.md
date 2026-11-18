@@ -313,8 +313,9 @@ the menu and is marked `noindex`. It shows per site:
   account or bucket (without it the service keeps every measurement, so nothing is lost):
   1. Cloudflare → R2 → enable R2 (Free: 10 GB and free downloads; Cloudflare may ask for a card even within the free
      limits) and create the bucket `hpgt-data-archive` (private, no public access).
-  2. Give the token «GitHub – flying-sites» the permission `Account → Workers R2 Storage → Edit` (My Profile → API
-     Tokens → Edit). The token's value stays the same.
+  2. The everyday deploy token (environment `cloudflare`, made from the Worker) can publish the Worker with the R2
+     binding; no extra permission is needed (tested 18.11.2026). Writing objects to R2 is only done by «Recover», with
+     its own token.
   3. The `[[r2_buckets]]` binding in `workers/data/wrangler.toml` (binding `ARCHIVE`, bucket `hpgt-data-archive`).
      Only after steps 1 and 2: a deploy with the binding and no bucket fails.
 - Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
