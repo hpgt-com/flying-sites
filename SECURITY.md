@@ -85,10 +85,12 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   key files.
 - The data service (`workers/data`) runs in the club's Cloudflare account «HPGT». It is published by
   `data-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
-  environment `cloudflare`, which only `main` may use, so a PR branch cannot publish. The token («GitHub – flying-sites»,
-  made 22.10.2026 with a year's TTL) may only change Workers (including their Durable Objects) and R2 in the HPGT account
-  (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read), has no access to KV, domains or DNS, and
-  expires in October 2027 (the date is under My Profile → API Tokens). The account has
+  environment `cloudflare`, which only `main` may use, so a PR branch cannot publish. The token is an account token
+  made from the Worker (Workers & Pages → data → Settings → Builds → «API token for external CI/CD») and can only
+  publish the Worker `data`: no other Worker, no R2, KV, domains or DNS. The broader token that «Recover» needs to
+  write the archive back to R2 (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read) is not kept:
+  it is made when needed, put in its own environment `recovery` (only `main`, a required reviewer) and deleted
+  afterwards. The account has
   two-factor sign-in with a security key and an authenticator app. The service's secrets are set in Cloudflare and
   never in GitHub or the code, and never logged: `HOLFUY_KEY` (sent only to api.holfuy.com), `FROST_CLIENT_ID` (MET's
   Frost), `TURNSTILE_SECRET`, and `REPORTS_APP_ID` with `REPORTS_APP_PRIVATE_KEY` (the GitHub App for «Meld fra»).

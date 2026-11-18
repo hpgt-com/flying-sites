@@ -2,13 +2,18 @@ name: Recover
 
 # Scenario 3 in docs/operations.md «Disaster recovery», a lost Cloudflare account (or a lost archive bucket, or just a
 # lost store): everything that can be done from here, in one run, by hand from Actions → «Recover» → «Run workflow».
-# Before it: the new account's deploy token and account id in the environment «cloudflare», the bucket
+# Before it: a recovery token and the account id in the environment «recovery» (see below), the bucket
 # hpgt-data-archive created, and the Worker's own secrets (HOLFUY_KEY, FROST_CLIENT_ID, TURNSTILE_SECRET,
 # REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY) set in Cloudflare from the password manager: they are deliberately not in
 # GitHub (SECURITY.md). Then this run: fetches the off-site copy from B2 (the environment «backup»), writes the
 # archive back to R2 when asked (restore_archive), publishes the data service from main, waits until it runs, and
 # when the store is new (lost_store) checks that it read the history back in with exactly the rows in the copy.
 # Nothing here changes GitHub settings or the site; the site is republished by «Build and deploy».
+#
+# The recovery token is not the everyday deploy token. «cloudflare» has a token that can only publish the Worker
+# `data`; writing the archive back to R2 also needs R2, so this job uses its own environment «recovery» (only
+# `main`, a required reviewer). The token there (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings:
+# Read, account HPGT only) is made when it is needed and deleted afterwards: docs/operations.md «Disaster recovery».
 
 on:
   workflow_dispatch:
@@ -97,7 +102,7 @@ jobs:
     needs: [fetch]
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: cloudflare
+    environment: recovery
     permissions:
       contents: read
     env:
@@ -124,7 +129,7 @@ jobs:
         if: inputs.restore_archive
         working-directory: workers/data
         run: |
-          # One object at a time through Cloudflare's API with the deploy token (no S3 key with write access exists, by
+          # One object at a time through Cloudflare's API with the recovery token (no S3 key with write access exists, by
           # design); an afternoon's work for years of files, minutes for months. Skips nothing: a file already there is
           # written again with the same content.
           n=0
