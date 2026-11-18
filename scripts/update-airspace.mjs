@@ -1,6 +1,7 @@
 // Fetches airspace from openAIP for the whole region and saves:
 //   src/_data/cache/airspace/<id>.json   airspace over and near each launch (used on the site page)
 //   src/_data/cache/airspace/region.geojson   all airspace as polygons (used by the map layer)
+//   src/_data/cache/airspace/checked.json     the date of this check, written every time
 //
 //   OPENAIP_API_KEY=... npm run airspace
 //
@@ -10,7 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readSites } from "../lib/site-files.js";
-import { fetchRegion, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM } from "../lib/airspace.js";
+import { fetchRegion, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM, CHECKED_FILE } from "../lib/airspace.js";
 
 // Margin around the sites, so the map also shows airspace some way beyond them (Lofoten, Bardufoss etc.).
 const MARGIN_KM = 60;
@@ -81,7 +82,7 @@ for (const { id, data } of sites) {
 
 // Sites that were removed or got a new id must not leave cache files behind.
 for (const file of fs.readdirSync(CACHE_DIR)) {
-  if (file.endsWith(".json") && !sites.some((s) => `${s.id}.json` === file)) {
+  if (file.endsWith(".json") && file !== CHECKED_FILE && !sites.some((s) => `${s.id}.json` === file)) {
     fs.unlinkSync(path.join(CACHE_DIR, file));
     console.log(`\nFjernet ${file} (stedet finnes ikke lenger).`);
   }
@@ -95,3 +96,8 @@ if (!oldGeo || JSON.stringify(oldGeo.features) !== JSON.stringify(geo.features))
   fs.writeFileSync(geoFile, JSON.stringify({ ...geo, source: "openAIP (CC BY-NC 4.0)", fetched: today }) + "\n");
   console.log(`\nKartlaget oppdatert: ${geo.features.length} luftrom.`);
 }
+
+// The date of this check, written every time (also when nothing changed), so the site can show when the airspace was
+// last checked and warn when a monthly check is missing. The monthly PR therefore always has at least this change.
+fs.writeFileSync(path.join(CACHE_DIR, CHECKED_FILE), JSON.stringify({ source: "openAIP", checked: today, sites: sites.length }, null, 2) + "\n");
+console.log(`\nKontrollert ${today} (${CHECKED_FILE}).`);

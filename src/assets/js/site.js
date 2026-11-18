@@ -99,6 +99,13 @@
 
   // The map and the elevation profile are set up when they come near the screen, not when the page loads. On a phone
   // they are further down, and setting up the map (and fetching its tiles) costs time and data that may not be needed.
+  // The airspace warning: the page may have been built before the check went stale, so the browser checks again.
+  document.querySelectorAll("[data-airspace-checked]").forEach(function (el) {
+    var checked = Date.parse(el.getAttribute("data-airspace-checked") + "T00:00:00Z");
+    var limit = Number(el.getAttribute("data-stale-days")) || 45;
+    if (!checked || (Date.now() - checked) / 86400000 > limit) el.hidden = false;
+  });
+
   var started = false;
   function start() {
     if (started) return;

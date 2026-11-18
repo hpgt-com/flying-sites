@@ -1,7 +1,8 @@
 name: Update airspace
 
 # Fetches airspace from openAIP for all sites once a month (the AIRAC cycle is 28 days).
-# Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing happens.
+# Changes arrive as a PR, so someone reviews the diff before publishing. Every successful run also updates
+# checked.json (the date of the check), so there is a PR every month; merging it records that the check was done.
 # Requires the repository secret OPENAIP_API_KEY.
 #
 # The PR is created with a GitHub App token when the app is set up (repository variable APP_CLIENT_ID
@@ -138,7 +139,7 @@ jobs:
             echo "Automatisk henting av luftrom fra openAIP. Se over diffen, og sammenlign med IPPC ved tvil, før du merger."
             echo
             echo '~~~'
-            grep -E "ENDRET|\(ny\)" -A 20 luftrom.txt | grep -v "^--$" || true
+            grep -E "ENDRET|\(ny\)" -A 20 luftrom.txt | grep -v "^--$" || echo "Ingen endringer i luftrommet. Bare kontrolldatoen (checked.json) er oppdatert." 
             echo '~~~'
           } > pr.md
           gh pr create --title "Luftrom fra openAIP $(date +%d.%m.%Y)" --body-file pr.md
