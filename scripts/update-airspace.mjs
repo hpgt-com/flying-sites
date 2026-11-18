@@ -11,7 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readSites } from "../lib/site-files.js";
-import { fetchRegion, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM, CHECKED_FILE } from "../lib/airspace.js";
+import { fetchCountry, withinCircles, airspaceForLaunch, regionGeoJSON, CACHE_DIR, NEARBY_KM, CHECKED_FILE } from "../lib/airspace.js";
 
 // Margin around the sites, so the map also shows airspace some way beyond them (Lofoten, Bardufoss etc.).
 const MARGIN_KM = 60;
@@ -24,10 +24,10 @@ if (!apiKey) {
 
 const sites = readSites();
 
-// Airspace is fetched in one or more circles that together cover all launches, plus margin. openAIP
-// rejects too large a radius (216 km gave 400), so the sites in Lofoten, on Andøya and in Bjerkvik cannot be
-// covered by one circle around the middle of the region. Each circle is centred on a launch and covers the
-// launches within MAX_RADIUS_KM - MARGIN_KM. Usually this means 2–3 requests.
+// The region is one or more circles that together cover all launches, plus margin. Each circle is centred on a launch
+// and covers the launches within MAX_RADIUS_KM - MARGIN_KM. The airspace of the countries in COUNTRIES is fetched whole
+// (openAIP no longer allows geographic queries, see fetchCountry), and what lies within a circle is kept.
+const COUNTRIES = ["NO", "SE", "FI"]; // Sweden and Finland for the airspace east of the sites (the map shows 60 km beyond them)
 const MAX_RADIUS_KM = 150;
 const km = (a, b) => {
   const r = Math.PI / 180;
@@ -51,18 +51,28 @@ while (left.length) {
 }
 
 const byId = new Map();
-for (const { center, radiusKm } of circles) {
-  console.log(`Henter luftrom innen ${radiusKm} km fra ${center.lat.toFixed(3)}, ${center.lon.toFixed(3)} …`);
-  for (const a of await fetchRegion(center.lat.toFixed(5), center.lon.toFixed(5), radiusKm * 1000, apiKey)) {
-    byId.set(a._id ?? JSON.stringify([a.name, a.geometry]), a);
-  }
+for (const country of COUNTRIES) {
+  console.log(`Henter luftrom for ${country} …`);
+  const all = await fetchCountry(country, apiKey);
+  const near = withinCircles(all, circles);
+  console.log(`  ${all.length} luftrom, ${near.length} innenfor regionen (${circles.map((c) => `${c.radiusKm} km`).join(", ")}).`);
+  for (const a of near) byId.set(a._id ?? JSON.stringify([a.name, a.geometry]), a);
 }
 const items = [...byId.values()];
+if (!items.length) {
+  console.error("Fikk ingen luftrom fra openAIP. Stopper, så cachen ikke tømmes.");
+  process.exit(1);
+}
 console.log(`${items.length} luftrom i regionen.`);
 
 const describe = (a) =>
   `${a.name} (${a.type}${a.class ? ", klasse " + a.class : ""}, ${a.lower.value} ${a.lower.unit} ${a.lower.ref}` +
   `${a.overLaunch ? ", over start" : `, ${a.distanceKm} km unna`}${a.byNotam ? ", aktiveres ved NOTAM" : ""})`;
+
+// Same content, whatever the order: openAIP's order is not fixed, and a new order alone must not count as a change
+// (it would set today's date as «sist endret» on every site).
+const sameSet = (a, b) => a.length === b.length &&
+  JSON.stringify(a.map((x) => JSON.stringify(x)).sort()) === JSON.stringify(b.map((x) => JSON.stringify(x)).sort());
 
 fs.mkdirSync(CACHE_DIR, { recursive: true });
 const today = new Date().toISOString().slice(0, 10);
@@ -71,7 +81,7 @@ for (const { id, data } of sites) {
   const airspaces = airspaceForLaunch(items, lat, lon);
   const file = path.join(CACHE_DIR, `${id}.json`);
   const before = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")).airspaces : null;
-  const unchanged = before && JSON.stringify(before) === JSON.stringify(airspaces);
+  const unchanged = before && sameSet(before, airspaces);
   if (!unchanged) {
     const content = { source: "openAIP", fetched: today, nearbyKm: NEARBY_KM, launch: { lat, lon }, airspaces };
     fs.writeFileSync(file, JSON.stringify(content, null, 2) + "\n");
@@ -92,7 +102,7 @@ for (const file of fs.readdirSync(CACHE_DIR)) {
 const geoFile = path.join(CACHE_DIR, "region.geojson");
 const geo = regionGeoJSON(items);
 const oldGeo = fs.existsSync(geoFile) ? JSON.parse(fs.readFileSync(geoFile, "utf8")) : null;
-if (!oldGeo || JSON.stringify(oldGeo.features) !== JSON.stringify(geo.features)) {
+if (!oldGeo || !sameSet(oldGeo.features, geo.features)) {
   fs.writeFileSync(geoFile, JSON.stringify({ ...geo, source: "openAIP (CC BY-NC 4.0)", fetched: today }) + "\n");
   console.log(`\nKartlaget oppdatert: ${geo.features.length} luftrom.`);
 }

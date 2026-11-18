@@ -356,9 +356,11 @@ the menu and is marked `noindex`. It shows per site:
   («Kontrollert mot openAIP …, sist endret …»), and warns («Luftrommet er ikke kontrollert mot openAIP siden …») when
   the last check is more than 45 days old (`AIRSPACE_STALE_DAYS` in `lib/airspace.js`). The warning is also turned on
   in the browser, so a page built before the limit still warns later.
-- **openAIP refuses GitHub Actions** (from 1.11.2026: «openAIP svarte 403 fra Cloudflare foran openAIP»). A failed run
-  opens an issue. Until it works again, run `OPENAIP_API_KEY=… npm run airspace` from another machine, read the diff,
-  and open the PR by hand, or ask openAIP to allow the requests.
+- **No geographic queries at openAIP.** From November 2026 openAIP answers `pos`/`dist` and `bbox` queries with 403
+  from Cloudflare («Geospatial query for external clients no longer available» on openaip.net/blog), whatever the key.
+  Runs from 1.11.2026 failed for that reason. The script now fetches the airspace of Norway and Sweden (`country`) and
+  selects the region around the sites itself (`withinCircles` in `lib/airspace.js`). A new key does not help with a 403
+  that says «fra Cloudflare foran openAIP»; a 403 with openAIP's own message (an expired key) does.
 - **Fetch now:** Actions → «Update airspace» → «Run workflow», or `npm run airspace` locally.
 - The key is stored as the repository secret `OPENAIP_API_KEY`. The update does not work without it.
 - **GitHub App «HPGT Flying Sites»** (recommended). The club's app for automation in GitHub Actions; today it is
