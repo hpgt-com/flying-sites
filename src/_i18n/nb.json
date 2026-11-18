@@ -211,7 +211,7 @@
     "fromGround": "Fra bakken",
     "noAirspace": "Ingen faste luftrom over starten.",
     "kmAway": "{km} km unna",
-    "airspaceSource": "Hentet automatisk fra openAIP {date}.",
+    "airspaceSource": "Kontrollert mot openAIP {checked}, sist endret {date}.",
     "checkIppc": "Sjekk alltid {ippc} før du flyr.",
     "towerPhones": "Telefonnumre til tårnene",
     "airspaceMissing": "Ikke registrert ennå. Sjekk {ippc}.",
@@ -252,7 +252,8 @@
     "linksWeather": "Vær",
     "linksLog": "Logg",
     "linksMore": "Mer om stedet",
-    "sourcesDetails": "Detaljer"
+    "sourcesDetails": "Detaljer",
+    "airspaceStale": "Luftrommet er ikke kontrollert mot openAIP siden {checked}. Sjekk IPPC før du flyr."
   },
   "sources": {
     "launch": "Startkoordinat",
@@ -261,7 +262,7 @@
     "landing": "Landing",
     "parking": "Parkering",
     "airspace": "Luftrom",
-    "airspaceFetched": "Luftrom: openAIP (CC BY-NC 4.0), hentet {date}",
+    "airspaceFetched": "Luftrom: openAIP (CC BY-NC 4.0), kontrollert {checked}, endret {date}",
     "route": "Gangrute: logget tur (GPX)",
     "routeHeights": ", høyder fra {sources}",
     "labels": {

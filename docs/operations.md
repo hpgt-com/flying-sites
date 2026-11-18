@@ -345,9 +345,17 @@ the menu and is marked `noindex`. It shows per site:
 
 ## Airspace
 
-- Fetched from openAIP on the 1st of each month (`airspace.yml`). If anything has changed, it arrives as a PR that
-  should be read through before merging. The workflow has two jobs: `fetch` gets the data with read-only access,
-  and `pr` opens the PR only if something changed (it is skipped otherwise).
+- Fetched from openAIP on the 1st of each month (`airspace.yml`). It arrives as a PR that should be read through
+  before merging. The workflow has two jobs: `fetch` gets the data with read-only access, and `pr` opens the PR.
+- **Checked and changed are two dates.** Every successful run writes `src/_data/cache/airspace/checked.json` (the date
+  of the check), also when the airspace is unchanged, so there is a PR every month; merging it records that the check
+  was done. `fetched` in each site's file is when that site's airspace last changed. The site page shows both
+  («Kontrollert mot openAIP …, sist endret …»), and warns («Luftrommet er ikke kontrollert mot openAIP siden …») when
+  the last check is more than 45 days old (`AIRSPACE_STALE_DAYS` in `lib/airspace.js`). The warning is also turned on
+  in the browser, so a page built before the limit still warns later.
+- **openAIP refuses GitHub Actions** (from 1.11.2026: «openAIP svarte 403 fra Cloudflare foran openAIP»). A failed run
+  opens an issue. Until it works again, run `OPENAIP_API_KEY=… npm run airspace` from another machine, read the diff,
+  and open the PR by hand, or ask openAIP to allow the requests.
 - **Fetch now:** Actions → «Update airspace» → «Run workflow», or `npm run airspace` locally.
 - The key is stored as the repository secret `OPENAIP_API_KEY`. The update does not work without it.
 - **GitHub App «HPGT Flying Sites»** (recommended). The club's app for automation in GitHub Actions; today it is

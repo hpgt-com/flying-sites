@@ -211,7 +211,7 @@
     "fromGround": "From the ground",
     "noAirspace": "No fixed airspace above the launch.",
     "kmAway": "{km} km away",
-    "airspaceSource": "Fetched automatically from openAIP {date}.",
+    "airspaceSource": "Checked against openAIP {checked}, last changed {date}.",
     "checkIppc": "Always check {ippc} before you fly.",
     "towerPhones": "Phone numbers for the towers",
     "airspaceMissing": "Not registered yet. Check {ippc}.",
@@ -252,7 +252,8 @@
     "linksWeather": "Weather",
     "linksLog": "Log",
     "linksMore": "More about the site",
-    "sourcesDetails": "Details"
+    "sourcesDetails": "Details",
+    "airspaceStale": "The airspace has not been checked against openAIP since {checked}. Check IPPC before you fly."
   },
   "sources": {
     "launch": "Launch coordinate",
@@ -261,7 +262,7 @@
     "landing": "Landing",
     "parking": "Parking",
     "airspace": "Airspace",
-    "airspaceFetched": "Airspace: openAIP (CC BY-NC 4.0), fetched {date}",
+    "airspaceFetched": "Airspace: openAIP (CC BY-NC 4.0), checked {checked}, changed {date}",
     "route": "Walking route: logged hike (GPX)",
     "routeHeights": ", elevations from {sources}",
     "labels": {

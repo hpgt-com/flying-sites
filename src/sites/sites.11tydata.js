@@ -7,7 +7,7 @@ import { dict, fmt, localeUrl } from "../../lib/i18n.js";
 import { readTranslations, overlay, introText, TRANSLATABLE } from "../../lib/translations.js";
 import { processImage } from "../../lib/images.js";
 import { listSiteImages, featuredImages, imageCaption, imageAlt } from "../../lib/site-images.js";
-import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace } from "../../lib/airspace.js";
+import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace, readAirspaceChecked, airspaceAgeDays, AIRSPACE_STALE_DAYS } from "../../lib/airspace.js";
 import { readDrawing } from "../../lib/drawing.js";
 
 // The intro (text before the first ##) as plain text, for the card on the home page.
@@ -26,7 +26,7 @@ function describeSources(data, routes, airspace, lang) {
   add(t.directions, data.wind_directions?.source);
   add(t.landing, unique(data.landings));
   add(t.parking, unique(data.parking));
-  if (airspace) lines.push(fmt(t.airspaceFetched, { date: formatDate(airspace.fetched, lang) }));
+  if (airspace) lines.push(fmt(t.airspaceFetched, { checked: formatDate(airspace.checked ?? airspace.fetched, lang), date: formatDate(airspace.fetched, lang) }));
   else add(t.airspace, unique(data.airspace));
   if (routes.length) {
     const elevationSources = [...new Set(routes.map((r) => r.elevationSource).filter(Boolean))];
@@ -112,7 +112,15 @@ export default {
 
       // Airspace fetched from openAIP with `npm run airspace`. null if the site has not been fetched yet.
       const cached = readCachedAirspace(data.id);
-      const airspace = cached ? { ...cached, airspaces: applyManualAirspace(cached.airspaces, local.airspace) } : null;
+      // checked: when it was last checked against openAIP (also without changes); fetched: when it last changed.
+      const checked = readAirspaceChecked();
+      const airspace = cached ? {
+        ...cached,
+        airspaces: applyManualAirspace(cached.airspaces, local.airspace),
+        checked,
+        stale: checked ? airspaceAgeDays(checked) > AIRSPACE_STALE_DAYS : true,
+        staleDays: AIRSPACE_STALE_DAYS,
+      } : null;
 
       return {
         routes,
