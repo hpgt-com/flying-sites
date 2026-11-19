@@ -99,6 +99,26 @@ the menu and is marked `noindex`. It shows per site:
   and `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (then open `/__scheduled` to run
   the schedule, and `/v1/forecast.json`). For Holfuy locally, put `HOLFUY_KEY=…` in `workers/data/.dev.vars` (ignored by Git).
 
+## The site on Cloudflare
+
+The site is moving from GitHub Pages to Cloudflare (Workers static assets, `workers/site/wrangler.toml`), so it can
+send real security headers (`src/_headers`: HSTS, framing, referrer, permissions) and cache the images for a year
+(GitHub Pages gives everything ten minutes). The build is the same; the job «cloudflare» in «Build and deploy»
+publishes the archive made for GitHub Pages, so both serve exactly the same files.
+
+1. **Token.** Cloudflare → Manage Account → Account API Tokens → Create token → Custom: Account → Workers Scripts →
+   Edit, account HPGT only. Put it in flying-sites → Settings → Environments → `cloudflare` as the secret
+   `CLOUDFLARE_SITE_TOKEN` (`CLOUDFLARE_ACCOUNT_ID` is there already). Without it the job only says it was skipped.
+2. **Test.** Run «Build and deploy». The site is then at `https://flysteder.hpgt.workers.dev`. «Meld fra» does not
+   work there (Turnstile and the data service only accept flysteder.hpgt.com); the rest should.
+3. **Switch.** In Cloudflare → hpgt.com → DNS, delete the CNAME `flysteder` → `hpgt-com.github.io`. Then Workers &
+   Pages → flysteder → Settings → Domains & Routes → Add → Custom domain → `flysteder.hpgt.com`. Cloudflare makes the
+   record and the certificate within minutes. Check the site and its headers (`curl -I https://flysteder.hpgt.com/`
+   shows `server: cloudflare` and `strict-transport-security`).
+4. **Back, if needed.** Remove the custom domain from the Worker and add the CNAME `flysteder` →
+   `hpgt-com.github.io` again, «DNS only» (grey cloud). GitHub Pages keeps publishing every build until it is turned
+   off, so it is always ready.
+
 ## The data service's address
 
 - `https://data.hpgt.com` is the data service's own address on the club's domain, beside
@@ -480,6 +500,7 @@ set in `src/_data/photoCredit.json`.
 | `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: the robot check (the site key is public, in `src/_data/site.js`) |
 | GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token is an account token that can only publish the Worker `data`, made under Workers & Pages → data → Settings → Builds → «API token for external CI/CD» (listed under Manage Account → Account API Tokens). To roll it: make a new one there, update the secret, run «Data service» once, and delete the old token. |
+| `CLOUDFLARE_SITE_TOKEN` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the site to Cloudflare (the job «cloudflare» in «Build and deploy»). An account token with Workers Scripts: Edit for the account HPGT only. See [The site on Cloudflare](#the-site-on-cloudflare). |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `recovery` (only `main`, a required reviewer) | Only «Recover». Empty normally: the token (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, account HPGT only, a short TTL) is made when a recovery needs it and deleted afterwards. See [Disaster recovery](#disaster-recovery). |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
 | Backblaze B2 (free plan; the account is on the club's address) with the bucket `hpgt-flysteder-backup` (private, EU region, lifecycle «keep prior versions for 90 days»: a file written again keeps its old version 90 days, files written once are kept for good) and the key `github-backup` (that bucket only, read and write, no expiry) | backblaze.com | The off-site copy of the archive, the backups, the issues and the code (`backup.yml`) |
