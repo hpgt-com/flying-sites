@@ -14,3 +14,9 @@ directory = "../../_site"
 # 404.html for an address that does not exist, as on GitHub Pages; /om serves /om/ like GitHub Pages does.
 not_found_handling = "404-page"
 html_handling = "auto-trailing-slash"
+
+# Turned on in the dashboard on 19.11.2026; kept here so a deploy keeps it. The site's files are served without
+# running any code, so there is little to log: mostly the metrics (requests, errors, bandwidth). Free plan: logging
+# pauses for the day at the daily limit and is never charged.
+[observability]
+enabled = true
