@@ -15,6 +15,8 @@ on:
 #            not stop publishing.
 #   build    builds the site with the fetched weather and never queries MET or Open-Meteo itself (WEATHER_FETCH=0).
 #   deploy   publishes. Only this job has publishing permissions (pages, id-token), and it runs no code from the repo.
+#   cloudflare publishes the same archive to Cloudflare (workers/site), with its own token. Skipped while the token is
+#            not set; see docs/operations.md «The site on Cloudflare».
 #   attest   signs build provenance and the SBOM for the published archive (see the job below).
 # Actions are pinned to commit SHAs (Dependabot updates them).
 permissions:
@@ -173,10 +175,53 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
+  # The same files on Cloudflare (Workers static assets, workers/site/wrangler.toml), from the archive the build made
+  # for GitHub Pages, so both serve exactly the same build. The token (CLOUDFLARE_SITE_TOKEN in the environment
+  # «cloudflare», only main) may only publish Workers in the HPGT account; without it the job does nothing.
+  cloudflare:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: cloudflare
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No npm cache here: a job that publishes should not restore files another run could have written.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # Wrangler, at the version in workers/data/package-lock.json.
+      - run: npm ci --ignore-scripts
+        working-directory: workers/data
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/pages
+
+      - run: mkdir -p _site && tar -xf "$RUNNER_TEMP/pages/artifact.tar" -C _site
+
+      - name: Publiser til Cloudflare
+        working-directory: workers/data
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_SITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::CLOUDFLARE_SITE_TOKEN er ikke satt i miljøet «cloudflare», så siden publiseres bare til GitHub Pages."
+            exit 0
+          fi
+          npx wrangler deploy --config ../site/wrangler.toml
+
   # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
   # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.
   alert:
-    needs: [weather, build, attest, deploy]
+    needs: [weather, build, attest, deploy, cloudflare]
     if: failure()
     runs-on: ubuntu-latest
     timeout-minutes: 5
