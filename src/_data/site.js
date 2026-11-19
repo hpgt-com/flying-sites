@@ -10,19 +10,19 @@ export default {
   goatcounter: "https://hpgt-flysteder.goatcounter.com/count",
   // The data service on Cloudflare (workers/data): the MET forecast, renewed every few minutes, and the Holfuy stations.
   // The pages use the forecast when it is newer than the one from the build. Must also be in connect-src in base.njk.
-  forecastUrl: "https://data.hpgt.workers.dev/v1/forecast.json",
-  stationsUrl: "https://data.hpgt.workers.dev/v1/stations.json",
-  windgramUrl: "https://data.hpgt.workers.dev/v1/windgram.json",
-  verificationUrl: "https://data.hpgt.workers.dev/v1/verification.json",
-  liveUrl: "https://data.hpgt.workers.dev/v1/live.json",
-  flightsUrl: "https://data.hpgt.workers.dev/v1/flights.json",
-  flightLogUrl: "https://data.hpgt.workers.dev/v1/flight-log.json",
+  forecastUrl: "https://data.hpgt.com/v1/forecast.json",
+  stationsUrl: "https://data.hpgt.com/v1/stations.json",
+  windgramUrl: "https://data.hpgt.com/v1/windgram.json",
+  verificationUrl: "https://data.hpgt.com/v1/verification.json",
+  liveUrl: "https://data.hpgt.com/v1/live.json",
+  flightsUrl: "https://data.hpgt.com/v1/flights.json",
+  flightLogUrl: "https://data.hpgt.com/v1/flight-log.json",
   // The forecast grids for the map layers «Prognose» on the home page (forecast-layer.js).
-  gridUrl: "https://data.hpgt.workers.dev/v1/grid.json",
-  gridWideUrl: "https://data.hpgt.workers.dev/v1/grid-wide.json",
+  gridUrl: "https://data.hpgt.com/v1/grid.json",
+  gridWideUrl: "https://data.hpgt.com/v1/grid-wide.json",
   // «Meld fra om endring» on the site pages (report.js, workers/data/src/report.js). The form is shown only when the
   // Turnstile site key is set (public; the secret is TURNSTILE_SECRET in Cloudflare), see docs/operations.md.
-  reportUrl: "https://data.hpgt.workers.dev/v1/report",
+  reportUrl: "https://data.hpgt.com/v1/report",
   turnstileSiteKey: "0x4AAAAAAFbKpuCOckRpqREy",
   // Form for suggesting changes. Until we have our own form it goes to GitHub issues.
   suggestChangeUrl: "https://github.com/hpgt-com/flying-sites/issues/new",

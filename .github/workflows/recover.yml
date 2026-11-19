@@ -29,7 +29,7 @@ on:
       base_url:
         description: "Datatjenestens adresse (en ny konto gir et nytt workers.dev-navn)"
         type: string
-        default: "https://data.hpgt.workers.dev"
+        default: "https://data.hpgt.com"
 
 permissions: {}
 

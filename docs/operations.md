@@ -92,7 +92,7 @@ the menu and is marked `noindex`. It shows per site:
   schedule).
 - The **data service** (`workers/data`, Cloudflare account «HPGT») fetches MET by itself every 5 minutes, six launches
   per run, and the pages use its forecast when it is newer than the one built into the page. See it at
-  `https://data.hpgt.workers.dev/v1/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
+  `https://data.hpgt.com/v1/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
   Cloudflare → Workers & Pages → data → Logs.
 - **Publishing the data service:** happens by itself when `workers/data/`, `lib/weather/met.js` or a site file changes
   on `main` (Actions → «Data service»), or with «Run workflow» there. Test locally with `node scripts/data-sites.mjs`
@@ -121,15 +121,16 @@ publishes the archive made for GitHub Pages, so both serve exactly the same file
 
 ## The data service's address
 
-- `https://data.hpgt.com` is the data service's own address on the club's domain, beside
-  `https://data.hpgt.workers.dev`, which keeps working. It is a custom domain on the Worker `data`, added by hand in
+- `https://data.hpgt.com` is the data service's address, used by the site, the checks and the workflows. The
+  Worker's own address, `https://data.hpgt.workers.dev`, keeps working beside it (older pages stored on a phone use
+  it until they are opened again with a connection). It is a custom domain on the Worker `data`, added by hand in
   Cloudflare (Workers & Pages → data → Settings → Domains & Routes → Add → Custom domain → `data.hpgt.com`); Cloudflare
   makes the DNS record and the certificate. It is not in `wrangler.toml`, because the deploy token may only publish the
   Worker and cannot make DNS records, and deploys leave it as it is.
 
 ## Data service health
 
-- `https://data.hpgt.workers.dev/v1/status.json` (`workers/data/src/health.js`) says for each source when it last
+- `https://data.hpgt.com/v1/status.json` (`workers/data/src/health.js`) says for each source when it last
   ran, last succeeded and its last error, and how long its runs take (`lastMs`, `avgMs` as a running average, `maxMs`
   the slowest today: a failure at 20 000 ms is a timeout, a success at 8 000 a slow source), for each dataset when it was last written and whether that is within its
   limit (forecast 60 min, stations 15, winds aloft 90, verification 90), which launches the forecast and the winds aloft
@@ -175,7 +176,7 @@ publishes the archive made for GitHub Pages, so both serve exactly the same file
   `site`, not by distance.
 - The key: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `HOLFUY_KEY`
   (type Secret). Publishing keeps it. Without the key, or without stations, the service skips Holfuy.
-- Fetched every minute. `https://data.hpgt.workers.dev/v1/stations.json` has the latest measurement and the last
+- Fetched every minute. `https://data.hpgt.com/v1/stations.json` has the latest measurement and the last
   6 hours per station. The service keeps the last 7 days; older days go to the archive (below), and nothing is deleted
   before it is there. Holfuy has accepted that the club stores the measurements over time.
 - Where they are shown: the layer «Klubbens værstasjoner» (MET's in their own layer, «METs værstasjoner») on the home map and the site maps (at Holfuy's position, or at the
@@ -194,7 +195,7 @@ publishes the archive made for GitHub Pages, so both serve exactly the same file
 
 - A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
   <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
-  Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.workers.dev/v1/report`,
+  Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.com/v1/report`,
   `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 50 a day, and 3 from one address (kept
   only as a hash with a salt for the day). Turnstile's answer must be for `flysteder.hpgt.com` (or the hosts in
   `REPORT_ORIGINS` when testing).
@@ -291,7 +292,7 @@ publishes the archive made for GitHub Pages, so both serve exactly the same file
   the flying site's own station measured in it (`workers/data/src/sources/verify.js`): the mean wind, the highest gust
   and the direction, and where the station measures them the temperature and the air pressure (the forecast's are kept
   per hour in `forecast_hours` too; both pressures are at sea level). Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
-  summed up in `https://data.hpgt.workers.dev/v1/verification.json`.
+  summed up in `https://data.hpgt.com/v1/verification.json`.
 - Which sites: those with a station of their own (`site` in `HOLFUY_STATIONS`, and `MET_STATION_SITES`), now Heia and
   Sætertinden, and those with one nearby at about the same height (`near` in `HOLFUY_STATIONS`), now Hinnstein against
   Heia's station. A station nearby is also shown under «Målt nå» on that site's page, with the distance; only a site's
@@ -303,7 +304,7 @@ publishes the archive made for GitHub Pages, so both serve exactly the same file
 
 - Fetched by the data service from Open-Meteo, two launches every 10 minutes (each about every half hour), for the launches in `WINDGRAM_SITES` in
   `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), served as
-  `https://data.hpgt.workers.dev/v1/windgram.json`, with the rain, cloud cover, sun and gusts per hour for the rows under
+  `https://data.hpgt.com/v1/windgram.json`, with the rain, cloud cover, sun and gusts per hour for the rows under
   the grid. No key. A launch that fails keeps its previous grid for up to 6
   hours. The site page uses it when it is newer than the grid built into the page; the section stays hidden when
   neither has hours left.
@@ -494,7 +495,7 @@ set in `src/_data/photoCredit.json`.
 |---|---|---|
 | `OPENAIP_API_KEY` | GitHub → Settings → Environments → `automation` (only `main`) | Monthly airspace fetch |
 | GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; the variable under flying-sites → Settings → Secrets and variables, the secret in the environment `automation` (only `main`) | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
-| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.workers.dev`) and «Meld fra» |
+| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.com`) and «Meld fra» |
 | `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | The Holfuy stations |
 | `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
 | `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: the robot check (the site key is public, in `src/_data/site.js`) |
@@ -661,7 +662,7 @@ staging Worker (`[env.staging]` in `wrangler.toml`) only if store migrations nee
 | `gangruten … skal hete …` | Multiple routes must be named `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
 | `status er «reviewed», men reviewed …` | Fill in `reviewed.by` and `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Typo in the translation. See [Translation](site-files.md#translation). |
-| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.workers.dev/v1/forecast.json`, and run «Build and deploy» manually. |
+| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.com/v1/forecast.json`, and run «Build and deploy» manually. |
 | An issue «Datatjenesten: data mangler eller er for gamle» | See [Data service health](#data-service-health). It closes by itself when the status is in order again. |
 | An issue «Jobben «…» feilet» | A run failed (the job `alert` opens it, or comments on the open one). Open the run from the link, fix the cause, run the workflow again, and close the issue. |
 | «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Make a new one (see [Runbook](#runbook)) and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |

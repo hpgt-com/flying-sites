@@ -24,7 +24,7 @@ export function smokeVerdict(status, since) {
   return { done: false, reason: "venter på første vellykkede kjøring etter publisering", errors };
 }
 
-async function main([since, base = "https://data.hpgt.workers.dev"]) {
+async function main([since, base = "https://data.hpgt.com"]) {
   if (!Number.isFinite(Date.parse(since))) throw new Error("bruk: node scripts/data-smoke.mjs <ISO-tid> [adresse]");
   const start = Date.now();
   let last = null;
