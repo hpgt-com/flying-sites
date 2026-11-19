@@ -1,6 +1,6 @@
 # 0001: Static site with Eleventy on GitHub Pages
 
-- **Status:** Accepted
+- **Status:** Superseded by [0006](0006-site-served-by-cloudflare.md) for the hosting; the static site with Eleventy stands
 - **Date:** 2026-09
 
 ## Context
