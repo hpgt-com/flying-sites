@@ -14,6 +14,8 @@
   var checkEl = document.getElementById("report-check");
   var sendEl = form.querySelector(".report__send");
   var token = "", widget = null, loading = false;
+  // The button is disabled in the HTML until this script runs (macros.njk), so the form is never sent by the browser
+  sendEl.disabled = false;
 
   function say(key, kind) {
     statusEl.textContent = key ? FS.t("report." + key) : "";
