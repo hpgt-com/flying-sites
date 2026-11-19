@@ -102,7 +102,7 @@ the menu and is marked `noindex`. It shows per site:
 ## The site on Cloudflare
 
 Since 19.11.2026 flysteder.hpgt.com is served by Cloudflare (Workers static assets, the Worker `flysteder`,
-`workers/site/wrangler.toml`), so it sends real security headers (`src/_headers`: HSTS, framing, referrer,
+`workers/site/wrangler.toml`), so it sends real security headers (`src/headers.njk` → `_headers`: HSTS, the CSP from `site.csp`, framing, referrer,
 permissions) and caches the images for a year (GitHub Pages gave everything ten minutes). The build is the same; the
 job «cloudflare» in «Build and deploy» publishes the archive made for GitHub Pages, so both get exactly the same files.
 GitHub Pages keeps publishing every build as a fallback. Its custom domain under Settings → Pages can stay; GitHub
@@ -217,9 +217,9 @@ only warns that the DNS record no longer points to it.
      else), «Only on this account». Create it; note the **App ID**; «Generate a private key» downloads a `.pem` file.
      Then «Install App» → only the repository `flying-sites`. Add the secrets `REPORTS_APP_ID` (the App ID, or the Client ID) and
      `REPORTS_APP_PRIVATE_KEY` (the whole `.pem` file, as it is) on the data service as above, and delete the `.pem`.
-     A fine-grained token in `GITHUB_ISSUES_TOKEN` (Issues: read and write, only this repository) is used instead when
-     the app's secrets are missing; once the app works it can be deleted, in Cloudflare and on GitHub.
-- Without Turnstile and the app (or the token) the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
+     There is no fallback to a personal token: a fine-grained token (`GITHUB_ISSUES_TOKEN`) was used before the app and
+     was removed in November 2026. If it is still among the data service's secrets, delete it there and revoke it on GitHub.
+- Without Turnstile and the app the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
   (Observability), as `report: GitHub svarte …`.
 
 ## Flight logs («Fra turlogger»)

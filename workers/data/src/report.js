@@ -1,8 +1,8 @@
 // «Meld fra om endring» on the site pages: POST /v1/report from flysteder.hpgt.com. The browser is checked with
 // Cloudflare Turnstile (the secret TURNSTILE_SECRET), and the report becomes an issue in the site's GitHub repository,
-// made by the club's GitHub App (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY, github-app.js), or else with a
-// fine-grained token (the secret GITHUB_ISSUES_TOKEN, only Issues: read and write on hpgt-com/flying-sites).
-// Without Turnstile and one of the two the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
+// made by the club's GitHub App «HPGT Flying Sites Reports» (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY,
+// github-app.js) with a one-hour token for Issues on this repository only. No personal token.
+// Without Turnstile and the app the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
 // src/_data/site.js). At most DAILY_LIMIT reports a day, and PER_IP_LIMIT from one address: both are counted and
 // reserved in one step in the store (store.js reserveReport), so two reports at the same time cannot both slip past the
 // limit, and a reservation is given back when GitHub fails. The address is kept only as a hash with a salt that is thrown
@@ -106,7 +106,7 @@ export async function ipKey(ip, salt) {
 const hasApp = (env) => !!(env.REPORTS_APP_ID && env.REPORTS_APP_PRIVATE_KEY);
 
 async function createIssue(env, issue, now) {
-  const token = hasApp(env) ? await installationToken(env, REPO, now) : env.GITHUB_ISSUES_TOKEN;
+  const token = await installationToken(env, REPO, now);
   const r = await fetch(`${env.GITHUB_API || "https://api.github.com"}/repos/${REPO}/issues`, {
     method: "POST",
     headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github+json", "user-agent": "hpgt-flysteder", "content-type": "application/json" },
@@ -121,7 +121,7 @@ async function createIssue(env, issue, now) {
 
 // The answer to POST /v1/report: { status, body }. store: for the day's count; siteNames as for checkReport.
 export async function handleReport(request, env, store, siteNames, now = Date.now()) {
-  if (!env.TURNSTILE_SECRET || !(hasApp(env) || env.GITHUB_ISSUES_TOKEN)) return { status: 503, body: { error: "not-configured" } };
+  if (!env.TURNSTILE_SECRET || !hasApp(env)) return { status: 503, body: { error: "not-configured" } };
   if (!/^application\/json\b/i.test(request.headers.get("content-type") || "")) return { status: 415, body: { error: "bad-request" } };
   if (Number(request.headers.get("content-length")) > MAX_BODY) return { status: 413, body: { error: "bad-length" } };
   const text = await request.text().catch(() => "");
