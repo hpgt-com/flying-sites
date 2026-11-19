@@ -5,6 +5,9 @@ name = "data"
 main = "src/index.js"
 compatibility_date = "2026-09-30"
 workers_dev = true
+# Also at data.hpgt.com (hpgt.com is on Cloudflare from November 2026): a custom domain added by hand under Workers &
+# Pages → data → Settings → Domains & Routes, since the deploy token may only publish this Worker and cannot make DNS
+# records. Deploys keep it (no routes here). data.hpgt.workers.dev keeps working beside it.
 
 # The store: one Durable Object with SQLite (src/store.js).
 [[durable_objects.bindings]]
