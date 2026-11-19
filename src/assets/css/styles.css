@@ -1917,6 +1917,11 @@ body.sheet-open { overflow: hidden; }
 /* The page «Flyaktivitet» (activity.js): the four numbers as .access-stats, then tables that scroll sideways in a box on
    a phone, numbers right-aligned. */
 .activity { display: flex; flex-direction: column; gap: 14px; }
+/* display: flex above would otherwise override the hidden attribute: «Siste turer» showed its empty heading before
+   (and without) the data */
+.activity[hidden] { display: none; }
+/* Room for the summary while it loads, so the page does not jump when it arrives (Lighthouse: layout shift) */
+#activity:has(> .activity-loading) { min-height: min(850px, 80vh); }
 .activity h2 { margin: 10px 0 0; font-size: 22px; }
 .activity p { margin: 0; }
 .activity-stats > div { flex-basis: 140px; }
