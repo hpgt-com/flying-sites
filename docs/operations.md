@@ -101,23 +101,24 @@ the menu and is marked `noindex`. It shows per site:
 
 ## The site on Cloudflare
 
-The site is moving from GitHub Pages to Cloudflare (Workers static assets, `workers/site/wrangler.toml`), so it can
-send real security headers (`src/_headers`: HSTS, framing, referrer, permissions) and cache the images for a year
-(GitHub Pages gives everything ten minutes). The build is the same; the job «cloudflare» in «Build and deploy»
-publishes the archive made for GitHub Pages, so both serve exactly the same files.
+Since 19.11.2026 flysteder.hpgt.com is served by Cloudflare (Workers static assets, the Worker `flysteder`,
+`workers/site/wrangler.toml`), so it sends real security headers (`src/_headers`: HSTS, framing, referrer,
+permissions) and caches the images for a year (GitHub Pages gave everything ten minutes). The build is the same; the
+job «cloudflare» in «Build and deploy» publishes the archive made for GitHub Pages, so both get exactly the same files.
+GitHub Pages keeps publishing every build as a fallback. Its custom domain under Settings → Pages can stay; GitHub
+only warns that the DNS record no longer points to it.
 
-1. **Token.** Cloudflare → Manage Account → Account API Tokens → Create token → Custom: Account → Workers Scripts →
-   Edit, account HPGT only. Put it in flying-sites → Settings → Environments → `cloudflare` as the secret
-   `CLOUDFLARE_SITE_TOKEN` (`CLOUDFLARE_ACCOUNT_ID` is there already). Without it the job only says it was skipped.
-2. **Test.** Run «Build and deploy». The site is then at `https://flysteder.hpgt.workers.dev`. «Meld fra» does not
-   work there (Turnstile and the data service only accept flysteder.hpgt.com); the rest should.
-3. **Switch.** In Cloudflare → hpgt.com → DNS, delete the CNAME `flysteder` → `hpgt-com.github.io`. Then Workers &
-   Pages → flysteder → Settings → Domains & Routes → Add → Custom domain → `flysteder.hpgt.com`. Cloudflare makes the
-   record and the certificate within minutes. Check the site and its headers (`curl -I https://flysteder.hpgt.com/`
-   shows `server: cloudflare` and `strict-transport-security`).
-4. **Back, if needed.** Remove the custom domain from the Worker and add the CNAME `flysteder` →
-   `hpgt-com.github.io` again, «DNS only» (grey cloud). GitHub Pages keeps publishing every build until it is turned
-   off, so it is always ready.
+- **The token** is `CLOUDFLARE_SITE_TOKEN` in the environment `cloudflare`: made under Workers & Pages → flysteder →
+  Settings → Builds → «API token for external CI/CD», so it can only deploy this Worker. It expires 19.11.2027; make a
+  new one the same way a couple of weeks before, replace the secret and run «Build and deploy». Without it the job
+  says it was skipped and the site stays as it was.
+- **The domain** flysteder.hpgt.com is a custom domain on the Worker (Settings → Domains & Routes), added by hand.
+  Cloudflare made the DNS record; the certificate is Cloudflare's own for hpgt.com. Check with
+  `curl -I https://flysteder.hpgt.com/` (`server: cloudflare`, `strict-transport-security`).
+- **Back to GitHub Pages, if needed:** remove the custom domain from the Worker, add the CNAME `flysteder` →
+  `hpgt-com.github.io` again in Cloudflare → hpgt.com → DNS, «DNS only» (grey cloud), and check that
+  `flysteder.hpgt.com` is still the custom domain under flying-sites → Settings → Pages. GitHub may need a while to
+  issue its certificate again.
 
 ## The data service's address
 
@@ -508,7 +509,7 @@ set in `src/_data/photoCredit.json`.
 | `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (secrets); `B2_ENDPOINT`, `R2_ENDPOINT` (variables; `B2_BUCKET` and `R2_BUCKET` only when the names differ from the defaults in `backup.yml`) | flying-sites → Settings → Environments → `backup` (only `main`) | `backup.yml`. The R2 token (an account token, Object Read only, `hpgt-data-archive` only; made 18.11.2026 in place of the user token «github-backup-read») is made under R2 → Manage R2 API Tokens → Create Account API token |
 | `B2_KEY_ID`, `B2_APPLICATION_KEY` (secrets, a read-only key); `B2_ENDPOINT` (variable; `B2_BUCKET` only when the name differs) | flying-sites → Settings → Environments → `backup-read` (only `main`) | `restore-drill.yml` and the fetch in `recover.yml`. A Backblaze application key with **Read Only** access to `hpgt-flysteder-backup` only, so the drill and a recovery cannot change or delete the copy |
 | UptimeRobot (free plan; the account is on the maintainer's e-mail, moved by changing it under My Settings → Account) | uptimerobot.com | Three monitors every five minutes: `https://flysteder.hpgt.com/` answers, `https://hpgt.com/` (the club's site) answers, and `/v1/status.json` on the data service contains `"ok":true`. E-mails the alert contacts when one fails and when it is back. |
-| GitHub Pages, domain | Settings → Pages, DNS record for `flysteder.hpgt.com` | Publishing |
+| Cloudflare Worker `flysteder`, domain | Cloudflare → Workers & Pages → flysteder (custom domain `flysteder.hpgt.com`) | Serving the site; GitHub Pages (Settings → Pages) gets every build as a fallback |
 
 MET and Kartverket require no key. MET requires the client to provide contact details (`USER_AGENT` in
 `lib/weather/met.js`).

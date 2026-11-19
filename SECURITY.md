@@ -12,7 +12,7 @@ Errors in site information (hazards, directions, airspace) are not security issu
 
 ## What is in place
 
-The site is static (Eleventy on GitHub Pages), with no login or accounts. Beside it runs the data service, a Cloudflare
+The site is static (Eleventy, served by Cloudflare from the same build GitHub Pages gets), with no login or accounts. Beside it runs the data service, a Cloudflare
 Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh data and takes the one public form,
 «Meld fra om endring».
 
@@ -20,7 +20,9 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
 - Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
   scripts, and no inline styles either: `style-src 'self'`) and Cloudflare Turnstile (`challenges.cloudflare.com`, also the only `frame-src`; loaded only when someone
   opens «Meld fra om endring»), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
-  GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
+  The header-only rules come from `src/_headers` on Cloudflare: `frame-ancestors 'none'` and `X-Frame-Options: DENY`,
+  HSTS, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that turns off
+  camera, microphone, location and payment.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
   `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.com`). The station
   data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.

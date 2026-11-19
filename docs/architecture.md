@@ -4,7 +4,7 @@ How flysteder.hpgt.com is put together: where the data comes from, what happens 
 runs in the browser. The diagrams are Mermaid and render as diagrams on GitHub.
 
 In short: **a static site with no server and no database.** All content lives as files in the repository. GitHub
-Actions builds the site with Eleventy and publishes it to GitHub Pages on every change. Data that must be fresh (the
+Actions builds the site with Eleventy and publishes it to Cloudflare (with GitHub Pages as a fallback) on every change. Data that must be fresh (the
 wind forecast, winds aloft, weather stations) comes from the data service on Cloudflare, which the pages read after
 loading; each build also starts from a forecast fetched in its own job just before it. Data that is slow to fetch
 (airspace, heights, power lines) is cached in the repository. Each kind of external data is a module, see
@@ -42,7 +42,7 @@ flowchart LR
     worker["Data service<br/>forecast, stations, winds aloft,<br/>verification, flights, live,<br/>«Meld fra» → GitHub issues"]
   end
 
-  pages["GitHub Pages<br/>flysteder.hpgt.com"]
+  pages["Cloudflare (Worker flysteder)<br/>flysteder.hpgt.com"]
 
   subgraph browser["The browser"]
     ui["Home page and site pages<br/>Leaflet map, filters,<br/>wind assessment"]

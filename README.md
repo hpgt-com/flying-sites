@@ -93,7 +93,7 @@ Other commands:
 
 ## Publishing
 
-- Everything merged to `main` is published automatically to GitHub Pages.
+- Everything merged to `main` is published automatically to Cloudflare (flysteder.hpgt.com), and to GitHub Pages as a fallback.
 - The site is built only when its content changes. Each build starts from a forecast fetched in its own job
   (`weather`); after loading, the pages fetch the forecast, the winds aloft and the weather stations from the data
   service (`workers/data`) when it has newer, so they stay fresh between builds.
