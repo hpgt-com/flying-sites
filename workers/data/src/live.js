@@ -104,10 +104,10 @@ export async function fetchLive(sites, now = Date.now(), { store = null, aprsSec
 
 // The answer to GET /v1/live.json, from OGN, or from the cache when it is fresh. store: for the tracks (mergeLive).
 export async function handleLive(sites, now = Date.now(), cache = globalThis.caches?.default, store = null) {
-  const key = new Request("https://data.hpgt.workers.dev/v1/live.json");
+  const key = new Request("https://data.hpgt.com/v1/live.json");
   const hit = cache && (await cache.match(key));
   if (hit) return hit;
-  const failKey = new Request("https://data.hpgt.workers.dev/v1/live.json?failed");
+  const failKey = new Request("https://data.hpgt.com/v1/live.json?failed");
   const unavailable = () => Response.json({ dataset: DATASET, error: "unavailable" }, { status: 503, headers: { "cache-control": "no-store" } });
   if (cache && (await cache.match(failKey))) return unavailable();
   let body;

@@ -122,9 +122,10 @@ only warns that the DNS record no longer points to it.
 
 ## The data service's address
 
-- `https://data.hpgt.com` is the data service's address, used by the site, the checks and the workflows. The
-  Worker's own address, `https://data.hpgt.workers.dev`, keeps working beside it (older pages stored on a phone use
-  it until they are opened again with a connection). It is a custom domain on the Worker `data`, added by hand in
+- `https://data.hpgt.com` is the data service's only address, used by the site, the checks and the workflows. The
+  Worker's own address, `https://data.hpgt.workers.dev`, was turned off on 19.11.2026 (`workers_dev = false`). A page
+  stored on a phone from before then asks the old address and shows its built-in forecast until it is loaded again
+  with a connection. It is a custom domain on the Worker `data`, added by hand in
   Cloudflare (Workers & Pages → data → Settings → Domains & Routes → Add → Custom domain → `data.hpgt.com`); Cloudflare
   makes the DNS record and the certificate. It is not in `wrangler.toml`, because the deploy token may only publish the
   Worker and cannot make DNS records, and deploys leave it as it is.
