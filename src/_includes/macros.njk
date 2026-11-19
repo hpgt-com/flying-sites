@@ -118,9 +118,11 @@
 {%- endmacro %}
 
 {#- The form of «Meld fra» (report.js), on each site page and on /meld-fra/. kinds: the choices for what it concerns
-    (workers/data/src/report.js has the same lists). -#}
+    (workers/data/src/report.js has the same lists). Only report.js sends it (to the data service): method="post" and
+    the button disabled until report.js has started (the pages say in <noscript> that it needs JavaScript), so the browser's own submission can never put the name and the
+    message in the address (a GET to the page) or anywhere else. -#}
 {% macro reportForm(kinds, messageLabel) -%}
-<form class="report__form" id="report-form" novalidate>
+<form class="report__form" id="report-form" method="post" novalidate>
   <label class="report__field">{{ t.report.kind }}
     <select name="kind" required>
       {% for k in kinds %}<option value="{{ k }}">{{ t.report["kind_" + k] }}</option>{% endfor %}
@@ -134,7 +136,7 @@
     <input type="text" name="name" maxlength="80" autocomplete="name">
   </label>
   <div class="report__check" id="report-check"></div>
-  <button type="submit" class="btn report__send">{{ t.report.send }}</button>
+  <button type="submit" class="btn report__send" disabled>{{ t.report.send }}</button>
   <p class="report__status" id="report-status" role="status" aria-live="polite"></p>
   <p class="muted report__privacy">{{ t.report.privacy }}</p>
 </form>

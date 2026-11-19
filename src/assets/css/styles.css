@@ -1937,6 +1937,7 @@ body.sheet-open { overflow: hidden; }
 .activity-log-head .btn { width: auto; flex: 0 0 auto; }
 .activity-log-nav { display: flex; flex-wrap: wrap; gap: 6px; }
 .activity-log-nav .btn:disabled { opacity: .45; cursor: default; }
+.report__send:disabled { opacity: .5; cursor: default; }
 /* «Alle turer denne dagen»: one colour per flight, the same on the map, the list and the curves. */
 .activity-day-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
 .activity-day-list li { display: flex; align-items: center; gap: 8px; }
