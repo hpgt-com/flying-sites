@@ -1,11 +1,13 @@
 # The site on Cloudflare (Workers static assets): the same build as GitHub Pages (_site), published by the job
-# «cloudflare» in .github/workflows/deploy.yml. No code runs here, only files. While GitHub Pages still serves
-# flysteder.hpgt.com, this answers at https://flysteder.hpgt.workers.dev for testing; the custom domain
-# flysteder.hpgt.com is added by hand in Cloudflare when the DNS record that points to GitHub is removed
-# (docs/operations.md «The site on Cloudflare»). Wrangler comes from workers/data (the same pinned version).
+# «cloudflare» in .github/workflows/deploy.yml. No code runs here, only files. flysteder.hpgt.com is a custom domain
+# on this Worker, added by hand in Cloudflare (Workers & Pages → flysteder → Settings → Domains & Routes) on
+# 19.11.2026; deploys keep it (docs/operations.md «The site on Cloudflare»). Wrangler comes from workers/data (the same
+# pinned version).
 name = "flysteder"
 compatibility_date = "2026-09-30"
-workers_dev = true
+# Only flysteder.hpgt.com: no copy of the site at flysteder.hpgt.workers.dev or at preview addresses.
+workers_dev = false
+preview_urls = false
 
 [assets]
 directory = "../../_site"
