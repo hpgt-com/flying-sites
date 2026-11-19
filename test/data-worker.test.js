@@ -407,6 +407,8 @@ function reportStore() {
 }
 
 test("report: needs both secrets, Turnstile for our hostname, JSON, and stays within the limits", async () => {
+  const { generateKeyPairSync } = await import("node:crypto");
+  const pem = generateKeyPairSync("rsa", { modulusLength: 2048 }).privateKey.export({ type: "pkcs1", format: "pem" });
   const store = reportStore();
   const req = (body, ip = "203.0.113.7", headers = {}) => new Request("https://data.test/v1/report", {
     method: "POST", body: typeof body === "string" ? body : JSON.stringify(body),
@@ -415,7 +417,8 @@ test("report: needs both secrets, Turnstile for our hostname, JSON, and stays wi
   const body = { site: "heia", kind: "hazard", message: "Ny kraftlinje over landingen.", token: "t" };
   const names = { heia: "Heia" };
   assert.equal((await reportMod.handleReport(req(body), {}, store, names, NOW)).status, 503);
-  const env = { TURNSTILE_SECRET: "s", GITHUB_ISSUES_TOKEN: "g" };
+  assert.equal((await reportMod.handleReport(req(body), { TURNSTILE_SECRET: "s", GITHUB_ISSUES_TOKEN: "g" }, store, names, NOW)).status, 503, "a personal token is no longer enough: only the app");
+  const env = { TURNSTILE_SECRET: "s", REPORTS_APP_ID: "12345", REPORTS_APP_PRIVATE_KEY: pem };
   const calls = [];
   const realFetch = globalThis.fetch;
   let turnstile = true, hostname = "flysteder.hpgt.com", github = 201;
@@ -423,6 +426,8 @@ test("report: needs both secrets, Turnstile for our hostname, JSON, and stays wi
   globalThis.fetch = async (url, init) => {
     calls.push(String(url));
     if (String(url).includes("siteverify")) return Response.json({ success: turnstile, hostname });
+    if (String(url).endsWith("/installation")) return Response.json({ id: 99 });
+    if (String(url).endsWith("/access_tokens")) return Response.json({ token: "inst-token" }, { status: 201 });
     return Response.json(answer, { status: github });
   };
   try {

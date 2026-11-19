@@ -1,0 +1,29 @@
+---
+permalink: /_headers
+eleventyExcludeFromCollections: true
+---
+# Response headers for the site on Cloudflare (workers/site; GitHub Pages ignores this file). Made from this template
+# (src/headers.njk → _site/_headers). The CSP is site.csp (src/_data/site.js), the same as the <meta> in every page,
+# plus frame-ancestors, which a meta tag cannot set. As a header it also covers files that are not HTML.
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Content-Security-Policy: {{ site.csp | safe }}; frame-ancestors 'none'
+  X-Frame-Options: DENY
+
+# The service worker fetches map tiles and data from other hosts (sw.js), and a CSP header on the worker script would
+# govern those fetches (connect-src). The pages' CSP is for the pages, so the worker gets none; it can only be loaded
+# by the pages, from this origin.
+/sw.js
+  ! Content-Security-Policy
+
+# The images have a hash of their content in the name (lib/images.js): a changed image gets a new name.
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The scripts, styles and fonts are asked for with ?v=<hash> by the pages, but not all (fonts from fonts.css, Leaflet's
+# images), so one day, not a year. GitHub Pages gives everything ten minutes.
+/assets/*
+  Cache-Control: public, max-age=86400

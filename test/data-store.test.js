@@ -308,7 +308,7 @@ test("a failure in the store gives a JSON 503 with the CORS headers, never Cloud
     assert.equal(res.headers.get("cache-control"), "no-store");
     assert.deepEqual(await res.json(), { error: "unavailable" });
     const report = await worker.fetch(new Request("https://data.test/v1/report", { method: "POST", headers: { origin: "https://flysteder.hpgt.com", "content-type": "application/json" }, body: "{}" }),
-      { ...env, TURNSTILE_SECRET: "x", GITHUB_ISSUES_TOKEN: "y", REPORTS_APP_ID: "", REPORTS_APP_PRIVATE_KEY: "" }, {});
+      { ...env, TURNSTILE_SECRET: "x", REPORTS_APP_ID: "12345", REPORTS_APP_PRIVATE_KEY: "nøkkel" }, {});
     assert.equal(report.status, 400, "a report that is wrong is refused before the store is asked");
   } finally {
     console.warn = warn;

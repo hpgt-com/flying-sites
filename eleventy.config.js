@@ -20,7 +20,6 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/sites": "flysteder" }, { filter: ["**/*.gpx"] });
   eleventyConfig.addPassthroughCopy("src/assets");
   // Response headers for the site on Cloudflare (workers/site); GitHub Pages ignores the file.
-  eleventyConfig.addPassthroughCopy({ "src/_headers": "_headers" });
   // Only what the pages load: leaflet-src.js and leaflet-src.esm.js (about 0.9 MB with their maps) are left out.
   eleventyConfig.addPassthroughCopy({
     "node_modules/leaflet/dist/leaflet.js": "assets/leaflet/leaflet.js",
