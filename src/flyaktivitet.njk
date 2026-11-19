@@ -31,7 +31,7 @@ eleventyComputed:
   </div>
 
   <section class="activity" id="activity" data-url="{{ site.flightsUrl }}" aria-live="polite">
-    <p class="muted">{{ t.activity.loading }}</p>
+    <p class="muted activity-loading">{{ t.activity.loading }}</p>
   </section>
   {#- «Siste turer»: each flight of the last 30 days from the data service (/v1/flight-log.json), with OGN's positions,
       drawn on a map when chosen (activity.js). Hidden until the data has come. -#}
