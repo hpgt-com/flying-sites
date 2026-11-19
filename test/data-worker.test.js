@@ -552,7 +552,7 @@ test("live: answered from the cache when fresh, OGN asked otherwise, 503 when OG
     assert.equal((await liveMod.handleLive(sites, NOW, cache2)).status, 503);
     assert.equal((await liveMod.handleLive(sites, NOW, cache2)).status, 503);
     assert.equal(calls, 1, "after a failure the answer is 503 at once for a while, OGN is not asked again");
-    assert.equal(empty.get("https://data.hpgt.workers.dev/v1/live.json?failed").headers.get("cache-control"), `public, max-age=${liveMod.FAIL_SECONDS}`);
+    assert.equal(empty.get("https://data.hpgt.com/v1/live.json?failed").headers.get("cache-control"), `public, max-age=${liveMod.FAIL_SECONDS}`);
   } finally {
     globalThis.fetch = realFetch;
     console.warn = warn;
