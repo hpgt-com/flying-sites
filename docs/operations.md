@@ -99,6 +99,14 @@ the menu and is marked `noindex`. It shows per site:
   and `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (then open `/__scheduled` to run
   the schedule, and `/v1/forecast.json`). For Holfuy locally, put `HOLFUY_KEY=…` in `workers/data/.dev.vars` (ignored by Git).
 
+## The data service's address
+
+- `https://data.hpgt.com` is the data service's own address on the club's domain, beside
+  `https://data.hpgt.workers.dev`, which keeps working. It is a custom domain on the Worker `data`, added by hand in
+  Cloudflare (Workers & Pages → data → Settings → Domains & Routes → Add → Custom domain → `data.hpgt.com`); Cloudflare
+  makes the DNS record and the certificate. It is not in `wrangler.toml`, because the deploy token may only publish the
+  Worker and cannot make DNS records, and deploys leave it as it is.
+
 ## Data service health
 
 - `https://data.hpgt.workers.dev/v1/status.json` (`workers/data/src/health.js`) says for each source when it last
