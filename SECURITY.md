@@ -22,8 +22,7 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   opens «Meld fra om endring»), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
   GitHub Pages cannot set custom HTTP headers, so `frame-ancestors` and other header-only rules are not included.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
-  `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.workers.dev`, and
-  `data.hpgt.com` beside it while the site moves over). The station
+  `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.com`). The station
   data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
 - «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
   `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000

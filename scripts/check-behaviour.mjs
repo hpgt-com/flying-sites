@@ -13,7 +13,7 @@ import fs from "node:fs";
 import { chromium, devices } from "playwright";
 import { serveSite } from "./site-server.mjs";
 
-const DATA = "https://data.hpgt.workers.dev";
+const DATA = "https://data.hpgt.com";
 const MOBILE = { ...devices["Pixel 7"], colorScheme: "light" };
 
 // The stations as the data service gave them, moved to now so none is too old to show.
@@ -107,7 +107,7 @@ function forecastNow() {
 async function answer(context, origin, { down = false, reports = [], forecast = false } = {}) {
   await context.route("**/*", async (route) => {
     const req = route.request();
-    // Compared by origin, not as text: «https://data.hpgt.workers.dev.example» is another host.
+    // Compared by origin, not as text: «https://data.hpgt.com.example» is another host.
     const url = new URL(req.url());
     if (url.origin === origin) return route.continue();
     if (url.origin === DATA && url.pathname === "/v1/report") {
