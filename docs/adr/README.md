@@ -6,8 +6,9 @@ not edited afterwards; it is superseded by a new one, and the old one gets the s
 
 | No. | Decision | Status |
 |---|---|---|
-| [0001](0001-static-site-eleventy-github-pages.md) | Static site with Eleventy on GitHub Pages | Accepted |
+| [0001](0001-static-site-eleventy-github-pages.md) | Static site with Eleventy on GitHub Pages | Superseded by 0006 (hosting) |
 | [0002](0002-data-service-cloudflare.md) | Data service on Cloudflare Workers with Durable Objects and R2 | Accepted |
 | [0003](0003-slow-data-cached-by-pr.md) | Slow-changing external data cached in the repository, updated by PR | Accepted |
 | [0004](0004-offsite-backup-restore-drill.md) | Off-site backup to Backblaze B2, with a monthly restore drill | Accepted |
 | [0005](0005-scoped-tokens-recovery-environment.md) | Scoped tokens owned by the club, and a separate recovery environment | Accepted |
+| [0006](0006-site-served-by-cloudflare.md) | Site served by Cloudflare, with GitHub Pages as a fallback | Accepted |

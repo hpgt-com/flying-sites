@@ -242,20 +242,22 @@ sequenceDiagram
   participant CI as PR check
   participant Main as main
   participant Deploy as Build and deploy
-  participant Pages as GitHub Pages
+  participant CF as Cloudflare (Worker flysteder)
+  participant Pages as GitHub Pages (fallback)
 
   Dev->>PR: branch + change
   PR->>CI: npm test, npm run build
   CI-->>PR: green / red
   PR->>Main: merge
   Main->>Deploy: push to main
-  Deploy->>Pages: _site/ is published
+  Deploy->>CF: _site/ is published (job cloudflare)
+  Deploy->>Pages: the same archive, as a fallback
 ```
 
 | Workflow | When | What |
 |---|---|---|
 | `pr-check.yml` | Every PR | Tests, build, link check, HTML validation and the check for template slips such as «[object Object]» (`build`), axe in Chromium on a few pages (`accessibility`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
-| `deploy.yml` | Push to `main`, manually | Four jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `deploy` publishes, and `attest` signs build provenance and an SBOM for what was published (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
+| `deploy.yml` | Push to `main`, manually | Five jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `cloudflare` publishes to Cloudflare (flysteder.hpgt.com) with the token in the environment `cloudflare`, `deploy` publishes the same archive to GitHub Pages as a fallback, and `attest` signs build provenance and an SBOM for that archive (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
 | `data-worker.yml` | Push to `main` when the data service, the MET code or the sites change, manually | Publishes the data service (`workers/data`) to Cloudflare Workers, with the token in the environment `cloudflare` (only `main`). |
 | `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
 | `obstacles.yml` | The 2nd of each month, manually | Fetches power lines and obstacles from NVE and OpenStreetMap and opens a PR if anything has changed. No secrets. |
@@ -380,7 +382,7 @@ Cloudflare and never in GitHub. Values are never written down here; see
 flowchart TB
   subgraph envs["GitHub environments (only main)"]
     automation["automation<br/>openAIP key, GitHub App<br/>«HPGT Flying Sites»"]
-    cloudflare["cloudflare<br/>token: publish Worker «data» only"]
+    cloudflare["cloudflare<br/>tokens: publish Worker «data» only,<br/>publish Worker «flysteder» only"]
     backupenv["backup<br/>R2 read-only + B2 bucket key"]
     backupread["backup-read<br/>B2 read-only key"]
     recovery["recovery<br/>required reviewer<br/>token only during a recovery"]
@@ -392,7 +394,7 @@ flowchart TB
     bk["backup.yml"]
     drillwf["restore-drill.yml"]
     rc["recover.yml"]
-    dep["deploy.yml<br/>(no secrets: GitHub Pages)"]
+    dep["deploy.yml<br/>(Cloudflare, and GitHub Pages as fallback)"]
   end
 
   subgraph cfsecrets["Cloudflare: Worker «data» secrets"]
@@ -401,6 +403,7 @@ flowchart TB
 
   automation --> air
   cloudflare --> dw
+  cloudflare --> dep
   backupenv --> bk
   backupread --> drillwf
   backupread --> rc

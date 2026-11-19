@@ -89,7 +89,9 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   `data-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
   environment `cloudflare`, which only `main` may use, so a PR branch cannot publish. The token is an account token
   made from the Worker (Workers & Pages → data → Settings → Builds → «API token for external CI/CD») and can only
-  publish the Worker `data`: no other Worker, no R2, KV, domains or DNS. The broader token that «Recover» needs to
+  publish the Worker `data`: no other Worker, no R2, KV, domains or DNS. The site is published the same way by
+  `deploy.yml` (job `cloudflare`) with `CLOUDFLARE_SITE_TOKEN` in the same environment, made from the Worker
+  `flysteder` so it can only publish that one; it expires 19.11.2027. The broader token that «Recover» needs to
   write the archive back to R2 (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read) is not kept:
   it is made when needed, put in its own environment `recovery` (only `main`, a required reviewer) and deleted
   afterwards. The account has
