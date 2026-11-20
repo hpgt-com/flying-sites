@@ -50,10 +50,11 @@ test("the site's own limit is used instead of the common limit", () => {
   assert.equal(rate({ dir: 247, speed: 4.5, gust: 6 }, local).rating, "ok");
 });
 
-test("light wind gives «Usikkert», because the direction is uncertain", () => {
+test("light wind from the right direction is «Passer», with no reason or note", () => {
   const r = rate({ dir: 247, speed: rules.minWind - 0.5, gust: 2 });
-  assert.equal(r.rating, "maybe");
-  assert.match(r.reasons.join(), /Svak vind/);
+  assert.equal(r.rating, "ok");
+  assert.deepEqual(r.reasons, []);
+  assert.equal(r.note, undefined);
 });
 
 test("possible direction gives «Usikkert», wrong direction gives «Passer ikke»", () => {
