@@ -246,7 +246,7 @@
       reasons.push(["edge"]);
     }
     if (wind.rain != null && wind.rain >= rules.rainMaybe) reasons.push(["someRain", { rain: formatRain(wind.rain) }]);
-    if (wind.speed < rules.minWind) reasons.push(["weak"]);
+    // Light wind is not a reason on its own: with the right direction a flight down is still a flight.
     if (wind.gust == null) reasons.push(["noGust"]);
     else if (wind.gust - wind.speed > rules.maxGustSpread) reasons.push(["gustSpread", { spread: rules.maxGustSpread }]);
     return result(reasons.length ? "maybe" : "ok", reasons);
