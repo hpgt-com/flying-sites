@@ -532,6 +532,11 @@ commit of any kind resets the 60 days. The data service's own schedule runs on C
 UptimeRobot (see [Accounts and secrets](#accounts-and-secrets)) watches the site and the status from outside GitHub
 whatever the schedule does: an e-mail from it is the first sign of a problem in a quiet season.
 
+The club's public status page [status.hpgt.com](https://status.hpgt.com) (Upptime in the repository `hpgt-com/status`,
+linked as «Driftsstatus» in the menu: `site.statusUrl`) also checks the site and the data service every 5 minutes from
+GitHub Actions, and opens an issue there when one is down. Its setup is described in hpgt-web `docs/operations.md`
+(«What watches what»).
+
 **The data service does not answer, or answers 503.** The pages still work from the built-in forecast. Look at
 Cloudflare → Workers & Pages → data → Observability (the logs name the source and the error) and at Metrics (the
 free plan's daily limits reset at 00:00 UTC; Cloudflare e-mails at 90 %). A bad version: roll back under Deployments
