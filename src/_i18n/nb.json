@@ -73,7 +73,9 @@
     "siteTitle": "HPGT flysteder",
     "aboutLink": "Om siden og personvern",
     "menuPlan": "Planlegg tur",
-    "menuClub": "Klubben og siden"
+    "menuClub": "Klubben og siden",
+    "statusLink": "Driftsstatus",
+    "statusSub": "Er siden og værdataene oppe?"
   },
   "home": {
     "description": "Flysteder for paraglider og speedglider i HPGTs område. Filtrer på vindretning, nivå og kategori.",

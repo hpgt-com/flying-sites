@@ -2,6 +2,8 @@ export default {
   title: "HPGT flysteder",
   url: "https://flysteder.hpgt.com",
   hpgtUrl: "https://hpgt.com",
+  // The status page (Upptime in hpgt-com/status): checks this site, hpgt.com and the data service every 5 minutes, from GitHub.
+  statusUrl: "https://status.hpgt.com/",
   repoUrl: "https://github.com/hpgt-com/flying-sites",
   // The front-page map zooms to the launches in this region. Sites further away (Lofoten, Andøya …) are in
   // the list and search, and the map can be zoomed out to them.
