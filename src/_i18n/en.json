@@ -73,7 +73,9 @@
     "siteTitle": "HPGT flying sites",
     "aboutLink": "About the site and privacy",
     "menuPlan": "Plan a trip",
-    "menuClub": "The club and the site"
+    "menuClub": "The club and the site",
+    "statusLink": "Service status",
+    "statusSub": "Are the site and the weather data up?"
   },
   "home": {
     "description": "Paragliding and speedflying sites in the HPGT area (Harstad, Northern Norway). Filter by wind direction, level and category.",
