@@ -27,10 +27,12 @@ binding = "ARCHIVE"
 bucket_name = "hpgt-data-archive"
 
 # The rate limit for CSP violation reports (src/csp-report.js): 30 requests a minute from one address, counted
-# by Cloudflare at each location under a hash of the address. namespace_id is any number unique in the account.
+# by Cloudflare at each location under a hash of the address. Rate limit namespaces are shared by the whole Cloudflare
+# account «HPGT», so each Worker and each limit has its own namespace_id: 1001 is the forms on hpgt.com (hpgt-web,
+# BEGRENS), 1002 is this one. A new limit gets a new number.
 [[ratelimits]]
 name = "CSP_LIMIT"
-namespace_id = "1001"
+namespace_id = "1002"
 simple = { limit = 30, period = 60 }
 
 [triggers]
