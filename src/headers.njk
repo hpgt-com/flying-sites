@@ -12,6 +12,8 @@ eleventyExcludeFromCollections: true
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
   Content-Security-Policy: {{ site.csp | safe }}; frame-ancestors 'none'
   X-Frame-Options: DENY
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-site
 
 # The service worker fetches map tiles and data from other hosts (sw.js), and a CSP header on the worker script would
 # govern those fetches (connect-src). The pages' CSP is for the pages, so the worker gets none; it can only be loaded
