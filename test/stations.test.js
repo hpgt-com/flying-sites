@@ -1,7 +1,9 @@
 // Tests for the weather stations on the pages (src/assets/js/stations.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { installDom, html } from "./helpers/dom.mjs";
 
+installDom();
 globalThis.FlyingSites = {
   opensNewTab: "(åpnes i ny fane)",
   DIRECTION_LABELS: { N: "N", NE: "NØ", E: "Ø", SE: "SØ", S: "S", SW: "SV", W: "V", NW: "NV" },
@@ -152,11 +154,12 @@ test("the map thins stations zoomed out: the club's always, then MET's with the 
 
 test("the marker shows the wind in whole m/s with a notch for the direction, or the temperature", () => {
   globalThis.FlyingSites.formatNumber = (n, d) => Number(n).toFixed(d || 0).replace(".", ",");
-  const html = ST.markerHtml(item({ source: "Holfuy" }), NOW, "wind");
-  assert.match(html, /station-marker__notch" data-dir="225"/, "the direction as data, the turn is set on the element (no inline style)");
-  assert.doesNotMatch(html, /style=/);
-  assert.match(html, /station-marker__dial">4</);
-  const temp = ST.markerHtml(item({ source: "MET Norge", temperature: -2.4 }), NOW, "temp");
+  const wind = html(ST.markerContent(item({ source: "Holfuy" }), NOW, "wind"));
+  assert.match(wind, /station-marker__notch" data-dir="225"/, "the direction as data, the turn is set on the element (no inline style)");
+  assert.doesNotMatch(wind, /style=/);
+  assert.match(wind, /station-marker__dial">4</);
+  assert.match(wind, /station-marker__label">4,4 <small>\(7,2\)<\/small>/);
+  const temp = html(ST.markerContent(item({ source: "MET Norge", temperature: -2.4 }), NOW, "temp"));
   assert.match(temp, /station-marker__dial">-2°/);
   assert.match(temp, />MET</);
   assert.doesNotMatch(temp, /notch/);

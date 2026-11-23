@@ -218,7 +218,7 @@
       if (typeof p[1] !== "number") return;
       var first = i === 0, last = i === f.points.length - 1;
       L.circleMarker([p[1], p[2]], { radius: first || last ? 6 : 3.5, color: "#fff", weight: 1.5, fillColor: first ? "#1E8A4C" : last ? "#C24A12" : "#2E5E6E", fillOpacity: 1 })
-        .bindTooltip(text("activity.pointTitle", { time: timeText(p[0]), alt: p[3] != null ? FS.formatNumber(p[3]) : "?", kmh: p[4] != null ? FS.formatNumber(Math.round(p[4] * 3.6)) : "?" }))
+        .bindTooltip(document.createTextNode(text("activity.pointTitle", { time: timeText(p[0]), alt: p[3] != null ? FS.formatNumber(p[3]) : "?", kmh: p[4] != null ? FS.formatNumber(Math.round(p[4] * 3.6)) : "?" })))
         .addTo(map);
     });
     if (latlngs.length > 1) map.fitBounds(latlngs, { padding: [24, 24], maxZoom: 14 }); else map.setView(latlngs[0], 13);
@@ -302,7 +302,7 @@
         if (!ll.length) { cursors.push(null); return; }
         all = all.concat(ll);
         L.polyline(ll, { color: "#1C2B33", weight: 5, opacity: 0.85 }).addTo(map);
-        L.polyline(ll, { color: colour, weight: 2.5 }).bindTooltip(f.name + " " + timeText(f.start)).addTo(map);
+        L.polyline(ll, { color: colour, weight: 2.5 }).bindTooltip(document.createTextNode(f.name + " " + timeText(f.start))).addTo(map);
         L.circleMarker(ll[0], { radius: 5, color: "#fff", weight: 1.5, fillColor: colour, fillOpacity: 1 }).addTo(map);
         cursors.push({ map: map, marker: L.circleMarker(ll[0], { radius: 8, color: "#fff", weight: 3, fillColor: colour, fillOpacity: 1 }) });
       });

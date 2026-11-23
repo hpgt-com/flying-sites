@@ -657,19 +657,27 @@
   function readMode() { try { return localStorage.getItem(MODE_KEY) === "temp" ? "temp" : "wind"; } catch (e) { return "wind"; } }
   function saveMode(m) { try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* private window: not remembered */ } }
 
-  // The marker's HTML, from numbers only. mode: "wind" or "temp".
-  function markerHtml(item, now, mode) {
+  // The marker's content as a fragment, from numbers only. mode: "wind" or "temp".
+  function markerContent(item, now, mode) {
     var old = isOld(item, now), w = item.wind || {};
     var hasW = !old && isNum(w.speed), hasT = !old && isNum(item.temperature);
-    var tag = isHolfuy(item) ? "" : '<span class="station-marker__tag">MET</span>';
+    var out = document.createDocumentFragment(), label = make("span", "station-marker__label");
+    if (!isHolfuy(item)) label.appendChild(make("span", "station-marker__tag", "MET"));
     if (mode === "temp") {
-      return '<span class="station-marker__dial">' + (hasT ? Math.round(item.temperature) + "°" : "–") + "</span>" +
-        '<span class="station-marker__label">' + tag + (hasT ? value(item.temperature) + " °C" : "–") + "</span>";
+      label.append(hasT ? value(item.temperature) + " °C" : "–");
+      out.append(make("span", "station-marker__dial", hasT ? Math.round(item.temperature) + "°" : "–"), label);
+      return out;
     }
     // The notch: the whole marker turned by the direction, with the notch at the bottom (where a wind from north blows).
-    var notch = hasW && isNum(w.dir) ? '<span class="station-marker__notch" data-dir="' + Math.round(w.dir) + '"></span>' : "";
-    return notch + '<span class="station-marker__dial">' + (hasW ? Math.round(w.speed) : "–") + "</span>" +
-      '<span class="station-marker__label">' + tag + (hasW ? value(w.speed) + (isNum(w.gust) ? " <small>(" + value(w.gust) + ")</small>" : "") : "–") + "</span>";
+    if (hasW && isNum(w.dir)) {
+      var notch = out.appendChild(make("span", "station-marker__notch"));
+      notch.setAttribute("data-dir", String(Math.round(w.dir)));
+    }
+    if (!hasW) label.append("–");
+    else if (!isNum(w.gust)) label.append(value(w.speed));
+    else label.append(value(w.speed) + " ", make("small", null, "(" + value(w.gust) + ")"));
+    out.append(make("span", "station-marker__dial", hasW ? String(Math.round(w.speed)) : "–"), label);
+    return out;
   }
   function markerClass(item, now, mode) {
     var cold = mode === "temp" && !isOld(item, now) && isNum(item.temperature) && item.temperature <= 0;
@@ -721,7 +729,8 @@
     // not cover the launch's own marker.
     function icon(item, now, atLaunch) {
       var met = !isHolfuy(item), size = met ? 26 : 30;
-      return L.divIcon({ className: markerClass(item, now, mode), html: markerHtml(item, now, mode),
+      var shown = mode;
+      return FS.divIcon({ className: markerClass(item, now, shown), content: function () { return markerContent(item, now, shown); },
         iconSize: [size, size], iconAnchor: atLaunch ? [-12, size + 12] : [size / 2, size / 2], popupAnchor: atLaunch ? [12 + size / 2, -size - 12] : [0, -size / 2] });
     }
     function thin() {
@@ -913,7 +922,7 @@
     OLD_MINUTES: OLD_MINUTES,
     OLD_MINUTES_MET: OLD_MINUTES_MET,
     thinned: thinned,
-    markerHtml: markerHtml,
+    markerContent: markerContent,
     groups: groups,
     metTable: metTable,
     verifyLines: verifyLines,
