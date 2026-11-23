@@ -153,15 +153,14 @@ GitHub in autumn 2026.
     again. A check can only be selected once it has run recently.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
     (once CodeQL has run on `main`).
-  - Bypass list: Repository admin, «For pull requests only». Without the GitHub App (see docs/operations.md),
-    PRs from the airspace workflow are created with the GitHub token and do not trigger the PR check, so they must
-    be merged with «Bypass rules». With the app they get the checks like any other PR, and the bypass is only a
-    fallback. Direct pushes to `main` are still blocked.
+  - Bypass list: Repository admin, «For pull requests only». PRs from the airspace and obstacles workflows are
+    created with the GitHub App (see docs/operations.md) and get the checks like any other PR. Direct pushes to
+    `main` are blocked.
 - [ ] **Advanced Security**: Private vulnerability reporting, Dependency graph, Dependabot alerts,
   Dependabot security updates, Secret scanning and Push protection on. Code scanning must be set to
   Advanced (our `code-scanning.yml`), not Default setup.
 - [ ] **Actions → General**, Workflow permissions: «Read repository contents and packages permissions»,
-  and «Allow GitHub Actions to create and approve pull requests» on (needed by the airspace workflow only while
-  the GitHub App is not set up; turn it off once the app works).
+  and «Allow GitHub Actions to create and approve pull requests» off (set for the whole organisation). The
+  workflows that open PRs use the GitHub App.
 - [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» on.
 - [ ] **Collaborators and teams** and **GitHub Apps**: as few people as possible with write and admin access.
