@@ -138,6 +138,8 @@ jobs:
       - run: node scripts/data-sites.mjs
       - run: npm ci --ignore-scripts
         working-directory: workers/data
+      - run: npm audit signatures
+        working-directory: workers/data
       - run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/worker"
         working-directory: workers/data
         env:

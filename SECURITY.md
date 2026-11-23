@@ -57,6 +57,10 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   deploy job has the publishing permissions (`pages`, `id-token`).
 - All workflows install with `npm ci --ignore-scripts`, so no package's install script runs in CI (none of the
   dependencies need one). A new dependency that needs one will fail the build and must be assessed first.
+- The pull request check runs `npm audit signatures` for `workers/data`, so a package that is not signed by the
+  registry stops the merge. The site itself cannot run the check: Eleventy installs `@11ty/nunjucks` under the alias
+  `nunjucks`, and `npm audit signatures` looks up the alias name, which does not exist in that version. The integrity
+  hashes in `package-lock.json` are still checked by `npm ci`.
 - The airspace workflow is split in two jobs: `fetch` installs the npm packages (`npm ci --ignore-scripts`) and
   runs the script with read-only access and the openAIP key; `pr` has write access to push the branch and open the
   PR, but runs no npm code. The fetched files go from one to the other as an artifact. When the club's GitHub App
