@@ -1,64 +1,63 @@
-# Operations and maintenance
+# Drift og vedlikehold
 
-Practical how-tos for those who maintain the site. How the site fits together is described in
-[architecture.md](architecture.md), and the site file format in [site-files.md](site-files.md).
+Praktiske fremgangsmåter for dem som vedlikeholder siden. Hvordan siden henger sammen, står i
+[architecture.md](architecture.md), og formatet på stedsfilene i [site-files.md](site-files.md).
 
-## Running the site locally
+## Kjøre siden lokalt
 
-Requires Node.js 26 or later (the version in `.nvmrc`, which CI uses; Node 26 is LTS until April 2029).
-
-```bash
-npm ci          # install the packages
-npm start       # http://localhost:8080, reloads when you save
-npm test        # the tests in test/
-npm run build   # builds into _site/
-```
-
-`FORECAST_OFFLINE=1 npm run build` builds without the weather (MET and Open-Meteo), which is faster and works
-offline. Otherwise the build fetches the weather when `.cache/weather/` is missing or older than 30 minutes.
-`npm run weather` fetches it right away, the same way the `weather` job in «Build and deploy» does.
-
-The quality checks in the PR check can be run locally after the build:
+Krever Node.js 26 eller nyere (versjonen i `.nvmrc`, som CI bruker; Node 26 er LTS til april 2029).
 
 ```bash
-npm run check:links   # internal links and images point to files that exist (no network)
-npm run check:html    # HTML validation of every page, rules in .htmlvalidate.mjs
-npm run check:output  # no «[object Object]», «undefined», «NaN» or unfilled placeholders in the pages
-npx playwright install chromium   # once
-npm run check:a11y    # axe in Chromium on a few pages, light and dark mode
-npm run check:behaviour  # what the pages do in Chromium: markers on zoom, live layer, data service down, «Meld fra», offline
+npm ci          # installerer pakkene
+npm start       # http://localhost:8080, lastes på nytt ved lagring
+npm test        # testene i test/
+npm run build   # bygger til _site/
 ```
 
-`check:a11y` fails only on findings with impact «serious» or «critical», and lists the rest. With a Chromium already
-installed, set `CHROMIUM_PATH` instead of running `playwright install`. Pages checked: `PAGES` in
-`scripts/check-a11y.mjs`. `check:behaviour` runs the scenarios in `scripts/check-behaviour.mjs` with the data service and
-Turnstile answered by the script (stations from `test/fixtures/stations.json`, moved to now) and no network; add a scenario
-there when something in the browser breaks.
+`FORECAST_OFFLINE=1 npm run build` bygger uten været (MET og Open-Meteo), som går raskere og virker uten nett.
+Ellers henter bygget været når `.cache/weather/` mangler eller er eldre enn 30 minutter. `npm run weather` henter det
+med en gang, på samme måte som jobben `weather` i «Build and deploy».
 
-## Workflow
+Kvalitetssjekkene i PR-sjekken kan kjøres lokalt etter bygget:
 
-1. Create a branch and make the change.
-2. Open a pull request. The PR check runs the tests, builds the site, and checks links, HTML and accessibility.
-   Invalid site files, broken internal links, invalid HTML or serious accessibility errors make it fail.
-3. Merge to `main`. The site is published automatically after a few minutes.
+```bash
+npm run check:links   # interne lenker og bilder peker på filer som finnes (uten nett)
+npm run check:html    # HTML-validering av hver side, regler i .htmlvalidate.mjs
+npm run check:output  # ingen «[object Object]», «undefined», «NaN» eller plassholdere som ikke er fylt ut
+npx playwright install chromium   # én gang
+npm run check:a11y    # axe i Chromium på noen sider, lys og mørk modus
+npm run check:behaviour  # hva sidene gjør i Chromium: markører ved zoom, live-laget, datatjenesten nede, «Meld fra», offline
+```
 
-Changes made by Claude or other bots appear in «Sist endret» ("Last changed") as the PR they came from
-(`lib/git.js`).
+`check:a11y` feiler bare på funn med alvorlighet «serious» eller «critical», og lister resten. Med en Chromium som
+allerede er installert, settes `CHROMIUM_PATH` i stedet for å kjøre `playwright install`. Sidene som sjekkes: `PAGES` i
+`scripts/check-a11y.mjs`. `check:behaviour` kjører scenarioene i `scripts/check-behaviour.mjs`, der skriptet svarer for
+datatjenesten og Turnstile (stasjoner fra `test/fixtures/stations.json`, flyttet til nå) og uten nett. Når noe i
+nettleseren slutter å virke, legges det til et scenario der.
 
-## Adding a site
+## Arbeidsflyt
 
-1. Create the folder `src/sites/<id>/` and copy `index.md` from a similar site.
-2. Fill in `name`, `id`, `launch`, `wind_directions`, `landings` and `parking`. Get the heights from Kartverket
+1. Lag en gren og gjør endringen.
+2. Åpne en pull request. PR-sjekken kjører testene, bygger siden og sjekker lenker, HTML og tilgjengelighet. Ugyldige
+   stedsfiler, brutte interne lenker, ugyldig HTML eller alvorlige tilgjengelighetsfeil får den til å feile.
+3. Merge til `main`. Siden publiseres automatisk etter noen minutter.
+
+Endringer laget av Claude eller andre roboter vises i «Sist endret» som PR-en de kom fra (`lib/git.js`).
+
+## Nytt flysted
+
+1. Lag mappen `src/sites/<id>/` og kopier `index.md` fra et lignende sted.
+2. Fyll inn `name`, `id`, `launch`, `wind_directions`, `landings` og `parking`. Høydene hentes fra Kartverket
    (`https://ws.geonorge.no/hoydedata/v1/punkt?koordsys=4258&punkter=[[lon,lat]]`).
-3. Set `status: draft` until the site has been reviewed.
-4. Add a walking route (`<id>-route.gpx`, without timestamps or heart-rate data) and images (`npm run images`).
-5. Run `npm run airspace` (requires `OPENAIP_API_KEY`), or wait for the monthly update.
-6. Write `index.en.md`, or let the status page remind you.
-7. Check `/status/` after the build: it shows what is missing.
+3. Sett `status: draft` til stedet er gjennomgått.
+4. Legg til en gangrute (`<id>-route.gpx`, uten tidsstempler eller pulsdata) og bilder (`npm run images`).
+5. Kjør `npm run airspace` (krever `OPENAIP_API_KEY`), eller vent på den månedlige oppdateringen.
+6. Skriv `index.en.md`, eller la statussiden minne om det.
+7. Sjekk `/status/` etter bygget: den viser hva som mangler.
 
-## Reviewing a site
+## Gjennomgå et flysted
 
-When the site has been checked by someone who knows it, set:
+Når stedet er sjekket av noen som kjenner det, settes:
 
 ```yaml
 status: reviewed
@@ -67,611 +66,614 @@ reviewed:
   date: '2026-10-06'
 ```
 
-The build stops if `status` and `reviewed` do not match.
+Bygget stopper hvis `status` og `reviewed` ikke stemmer overens.
 
-## Status page
+## Statussiden
 
-[`/status/`](https://flysteder.hpgt.com/status/) is generated on every build (`lib/status.js`), is not linked from
-the menu and is marked `noindex`. It shows per site:
+[`/status/`](https://flysteder.hpgt.com/status/) lages ved hvert bygg (`lib/status.js`), lenkes ikke fra menyen og er
+merket `noindex`. Den viser per sted:
 
-| Check | Missing when |
+| Sjekk | Mangler når |
 |---|---|
-| level, landing, parking | the field is empty (landing not when `no_fixed_landing: true`) |
-| parking text | parking is on the map, but `access.parking_text` is missing |
-| walking route | no GPX, and no parking within 300 m of the launch and less than 50 m lower |
-| launch text, landing text | the section is missing or is a placeholder |
-| heights | `launch_masl` or `landing_masl` is missing |
-| launch photo, landing photo, overview photo | no images of that type |
-| airspace | neither fetched from openAIP nor recorded in the site file |
-| yr_id, flightlog_id | not linked |
-| English text (outdated) | `index.en.md` is missing, or is older than `index.md` |
+| nivå, landing, parkering | feltet er tomt (landing ikke når `no_fixed_landing: true`) |
+| parkeringstekst | parkeringen er i kartet, men `access.parking_text` mangler |
+| gangrute | ingen GPX, og ingen parkering innen 300 m fra starten og mindre enn 50 m lavere |
+| starttekst, landingstekst | avsnittet mangler eller er en plassholder |
+| høyder | `launch_masl` eller `landing_masl` mangler |
+| startbilde, landingsbilde, oversiktsbilde | ingen bilder av den typen |
+| luftrom | verken hentet fra openAIP eller ført inn i stedsfilen |
+| yr_id, flightlog_id | ikke koblet |
+| engelsk tekst (utdatert) | `index.en.md` mangler, eller er eldre enn `index.md` |
 
-## Wind forecast
+## Vindvarselet
 
-- Fetched from MET on every build (the `weather` job; the site is built only when its content changes, with no
-  schedule).
-- The **data service** (`workers/data`, Cloudflare account «HPGT») fetches MET by itself every 5 minutes, six launches
-  per run, and the pages use its forecast when it is newer than the one built into the page. See it at
-  `https://data.hpgt.com/v1/forecast.json` (`fetched` = when the oldest launch was fetched). Its logs are in
-  Cloudflare → Workers & Pages → data → Logs.
-- **Publishing the data service:** happens by itself when `workers/data/`, `lib/weather/met.js` or a site file changes
-  on `main` (Actions → «Data service»), or with «Run workflow» there. Test locally with `node scripts/data-sites.mjs`
-  and `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (then open `/__scheduled` to run
-  the schedule, and `/v1/forecast.json`). For Holfuy locally, put `HOLFUY_KEY=…` in `workers/data/.dev.vars` (ignored by Git).
+- Hentes fra MET ved hvert bygg (jobben `weather`; siden bygges bare når innholdet endres, uten tidsplan).
+- **Datatjenesten** (`workers/data`, Cloudflare-kontoen «HPGT») henter selv MET hvert 5. minutt, seks startsteder per
+  kjøring, og sidene bruker varselet derfra når det er nyere enn det som er bygget inn i siden. Det ligger på
+  `https://data.hpgt.com/v1/forecast.json` (`fetched` = når det eldste startstedet ble hentet). Loggene ligger i
+  Cloudflare → Workers & Pages → data → Observability.
+- Er varselet mer enn 6 timer gammelt (`maxForecastAgeHours` i `src/_data/windRules.json`), eller kommer det fra en
+  modellkjøring hos MET som er mer enn 12 timer gammel (`maxModelAgeHours`), slås vindvurderingen av, og siden sier fra.
+- **Hent et nytt varsel nå:** Actions → «Build and deploy» → «Run workflow».
+- Grensene for vurderingen står i `src/_data/windRules.json`. Et steds egen grense settes med `wind_limits.max_wind` i
+  stedsfilen.
+- **Publisere datatjenesten:** skjer av seg selv når `workers/data/`, `lib/weather/met.js` eller en stedsfil endres på
+  `main` (Actions → «Data service»), eller med «Run workflow» der. Testes lokalt med `node scripts/data-sites.mjs` og
+  `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (åpne så `/__scheduled` for å kjøre
+  tidsplanen, og `/v1/forecast.json`). For Holfuy lokalt legges `HOLFUY_KEY=…` i `workers/data/.dev.vars` (ignoreres
+  av Git).
 
-## The site on Cloudflare
+## Siden på Cloudflare
 
-Since 19.11.2026 flysteder.hpgt.com is served by Cloudflare (Workers static assets, the Worker `flysteder`,
-`workers/site/wrangler.toml`), so it sends real security headers (`src/headers.njk` → `_headers`: HSTS, the CSP from `site.csp`, framing, referrer,
-permissions) and caches the images for a year (GitHub Pages gave everything ten minutes). The build is the same; the
-job «cloudflare» in «Build and deploy» publishes the archive made for GitHub Pages, so both get exactly the same files.
-GitHub Pages keeps publishing every build as a fallback. Its custom domain under Settings → Pages can stay; GitHub
-only warns that the DNS record no longer points to it.
+flysteder.hpgt.com serveres av Cloudflare (Workers static assets, Workeren `flysteder`, `workers/site/wrangler.toml`),
+slik at den sender ekte sikkerhetshoder (`src/headers.njk` → `_headers`: HSTS, CSP-en fra `site.csp`, innramming,
+referrer, permissions) og cacher bildene i et år. Bygget er det samme: jobben «cloudflare» i «Build and deploy»
+publiserer arkivet som lages for GitHub Pages, så begge får nøyaktig de samme filene. GitHub Pages får fortsatt hvert
+bygg som reserve. Det egne domenet under Settings → Pages kan bli stående; GitHub varsler bare at DNS-posten ikke
+lenger peker dit.
 
-- **The token** is `CLOUDFLARE_SITE_TOKEN` in the environment `cloudflare`: made under Workers & Pages → flysteder →
-  Settings → Builds → «API token for external CI/CD», so it can only deploy this Worker. It expires 19.11.2027; make a
-  new one the same way a couple of weeks before, replace the secret and run «Build and deploy». Without it the job
-  says it was skipped and the site stays as it was.
-- **The domain** flysteder.hpgt.com is a custom domain on the Worker (Settings → Domains & Routes), added by hand.
-  Cloudflare made the DNS record; the certificate is Cloudflare's own for hpgt.com. Check with
+- **Tokenet** er `CLOUDFLARE_SITE_TOKEN` i miljøet `cloudflare`, laget under Workers & Pages → flysteder → Settings →
+  Builds → «API token for external CI/CD», så det bare kan publisere denne Workeren. Det utløper 19.11.2027. Lag et
+  nytt på samme måte et par uker før, bytt hemmeligheten og kjør «Build and deploy». Uten tokenet sier jobben at den
+  ble hoppet over, og siden blir som den var.
+- **Domenet** flysteder.hpgt.com er et eget domene på Workeren (Settings → Domains & Routes), lagt til for hånd.
+  Cloudflare lager DNS-posten, og sertifikatet er Cloudflares eget for hpgt.com. Sjekk med
   `curl -I https://flysteder.hpgt.com/` (`server: cloudflare`, `strict-transport-security`).
-- **Back to GitHub Pages, if needed:** remove the custom domain from the Worker, add the CNAME `flysteder` →
-  `hpgt-com.github.io` again in Cloudflare → hpgt.com → DNS, «DNS only» (grey cloud), and check that
-  `flysteder.hpgt.com` is still the custom domain under flying-sites → Settings → Pages. GitHub may need a while to
-  issue its certificate again.
+- **Tilbake til GitHub Pages ved behov:** fjern det egne domenet fra Workeren, legg CNAME-posten `flysteder` →
+  `hpgt-com.github.io` inn igjen i Cloudflare → hpgt.com → DNS som «DNS only» (grå sky), og sjekk at
+  `flysteder.hpgt.com` fortsatt er det egne domenet under flying-sites → Settings → Pages. GitHub kan bruke en stund på
+  å utstede sertifikatet sitt igjen.
 
-## The data service's address
+## Adressen til datatjenesten
 
-- `https://data.hpgt.com` is the data service's only address, used by the site, the checks and the workflows. The
-  Worker's own address, `https://data.hpgt.workers.dev`, was turned off on 19.11.2026 (`workers_dev = false`). A page
-  stored on a phone from before then asks the old address and shows its built-in forecast until it is loaded again
-  with a connection. It is a custom domain on the Worker `data`, added by hand in
-  Cloudflare (Workers & Pages → data → Settings → Domains & Routes → Add → Custom domain → `data.hpgt.com`); Cloudflare
-  makes the DNS record and the certificate. It is not in `wrangler.toml`, because the deploy token may only publish the
-  Worker and cannot make DNS records, and deploys leave it as it is.
+- `https://data.hpgt.com` er datatjenestens eneste adresse, og den brukes av siden, sjekkene og arbeidsflytene.
+  Workerens egen `workers.dev`-adresse er slått av (`workers_dev = false`). Adressen er et eget domene på Workeren
+  `data`, lagt til for hånd i Cloudflare (Workers & Pages → data → Settings → Domains & Routes → Add → Custom domain →
+  `data.hpgt.com`); Cloudflare lager DNS-posten og sertifikatet. Den står ikke i `wrangler.toml`, fordi
+  publiseringstokenet bare kan publisere Workeren og ikke kan lage DNS-poster, og publiseringer lar den være som den er.
 
-## Data service health
+## Helsesjekk for datatjenesten
 
-- `https://data.hpgt.com/v1/status.json` (`workers/data/src/health.js`) says for each source when it last
-  ran, last succeeded and its last error, and how long its runs take (`lastMs`, `avgMs` as a running average, `maxMs`
-  the slowest today: a failure at 20 000 ms is a timeout, a success at 8 000 a slow source), for each dataset when it was last written and whether that is within its
-  limit (forecast 60 min, stations 15, winds aloft 90, verification 90), which launches the forecast and the winds aloft
-  lack, and the last day archived per station source. `"ok": false` when a dataset is too old.
-- «Data service health» (`health.yml`) checks it from outside every hour: when something is wrong it opens an issue
-  «Datatjenesten: data mangler eller er for gamle» (or comments on the open one), and closes it when all is well again.
-  GitHub may run it late, so a problem can take an hour or two to show. Run it now: Actions → «Data service health» →
-  «Run workflow».
-- When it reports a problem: the logs are in Cloudflare (Workers → data → Observability), and a source that fails keeps
-  its error in the status until it succeeds again. The usual causes are a source down (MET, Holfuy, Frost, Open-Meteo),
-  an expired secret, or one of the free plan's daily limits (reset at 00:00 UTC): 100 000 requests, and for the store
-  100 000 requests, 5 million rows read and 100 000 rows written (Cloudflare e-mails at 90 %). `test/data-quota.test.js`
-  runs one day of the schedule against a full store and fails when it uses more than 30 % of any of these (run it with
-  `QUOTA_DETAIL=1` to see which queries cost what). Every query on the time goes through a key or an index
-  (`workers/data/src/indexes.js`, `test/store-indexes.test.js`), and each index costs a row written per row. The
-  datasets are cached 60 seconds in front of the store (`cache.js`), so page views add little.
-- Publishing (`data-worker.yml`): after `wrangler deploy` the job waits up to 6 minutes until the new version has run
-  the stations successfully and serves `/v1/forecast.json` (`scripts/data-smoke.mjs`). If it does not, the job rolls
-  back to the version that ran before (`wrangler rollback`) and fails, so the alert opens an issue. A rollback by hand:
-  Cloudflare → Workers & Pages → data → Deployments, or `npx wrangler rollback` in `workers/data`.
-- The forecast grids (`/v1/grid.json`, `/v1/grid-wide.json`, `sources/grid.js`) use Open-Meteo's free, non-commercial
-  use: at most 600 points a minute and 10 000 a day. The close grid (about 540 points) is fetched every 3 hours and the
-  wide one (about 380) every 6, at different minutes, so a day uses about 5 800, and the winds aloft about 300 more.
-  `test/data-store.test.js` fails if a grid gets over 600 points or the day over 7 000. A larger area or a finer grid
-  needs Open-Meteo's paid API.
-- Restoring: the code is in Git (redeploy with Actions → «Data service» → «Run workflow»). The store (the Durable
-  Object) holds only data that comes back by itself: the forecast and winds aloft within half an hour, the last 7 days
-  of measurements from the sources' own short history (Holfuy and Frost give only the latest, so a lost store loses
-  the days not yet archived), the verification from then on. The flying activity per day (`flight_days`) and the
-  verification history (`verify_hours`) are backed up to R2 every night at 02:14 UTC (`backup.js`:
-  `backup/<table>/<day>.json` and `latest.json`, 90 days kept). A new, empty store reads `latest.json` back in within a
-  minute of starting (`store.js` `restore`, tried every minute until it has succeeded once, shown in `/v1/status.json`
-  as `backup.restored` and as the source `restore`), so after a lost store the history is back with nothing to do by
-  hand, and a restore that keeps failing shows in the health check. The archive in R2 has the measurements of every
-  finished day.
+- `https://data.hpgt.com/v1/status.json` (`workers/data/src/health.js`) viser for hver kilde når den sist kjørte, sist
+  lyktes og siste feil, og hvor lang tid kjøringene tar (`lastMs`, `avgMs` som glidende snitt, `maxMs` den tregeste i
+  dag: en feil på 20 000 ms er et tidsavbrudd, en suksess på 8 000 en treg kilde). For hvert datasett viser den når det
+  sist ble skrevet og om det er innenfor grensen (varsel 60 min, stasjoner 15, høydevind 90, verifisering 90), hvilke
+  startsteder varselet og høydevinden mangler, og siste arkiverte dag per stasjonskilde. `"ok": false` når et datasett
+  er for gammelt.
+- «Data service health» (`health.yml`) sjekker den utenfra hver time. Når noe er galt, åpner den saken
+  «Datatjenesten: data mangler eller er for gamle» (eller kommenterer på den åpne), og lukker den når alt er i orden
+  igjen. GitHub kan kjøre den sent, så et problem kan bruke en time eller to på å vises. Kjør den nå: Actions → «Data
+  service health» → «Run workflow».
+- Når den melder et problem: loggene ligger i Cloudflare (Workers → data → Observability), og en kilde som feiler,
+  beholder feilen i statusen til den lykkes igjen. Vanlige årsaker er en kilde som er nede (MET, Holfuy, Frost,
+  Open-Meteo), en utløpt hemmelighet, eller en av gratisplanens daglige grenser (nullstilles kl. 00:00 UTC):
+  100 000 forespørsler, og for lageret 100 000 forespørsler, 5 millioner leste rader og 100 000 skrevne rader
+  (Cloudflare sender e-post ved 90 %). `test/data-quota.test.js` kjører ett døgn av tidsplanen mot et fullt lager og
+  feiler når den bruker mer enn 30 % av noen av disse (kjør den med `QUOTA_DETAIL=1` for å se hva hver spørring koster).
+  Hver spørring på tid går gjennom en nøkkel eller en indeks (`workers/data/src/indexes.js`,
+  `test/store-indexes.test.js`), og hver indeks koster en skrevet rad per rad. Datasettene caches 60 sekunder foran
+  lageret (`cache.js`), så sidevisninger gir lite ekstra.
+- Publisering (`data-worker.yml`): etter `wrangler deploy` venter jobben i opptil 6 minutter til den nye versjonen har
+  kjørt stasjonene og serverer `/v1/forecast.json` (`scripts/data-smoke.mjs`). Gjør den ikke det, ruller jobben tilbake
+  til versjonen som kjørte før (`wrangler rollback`) og feiler, så varselet åpner en sak. Tilbakerulling for hånd:
+  Cloudflare → Workers & Pages → data → Deployments, eller `npx wrangler rollback` i `workers/data`.
+- Prognosenettene (`/v1/grid.json`, `/v1/grid-wide.json`, `sources/grid.js`) bruker Open-Meteos gratis,
+  ikke-kommersielle tilgang: høyst 600 punkter i minuttet og 10 000 i døgnet. Det nære nettet (omtrent 540 punkter)
+  hentes hver 3. time og det vide (omtrent 380) hver 6., på ulike minutter, så et døgn bruker omtrent 5 800, og
+  høydevinden omtrent 300 til. `test/data-store.test.js` feiler hvis et nett får over 600 punkter eller døgnet over
+  7 000. Et større område eller et finere nett krever Open-Meteos betalte API.
+- Gjenoppretting: koden ligger i Git (publiser på nytt med Actions → «Data service» → «Run workflow»). Lageret (Durable
+  Object-et) har bare data som kommer tilbake av seg selv: varselet og høydevinden innen en halvtime, de siste 7 dagene
+  med målinger fra kildenes egen korte historikk (Holfuy og Frost gir bare den siste, så et tapt lager mister dagene som
+  ikke er arkivert ennå), og verifiseringen fra da av. Flyaktiviteten per dag (`flight_days`) og
+  verifiseringshistorikken (`verify_hours`) sikkerhetskopieres til R2 hver natt kl. 02:14 UTC (`backup.js`:
+  `backup/<table>/<day>.json` og `latest.json`, 90 dager beholdes). Et nytt, tomt lager leser `latest.json` inn igjen
+  innen ett minutt etter start (`store.js` `restore`, prøvd hvert minutt til det har lyktes én gang, vist i
+  `/v1/status.json` som `backup.restored` og som kilden `restore`). Etter et tapt lager er historikken derfor tilbake
+  uten noe arbeid for hånd, og en gjenoppretting som stadig feiler, vises i helsesjekken. Arkivet i R2 har målingene
+  fra hvert ferdige døgn.
 
-## Weather stations (Holfuy)
+## Værstasjoner (Holfuy)
 
-- The stations are listed in `workers/data/src/stations.js`: `id` (the number in holfuy.com/en/weather/<id>), and
-  optionally `name` (otherwise Holfuy's), `model` and `site` (the flying site's folder: that site page then shows the
-  «Målt nå» block and a Holfuy button, and its assessment for the hour now uses the measurement). Today: 490 HPGT Heia
-  (site `heia`) and 820 Modellflystripa. A change there is published by itself. A station is linked to a site only by
-  `site`, not by distance.
-- The key: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `HOLFUY_KEY`
-  (type Secret). Publishing keeps it. Without the key, or without stations, the service skips Holfuy.
-- Fetched every minute. `https://data.hpgt.com/v1/stations.json` has the latest measurement and the last
-  6 hours per station. The service keeps the last 7 days; older days go to the archive (below), and nothing is deleted
-  before it is there. Holfuy has accepted that the club stores the measurements over time.
-- Where they are shown: the layer «Klubbens værstasjoner» (MET's in their own layer, «METs værstasjoner») on the home map and the site maps (at Holfuy's position, or at the
-  site's launch when Holfuy gives none), short rows in the Vær tab, the weather page `/vaer/`, and «Målt nå» on the
-  station's site page. The rating of the measured wind, the change over a period and how even the wind is are worked out
-  in the browser (`src/assets/js/stations.js`), with the limits in `src/_data/windRules.json`.
-- The assessment for the hour now (site page and home page «Nå») uses a measurement at most 15 minutes old: a stricter
-  measurement always counts, a better one only when the wind over the last half hour is steady. Change the rule in
-  `rateNow` (`src/assets/js/wind.js`) and the steadiness in `measurement` (`stations.js`).
+- Stasjonene står i `workers/data/src/stations.js`: `id` (nummeret i holfuy.com/en/weather/<id>), og eventuelt `name`
+  (ellers Holfuys), `model` og `site` (flystedets mappe: den stedssiden viser da «Målt nå» og en Holfuy-knapp, og
+  vurderingen for timen nå bruker målingen). Stasjonene er 490 HPGT Heia (stedet `heia`) og 820 Modellflystripa. En
+  endring der publiseres av seg selv. En stasjon kobles til et sted bare med `site`, ikke etter avstand.
+- Nøkkelen: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → legg til hemmeligheten
+  `HOLFUY_KEY` (type Secret). Publisering beholder den. Uten nøkkel, eller uten stasjoner, hopper tjenesten over Holfuy.
+- Hentes hvert minutt. `https://data.hpgt.com/v1/stations.json` har siste måling og de siste 6 timene per stasjon.
+  Tjenesten beholder de siste 7 dagene; eldre dager går til arkivet (under), og ingenting slettes før det ligger der.
+  Holfuy har godtatt at klubben lagrer målingene over tid.
+- Hvor de vises: laget «Klubbens værstasjoner» (METs i eget lag, «METs værstasjoner») på forsidekartet og stedskartene
+  (på Holfuys posisjon, eller ved stedets start når Holfuy ikke oppgir noen), korte rader i Vær-fanen, værsiden
+  `/vaer/`, og «Målt nå» på stasjonens stedsside. Vurderingen av den målte vinden, endringen over en periode og hvor
+  jevn vinden er, regnes ut i nettleseren (`src/assets/js/stations.js`), med grensene i `src/_data/windRules.json`.
+- Vurderingen for timen nå (stedssiden og «Nå» på forsiden) bruker en måling som er høyst 15 minutter gammel: en
+  strengere måling teller alltid, en bedre bare når vinden den siste halvtimen er jevn. Regelen endres i `rateNow`
+  (`src/assets/js/wind.js`), og jevnheten i `measurement` (`stations.js`).
+- **Hva varselet sa for hver time:** hver henting av varselet lagrer også varselet for timen som pågår (siste henting i
+  timen vinner), og det beholdes i 30 dager i lageret (`forecast_hours`). De siste 6 timene ligger i
+  `/v1/forecast.json` som `past`, som «Målt mot varslet» på værsiden tegner over målingene.
 
-- **What the forecast said for each hour:** every forecast fetch also stores the forecast for the hour going on then
-  (the latest fetch during the hour wins), kept for 30 days in the store (`forecast_hours`). The last 6 hours are in
-  `/v1/forecast.json` as `past`, which «Målt mot varslet» on the weather page draws over the measurements.
+## «Meld fra om endring»
 
-## «Meld fra om endring» (report a change)
+- Et kort skjema på hver stedsside (`report.js`) som blir en sak i dette repoet, med tittelen «[Meld fra] <sted>:
+  <type>», og det samme skjemaet på `/meld-fra/` (i menyen) for det som ikke gjelder ett sted, med tittelen «[Meld fra]
+  Generelt: <type>» (nytt flysted, feil på siden, idé, annet). Datatjenesten tar imot det
+  (`POST https://data.hpgt.com/v1/report`, `workers/data/src/report.js`), sjekker det med Cloudflare Turnstile og lager
+  saken. Høyst 50 i døgnet, og 3 fra én adresse (lagret bare som en hash med et salt for dagen). Svaret fra Turnstile
+  må gjelde `flysteder.hpgt.com` (eller vertene i `REPORT_ORIGINS` ved testing).
+- Saken får etikettene for typen (`LABELS` i `report.js`): det som gjelder et sted `endringsforslag` og `site-data`, en
+  fare i tillegg `safety`, en feil på siden `bug`, en idé `enhancement`, og et generelt «Annet» ingen. Etikettene må
+  finnes i repoet (det gjør de); GitHub dropper uten å si fra en etikett appen ikke får sette. Svaret har sakens nummer
+  og adresse, og takken i skjemaet lenker dit.
+- **Slå det på** (én gang):
+  1. Cloudflare → Turnstile → Add widget: navn «flysteder», vertsnavn `flysteder.hpgt.com`, modus «Managed». Kopier
+     **site key** (offentlig) til `turnstileSiteKey` i `src/_data/site.js`. Skjemaet er skjult så lenge den er tom.
+  2. **Secret key** fra den samme widgeten: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets →
+     legg til hemmeligheten `TURNSTILE_SECRET`.
+  3. Sakene lages av klubbens **GitHub App**, så de vises som fra appen, og ingenting utløper: organisasjonen
+     `hpgt-com` → Settings → Developer settings → GitHub Apps → New GitHub App. Navn «HPGT Flying Sites Reports» (en
+     egen app, ikke «HPGT Flying Sites», som har en nøkkel som kan endre koden), hjemmeside
+     `https://flysteder.hpgt.com`, Webhook av, rettigheter **Repository → Issues: Read and write** (ingenting annet),
+     «Only on this account». Opprett den, noter **App ID**, og «Generate a private key» laster ned en `.pem`-fil.
+     Deretter «Install App» → bare repoet `flying-sites`. Legg til hemmelighetene `REPORTS_APP_ID` (App ID, eller
+     Client ID) og `REPORTS_APP_PRIVATE_KEY` (hele `.pem`-filen, som den er) på datatjenesten som over, og slett
+     `.pem`-filen. Det finnes ingen reserve med personlig token.
+- Uten Turnstile og appen svarer endepunktet 503 «not-configured». Feil fra GitHub står i datatjenestens logger
+  (Observability), som `report: GitHub svarte …`.
 
-- A short form on each site page (`report.js`) that becomes an issue in this repository, titled «[Meld fra] <site>:
-  <kind>», and the same form on `/meld-fra/` (in the menu) for what does not concern one site, titled «[Meld fra]
-  Generelt: <kind>» (new flying site, error on the site, idea, other). The data service receives it (`POST https://data.hpgt.com/v1/report`,
-  `workers/data/src/report.js`), checks it with Cloudflare Turnstile and creates the issue. At most 50 a day, and 3 from one address (kept
-  only as a hash with a salt for the day). Turnstile's answer must be for `flysteder.hpgt.com` (or the hosts in
-  `REPORT_ORIGINS` when testing).
-- The issue gets the labels for its kind (`LABELS` in `report.js`): what concerns a site `endringsforslag` and
-  `site-data`, a hazard also `safety`, an error on the site `bug`, an idea `enhancement`, a general «Annet» none. The
-  labels must exist in the repository (they do); GitHub drops a label the app may not set without saying so. The answer
-  carries the issue's number and address, and the form's thanks link to it.
-- **Turning it on** (once):
-  1. Cloudflare → Turnstile → Add widget: name «flysteder», hostname `flysteder.hpgt.com`, mode «Managed». Copy the
-     **site key** (public) into `turnstileSiteKey` in `src/_data/site.js`. The form is hidden while it is empty.
-  2. The **secret key** from the same widget: Cloudflare → Workers & Pages → data → Settings → Variables and Secrets →
-     add the secret `TURNSTILE_SECRET`.
-  3. The issues are made by the club's **GitHub App**, so they show as from the app and nothing expires:
-     organisation `hpgt-com` → Settings → Developer settings → GitHub Apps → New GitHub App. Name «HPGT Flying Sites
-     Reports» (its own app, not «HPGT Flying Sites», whose key may change the code),
-     homepage `https://flysteder.hpgt.com`, Webhook off, permissions **Repository → Issues: Read and write** (nothing
-     else), «Only on this account». Create it; note the **App ID**; «Generate a private key» downloads a `.pem` file.
-     Then «Install App» → only the repository `flying-sites`. Add the secrets `REPORTS_APP_ID` (the App ID, or the Client ID) and
-     `REPORTS_APP_PRIVATE_KEY` (the whole `.pem` file, as it is) on the data service as above, and delete the `.pem`.
-     There is no fallback to a personal token: a fine-grained token (`GITHUB_ISSUES_TOKEN`) was used before the app and
-     was removed in November 2026. If it is still among the data service's secrets, delete it there and revoke it on GitHub.
-- Without Turnstile and the app the endpoint answers 503 «not-configured». Errors from GitHub are in the data service's logs
-  (Observability), as `report: GitHub svarte …`.
+## Turlogger («Fra turlogger»)
 
-## Flight logs («Fra turlogger»)
+- Turlogger (IGC, og KML med tider) leses på pilotens egen maskin, og bare summene committes:
+  `npm run logbook -- ~/turer [~/turer-fra-andre …]` (`scripts/logbook.mjs`, `lib/igc.js`) skriver
+  `src/_data/logbook.json`. Se over filen, og commit den. Loggene, sporene og navnene forlater aldri maskinen.
+- Kjør det på nytt over alle mappene når det kommer nye logger: filen skrives på nytt hver gang, og den samme turen i en
+  IGC- og en KML-fil telles én gang. Én mappe per pilot (`pilots` i filen er antallet mapper). En tur som telles feil,
+  kan holdes utenfor med `--skip <del av filnavnet>` (kan gjentas; kjør igjen med de samme utelatelsene).
+- En tur finnes der loggen beveger seg 4 m/s eller mer over 20 sekunder (avgang og landing), og teller for nærmeste
+  start innen 500 m (et steds `launch` og dets `launches` med posisjon). Skriptet skriver ut hvor mange turer det fant
+  per sted, hvor mange som var andre steder, i hvor mange IGC- og KML-filer, og filene uten tur eller som ikke kunne
+  leses (`--list` navngir dem). KML virker med tider: en gx:Track, ett stedsmerke per punkt med tid, eller en GpsDump-tur
+  (sporloggens tider i FsInfo). En KML med bare en linje har ingen tider og gir ingen tur (eksporter IGC i stedet;
+  XCTracer skriver en slik KML ved siden av IGC-filen, og IGC-filen telles).
+- Vises på stedssiden som «Fra turlogger» når stedet har turer i filen. Det finnes ingen `src/_data/logbook.json`, så
+  boksen er skjult: én pilots logger var for få, og tallene stemte ikke med Flightlog. Filen committes når flere piloter
+  har lagt inn logger (eller Flightlog eller pgpilot får et API, #105).
 
-- Flight logs (IGC, and KML with times) are read on the pilot's own machine and only the sums are committed:
-  `npm run logbook -- ~/turer [~/turer-fra-andre …]` (`scripts/logbook.mjs`, `lib/igc.js`) writes
-  `src/_data/logbook.json`. Look it over, then commit it. The logs, tracks and names never leave the machine.
-- Run it again over all the folders when logs are added: the file is written anew each time, and the same flight in an
-  IGC and a KML file counts once. One folder per pilot (`pilots` in the file is the number of folders). A flight that
-  counts wrongly can be left out with `--skip <part of the file name>` (repeatable; run it with the same skips again).
-- A flight is found where the log moves at 4 m/s or more over 20 seconds (takeoff and landing), and counts for the
-  nearest launch within 500 m (a site's `launch` and its `launches` with a position). The script prints how many
-  flights it found per site, how many were elsewhere, in how many IGC and KML files, and the files without a flight
-  or that could not be read (`--list` names them). KML works with times: a gx:Track, or one placemark per fix with
-  its time, or a GpsDump trip (the tracklog's times in FsInfo); a KML with only a line has no times and gives no
-  flight (export IGC instead; XCTracer writes such a KML beside its IGC, and the IGC is counted).
-- Shown on the site page as «Fra turlogger» when the site has flights in the file. For now there is no
-  `src/_data/logbook.json`, so the box is hidden: one pilot's logs were too few, and the records did not match Flightlog.
-  Commit the file again when more pilots have added logs (or Flightlog or pgpilot get an API, #105).
+## Piloter i lufta (OGN)
 
-## Pilots in the air (OGN)
+- Kartlaget «Piloter i lufta» spør datatjenesten hvert 10. sekund mens det er på. Datatjenesten spør OGNs livekart
+  (`live.glidernet.org/lxml.php`, området rundt stedene med en margin) høyst én gang per 10 sekunder og sender videre
+  det den får for paraglidere (`workers/data/src/live.js`; hengglidere og andre luftfartøy holdes utenfor), med hver
+  pilots spor og stigning de siste 10 minuttene, holdt bare i lagerets minne (skrives aldri ned; borte når lageret
+  kastes ut). Ingen nøkkel.
+- **Flyaktivitet** (`workers/data/src/sources/flights.js`): hvert minutt spør datatjenesten OGN på samme måte og teller
+  turene til paraglidere som ses fly (3 m/s over bakken, eller stiger eller synker 0,5 m/s, og aldri over 80 km/t: det
+  er en bil med appen på). En tur teller for stedet nærmest der piloten først ble sett i lufta (innen 5 km), men først
+  når piloten er sett 50 m eller mer over bakken (en bil, en sykkel eller en tur til fots med appen på er aldri det;
+  til da venter turen med minuttene sine, og den droppes hvis piloten lander først; uten bakkens høyde teller den etter
+  tre kjøringer). En ny tur begynner når piloten har landet: står stille to kjøringer på rad, eller ikke er hørt på 15
+  minutter, og i begge tilfeller mindre enn 100 m over bakken der den sist ble sett. Bakkens høyde kommer fra
+  Kartverkets høydemodell (`ws.geonorge.no/hoydedata/v1/punkt`, ingen nøkkel), spurt bare for de få pilotene, i én
+  forespørsel per kjøring. Uten svar teller et stopp eller et opphold som landing, og et opphold på mer enn to timer
+  gjør det alltid. Dagens tilstand holder hver pilots siste posisjon i lufta, og den kastes sammen med nøklene neste
+  dag. Bare summene per sted og dag beholdes (`flight_days` i lageret: turer, piloter, minutter, lengst fra start,
+  høyest). Dagens piloter skilles med en nøkkel laget med et tilfeldig salt for dagen (tilstanden `flights-today`), som
+  byttes ved første kjøring på en ny dag, så ingen enhets-id beholdes. Serveres som `/v1/flights.json`, og vises på
+  stedssiden og på /flyaktivitet/ (`activity.js`). Tellingen begynte da dette ble publisert (`flights-since`).
+- **Turloggen** (`flights` i lageret, `/v1/flight-log.json`): hver tur for seg også, når den er ferdig (landet, et
+  opphold, eller oppryddingen etter to timer uten livstegn): stedet, start og slutt, minuttene, høyeste punkt, lengst
+  unna, toppfarten og OGNs posisjoner, én per kjøring (ett minutt mellom)
+  ([time, lat, lon, alt, speed m/s, climb m/s]). En tilfeldig id, ingen enhet og ingen nøkkel. En tur som aldri ble sett
+  50 m over bakken (en bil, en sykkel eller en tur til fots med appen på), beholdes ikke i det hele tatt. Turer beholdes
+  i 120 dager; summene per sted og dag blir stående for alltid. Vises på /flyaktivitet/ under «Siste turer» (den valgte
+  turen på et kart, med høydekurven: pek på kurven for å se hvor piloten var; «‹ Forrige» og «Neste ›» går gjennom
+  turene i tid, og «Alle turer denne dagen» viser dagens turer på ett kart, hver i sin farge, med høydekurvene mot
+  klokka; `#tur-<id>` og `#dag-<YYYY-MM-DD>` åpner dem) og på stedssiden som «Siste turer herfra», der hver lenker til
+  `/flyaktivitet/#tur-<id>`. Sikkerhetskopieres sammen med de andre tabellene.
+- OGNs regler (`https://www.glidernet.org/ogn-data-usage/`): ODbL med kreditering, følg eiernes personvernvalg, og send
+  ikke videre noe som er eldre enn 24 timer. OGNs livedata holder allerede utenfor enheter som ikke skal spores, og gir
+  de uidentifiserte et tilfeldig navn, som vises her som «Ukjent».
+- **APRS-reserven** (`workers/data/src/aprs.js`): når livekartet ikke svarer, leser både laget og flyaktiviteten de
+  samme posisjonene fra OGNs APRS-strøm i stedet (`aprs.glidernet.org:14580`, bare lesing med passcode -1 og et
+  områdefilter for det samme området): laget lytter i 8 sekunder, flyaktiviteten i 20. Strømmen er OGNs egen ryggrad,
+  som mottakere og apper som pgpilot sender til, og den krever ingen egen mottaker. Siden strømmen har alle enheter,
+  følges OGNs regler her: flagget mot sporing i hver melding og `tracked: N` i OGNs enhetsdatabase
+  (`ddb.glidernet.org/download/ddb-cache.csv`, hentet av lageret hver dag kl. 05:14 UTC når OGN er oppe, kilden
+  `ognDdb` i `/v1/status.json`, tilstanden `ogn-notrack`) holder en enhet utenfor, og ingen navngis (alle er «Ukjent»).
+  Databasen kan være nede samtidig med livekartet, så listen hentes på forhånd, og den lagrede brukes til den er en uke
+  gammel. Uten noen liste gir reserven ingenting. `/v1/live.json` har da `"via": "aprs"`, og kjøringen av turene logger
+  `flights: … fra OGNs APRS-strøm`. Den hjelper ikke når hele OGN er nede, eller når en pilots app ikke fikk sendt.
+- Adressen er den OGNs eget livekart bruker, og den er ikke dokumentert. Endrer OGN den, brukes reserven over, og
+  feiler også den, viser laget ingenting, og datatjenesten logger `live: …`. Mottakere nær Harstad: AVX970 nord for
+  Evenes, AVX1058 Hadsel/Sortland og AVX1004 Tromsø (`live.glidernet.org/rec.php`).
 
-- The map layer «Piloter i lufta» asks the data service every 10 seconds while it is on; the data service asks OGN's live
-  map (`live.glidernet.org/lxml.php`, the area of the sites with a margin) at most once per 10 seconds and passes on what
-  it gets for paragliders (`workers/data/src/live.js`; hang gliders and other aircraft are left out), with each pilot's
-  track and climb over the last 10 minutes, kept in the store's memory
-  only (never written down; gone when the store is evicted). No key.
-- **Flyaktivitet** (`workers/data/src/sources/flights.js`): every minute the data service asks OGN the same way and
-  counts the flights of the paragliders seen flying (3 m/s over the ground, or climbing or sinking 0.5 m/s, and never
-  over 80 km/h: that is a car with the app on). A flight counts for the site nearest where first seen in the air (within
-  5 km), but only once the pilot has been seen 50 m or more over the ground (a car, a bike or a walk with the app on
-  never is; until then the flight is pending with its minutes, and dropped if the pilot lands first; without the
-  ground's height it counts after three runs); a new one begins when the pilot has landed:
-  standing still two runs in a row, or not heard for 15 minutes, and in both cases less than 100 m over the ground
-  where last seen. The ground's height comes from Kartverket's elevation model (`ws.geonorge.no/hoydedata/v1/punkt`,
-  no key), asked only for those few pilots, in one request per run; without an answer a stop or a gap counts as a
-  landing, and a gap of more than two hours always does. The day's state holds each pilot's last position in the air,
-  thrown away with the keys the next day. Only the sums per site and day are kept
-  (`flight_days` in the store: flights, pilots, minutes, farthest from launch, highest); the day's pilots are told apart by a key made with a random
-  salt for the day (state `flights-today`), which is replaced at the first run of a new day, so no device id is kept.
-  Served as `/v1/flights.json`, shown on the site page and on /flyaktivitet/ (`activity.js`). Counting began when this was deployed (`flights-since`).
-- **The flight log** (`flights` in the store, `/v1/flight-log.json`): each flight on its own as well, once it has ended
-  (landed, a gap, or the sweep after two hours without a word): the site, the start and the end, the minutes, the
-  highest, the farthest, the top speed, and OGN's positions, one per run (a minute apart)
-  ([time, lat, lon, alt, speed m/s, climb m/s]). A random id, no device and no key. A flight never seen 50 m over the
-  ground (a car, a bike or a walk with the app on) is not kept at all. Flights are kept 120 days; the sums per site
-  and day stay for ever. Shown on /flyaktivitet/ under «Siste turer» (the chosen
-  flight on a map, with its height curve: point on the curve to see where the pilot was; «‹ Forrige» and «Neste ›» go
-  through the flights in time, and «Alle turer denne dagen» shows the day's flights on one map, each in its own colour,
-  with their height curves against the clock; `#tur-<id>` and `#dag-<YYYY-MM-DD>` open them) and on the site page as
-  «Siste turer herfra», each linking to `/flyaktivitet/#tur-<id>`. Backed up with the other tables.
-- OGN's rules (`https://www.glidernet.org/ogn-data-usage/`): ODbL with credit, follow the owners' privacy choices, pass
-  on nothing older than 24 hours. OGN's live data already leaves out devices that must not be tracked and gives the
-  unidentified a random name, shown here as «Ukjent».
-- **The APRS reserve** (`workers/data/src/aprs.js`): when the live map does not answer (it gave `521` all of the afternoon
-  of 21.10.2026), both the layer and the flying activity read the same positions from OGN's APRS stream instead
-  (`aprs.glidernet.org:14580`, read-only with passcode -1 and an area filter for the same area): the layer listens 8
-  seconds, the flying activity 20. The stream is OGN's own backbone, which receivers and apps such as pgpilot send to;
-  it needs no receiver of ours. Since the stream has every device, OGN's rules are followed here: the no-tracking flag
-  in each message and `tracked: N` in OGN's device database (`ddb.glidernet.org/download/ddb-cache.csv`, fetched by the store
-  every day at 05:14 UTC while OGN is up, source `ognDdb` in `/v1/status.json`, state `ogn-notrack`) leave a device
-  out, and no one is named (all are «Ukjent»). The database went down with the live map on 21.10.2026, so the list is
-  fetched ahead and the kept one used up to a week old; without any list the reserve gives nothing. `/v1/live.json` then has `"via": "aprs"`, and the flights run logs `flights: … fra OGNs
-  APRS-strøm`. It does not help when all of OGN is down, or when a pilot's app could not send.
-- The address is OGN's own live map's and is not documented; if OGN changes it, the reserve above is used, and if that
-  fails too the layer shows nothing and the data service logs `live: …`. Receivers near Harstad (October 2026): AVX970 north of Evenes, AVX1058 Hadsel/Sortland,
-  AVX1004 Tromsø (`live.glidernet.org/rec.php`).
+## Hvor godt varselet treffer
 
-## How well the forecast hits
+- Datatjenesten parer varselet for hver ferdige time (slik det sto i timen, `forecast_hours`) med det flystedets egen
+  stasjon målte i den (`workers/data/src/sources/verify.js`): middelvinden, det høyeste kastet og retningen, og der
+  stasjonen måler dem, temperaturen og lufttrykket (varselets verdier lagres også per time i `forecast_hours`; begge
+  trykkene er ved havnivå). To ganger i timen (:09 og :39). Parene beholdes i et år (`verify_hours`); de siste 30
+  dagene summeres i `https://data.hpgt.com/v1/verification.json`.
+- Hvilke steder: de med egen stasjon (`site` i `HOLFUY_STATIONS`, og `MET_STATION_SITES`), det vil si Heia og
+  Sætertinden, og de med en stasjon i nærheten på omtrent samme høyde (`near` i `HOLFUY_STATIONS`), det vil si
+  Hinnstein mot stasjonen på Heia. En stasjon i nærheten vises også under «Målt nå» på det stedets side, med avstanden;
+  bare et steds egen stasjon brukes i vurderingen av timen nå. Andre steder har ingen stasjon nær nok på sin høyde (de
+  fleste stasjonene står nede ved veien eller sjøen), så de holdes utenfor i stedet for å sammenlignes med en
+  dalstasjon. Vises under «Målt nå» på stedssiden og i «Målt mot varslet» på /vaer/ når det finnes 24 timer (før det,
+  hvor langt innsamlingen har kommet).
 
-- The data service pairs the forecast for each finished hour (as it stood during the hour, `forecast_hours`) with what
-  the flying site's own station measured in it (`workers/data/src/sources/verify.js`): the mean wind, the highest gust
-  and the direction, and where the station measures them the temperature and the air pressure (the forecast's are kept
-  per hour in `forecast_hours` too; both pressures are at sea level). Twice an hour (:09 and :39). The pairs are kept for a year (`verify_hours`); the last 30 days are
-  summed up in `https://data.hpgt.com/v1/verification.json`.
-- Which sites: those with a station of their own (`site` in `HOLFUY_STATIONS`, and `MET_STATION_SITES`), now Heia and
-  Sætertinden, and those with one nearby at about the same height (`near` in `HOLFUY_STATIONS`), now Hinnstein against
-  Heia's station. A station nearby is also shown under «Målt nå» on that site's page, with the distance; only a site's
-  own station is used for the assessment of the hour now. Other sites have no station near enough at their height
-  (most stations stand down by the road or the sea), so they are left out rather than compared with a valley station. Shown under «Målt nå» on the site page and in «Målt mot varslet» on /vaer/, once there are 24 hours
-  (before that, how far the collecting has come).
+## Høydevind
 
-## Winds aloft
+- Hentes av datatjenesten fra Open-Meteo, to startsteder hvert 10. minutt (hvert omtrent hver halvtime), for
+  startstedene i `WINDGRAM_SITES` i `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), og serveres som
+  `https://data.hpgt.com/v1/windgram.json`, med regn, skydekke, sol og vindkast per time til radene under rutenettet.
+  Ingen nøkkel. Et startsted som feiler, beholder forrige rutenett i opptil 6 timer. Stedssiden bruker det når det er
+  nyere enn rutenettet som er bygget inn i siden; avsnittet er skjult når ingen av dem har timer igjen.
+- Et nytt startsted: legg mappen til i `WINDGRAM_SITES` og publiser både siden og datatjenesten.
 
-- Fetched by the data service from Open-Meteo, two launches every 10 minutes (each about every half hour), for the launches in `WINDGRAM_SITES` in
-  `lib/weather/open-meteo.js` (`workers/data/src/sources/windgram.js`), served as
-  `https://data.hpgt.com/v1/windgram.json`, with the rain, cloud cover, sun and gusts per hour for the rows under
-  the grid. No key. A launch that fails keeps its previous grid for up to 6
-  hours. The site page uses it when it is newer than the grid built into the page; the section stays hidden when
-  neither has hours left.
-- A new launch: add its folder to `WINDGRAM_SITES` and deploy both the site and the data service.
+## Værstasjoner (MET)
 
-## Weather stations (MET)
+- METs egne stasjoner finner datatjenesten selv: én gang i døgnet spør den Frost etter stasjonene i området rundt
+  flystedene, og beholder dem innen 50 km fra en start (Lofoten til Bardu) som måler vind
+  (`workers/data/src/sources/frost.js`). De siste observasjonene hentes hvert 10. minutt (vind, retning, kast,
+  temperatur, fuktighet, trykk, regn), lagres og arkiveres som Holfuys (`met/station=SN…/…` i arkivet), og serveres i
+  `/v1/stations.json` sammen med Holfuys, hver stasjon med kilden sin («MET Norge», lisens CC BY).
+- Klient-ID-en: registrer (gratis) på `https://frost.met.no/auth/requestCredentials.html` med klubbens e-postadresse,
+  og så Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → legg til hemmeligheten
+  `FROST_CLIENT_ID` (bare klient-ID-en; klienthemmeligheten brukes ikke). Uten den hopper tjenesten over MET.
+- En MET-stasjon på et flysted kobles til det i `MET_STATION_SITES` i `workers/data/src/stations.js` (METs nummer og
+  stedets mappe; Sætertindens egen MET-stasjon, SN87772, er koblet dit). En stasjon som ikke skal vises, legges i
+  `MET_EXCLUDE` samme sted; stasjonene slås da opp på nytt ved neste kjøring.
 
-- MET's own stations are found by the data service itself: once a day it asks Frost for the stations in the area of the
-  flying sites, and keeps those within 50 km of a launch (Lofoten to Bardu) that measure wind (`workers/data/src/sources/frost.js`). Their
-  latest observations are fetched every 10 minutes (wind, direction, gust, temperature, humidity, pressure, rain), stored
-  and archived like Holfuy's (`met/station=SN…/…` in the archive), and served in `/v1/stations.json` together with
-  Holfuy's, each station with its source («MET Norge», licence CC BY).
-- The client ID: register (free) at `https://frost.met.no/auth/requestCredentials.html` with the club's e-mail, then
-  Cloudflare → Workers & Pages → data → Settings → Variables and Secrets → add the secret `FROST_CLIENT_ID` (the client ID
-  only; the client secret is not used). Without it the service skips MET.
-- A MET station on a flying site is linked to it in `MET_STATION_SITES` in `workers/data/src/stations.js` (MET's number
-  and the site's folder; Sætertinden's own MET station, SN87772, is linked to it). A station that should not be shown goes in `MET_EXCLUDE` there; the stations are then looked up
-  again at the next run.
+## Værarkivet (R2)
 
-## Weather archive (R2)
-
-- One CSV per station per day (UTC) in the R2 bucket `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
-  (columns `source, station, time_utc, direction_deg, speed_ms, gust_ms, min_ms, temperature_c, humidity_pct,
-  pressure_hpa, rain_mm, extra_json`), and the stations in `holfuy/stations.csv` (`source, station, name, model, site,
-  lat, lon, altitude_m`). A station without a sensor leaves its column empty. Other numbers a station sends are kept in
-  `extra_json` until they get a column of their own (`workers/data/src/measurements.js`; the store adds the column).
-  `source` + `station` identify a station, since two providers can use the same number. Written from 03:00 UTC for the day before, so
-  measurements that come in late are included (`workers/data/src/archive.js`). The fresh measurements are published
-  before the archive is written, so a failing archive (R2 down) does not stop «Målt nå»; nothing is deleted from the
-  store before its day is archived.
-- The folders use the `key=value` form, so DuckDB, BigQuery, Athena and Spark read `station` and `year` as columns, and
-  every row carries the station, so all files load into one table. Example with DuckDB and R2's S3 address:
+- Én CSV per stasjon per døgn (UTC) i R2-bøtta `hpgt-data-archive`: `holfuy/station=<id>/year=<year>/<date>.csv`
+  (kolonnene `source, station, time_utc, direction_deg, speed_ms, gust_ms, min_ms, temperature_c, humidity_pct,
+  pressure_hpa, rain_mm, extra_json`), og stasjonene i `holfuy/stations.csv` (`source, station, name, model, site,
+  lat, lon, altitude_m`). En stasjon uten en sensor lar kolonnen stå tom. Andre tall en stasjon sender, beholdes i
+  `extra_json` til de får en egen kolonne (`workers/data/src/measurements.js`; lageret legger til kolonnen).
+  `source` + `station` identifiserer en stasjon, siden to leverandører kan bruke samme nummer. Skrives fra kl. 03:00 UTC
+  for døgnet før, så målinger som kommer sent, kommer med (`workers/data/src/archive.js`). De ferske målingene
+  publiseres før arkivet skrives, så et arkiv som feiler (R2 nede), stopper ikke «Målt nå»; ingenting slettes fra
+  lageret før døgnet er arkivert.
+- Mappene bruker formen `key=value`, så DuckDB, BigQuery, Athena og Spark leser `station` og `year` som kolonner, og hver
+  rad har stasjonen, så alle filene kan lastes inn i én tabell. Eksempel med DuckDB og R2s S3-adresse:
   `SELECT station, date_trunc('day', time_utc) AS day, avg(speed_ms), max(gust_ms) FROM read_csv('s3://hpgt-data-archive/holfuy/*/*/*.csv', hive_partitioning = true) GROUP BY ALL ORDER BY day;`
-- **Turned on** 19.10.2026: the bucket exists and is bound in `workers/data/wrangler.toml`. How it was done, for a new
-  account or bucket (without it the service keeps every measurement, so nothing is lost):
-  1. Cloudflare → R2 → enable R2 (Free: 10 GB and free downloads; Cloudflare may ask for a card even within the free
-     limits) and create the bucket `hpgt-data-archive` (private, no public access).
-  2. The everyday deploy token (environment `cloudflare`, made from the Worker) can publish the Worker with the R2
-     binding; no extra permission is needed (tested 18.11.2026). Writing objects to R2 is only done by «Recover», with
-     its own token.
-  3. The `[[r2_buckets]]` binding in `workers/data/wrangler.toml` (binding `ARCHIVE`, bucket `hpgt-data-archive`).
-     Only after steps 1 and 2: a deploy with the binding and no bucket fails.
-- Reading the files for reports: R2 → `hpgt-data-archive` → Settings → R2 API tokens (read only), and use them with the
-  S3 address `https://<account id>.r2.cloudflarestorage.com`.
-- **Off-site copy** (`.github/workflows/backup.yml`, every night at 03:30 UTC and by hand with «Run workflow»): the whole
-  bucket is copied with rclone to the bucket `hpgt-flysteder-backup` at Backblaze B2 (another provider, so a lost
-  Cloudflare account or bucket does not lose the data) under `archive/`, never deleting anything there (the B2 bucket
-  keeps old versions too). The copy's `latest.json` of each table is then checked (`scripts/check-backup.mjs`,
-  `lib/backup-check.js`): present, parses as that table, from today or yesterday. Before that, `rclone check` confirms
-  that every file in R2 is in the copy with the same checksum, and after the upload the issues and the Git bundle are
-  checked in B2 too (the bundle at most 8 days old). Every step runs with `shell: bash` (pipefail), so a failing
-  rclone turns the run red instead of being hidden by `| tail`. The issues and their comments go to
-  `github/` every night (the only copy of «Meld fra» outside GitHub) and the whole Git history as a bundle to
-  `git/flying-sites.bundle` on Sundays (`git clone flying-sites.bundle` restores it). A failed night opens the issue
-  «Backup: den nattlige kopien feilet», closed by the next good night. The keys are in the GitHub environment `backup`
-  (see [Accounts and secrets](#accounts-and-secrets)). The copy compares checksums from the listings
-  (`--checksum`), so a night costs a few Class C listings at B2 and no per-file Class B calls; B2's free daily caps
-  (2 500 Class B and 2 500 Class C transactions, under Caps & Alerts) are then far away. A full restore downloads every
-  file once, which is one Class B call per file: raise the Class B cap for that day (it costs fractions of a cent per 10 000) before running
-  «Recover» with `restore_archive`. **Restoring R2 from the copy** (a lost bucket): create the
-  bucket, then from a machine with rclone and both keys: `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`;
-  the data service then reads the history back in by itself within a minute of its store being empty (`store.js`
-  `restore`).
-- If the forecast is more than 6 hours old (`maxForecastAgeHours` in `src/_data/windRules.json`), or comes from a MET
-  model run more than 12 hours old (`maxModelAgeHours`), the wind assessment
-  is turned off and the site says so.
-- **Fetch a new forecast now:** Actions → «Build and deploy» → «Run workflow».
-- The limits for the assessment are in `src/_data/windRules.json`. A site's own limit is set with
-  `wind_limits.max_wind` in the site file.
+- **Oppsett** for en ny konto eller bøtte (uten arkivet beholder tjenesten alle målingene, så ingenting går tapt):
+  1. Cloudflare → R2 → slå på R2 (Free: 10 GB og gratis nedlasting; Cloudflare kan be om et kort selv innenfor
+     gratisgrensene) og lag bøtta `hpgt-data-archive` (privat, ingen offentlig tilgang).
+  2. Det daglige publiseringstokenet (miljøet `cloudflare`, laget fra Workeren) kan publisere Workeren med
+     R2-bindingen; det trengs ingen ekstra rettighet. Bare «Recover» skriver objekter til R2, med sitt eget token.
+  3. Bindingen `[[r2_buckets]]` i `workers/data/wrangler.toml` (binding `ARCHIVE`, bøtte `hpgt-data-archive`). Først
+     etter steg 1 og 2: en publisering med bindingen og uten bøtte feiler.
+- Lese filene til rapporter: R2 → `hpgt-data-archive` → Settings → R2 API tokens (bare lesing), og bruk dem med
+  S3-adressen `https://<account id>.r2.cloudflarestorage.com`.
+- **Kopi utenfor Cloudflare** (`.github/workflows/backup.yml`, hver natt kl. 03:30 UTC og for hånd med «Run
+  workflow»): hele bøtta kopieres med rclone til bøtta `hpgt-flysteder-backup` hos Backblaze B2 (en annen leverandør,
+  så en tapt Cloudflare-konto eller bøtte ikke mister dataene) under `archive/`, uten at noe slettes der (B2-bøtta
+  beholder også gamle versjoner). Deretter sjekkes kopiens `latest.json` for hver tabell (`scripts/check-backup.mjs`,
+  `lib/backup-check.js`): den finnes, kan leses som den tabellen, og er fra i dag eller i går. Før det bekrefter
+  `rclone check` at hver fil i R2 ligger i kopien med samme sjekksum, og etter opplastingen sjekkes sakene og
+  Git-bunten i B2 også (bunten høyst 8 dager gammel). Hvert steg kjører med `shell: bash` (pipefail), så en rclone som
+  feiler, gjør kjøringen rød i stedet for å skjules av `| tail`. Sakene og kommentarene deres går til `github/` hver
+  natt (den eneste kopien av «Meld fra» utenfor GitHub), og hele Git-historikken som en bunt til
+  `git/flying-sites.bundle` på søndager (`git clone flying-sites.bundle` gjenoppretter den). En natt som feiler, åpner
+  saken «Backup: den nattlige kopien feilet», som lukkes av neste gode natt. Nøklene ligger i GitHub-miljøet `backup`
+  (se [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)). Kopien sammenligner sjekksummer fra listingene
+  (`--checksum`), så en natt koster noen få Class C-listinger hos B2 og ingen Class B-kall per fil; B2s gratis daglige
+  tak (2 500 Class B- og 2 500 Class C-transaksjoner, under Caps & Alerts) er da langt unna. En full gjenoppretting
+  laster ned hver fil én gang, som er ett Class B-kall per fil: øk Class B-taket for den dagen (det koster brøkdeler av
+  en cent per 10 000) før «Recover» kjøres med `restore_archive`. **Gjenopprette R2 fra kopien** (en tapt bøtte): lag
+  bøtta, og så fra en maskin med rclone og begge nøklene:
+  `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`. Datatjenesten leser så historikken inn igjen av
+  seg selv innen ett minutt etter at lageret er tomt (`store.js` `restore`).
 
-## Airspace
+## Luftrom
 
-- Fetched from openAIP on the 1st of each month (`airspace.yml`). It arrives as a PR that should be read through
-  before merging. The workflow has two jobs: `fetch` gets the data with read-only access, and `pr` opens the PR.
-- **Checked and changed are two dates.** Every successful run writes `src/_data/cache/airspace/checked.json` (the date
-  of the check), also when the airspace is unchanged, so there is a PR every month; merging it records that the check
-  was done. `fetched` in each site's file is when that site's airspace last changed. The site page shows both
-  («Kontrollert mot openAIP …, sist endret …»), and warns («Luftrommet er ikke kontrollert mot openAIP siden …») when
-  the last check is more than 45 days old (`AIRSPACE_STALE_DAYS` in `lib/airspace.js`). The warning is also turned on
-  in the browser, so a page built before the limit still warns later.
-- **No geographic queries at openAIP.** From November 2026 openAIP answers `pos`/`dist` and `bbox` queries with 403
-  from Cloudflare («Geospatial query for external clients no longer available» on openaip.net/blog), whatever the key.
-  Runs from 1.11.2026 failed for that reason. The script now fetches the airspace of Norway and Sweden (`country`) and
-  selects the region around the sites itself (`withinCircles` in `lib/airspace.js`). A new key does not help with a 403
-  that says «fra Cloudflare foran openAIP»; a 403 with openAIP's own message (an expired key) does.
-- **Fetch now:** Actions → «Update airspace» → «Run workflow», or `npm run airspace` locally.
-- The key is stored as the repository secret `OPENAIP_API_KEY`. The update does not work without it.
-- **GitHub App «HPGT Flying Sites»**. The club's app for automation in GitHub Actions, used by the airspace and
-  obstacles workflows to open their PRs. The PRs get the checks like any other. GitHub Actions cannot create pull
-  requests with its own token in the organisation, so the workflows fail if the app is not set up. Setting it up
-  (someone with admin access to hpgt-com):
-  1. hpgt-com → Settings → Developer settings → GitHub Apps → New GitHub App. Name «HPGT Flying Sites»,
-     homepage `https://flysteder.hpgt.com`, Webhook «Active» off. Repository permissions: Contents = Read and
-     write, Pull requests = Read and write (Metadata = Read is added automatically). Nothing else. «Only on this
-     account». Give it only what the workflows using it need; widen it when a new task needs more. Anything that
-     runs outside GitHub or takes input from the public (such as a form) should get its own app instead.
-  2. On the app page: note the **Client ID**, and «Generate a private key» (downloads a `.pem` file).
+- Hentes fra openAIP den 1. hver måned (`airspace.yml`). Det kommer som en PR som bør leses gjennom før merge.
+  Arbeidsflyten har to jobber: `fetch` henter dataene med lesetilgang, og `pr` åpner PR-en.
+- **Kontrollert og endret er to datoer.** Hver vellykket kjøring skriver `src/_data/cache/airspace/checked.json`
+  (datoen for kontrollen), også når luftrommet er uendret, så det kommer en PR hver måned; når den merges, er det
+  registrert at kontrollen er gjort. `fetched` i hvert steds fil er når stedets luftrom sist endret seg. Stedssiden viser
+  begge («Kontrollert mot openAIP …, sist endret …»), og varsler («Luftrommet er ikke kontrollert mot openAIP siden …»)
+  når siste kontroll er mer enn 45 dager gammel (`AIRSPACE_STALE_DAYS` i `lib/airspace.js`). Varselet slås også på i
+  nettleseren, så en side bygget før grensen varsler likevel senere.
+- **Ingen geografiske søk hos openAIP.** openAIP svarer på `pos`/`dist`- og `bbox`-søk med 403 fra Cloudflare
+  («Geospatial query for external clients no longer available» på openaip.net/blog), uansett nøkkel. Skriptet henter
+  derfor luftrommet for Norge og Sverige (`country`) og velger selv ut området rundt stedene (`withinCircles` i
+  `lib/airspace.js`). En ny nøkkel hjelper ikke mot en 403 som sier «fra Cloudflare foran openAIP»; mot en 403 med
+  openAIPs egen melding (en utløpt nøkkel) hjelper den.
+- **Hent nå:** Actions → «Update airspace» → «Run workflow», eller `npm run airspace` lokalt.
+- Nøkkelen `OPENAIP_API_KEY` ligger i miljøet `automation` (se [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)).
+  Oppdateringen virker ikke uten den.
+- **GitHub App «HPGT Flying Sites»**. Klubbens app for automatisering i GitHub Actions, brukt av arbeidsflytene for
+  luftrom og hindre til å åpne PR-ene sine. PR-ene får sjekkene som alle andre. GitHub Actions kan ikke lage pull
+  requests med sitt eget token i organisasjonen, så arbeidsflytene feiler hvis appen ikke er satt opp. Oppsett (en med
+  admin-tilgang til hpgt-com):
+  1. hpgt-com → Settings → Developer settings → GitHub Apps → New GitHub App. Navn «HPGT Flying Sites», hjemmeside
+     `https://flysteder.hpgt.com`, Webhook «Active» av. Repository permissions: Contents = Read and write, Pull
+     requests = Read and write (Metadata = Read legges til automatisk). Ingenting annet. «Only on this account». Gi den
+     bare det arbeidsflytene som bruker den, trenger, og utvid når en ny oppgave trenger mer. Alt som kjører utenfor
+     GitHub eller tar imot input fra publikum (som et skjema), skal ha en egen app.
+  2. På appsiden: noter **Client ID**, og «Generate a private key» (laster ned en `.pem`-fil).
   3. «Install App» → hpgt-com → «Only select repositories» → flying-sites.
-  4. In flying-sites → Settings → Secrets and variables → Actions: the variable `APP_CLIENT_ID` (the
-     Client ID) under Variables, and the secret `APP_PRIVATE_KEY` (the whole content of the `.pem` file)
-     under Secrets. Then delete the `.pem` file.
-  5. Test the app: Actions → «Update airspace» → «Run workflow», tick «Test the GitHub App token only». The job
-     `test-app-token` gets a read-only token from the app and reads the repository; it fetches no airspace and
-     opens no PR. Green means the app works. The PRs come from `hpgt-flying-sites[bot]`.
-- Airspace notes (for example that the approach enters Evenes CTR) go in the site file's `airspace`.
-- The towers' phone numbers are only in `src/_data/towers.json` (with names per language in `names`).
+  4. Variabelen `APP_CLIENT_ID` (Client ID) under flying-sites → Settings → Secrets and variables → Actions →
+     Variables, og hemmeligheten `APP_PRIVATE_KEY` (hele innholdet i `.pem`-filen) i miljøet `automation`. Slett så
+     `.pem`-filen.
+  5. Test appen: Actions → «Update airspace» → «Run workflow», kryss av «Test the GitHub App token only». Jobben
+     `test-app-token` får et token med lesetilgang fra appen og leser repoet; den henter ikke luftrom og åpner ingen PR.
+     Grønt betyr at appen virker. PR-ene kommer fra `hpgt-flying-sites[bot]`.
+- Merknader om luftrom (for eksempel at innflygingen går inn i Evenes CTR) står i stedsfilens `airspace`.
+- Tårnenes telefonnumre står bare i `src/_data/towers.json` (med navn per språk i `names`).
 
-## Power lines and obstacles
+## Kraftlinjer og hindre
 
-- The map layer «Kraftlinjer og hindre» (home page and site pages, off until turned on) comes from
-  `src/_data/cache/obstacles/` (`index.json` and `tiles/<row>_<column>.geojson`, 0.25° × 0.5°, about 28 × 20 km),
-  fetched by `npm run obstacles` (`scripts/update-obstacles.mjs`, `lib/obstacles.js`) for the whole region around
-  the sites (25 km beyond the outermost, out to whole tiles), so flights away from the sites are covered too. The map
-  loads only the tiles in view, from zoom 10 («Zoom inn for å se kraftlinjer» further out). A new site far from the
-  others widens the region at the next fetch.
-  - **NVE** (`kart.nve.no/enterprise`, NLOD): the overhead power lines of the transmission, regional and distribution
-    grid (22 kV and up) with voltage and owner, and wind turbines in operation. The masts and poles only within 1.5 km
-    of each site's launches and landings (there are over 40 000 in the region; the lines show where they stand).
-  - **OpenStreetMap** (Overpass, ODbL, one query for the whole region): low-voltage lines (`power=minor_line`), ski
-    lifts and other aerial lifts (also `aerialway=yes`, such as old goods cables), and communication masts. Only where
-    someone has drawn them.
-- Fetched on the 2nd of each month (`obstacles.yml`); changes arrive as a PR. No secrets are needed. **Fetch now:**
-  Actions → «Update power lines and obstacles» → «Run workflow», or `npm run obstacles` locally.
-  `npm run obstacles -- --no-osm` fetches NVE only (when Overpass cannot be reached); the file then says so, and the
-  map's attribution names only NVE.
-- Not complete: low voltage (230/400 V) is not in NVE's data and only partly in OpenStreetMap, and wires that are not
-  power lines (guy wires, cables for timber and goods) are rarely in either. Kartverket's register of aviation obstacles
-  (NRL) closed for the public on 1 July 2026 («Norge digitalt begrenset»; access for entitled users by application to
-  kundesenter@kartverket.no). What is known locally belongs in the site's hazards.
-- A missing lift, line or mast is best added in OpenStreetMap; it comes with the next monthly fetch.
+- Kartlaget «Kraftlinjer og hindre» (forsiden og stedssidene, av til det slås på) kommer fra
+  `src/_data/cache/obstacles/` (`index.json` og `tiles/<row>_<column>.geojson`, 0,25° × 0,5°, omtrent 28 × 20 km), hentet
+  av `npm run obstacles` (`scripts/update-obstacles.mjs`, `lib/obstacles.js`) for hele regionen rundt stedene (25 km
+  utenfor de ytterste, ut til hele ruter), så turer bort fra stedene også er dekket. Kartet laster bare rutene som er i
+  bildet, fra zoom 10 («Zoom inn for å se kraftlinjer» lenger ut). Et nytt sted langt fra de andre utvider regionen ved
+  neste henting.
+  - **NVE** (`kart.nve.no/enterprise`, NLOD): luftledningene i sentral-, regional- og distribusjonsnettet (22 kV og
+    oppover) med spenning og eier, og vindturbiner i drift. Mastene og stolpene bare innen 1,5 km fra hvert steds
+    starter og landinger (det er over 40 000 i regionen; linjene viser hvor de står).
+  - **OpenStreetMap** (Overpass, ODbL, ett søk for hele regionen): lavspentlinjer (`power=minor_line`), skiheiser og
+    andre taubaner (også `aerialway=yes`, som gamle vareløyper), og kommunikasjonsmaster. Bare der noen har tegnet dem.
+- Hentes den 2. hver måned (`obstacles.yml`); endringer kommer som en PR. Det trengs ingen hemmeligheter. **Hent nå:**
+  Actions → «Update power lines and obstacles» → «Run workflow», eller `npm run obstacles` lokalt.
+  `npm run obstacles -- --no-osm` henter bare NVE (når Overpass ikke svarer); filen sier da fra om det, og kartets
+  kreditering nevner bare NVE.
+- Ikke komplett: lavspent (230/400 V) er ikke i NVEs data og bare delvis i OpenStreetMap, og vaiere som ikke er
+  kraftlinjer (barduner, tømmer- og vareløyper), er sjelden i noen av dem. Kartverkets register over luftfartshindre
+  (NRL) er stengt for publikum («Norge digitalt begrenset»; tilgang for berettigede brukere etter søknad til
+  Kartverket). Det som er kjent lokalt, hører hjemme i stedets farer.
+- En heis, linje eller mast som mangler, legges best inn i OpenStreetMap; den kommer med ved neste månedlige henting.
 
-## Map tiles
+## Kartfliser
 
-- Kartverket's tiles (`cache.kartverket.no`) come ready for land, but tiles that are mostly sea or outside Norway
-  (most of a wide view, from about the 30 km scale out) are made anew for each request and take 0.5–1 s each, so a
-  zoom out waits for them. On a PC (fine pointer, window at least 900 px wide, no data saving) the home map fetches
-  the tiles for the next two zoom levels out in the background (`warmZoomOut` in `common.js`): 1.5 s after the first
-  tiles have shown, and 0.4 s after each zoom out, at most 160 tiles a page view, four at a time. The step out is then
-  drawn from the browser's cache. Phones are left alone (data).
-- The service worker (`lib/service-worker.js`) keeps the last `MAX_TILES` (500) Kartverket tiles for use without
-  net, hands a tile to the map as soon as it arrives and stores it afterwards, and trims the store only every 20th
-  tile, so a zoom that brings twenty new tiles is not held up by twenty trims.
+- Kartverkets fliser (`cache.kartverket.no`) ligger ferdige for land, men fliser som for det meste er sjø eller utenfor
+  Norge (det meste av en vid utsikt, fra omtrent 30 km-målestokken og ut), lages på nytt for hver forespørsel og tar
+  0,5–1 s hver, så en utzooming venter på dem. På PC (fin peker, vindu minst 900 px bredt, uten datasparing) henter
+  forsidekartet flisene for de to neste zoomnivåene ut i bakgrunnen (`warmZoomOut` i `common.js`): 1,5 s etter at de
+  første flisene er vist, og 0,4 s etter hver utzooming, høyst 160 fliser per sidevisning, fire om gangen. Steget ut
+  tegnes da fra nettleserens cache. Telefoner lar det være (data).
+- Service workeren (`lib/service-worker.js`) beholder de siste `MAX_TILES` (500, i `lib/pwa.js`) Kartverket-flisene til
+  bruk uten nett, gir en flis til kartet så snart den kommer og lagrer den etterpå, og rydder lageret bare hver 20.
+  flis, så en zoom som gir tjue nye fliser, ikke holdes igjen av tjue oppryddinger.
 
-## Images
+## Bilder
 
 ```bash
-npm run images -- ~/Bilder/flysteder        # imports all images named by the convention
-npm run images -- elgen landing bilde.jpg    # one image for a site
-npm run images                               # checks and shrinks all images in the repository
+npm run images -- ~/Bilder/flysteder        # importerer alle bilder som er navngitt etter konvensjonen
+npm run images -- elgen landing bilde.jpg    # ett bilde for et sted
+npm run images                               # sjekker og krymper alle bildene i repoet
 ```
 
-Naming before import: `Storlitinden_Takeoff_SE_1_DSC04968.jpg`, `Storlitinden_Landing_1_DSC05012.jpg`,
-`Storlitinden_Overview_1_DJI_0042.jpg`. See [SPEC.md](../SPEC.md#content). The default photographer and licence are
-set in `src/_data/photoCredit.json`.
+Navngiving før import: `Storlitinden_Takeoff_SE_1_DSC04968.jpg`, `Storlitinden_Landing_1_DSC05012.jpg`,
+`Storlitinden_Overview_1_DJI_0042.jpg`. Se [SPEC.md](../SPEC.md#innhold). Standard fotograf og lisens settes i
+`src/_data/photoCredit.json`.
 
-## Statistics
+## Statistikk
 
-- [GoatCounter](https://hpgt-flysteder.goatcounter.com), account `hpgt-flysteder`. Anonymous and without cookies.
-  Does not count on localhost.
-- The script is a copy in `src/assets/js/goatcounter.js` (the CSP allows only the site's own scripts). The URL is set
-  in `src/_data/site.js` and in the CSP in `base.njk`.
-- Events (clicks) have fixed English names, the same in all languages: `link/<domain><page>`, `download/<file>`,
-  `tab/sites|weather` (`tab/info` until the Info tab moved into the menu), `filter/direction|level|category/…`,
-  `filter/wind/<hours from now>`, `filter/suggest/on|off`, `map/select/<id>`, `map/status` (the status details opened),
-  `list/show-all`, `list/open/<id>` (second tap in the list on mobile), `day-plan/select/<id>`, `map-layer/<key>` (topo, greyscale, opentopomap, satellite, skyways,
-  thermals, hillshade, radar, airspace-tma, airspace-ctr, airspace-military, airspace-danger), `search/no-hits` (only counted, the search text is not sent),
-  `images<page>`, `fullscreen<page>`, `setting/theme/…`, `setting/colorblind/on|off`. Up to and including
-  11.10.2026 they had Norwegian names (`lenke/…`, `fane/…`, `kart/valgt/…` etc.).
-- Your own visits are not counted once you have opened `https://flysteder.hpgt.com/#toggle-goatcounter` in the
-  browser.
+- [GoatCounter](https://hpgt-flysteder.goatcounter.com), kontoen `hpgt-flysteder`. Anonymt og uten informasjonskapsler.
+  Teller ikke på localhost.
+- Skriptet er en kopi i `src/assets/js/goatcounter.js` (CSP-en tillater bare sidens egne skript). Adressen settes i
+  `src/_data/site.js` og i CSP-en i `base.njk`.
+- Hendelser (klikk) har faste engelske navn, de samme på alle språk: `link/<domain><page>`, `download/<file>`,
+  `tab/sites|weather`, `filter/direction|level|category/…`, `filter/wind/<hours from now>`, `filter/suggest/on|off`,
+  `map/select/<id>`, `map/status` (statusdetaljene åpnet), `list/show-all`, `list/open/<id>` (andre trykk i listen på
+  mobil), `day-plan/select/<id>`, `map-layer/<key>` (topo, greyscale, opentopomap, satellite, skyways, thermals,
+  hillshade, radar, airspace-tma, airspace-ctr, airspace-military, airspace-danger), `search/no-hits` (bare telt,
+  søketeksten sendes ikke), `images<page>`, `fullscreen<page>`, `setting/theme/…`, `setting/colorblind/on|off`.
+  Hendelser til og med 11.10.2026 har norske navn i GoatCounter (`lenke/…`, `fane/…`, `kart/valgt/…` osv.), og
+  `tab/info` finnes i eldre data.
+- Egne besøk telles ikke etter at `https://flysteder.hpgt.com/#toggle-goatcounter` er åpnet i nettleseren.
 
-## Adding a language
+## Nytt språk
 
-1. Add the language to `src/_data/languages.js`: `code`, `name` (as written in the language itself), `locale`
-   (for Open Graph), `prefix` (`/de`) and `slugs` (URLs: `{ flysteder: "orte", tarn: "tuerme" }`).
-2. Copy `src/_i18n/en.json` to `src/_i18n/<code>.json` and translate the values. Missing keys are shown in Norwegian.
-3. Add the language's Norwegian name to `LANGUAGE_WORDS` in `lib/status.js`, so the status page can show
-   «tysk tekst» ("German text").
-4. Translate the sites in `index.<code>.md`, or let the status page show what is missing.
-5. `npm test` checks that the dictionary only has keys that exist in `nb.json`.
+1. Legg språket til i `src/_data/languages.js`: `code`, `name` (slik det skrives på språket selv), `locale` (for Open
+   Graph), `prefix` (`/de`) og `slugs` (adresser: `{ flysteder: "orte", tarn: "tuerme" }`).
+2. Kopier `src/_i18n/en.json` til `src/_i18n/<code>.json` og oversett verdiene. Nøkler som mangler, vises på norsk.
+3. Legg språkets norske navn til i `LANGUAGE_WORDS` i `lib/status.js`, så statussiden kan vise «tysk tekst».
+4. Oversett stedene i `index.<code>.md`, eller la statussiden vise hva som mangler.
+5. `npm test` sjekker at ordboken bare har nøkler som finnes i `nb.json`.
 
-## Accounts and secrets
+## Kontoer og hemmeligheter
 
-| What | Where | Used for |
+| Hva | Hvor | Brukes til |
 |---|---|---|
-| `OPENAIP_API_KEY` | GitHub → Settings → Environments → `automation` (only `main`) | Monthly airspace fetch |
-| GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variable), `APP_PRIVATE_KEY` (secret) | hpgt-com → Developer settings → GitHub Apps; the variable under flying-sites → Settings → Secrets and variables, the secret in the environment `automation` (only `main`) | Automation in GitHub Actions (today: the airspace PRs, so the PR check runs) |
-| Cloudflare account «HPGT» (owner: Kristoffer's user for now; move to a club address under Manage account → Members) | dash.cloudflare.com | The data service (`data.hpgt.com`) and «Meld fra» |
-| `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | The Holfuy stations |
-| `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | MET's stations (Frost) |
-| `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: the robot check (the site key is public, in `src/_data/site.js`) |
-| GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (as above); the app under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: makes the issues (only Issues: read and write) |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the data service. The token is an account token that can only publish the Worker `data`, made under Workers & Pages → data → Settings → Builds → «API token for external CI/CD» (listed under Manage Account → Account API Tokens). To roll it: make a new one there, update the secret, run «Data service» once, and delete the old token. |
-| `CLOUDFLARE_SITE_TOKEN` | flying-sites → Settings → Environments → `cloudflare` (only `main`) | Publishing the site to Cloudflare (the job «cloudflare» in «Build and deploy»). An account token with Workers Scripts: Edit for the account HPGT only. See [The site on Cloudflare](#the-site-on-cloudflare). |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `recovery` (only `main`, review required from the team `maintainers`) | Only «Recover». Empty normally: the token (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, account HPGT only, a short TTL) is made when a recovery needs it and deleted afterwards. See [Disaster recovery](#disaster-recovery). |
-| GoatCounter `hpgt-flysteder` | goatcounter.com | Visitor statistics |
-| Backblaze B2 (free plan; the account is on the club's address) with the bucket `hpgt-flysteder-backup` (private, EU region, lifecycle «keep prior versions for 90 days»: a file written again keeps its old version 90 days, files written once are kept for good) and the key `github-backup` (that bucket only, read and write, no expiry) | backblaze.com | The off-site copy of the archive, the backups, the issues and the code (`backup.yml`) |
-| `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (secrets); `B2_ENDPOINT`, `R2_ENDPOINT` (variables; `B2_BUCKET` and `R2_BUCKET` only when the names differ from the defaults in `backup.yml`) | flying-sites → Settings → Environments → `backup` (only `main`) | `backup.yml`. The R2 token (an account token, Object Read only, `hpgt-data-archive` only; made 18.11.2026 in place of the user token «github-backup-read») is made under R2 → Manage R2 API Tokens → Create Account API token |
-| `B2_KEY_ID`, `B2_APPLICATION_KEY` (secrets, a read-only key); `B2_ENDPOINT` (variable; `B2_BUCKET` only when the name differs) | flying-sites → Settings → Environments → `backup-read` (only `main`) | `restore-drill.yml` and the fetch in `recover.yml`. A Backblaze application key with **Read Only** access to `hpgt-flysteder-backup` only, so the drill and a recovery cannot change or delete the copy |
-| UptimeRobot (free plan; the account is on the maintainer's e-mail, moved by changing it under My Settings → Account) | uptimerobot.com | Three monitors every five minutes: `https://flysteder.hpgt.com/` answers, `https://hpgt.com/` (the club's site) answers, and `/v1/status.json` on the data service contains `"ok":true`. E-mails the alert contacts when one fails and when it is back. |
-| Cloudflare Worker `flysteder`, domain | Cloudflare → Workers & Pages → flysteder (custom domain `flysteder.hpgt.com`) | Serving the site; GitHub Pages (Settings → Pages) gets every build as a fallback |
+| `OPENAIP_API_KEY` | GitHub → Settings → Environments → `automation` (bare `main`) | Månedlig henting av luftrom |
+| GitHub App «HPGT Flying Sites»: `APP_CLIENT_ID` (variabel), `APP_PRIVATE_KEY` (hemmelighet) | hpgt-com → Developer settings → GitHub Apps; variabelen under flying-sites → Settings → Secrets and variables, hemmeligheten i miljøet `automation` (bare `main`) | Automatisering i GitHub Actions (PR-ene for luftrom og hindre, så PR-sjekken kjører) |
+| Cloudflare-kontoen «HPGT» (eieren står under Manage account → Members, og bør være en klubbadresse) | dash.cloudflare.com | Siden (`flysteder.hpgt.com`), datatjenesten (`data.hpgt.com`) og «Meld fra» |
+| `HOLFUY_KEY` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | Holfuy-stasjonene |
+| `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | METs stasjoner (Frost) |
+| `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: robotsjekken (site key er offentlig, i `src/_data/site.js`) |
+| GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (som over); appen under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: lager sakene (bare Issues: read and write) |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (bare `main`) | Publisering av datatjenesten. Tokenet er et kontotoken som bare kan publisere Workeren `data`, laget under Workers & Pages → data → Settings → Builds → «API token for external CI/CD» (står under Manage Account → Account API Tokens). Bytte det: lag et nytt der, oppdater hemmeligheten, kjør «Data service» én gang, og slett det gamle tokenet. |
+| `CLOUDFLARE_SITE_TOKEN` | flying-sites → Settings → Environments → `cloudflare` (bare `main`) | Publisering av siden til Cloudflare (jobben «cloudflare» i «Build and deploy»). Et kontotoken som bare kan publisere Workeren `flysteder`, laget fra Workeren. Utløper 19.11.2027. Se [Siden på Cloudflare](#siden-på-cloudflare). |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `recovery` (bare `main`, krever godkjenning fra teamet `maintainers`) | Bare «Recover». Tomt til vanlig: tokenet (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, bare kontoen HPGT, kort levetid) lages når en gjenoppretting trenger det, og slettes etterpå. Se [Katastrofegjenoppretting](#katastrofegjenoppretting). |
+| GoatCounter `hpgt-flysteder` | goatcounter.com | Besøksstatistikk |
+| Backblaze B2 (gratisplan; kontoen står på klubbens adresse) med bøtta `hpgt-flysteder-backup` (privat, EU-region, livssyklus «keep prior versions for 90 days»: en fil som skrives på nytt, beholder den gamle versjonen i 90 dager, og filer som skrives én gang, beholdes for godt) og nøkkelen `github-backup` (bare den bøtta, lese og skrive, utløper ikke) | backblaze.com | Kopien utenfor Cloudflare av arkivet, sikkerhetskopiene, sakene og koden (`backup.yml`) |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (hemmeligheter); `B2_ENDPOINT`, `R2_ENDPOINT` (variabler; `B2_BUCKET` og `R2_BUCKET` bare når navnene avviker fra standardverdiene i `backup.yml`) | flying-sites → Settings → Environments → `backup` (bare `main`) | `backup.yml`. R2-tokenet (et kontotoken, bare Object Read, bare `hpgt-data-archive`) lages under R2 → Manage R2 API Tokens → Create Account API token |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY` (hemmeligheter, en nøkkel med bare lesetilgang); `B2_ENDPOINT` (variabel; `B2_BUCKET` bare når navnet avviker) | flying-sites → Settings → Environments → `backup-read` (bare `main`) | `restore-drill.yml` og hentingen i `recover.yml`. En Backblaze application key med **Read Only**-tilgang til bare `hpgt-flysteder-backup`, så øvelsen og en gjenoppretting ikke kan endre eller slette kopien |
+| UptimeRobot (gratisplan; kontoen står på e-postadressen til eier og flyttes ved å endre den under My Settings → Account) | uptimerobot.com | Tre overvåkinger hvert femte minutt: `https://flysteder.hpgt.com/` svarer, `https://hpgt.com/` (klubbens side) svarer, og `/v1/status.json` på datatjenesten inneholder `"ok":true`. Sender e-post til varslingskontaktene når en feiler, og når den er tilbake. |
+| Cloudflare-Workeren `flysteder`, domene | Cloudflare → Workers & Pages → flysteder (eget domene `flysteder.hpgt.com`) | Serverer siden; GitHub Pages (Settings → Pages) får hvert bygg som reserve |
 
-MET and Kartverket require no key. MET requires the client to provide contact details (`USER_AGENT` in
+MET og Kartverket krever ingen nøkkel. MET krever at klienten oppgir kontaktinformasjon (`USER_AGENT` i
 `lib/weather/met.js`).
 
 ## Runbook
 
-What to do when something stops, and how the next board takes over. Everything here can be done by one person with
-admin on the repository and the Cloudflare account; nothing needs a developer machine except where `npm` is named.
+Hva som gjøres når noe stopper, og hvordan neste styre tar over. Alt her kan gjøres av én person med admin på repoet og
+Cloudflare-kontoen; ingenting krever en utviklermaskin, bortsett fra der `npm` er nevnt.
 
-**A source is down (MET, Holfuy, Frost, Open-Meteo, OGN).** Nothing to do. The data service keeps the last good data,
-the pages show it with its age, and the assessment goes off when the forecast is too old (6 hours). The status
-(`/v1/status.json`) shows the source's last error; the hourly check opens an issue only when the source has failed for a
-day or a dataset is over its limit.
+**En kilde er nede (MET, Holfuy, Frost, Open-Meteo, OGN).** Ingenting å gjøre. Datatjenesten beholder siste gode data,
+sidene viser dem med alderen, og vurderingen slås av når varselet er for gammelt (6 timer). Statusen
+(`/v1/status.json`) viser kildens siste feil; den timevise sjekken åpner en sak bare når kilden har feilet i et døgn,
+eller et datasett er over grensen sin.
 
-**The schedule has stopped.** GitHub turns the schedule of a public repository off after 60 days without a commit, and
-runs it late when busy. Signs: the monthly airspace PR did not come, or «Data service health» has not run for days
-(Actions → the workflow → the list of runs). Fix: Actions → the workflow → «Enable workflow», then «Run workflow». A
-commit of any kind resets the 60 days. The data service's own schedule runs on Cloudflare and is not affected, and
-UptimeRobot (see [Accounts and secrets](#accounts-and-secrets)) watches the site and the status from outside GitHub
-whatever the schedule does: an e-mail from it is the first sign of a problem in a quiet season.
+**Tidsplanen har stoppet.** GitHub slår av tidsplanen i et offentlig repo etter 60 dager uten commit, og kjører den sent
+når det er travelt. Tegn: den månedlige luftroms-PR-en kom ikke, eller «Data service health» har ikke kjørt på flere
+dager (Actions → arbeidsflyten → listen over kjøringer). Løsning: Actions → arbeidsflyten → «Enable workflow», og så
+«Run workflow». En commit av hvilken som helst type nullstiller de 60 dagene. Datatjenestens egen tidsplan kjører på
+Cloudflare og berøres ikke, og UptimeRobot (se [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)) overvåker siden og
+statusen utenfra GitHub uansett hva tidsplanen gjør: en e-post derfra er det første tegnet på et problem i en stille
+periode.
 
-The club's public status page [status.hpgt.com](https://status.hpgt.com) (Upptime in the repository `hpgt-com/status`,
-linked as «Driftsstatus» in the menu: `site.statusUrl`) also checks the site and the data service every 5 minutes from
-GitHub Actions, and opens an issue there when one is down. Its setup is described in hpgt-web `docs/operations.md`
-(«What watches what»).
+Klubbens offentlige statusside [status.hpgt.com](https://status.hpgt.com) (Upptime i repoet `hpgt-com/status`, lenket som
+«Driftsstatus» i menyen: `site.statusUrl`) sjekker også siden og datatjenesten hvert 5. minutt fra GitHub Actions, og
+åpner en sak der når en av dem er nede. Oppsettet er beskrevet i [«Hva overvåker hva»](https://github.com/hpgt-com/hpgt-web/blob/main/docs/operations.md#hva-overvåker-hva) i hpgt-web.
 
-**The data service does not answer, or answers 503.** The pages still work from the built-in forecast. Look at
-Cloudflare → Workers & Pages → data → Observability (the logs name the source and the error) and at Metrics (the
-free plan's daily limits reset at 00:00 UTC; Cloudflare e-mails at 90 %). A bad version: roll back under Deployments
-(or `npx wrangler rollback` in `workers/data`). A lost store comes back by itself, see
-[Data service health](#data-service-health). To publish again from the code: Actions → «Data service» → «Run workflow».
+**Datatjenesten svarer ikke, eller svarer 503.** Sidene virker fortsatt med det innebygde varselet. Se i Cloudflare →
+Workers & Pages → data → Observability (loggene navngir kilden og feilen) og Metrics (gratisplanens daglige grenser
+nullstilles kl. 00:00 UTC; Cloudflare sender e-post ved 90 %). En dårlig versjon: rull tilbake under Deployments (eller
+`npx wrangler rollback` i `workers/data`). Et tapt lager kommer tilbake av seg selv, se
+[Helsesjekk for datatjenesten](#helsesjekk-for-datatjenesten). Publisere på nytt fra koden: Actions → «Data service» →
+«Run workflow».
 
-**A publish of the site went wrong.** Actions → «Build and deploy» → an earlier green run → «Re-run all jobs» publishes
-that commit again, with a fresh forecast. For good: `git revert` of the merge on `main` through a PR. Nothing is lost:
-every publish is built from Git.
+**En publisering av siden gikk galt.** Actions → «Build and deploy» → en tidligere grønn kjøring → «Re-run all jobs»
+publiserer den commiten igjen, med et ferskt varsel. Varig: `git revert` av mergen på `main` gjennom en PR. Ingenting
+går tapt: hver publisering bygges fra Git.
 
-**A secret or token may have leaked, or has expired.** Roll it where it lives (the table under
-[Accounts and secrets](#accounts-and-secrets)), and nothing else needs to change:
+**En hemmelighet eller et token kan ha lekket, eller har utløpt.** Bytt den der den ligger (tabellen under
+[Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)); ingenting annet trenger å endres:
 
-- `CLOUDFLARE_API_TOKEN` in `cloudflare`: a new token from the Worker (Workers & Pages → data → Settings → Builds →
-  «API token for external CI/CD»), then the environment `cloudflare` in GitHub, run «Data service» once, and delete the
-  old token under Manage Account → Account API Tokens. When it expires, «Data service» fails with an authentication
-  error.
-- `CLOUDFLARE_API_TOKEN` in `recovery`: normally there is none. If one was left after a recovery, delete it in
-  Cloudflare and remove the secret.
-- The Worker's secrets (`HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`): new value under
-  Variables and Secrets; the running version picks it up at once. For a GitHub App key, make a new key under the app
-  and delete the old one. For Turnstile, a new widget under Cloudflare → Turnstile gives a new site key
-  (`src/_data/site.js`) and secret.
-- `OPENAIP_API_KEY` and `APP_PRIVATE_KEY`: new value under Settings → Environments → `automation`.
-- A GitHub account with admin: change the password, check Settings → Sessions and Applications, and keep two-factor
-  with a security key.
+- `CLOUDFLARE_API_TOKEN` i `cloudflare`: et nytt token fra Workeren (Workers & Pages → data → Settings → Builds → «API
+  token for external CI/CD»), så miljøet `cloudflare` i GitHub, kjør «Data service» én gang, og slett det gamle tokenet
+  under Manage Account → Account API Tokens. Når det utløper, feiler «Data service» med en autentiseringsfeil.
+- `CLOUDFLARE_SITE_TOKEN` i `cloudflare`: på samme måte fra Workeren `flysteder`, se
+  [Siden på Cloudflare](#siden-på-cloudflare).
+- `CLOUDFLARE_API_TOKEN` i `recovery`: til vanlig finnes det ikke. Ble det liggende igjen etter en gjenoppretting,
+  slettes det i Cloudflare, og hemmeligheten fjernes.
+- Workerens hemmeligheter (`HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`): ny verdi under
+  Variables and Secrets; versjonen som kjører, tar den i bruk med en gang. For en nøkkel til en GitHub App lages en ny
+  nøkkel under appen, og den gamle slettes. For Turnstile gir en ny widget under Cloudflare → Turnstile en ny site key
+  (`src/_data/site.js`) og hemmelighet.
+- `OPENAIP_API_KEY` og `APP_PRIVATE_KEY`: ny verdi under Settings → Environments → `automation`.
+- En GitHub-konto med admin: bytt passord, sjekk Settings → Sessions og Applications, og behold totrinnsinnlogging med
+  en sikkerhetsnøkkel.
 
-If a token with write access to the repository may have leaked, also read the commits and Actions runs since (Settings →
-Audit log on the organization).
+Kan et token med skrivetilgang til repoet ha lekket, leses også commitene og Actions-kjøringene siden da (Settings →
+Audit log i organisasjonen).
 
-**The domain does not resolve, or shows GitHub's 404.** `flysteder.hpgt.com` is a CNAME to `hpgt-com.github.io` at the
-DNS provider of `hpgt.com`, and the domain is set under Settings → Pages (with «Enforce HTTPS»). GitHub also checks the
-verification record `_github-pages-challenge-hpgt-com` (Organization → Settings → Pages → Verified domains). If the
-record or the Pages setting is gone, put it back; the certificate renews by itself within a day.
+**Domenet svarer ikke, eller viser feil side.** `flysteder.hpgt.com` og `data.hpgt.com` er egne domener på Workerne
+`flysteder` og `data` (Workers & Pages → Workeren → Settings → Domains & Routes), i sonen `hpgt.com` på Cloudflare. Er
+et domene borte, legges det til igjen der; Cloudflare lager DNS-posten og sertifikatet. Sonen `hpgt.com` forvaltes
+utenfor dette repoet. For å gå tilbake til GitHub Pages, se [Siden på Cloudflare](#siden-på-cloudflare); GitHub sjekker
+da også verifiseringsposten `_github-pages-challenge-hpgt-com` (Organization → Settings → Pages → Verified domains).
 
-**Handing over to a new board.** Give the new person owner on the GitHub organization `hpgt-com` and admin on the
-repository, a member with Administrator on the Cloudflare account «HPGT» (and move the account's owner to a club
-address if it is still a person's), access to the GoatCounter account and to the DNS of `hpgt.com`, and ownership of
-the two GitHub Apps (the organization owns them). Then remove the people who left. The checklist in `SECURITY.md`
-is the list of settings to go through afterwards.
+**Overlevering til et nytt styre.** Gi den nye personen eierrolle i GitHub-organisasjonen `hpgt-com` og admin på repoet,
+et medlemskap med Administrator på Cloudflare-kontoen «HPGT» (og flytt kontoens eier til en klubbadresse hvis den
+fortsatt er en persons), tilgang til GoatCounter-kontoen og til DNS for `hpgt.com`, og eierskap til de to GitHub-appene
+(organisasjonen eier dem). Fjern så dem som har sluttet. Sjekklisten i `SECURITY.md` er listen over innstillinger som
+gås gjennom etterpå.
 
-## Disaster recovery
+## Katastrofegjenoppretting
 
-What is lost when each part goes, what brings it back, and how long it takes. The site is static and built from Git,
-and the data service keeps only data that comes back by itself within the hour, except the history and the archive,
-which are copied every night. Everything below that says «by itself» has been run at least once, with the date.
+Hva som går tapt når hver del forsvinner, hva som bringer den tilbake, og hvor lang tid det tar. Siden er statisk og
+bygges fra Git, og datatjenesten har bare data som kommer tilbake av seg selv innen en time, bortsett fra historikken og
+arkivet, som kopieres hver natt.
 
-**Targets.** At most 24 hours of history and archive lost (the copies are nightly). The site and the data service back
-within an hour, with no step that needs a developer machine.
+**Mål.** Høyst 24 timer med historikk og arkiv tapt (kopiene tas hver natt). Siden og datatjenesten tilbake innen en
+time, uten steg som krever en utviklermaskin.
 
-**What lives where, and its copies.**
+**Hva som ligger hvor, og kopiene.**
 
-| What | Lives in | Comes back from | Copy taken |
+| Hva | Ligger i | Kommer tilbake fra | Kopi tas |
 |---|---|---|---|
-| Code, site files, images, workflows | GitHub (`hpgt-com/flying-sites`) | Any clone; `git/flying-sites.bundle` in the B2 bucket (`git clone flying-sites.bundle`) | Bundle every Sunday (`backup.yml`); every maintainer's clone |
-| Issues (including «Meld fra») and comments | GitHub | `github/issues.json` and `github/issue-comments.json` in the B2 bucket, as the API gives them | Every night |
-| Forecast, winds aloft, grids, last 7 days of measurements, pilots in the air | The store (Durable Object) | The sources, within the hour; the last 7 days of measurements only as far as the sources' own history goes (Holfuy and Frost give the latest only) | None needed |
-| Flying activity per day, verification history | The store | `backup/<table>/latest.json` in R2, read in by the store itself within a minute of being empty (`store.js` `restore`, since 23.10.2026) | Every night 02:14 UTC to R2, 03:30 UTC on to B2 |
-| Weather archive (CSV per station and day) | R2 `hpgt-data-archive` | `archive/` in the B2 bucket `hpgt-flysteder-backup` (`rclone copy b2:… r2:…`) | Every night 03:30 UTC |
-| Settings outside Git: rulesets, environments, Pages, Turnstile, the GitHub Apps, DNS | GitHub, Cloudflare, the DNS provider | By hand from the checklist in `SECURITY.md` and the table under [Accounts and secrets](#accounts-and-secrets) | None (it is small; the checklist is the copy) |
-| Secrets and keys | Where the table says; the values in the club's password manager | Rolled, never restored: new values where they live | — |
+| Kode, stedsfiler, bilder, arbeidsflyter | GitHub (`hpgt-com/flying-sites`) | En hvilken som helst klone; `git/flying-sites.bundle` i B2-bøtta (`git clone flying-sites.bundle`) | Bunt hver søndag (`backup.yml`); hver vedlikeholders klone |
+| Saker (også «Meld fra») og kommentarer | GitHub | `github/issues.json` og `github/issue-comments.json` i B2-bøtta, slik API-et gir dem | Hver natt |
+| Varsel, høydevind, prognosenett, siste 7 dager med målinger, piloter i lufta | Lageret (Durable Object) | Kildene, innen en time; de siste 7 dagene med målinger bare så langt kildenes egen historikk rekker (Holfuy og Frost gir bare den siste) | Trengs ikke |
+| Flyaktivitet per dag, verifiseringshistorikk | Lageret | `backup/<table>/latest.json` i R2, lest inn av lageret selv innen ett minutt etter at det er tomt (`store.js` `restore`) | Hver natt kl. 02:14 UTC til R2, kl. 03:30 UTC videre til B2 |
+| Værarkivet (CSV per stasjon og døgn) | R2 `hpgt-data-archive` | `archive/` i B2-bøtta `hpgt-flysteder-backup` (`rclone copy b2:… r2:…`) | Hver natt kl. 03:30 UTC |
+| Innstillinger utenfor Git: rulesets, miljøer, Pages, Turnstile, GitHub-appene, DNS | GitHub, Cloudflare | For hånd fra sjekklisten i `SECURITY.md` og tabellen under [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter) | Ingen (det er lite; sjekklisten er kopien) |
+| Hemmeligheter og nøkler | Der tabellen sier; verdiene i klubbens passordhvelv | Byttes, gjenopprettes aldri: nye verdier der de ligger | — |
 
-**Scenarios, in the order to work them.**
+**Scenarioer, i rekkefølgen de tas.**
 
-1. **The store is lost** (a Durable Object migration gone wrong, a Cloudflare incident, a reset). Nothing to do. The
-   next minute the store reads the history back in from R2, the sources fill the rest within the hour, and
-   `/v1/status.json` shows `backup.restored` with the time and rows. Verified 23.10.2026: 274 + 1 rows in 1.1 s.
-2. **The archive bucket is lost, or emptied.** Create `hpgt-data-archive` again (R2, private), then from any machine with
-   rclone and the two keys from the environment `backup`: `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`.
-   Then scenario 1 happens by itself. About half an hour for the copy at today's size.
-3. **The Cloudflare account is lost** (or just the archive bucket and the store). In this order, from the checklist
-   under [Accounts and secrets](#accounts-and-secrets) and the club's password manager:
-   1. New account on the club's address, with two-factor sign-in; enable Workers and R2 (a card may be asked for even
-      within the free limits), and create the bucket `hpgt-data-archive` (private).
-   2. Two tokens on the new account: the everyday deploy token from the Worker (as under [Runbook](#runbook) «A secret
-      or token may have leaked») into the GitHub environment `cloudflare`, and a recovery token (Manage Account →
-      Account API Tokens → Create: Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, a TTL of a
-      few days) into the environment `recovery`, both with the account id. Delete the recovery token when «Recover» has
-      run. (The Worker does not exist yet on a new account, so the first publish here uses the recovery token; make the
-      Worker's own token afterwards.)
-   3. A new Turnstile widget for `flysteder.hpgt.com` (site key into `src/_data/site.js` through a PR, secret into the
-      Worker below), and a new private key on the GitHub App «HPGT Flying Sites Reports».
-   4. Actions → «Recover» → «Run workflow» with `restore_archive` on, `lost_store` on, and `base_url` set to the new
-      account's `workers.dev` address: it fetches the copy from B2, writes the archive back to R2 (one object at a
-      time through the API, minutes for months of files), publishes the data service, waits until it runs, and
-      checks that the store read the history back in with exactly the rows in the copy.
-   5. The Worker's secrets by hand in Cloudflare → Workers & Pages → data → Settings → Variables and Secrets:
-      `HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY`. They are kept
-      out of GitHub on purpose (SECURITY.md): a second copy there would widen what a bad workflow change could reach,
-      for a scenario where two of them must be made anew anyway. Until they are set, the stations, «Meld fra» and
-      MET's stations are off; the rest runs.
-   6. The new address into `src/_data/site.js` (`forecastUrl` and the others) through a PR, and the health check and
-      UptimeRobot pointed at it. An hour of work plus the copy.
-4. **The GitHub repository is lost.** Push any clone, or the bundle from B2, to a new repository (`git clone
-   flying-sites.bundle`, add the remote, `git push --all`). Then the settings from the `SECURITY.md` checklist: Pages
-   with the domain, the environments `automation`, `cloudflare`, `recovery` and `backup` with their secrets and variables, the
-   rulesets, the two GitHub Apps' installation. The issues are in `github/issues.json` for reading; they are not
-   imported back. Half a day, mostly settings.
-5. **The B2 account is lost.** Nothing is down. New account and bucket, new key into the environment `backup`, and the
-   next night copies everything again from R2.
-6. **The domain.** See «The domain does not resolve» under [Runbook](#runbook). The DNS of `hpgt.com` is outside this
-   repository.
-7. **The person is unavailable.** See «Handing over to a new board» under [Runbook](#runbook). This is the one scenario
-   nothing here automates: it needs a second owner on the GitHub organization and the Cloudflare account, and the
-   password manager shared, before it is needed.
+1. **Lageret er tapt** (en Durable Object-migrering som gikk galt, en hendelse hos Cloudflare, en nullstilling).
+   Ingenting å gjøre. Minuttet etter leser lageret historikken inn igjen fra R2, kildene fyller resten innen en time,
+   og `/v1/status.json` viser `backup.restored` med tidspunkt og rader.
+2. **Arkivbøtta er tapt eller tømt.** Lag `hpgt-data-archive` på nytt (R2, privat), og så fra en hvilken som helst
+   maskin med rclone og de to nøklene fra miljøet `backup`:
+   `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`. Deretter skjer scenario 1 av seg selv. Kopien
+   tar omtrent en halvtime.
+3. **Cloudflare-kontoen er tapt** (eller bare arkivbøtta og lageret). I denne rekkefølgen, fra sjekklisten under
+   [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter) og klubbens passordhvelv:
+   1. Ny konto på klubbens adresse, med totrinnsinnlogging. Slå på Workers og R2 (det kan bli bedt om et kort selv
+      innenfor gratisgrensene), og lag bøtta `hpgt-data-archive` (privat).
+   2. To tokener på den nye kontoen: det daglige publiseringstokenet fra Workeren (som under [Runbook](#runbook) «En
+      hemmelighet eller et token kan ha lekket») i GitHub-miljøet `cloudflare`, og et gjenopprettingstoken (Manage
+      Account → Account API Tokens → Create: Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read,
+      levetid på noen dager) i miljøet `recovery`, begge med konto-id-en. Slett gjenopprettingstokenet når «Recover»
+      har kjørt. (Workeren finnes ikke ennå på en ny konto, så den første publiseringen her bruker
+      gjenopprettingstokenet; Workerens eget token lages etterpå.)
+   3. En ny Turnstile-widget for `flysteder.hpgt.com` (site key inn i `src/_data/site.js` gjennom en PR, hemmeligheten
+      inn i Workeren under), og en ny privat nøkkel på GitHub-appen «HPGT Flying Sites Reports».
+   4. Actions → «Recover» → «Run workflow» med `restore_archive` på, `lost_store` på og `base_url` satt til
+      datatjenestens adresse på den nye kontoen. Den henter kopien fra B2, skriver arkivet tilbake til R2 (ett objekt
+      om gangen gjennom API-et, minutter for måneder med filer), publiserer datatjenesten, venter til den kjører (høyst
+      6 minutter), og sjekker at lageret leste historikken inn igjen med nøyaktig radene i kopien.
+      `workers/data/wrangler.toml` har `workers_dev = false`, så Workeren får ingen `workers.dev`-adresse: legg til det
+      egne domenet `data.hpgt.com` på Workeren (sonen `hpgt.com` må da ligge på den nye kontoen) mens kjøringen
+      venter, og bruk det som `base_url`.
+   5. Workerens hemmeligheter for hånd i Cloudflare → Workers & Pages → data → Settings → Variables and Secrets:
+      `HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY`. De holdes med
+      vilje utenfor GitHub (SECURITY.md): en ekstra kopi der ville utvidet det en dårlig endring i en arbeidsflyt kunne
+      nå, for et scenario der to av dem uansett må lages på nytt. Til de er satt, er stasjonene, «Meld fra» og METs
+      stasjoner av; resten kjører.
+   6. Siden på den nye kontoen: Workeren `flysteder` publiseres av «Build and deploy» med et nytt
+      `CLOUDFLARE_SITE_TOKEN`, og domenet `flysteder.hpgt.com` legges til på den (se
+      [Siden på Cloudflare](#siden-på-cloudflare)); til da kan siden serveres fra GitHub Pages. Får datatjenesten en
+      annen adresse enn `data.hpgt.com`, må den inn i `src/_data/site.js` (`forecastUrl` og de andre) gjennom en PR, og
+      helsesjekken og UptimeRobot pekes dit. En time arbeid pluss kopien.
+4. **GitHub-repoet er tapt.** Push en hvilken som helst klone, eller bunten fra B2, til et nytt repo
+   (`git clone flying-sites.bundle`, legg til remote, `git push --all`). Deretter innstillingene fra sjekklisten i
+   `SECURITY.md`: Pages med domenet, miljøene `automation`, `cloudflare`, `recovery`, `backup` og `backup-read` med
+   hemmeligheter og variabler, rulesettene, og installasjonen av de to GitHub-appene. Sakene ligger i
+   `github/issues.json` til lesing; de importeres ikke tilbake. En halv dag, mest innstillinger.
+5. **B2-kontoen er tapt.** Ingenting er nede. Ny konto og bøtte, ny nøkkel i miljøet `backup`, og neste natt kopierer
+   alt på nytt fra R2.
+6. **Domenet.** Se «Domenet svarer ikke» under [Runbook](#runbook). DNS for `hpgt.com` ligger utenfor dette repoet.
+7. **Personen er utilgjengelig.** Se «Overlevering til et nytt styre» under [Runbook](#runbook). Dette er det ene
+   scenarioet ingenting her automatiserer: det krever en eier til i GitHub-organisasjonen og på Cloudflare-kontoen, og
+   at passordhvelvet er delt, før det trengs.
 
-**What watches it.** `backup.yml` fails and opens an issue when the nightly copy or its check fails, and closes it when
-a night goes through again. `health.yml` opens an issue when the store's own backup is more than two days behind, or
-when the restore keeps failing. UptimeRobot e-mails when the site or the status stops answering. A quiet repository
-turns GitHub's schedules off after 60 days without a commit (see [Runbook](#runbook)); UptimeRobot does not depend on it.
+**Hva som overvåker det.** `backup.yml` feiler og åpner en sak når den nattlige kopien eller kontrollen av den feiler,
+og lukker den når en natt går gjennom igjen. `health.yml` åpner en sak når lagerets egen sikkerhetskopi er mer enn to
+døgn bak, eller når gjenopprettingen stadig feiler. UptimeRobot sender e-post når siden eller statusen slutter å svare.
+Et stille repo får GitHubs tidsplaner slått av etter 60 dager uten commit (se [Runbook](#runbook)); UptimeRobot er ikke
+avhengig av det.
 
-**The monthly drill** (`restore-drill.yml`, the 1st at 04:30 UTC and by hand): scenarios 1 and 2 proven together
-without touching production. The data service's own code runs on the runner (`wrangler dev`, local workerd, with its
-own empty store and local R2), the latest backup of each table is fetched from the copy in B2 and put in that local R2,
-the schedule is fired once, and the store must read every row back in, compared with the rows in the files
-(`scripts/restore-drill.mjs`, `lib/restore-drill.js`). A failed drill opens the issue «Gjenopprettingsøvelsen feilet»;
-the Actions history of the workflow is the record of the drills.
+**Den månedlige øvelsen** (`restore-drill.yml`, den 1. kl. 04:30 UTC og for hånd): scenario 1 og 2 bevist sammen uten å
+røre produksjon. Datatjenestens egen kode kjører på runneren (`wrangler dev`, lokal workerd, med eget tomt lager og
+lokal R2), den siste sikkerhetskopien av hver tabell hentes fra kopien i B2 og legges i den lokale R2-en, tidsplanen
+utløses én gang, og lageret må lese hver rad inn igjen, sammenlignet med radene i filene (`scripts/restore-drill.mjs`,
+`lib/restore-drill.js`). En øvelse som feiler, åpner saken «Gjenopprettingsøvelsen feilet»; Actions-historikken for
+arbeidsflyten er loggen over øvelsene.
 
-**Not yet done.** A copy of the repository at another Git host would make scenario 4 a push instead of a bundle. A
-staging Worker (`[env.staging]` in `wrangler.toml`) only if store migrations need trying against real Cloudflare before
-`main`.
+**Ikke dekket.** Det finnes ingen kopi av repoet hos en annen Git-tjeneste; en slik kopi ville gjort scenario 4 til en
+push i stedet for en bunt. Det finnes ikke noe staging-miljø for Workeren (`[env.staging]` i `wrangler.toml`); det
+trengs bare hvis migreringer av lageret må prøves mot ekte Cloudflare før `main`.
 
-## Troubleshooting
+## Feilsøking
 
-| Build message | Fix |
+| Melding fra bygget | Løsning |
 |---|---|
-| `ukjent source «…»` | Use one of the fixed values, see [source](site-files.md#front-matter). |
-| `ukjent nøkkel …` | Typo in the front matter. See the table in [site-files.md](site-files.md#front-matter). |
-| `bildet … har feil navn` | Import with `npm run images`, or rename the file to match the pattern. |
-| `gangruten … skal hete …` | Multiple routes must be named `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
-| `status er «reviewed», men reviewed …` | Fill in `reviewed.by` and `reviewed.date`. |
-| `index.en.md: ukjente nøkler …` | Typo in the translation. See [Translation](site-files.md#translation). |
-| The wind assessment is missing on the site | The forecast is too old, or MET did not respond. Check `https://data.hpgt.com/v1/forecast.json`, and run «Build and deploy» manually. |
-| An issue «Datatjenesten: data mangler eller er for gamle» | See [Data service health](#data-service-health). It closes by itself when the status is in order again. |
-| An issue «Jobben «…» feilet» | A run failed (the job `alert` opens it, or comments on the open one). Open the run from the link, fix the cause, run the workflow again, and close the issue. |
-| «Data service» fails with an authentication error | The Cloudflare token has expired or been changed. Make a new one (see [Runbook](#runbook)) and update `CLOUDFLARE_API_TOKEN` in the environment `cloudflare`. |
-| The airspace layer says «Kunne ikke hente luftrom» ("Could not load airspace") | `assets/airspace.geojson` is missing from the build. Check that `src/_data/cache/airspace/region.geojson` exists. |
+| `ukjent source «…»` | Bruk en av de faste verdiene, se [source](site-files.md#front-matter). |
+| `ukjent nøkkel …` | Skrivefeil i front matter. Se tabellen i [site-files.md](site-files.md#front-matter). |
+| `bildet … har feil navn` | Importer med `npm run images`, eller gi filen et navn etter mønsteret. |
+| `gangruten … skal hete …` | Flere ruter skal hete `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
+| `status er «reviewed», men reviewed …` | Fyll inn `reviewed.by` og `reviewed.date`. |
+| `index.en.md: ukjente nøkler …` | Skrivefeil i oversettelsen. Se [Oversettelse](site-files.md#oversettelse). |
+| Vindvurderingen mangler på siden | Varselet er for gammelt, eller MET svarte ikke. Sjekk `https://data.hpgt.com/v1/forecast.json`, og kjør «Build and deploy» for hånd. |
+| En sak «Datatjenesten: data mangler eller er for gamle» | Se [Helsesjekk for datatjenesten](#helsesjekk-for-datatjenesten). Den lukkes av seg selv når statusen er i orden igjen. |
+| En sak «Jobben «…» feilet» | En kjøring feilet (jobben `alert` åpner den, eller kommenterer på den åpne). Åpne kjøringen fra lenken, rett årsaken, kjør arbeidsflyten igjen, og lukk saken. |
+| «Data service» feiler med en autentiseringsfeil | Cloudflare-tokenet har utløpt eller er endret. Lag et nytt (se [Runbook](#runbook)) og oppdater `CLOUDFLARE_API_TOKEN` i miljøet `cloudflare`. |
+| Luftromslaget sier «Kunne ikke hente luftrom» | `assets/airspace.geojson` mangler i bygget. Sjekk at `src/_data/cache/airspace/region.geojson` finnes. |
 
-| Other message | Fix |
+| Annen melding | Løsning |
 |---|---|
-| E-mail from Backblaze: «Daily Class B Transactions Cap reached» | Something read many single files from B2 the same day (a restore, or several backup runs before `--checksum` was added on 18.11.2026). Transfers that need Class B fail until the cap resets at 00:00 UTC; the nightly copy runs after that. Raise the cap under Caps & Alerts if a restore is under way. |
+| E-post fra Backblaze: «Daily Class B Transactions Cap reached» | Noe har lest mange enkeltfiler fra B2 samme dag (en gjenoppretting, eller flere kopieringer). Overføringer som trenger Class B, feiler til taket nullstilles kl. 00:00 UTC; den nattlige kopien kjører etter det. Øk taket under Caps & Alerts hvis en gjenoppretting pågår. |

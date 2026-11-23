@@ -26,5 +26,5 @@ workers/data/src/sites.json
 workers/data/.wrangler/
 # Lokale hemmeligheter for wrangler dev (HOLFUY_KEY).
 .dev.vars
-# Wrangler's local state when the site Worker is tried with wrangler dev.
+# Lokal tilstand for wrangler dev når Workeren for siden prøves lokalt.
 workers/site/.wrangler/
