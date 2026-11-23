@@ -36,6 +36,8 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   require-trusted-types-for 'script'` with the same report directives. The site's own scripts assign no HTML strings,
   but Leaflet still does (attribution, prefix, the layer control's names) and Turnstile is third-party, so the reports
   show what must change before it can be enforced. `/sw.js` gets neither policy nor `Reporting-Endpoints`.
+- Neither Worker (`data`, `site`) has Cloudflare's per-request log (`invocation_logs = false`), which would record
+  every visitor's IP address and user agent. Only the Workers' own lines are logged, and they hold no personal data.
 - The CSP report endpoint stores nothing: each report becomes one line in the Worker's log with only the directive,
   enforce or report, what was blocked reduced to scheme and host or a keyword (`inline`, `eval`, `data`, `blob`,
   `trusted-types-sink` …), the page's path on `flysteder.hpgt.com` without query string, and for Trusted Types the
