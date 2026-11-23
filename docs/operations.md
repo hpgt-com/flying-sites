@@ -394,10 +394,10 @@ only warns that the DNS record no longer points to it.
   that says «fra Cloudflare foran openAIP»; a 403 with openAIP's own message (an expired key) does.
 - **Fetch now:** Actions → «Update airspace» → «Run workflow», or `npm run airspace` locally.
 - The key is stored as the repository secret `OPENAIP_API_KEY`. The update does not work without it.
-- **GitHub App «HPGT Flying Sites»** (recommended). The club's app for automation in GitHub Actions; today it is
-  only used by the airspace workflow. Without it the PR is created with the GitHub token, which
-  does not trigger the PR check, so the PR must be merged with «Bypass rules». With it the PR gets the checks like
-  any other. Setting it up (someone with admin access to hpgt-com):
+- **GitHub App «HPGT Flying Sites»**. The club's app for automation in GitHub Actions, used by the airspace and
+  obstacles workflows to open their PRs. The PRs get the checks like any other. GitHub Actions cannot create pull
+  requests with its own token in the organisation, so the workflows fail if the app is not set up. Setting it up
+  (someone with admin access to hpgt-com):
   1. hpgt-com → Settings → Developer settings → GitHub Apps → New GitHub App. Name «HPGT Flying Sites»,
      homepage `https://flysteder.hpgt.com`, Webhook «Active» off. Repository permissions: Contents = Read and
      write, Pull requests = Read and write (Metadata = Read is added automatically). Nothing else. «Only on this
@@ -410,10 +410,7 @@ only warns that the DNS record no longer points to it.
      under Secrets. Then delete the `.pem` file.
   5. Test the app: Actions → «Update airspace» → «Run workflow», tick «Test the GitHub App token only». The job
      `test-app-token` gets a read-only token from the app and reads the repository; it fetches no airspace and
-     opens no PR. Green means the app works. Then «Allow GitHub Actions to create and approve pull requests» can
-     be turned off (Settings → Actions → General). The next airspace PR comes from `hpgt-flying-sites[bot]`
-     and gets the PR check.
-  The workflow uses the app only when `APP_CLIENT_ID` is set, and falls back to the GitHub token otherwise.
+     opens no PR. Green means the app works. The PRs come from `hpgt-flying-sites[bot]`.
 - Airspace notes (for example that the approach enters Evenes CTR) go in the site file's `airspace`.
 - The towers' phone numbers are only in `src/_data/towers.json` (with names per language in `names`).
 
