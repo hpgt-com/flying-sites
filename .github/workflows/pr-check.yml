@@ -35,6 +35,9 @@ jobs:
       # --ignore-scripts: no package's install script runs (none of the dependencies need one).
       - run: npm ci --ignore-scripts
 
+      # The packages in the lockfile are signed by the registry they came from.
+      - run: npm audit signatures
+
       - run: npm test
 
       # ESLint, the recommended rules only (eslint.config.js): an undefined name or an unused variable the tests do not reach.
@@ -137,6 +140,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: node scripts/data-sites.mjs
       - run: npm ci --ignore-scripts
+        working-directory: workers/data
+      - run: npm audit signatures
         working-directory: workers/data
       - run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/worker"
         working-directory: workers/data
