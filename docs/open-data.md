@@ -1,49 +1,50 @@
-# Open data: HPGT flying sites
+# Åpne data: HPGT flysteder
 
-The paragliding and speedflying sites around Harstad, Northern Norway, published by Harstad Hang og Paragliderklubb
-(HPGT) as open data. The files are rebuilt from the site files in this repository every time the site is published
-(on every change), so the URLs always serve the current data.
+Paraglider- og speedflyingstedene rundt Harstad i Nord-Norge, publisert som åpne data av Harstad Hang og
+Paragliderklubb (HPGT). Filene bygges på nytt fra stedsfilene i dette repoet hver gang siden publiseres (ved hver
+endring), så adressene gir alltid gjeldende data.
 
-| File | URL | Use it for |
+| Fil | Adresse | Brukes til |
 |---|---|---|
-| GeoJSON | <https://flysteder.hpgt.com/flysteder.geojson> | Apps and maps (Leaflet, MapLibre, QGIS). Structured fields, recommended for import. |
-| KML | <https://flysteder.hpgt.com/flysteder.kml> | Google Earth, norgeskart.no and map apps. Same content, with readable names and descriptions in Norwegian. |
+| GeoJSON | <https://flysteder.hpgt.com/flysteder.geojson> | Apper og kart (Leaflet, MapLibre, QGIS). Strukturerte felt, anbefalt for import. |
+| KML | <https://flysteder.hpgt.com/flysteder.kml> | Google Earth, norgeskart.no og kartapper. Samme innhold, med lesbare navn og beskrivelser på norsk. |
 
-Fetch the files from the URLs rather than copying them once, so corrections reach you.
+Hent filene fra adressene i stedet for å kopiere dem én gang, så rettelser kommer med.
 
-## Licence
+## Lisens
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). You may use, share and adapt the data, also commercially,
-as long as you credit:
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Dataene kan brukes, deles og bearbeides, også
+kommersielt, så lenge de krediteres slik:
 
-> Flying sites: HPGT flysteder (https://flysteder.hpgt.com), CC BY 4.0
+> Flysteder: HPGT flysteder (https://flysteder.hpgt.com), CC BY 4.0
 
-See [LICENSE_DATA.md](../LICENSE_DATA.md). The data is for guidance only and not for navigation. Always check the site
-page, IPPC (airspace and NOTAM) and the conditions yourself.
+Se [LICENSE_DATA.md](../LICENSE_DATA.md). Dataene er bare veiledende og ikke for navigasjon. Sjekk alltid
+stedssiden, IPPC (luftrom og NOTAM) og forholdene selv.
 
-**Not included:** the site descriptions, hazards and landowner information. They belong on the site pages, where they
-are kept up to date and read in context. Please link to the site page (`site_url`) instead of copying them.
+**Ikke med:** beskrivelsene av flystedene, farer og opplysninger om grunneiere. De hører hjemme på stedssidene, der
+de holdes oppdatert og leses i sammenheng. Lenk til stedssiden (`site_url`) i stedet for å kopiere dem.
 
-## How a site is structured
+## Hvordan et flysted er bygget opp
 
-Each site (`site_id`, for example `elgen`) consists of several features:
+Hvert flysted (`site_id`, for eksempel `elgen`) består av flere features:
 
-- **One main launch** (`kind: "launch"`, `main: true`). This is the site's position, with all its wind directions,
-  categories, level and height. Sites often have several launches in different directions or for different categories
-  (paragliding and speedflying). They are listed in `launch_groups` on the main launch.
-- **Extra launches with their own position** (`kind: "launch"`, `main: false`), where a launch is far enough from the
-  main launch to have its own point. Launches without their own position are only in `launch_groups`.
-- **Landings** (`kind: "landing"`). `primary: true` is the main landing, and `primary: false` marks alternative
-  landings. A site can have no landing at all, for example when you land on the bogs around the mountain.
-- **Parking** (`kind: "parking"`), one or more.
-- **Walking routes** (`kind: "route"`), from parking to launch, as lines, with a link to the GPX file.
-- **Club map annotations** (`kind: "drawing_label"` for points, `"drawing_path"` for lines, `"drawing_area"` for areas),
-  for example a named point, a path or a landing area. Hazard annotations are left out, like the hazard texts.
+- **Én hovedstart** (`kind: "launch"`, `main: true`). Dette er posisjonen til flystedet, med alle vindretninger,
+  kategorier, nivå og høyde. Et flysted har ofte flere starter i ulike retninger eller for ulike kategorier
+  (paragliding og speedflying). De står i `launch_groups` på hovedstarten.
+- **Ekstra starter med egen posisjon** (`kind: "launch"`, `main: false`), der en start ligger langt nok fra
+  hovedstarten til å få sitt eget punkt. Starter uten egen posisjon står bare i `launch_groups`.
+- **Landinger** (`kind: "landing"`). `primary: true` er hovedlandingen, og `primary: false` er alternative
+  landinger. Et flysted kan mangle landing helt, for eksempel når landingen er på myrene rundt fjellet.
+- **Parkering** (`kind: "parking"`), én eller flere.
+- **Gangruter** (`kind: "route"`), fra parkering til start, som linjer, med lenke til GPX-filen.
+- **Klubbens kartmarkeringer** (`kind: "drawing_label"` for punkter, `"drawing_path"` for linjer, `"drawing_area"`
+  for områder), for eksempel et navngitt punkt, en sti eller et landingsområde. Markeringer av farer er utelatt,
+  som faretekstene.
 
-### Examples
+### Eksempler
 
-**Sollifjellet** (`sollifjellet`) has a main launch and several launches with their own positions. Paragliding (PG)
-and speedflying (SPG) share the launch towards E–S, while PG also launches towards N–NE and NW:
+**Sollifjellet** (`sollifjellet`) har en hovedstart og flere starter med egen posisjon. Paragliding (PG) og
+speedflying (SPG) deler starten mot Ø–S, mens PG også starter mot N–NØ og NV:
 
 ```
 launch (main)      Sollifjellet            directions_primary: N, NE, E, SE, S, NW
@@ -55,8 +56,8 @@ landing            SPG landing
 parking, route, drawing_label …
 ```
 
-**Elgen** (`elgen`) has one launch point, but PG launches in all directions and SPG only towards NE–SW. That is in
-`launch_groups` on the main launch:
+**Elgen** (`elgen`) har ett startpunkt, men PG starter i alle retninger og SPG bare mot NØ–SV. Det står i
+`launch_groups` på hovedstarten:
 
 ```json
 "launch_groups": [
@@ -65,71 +66,73 @@ parking, route, drawing_label …
 ]
 ```
 
-It also has a main landing (Aun, south) and two alternative landings (by the chapel, north, and on the shore at
+Elgen har også en hovedlanding (Aun, i sør) og to alternative landinger (ved kapellet i nord, og i fjæra ved
 Elgsnes).
 
-## Fields (GeoJSON)
+## Felt (GeoJSON)
 
-Coordinates are WGS 84, `[longitude, latitude]` as in GeoJSON. The collection has `name`, `generated` (ISO time of the
-build) and `license`.
+Koordinatene er WGS 84, `[lengdegrad, breddegrad]` som i GeoJSON. Samlingen har `name`, `generated` (ISO-tidspunktet
+for bygget) og `license`.
 
-**On every feature**
+**På hver feature**
 
-| Field | Description |
+| Felt | Beskrivelse |
 |---|---|
-| `site_id` | Stable id of the site, also used in the site URL. Use it to match sites between updates. |
-| `site_name` | Name of the site. |
-| `site_url` | The site page (Norwegian). The English page is the same path under `/en/sites/`. |
-| `municipality` | Municipality the launch is in. |
-| `kind` | `launch`, `landing`, `parking`, `route`, `drawing_label`, `drawing_path` or `drawing_area`. |
-| `name` | Name of the feature. |
-| `source` | Where the position comes from (see below). `null` when not recorded, always `null` on routes and drawings. |
+| `site_id` | Stabil id for flystedet, brukes også i adressen til stedssiden. Brukes til å kjenne igjen flysteder mellom oppdateringer. |
+| `site_name` | Navnet på flystedet. |
+| `site_url` | Stedssiden (norsk). Den engelske siden har samme sti under `/en/sites/`. |
+| `municipality` | Kommunen starten ligger i. |
+| `kind` | `launch`, `landing`, `parking`, `route`, `drawing_label`, `drawing_path` eller `drawing_area`. |
+| `name` | Navnet på featuren. |
+| `source` | Hvor posisjonen kommer fra (se under). `null` når den ikke er registrert, alltid `null` på gangruter og tegninger. |
 
-**Main launch** (`kind: "launch"`, `main: true`)
+**Hovedstart** (`kind: "launch"`, `main: true`)
 
-| Field | Description |
+| Felt | Beskrivelse |
 |---|---|
-| `directions_primary` | Main wind directions, in compass order. |
-| `directions_possible` | Directions that can work but are less ideal. |
-| `launch_groups` | `[{ categories, directions }]`, one entry per distinct launch type. |
-| `categories` | `PG` (paragliding), `SPG` (speedflying), `PPG` (paramotor), `WINCH` (winch towing). |
-| `level` | Required Norwegian pilot rating: `PP2`, `PP3`, `PP4` or `PP5`. `null` when not set. |
-| `training_site` | `true` when the site is used for training. |
-| `elevation_m` | Launch height above sea level, in metres (mostly from Kartverket's terrain model). |
-| `height_difference_m` | Height from launch to main landing, in metres. |
-| `reviewed` | `true` when the site has been reviewed by the club. |
+| `directions_primary` | Hovedretninger for vinden, i kompassrekkefølge. |
+| `directions_possible` | Retninger som kan fungere, men er mindre ideelle. |
+| `launch_groups` | `[{ categories, directions }]`, én oppføring per type start. |
+| `categories` | `PG` (paragliding), `SPG` (speedflying), `PPG` (paramotor), `WINCH` (vinsjslep). |
+| `level` | Påkrevd norsk pilotbevis: `PP2`, `PP3`, `PP4` eller `PP5`. `null` når nivået ikke er satt. |
+| `training_site` | `true` når flystedet brukes til opplæring. |
+| `elevation_m` | Høyden på starten over havet, i meter (for det meste fra Kartverkets terrengmodell). |
+| `height_difference_m` | Høydeforskjellen fra start til hovedlanding, i meter. |
+| `reviewed` | `true` når flystedet er gjennomgått av klubben. |
 
-**Extra launch** (`main: false`): `directions` and `categories`.
+**Ekstra start** (`main: false`): `directions` og `categories`.
 
-**Landing:** `primary` (`true` for the main landing).
+**Landing:** `primary` (`true` for hovedlandingen).
 
-**Route:** `length_km`, `elevation_gain_m`, `gpx_url`.
+**Gangrute:** `length_km`, `elevation_gain_m`, `gpx_url`.
 
-**Drawing:** `text` (short description) and `style` (`launch`, `flight`, `landing` or `info`).
+**Tegning:** `text` (kort beskrivelse) og `style` (`launch`, `flight`, `landing` eller `info`).
 
-**Codes**
+**Koder**
 
-- Directions: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`. The KML uses the Norwegian labels (`NØ`, `Ø`, `SØ`, `SV`, `V`, `NV`).
-- `source`: `manual` (registered by the club), `gpx` (from a logged walk), `kartverket` (Norwegian Mapping Authority),
-  `flightlog`, `local_knowledge`, `flightlog/local_knowledge`, `kartverket/flightlog`, `flightlog/gpx`, `ippc`,
-  `old_site` (the club's previous site list).
+- Retninger: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`. KML-filen bruker de norske betegnelsene (`NØ`, `Ø`, `SØ`,
+  `SV`, `V`, `NV`).
+- `source`: `manual` (registrert av klubben), `gpx` (fra en logget tur), `kartverket` (Kartverket), `flightlog`,
+  `local_knowledge`, `flightlog/local_knowledge`, `kartverket/flightlog`, `flightlog/gpx`, `ippc`, `old_site`
+  (klubbens tidligere flystedsoversikt).
 
 ## KML
 
-The KML has one folder per site, with the same features as the GeoJSON. The names say what each point is, in Norwegian:
+KML-filen har én mappe per flysted, med de samme featurene som GeoJSON-filen. Navnene sier hva hvert punkt er, på
+norsk:
 
-| Name | Meaning |
+| Navn | Betydning |
 |---|---|
-| `Elgen – start` | Main launch. The description lists directions, launch groups, categories, level and height. |
-| `Sollifjellet – start PG (N, NØ)` | Extra launch for paragliding towards N and NE. |
-| `Elgen – hovedlanding: Landing Aun …` | Main landing. |
-| `Elgen – alternativ landing: …` | Alternative landing. |
-| `Elgen – parkering: P kapellet` | Parking. |
-| `Elgen – gangrute: fra kapellet` | Walking route. |
+| `Elgen – start` | Hovedstart. Beskrivelsen lister retninger, startgrupper, kategorier, nivå og høyde. |
+| `Sollifjellet – start PG (N, NØ)` | Ekstra start for paragliding mot N og NØ. |
+| `Elgen – hovedlanding: Landing Aun …` | Hovedlanding. |
+| `Elgen – alternativ landing: …` | Alternativ landing. |
+| `Elgen – parkering: P kapellet` | Parkering. |
+| `Elgen – gangrute: fra kapellet` | Gangrute. |
 
-Every description ends with a link to the site page.
+Hver beskrivelse slutter med en lenke til stedssiden.
 
-## Questions and corrections
+## Spørsmål og rettelser
 
-Open an issue in [hpgt-com/flying-sites](https://github.com/hpgt-com/flying-sites/issues), or contact the club through
+Opprett en sak i [hpgt-com/flying-sites](https://github.com/hpgt-com/flying-sites/issues), eller bruk «Meld fra» på
 <https://flysteder.hpgt.com>.

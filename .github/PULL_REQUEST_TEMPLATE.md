@@ -9,9 +9,9 @@
 
 ## Dokumentasjon
 
-<!-- Kryss av det som gjelder. Se «Documentation» i README.md. -->
+<!-- Kryss av det som gjelder. Se «Dokumentasjon» i README.md. -->
 - [ ] Ingen endring i oppsett, arbeidsflyt, kontoer eller nøkler
-- [ ] `docs/` er oppdatert (architecture, operations, site-files, open-data eller en ny ADR)
+- [ ] `docs/` er oppdatert (architecture, operations, site-files, open-data eller et nytt beslutningsnotat i `docs/decisions/`)
 - [ ] Noe må gjøres for hånd etter merge (dashbord, nøkler): beskrevet under
 
 ## Etter merge

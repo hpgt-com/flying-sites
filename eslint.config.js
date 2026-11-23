@@ -18,7 +18,7 @@ const browserGlobals = {
 };
 
 export default [
-  { ignores: ["_site/**", "node_modules/**", "workers/data/node_modules/**", ".cache/**", "review/**", "src/assets/vendor/**"] },
+  { ignores: ["_site/**", "node_modules/**", "workers/data/node_modules/**", ".cache/**", "src/assets/vendor/**"] },
   js.configs.recommended,
   {
     rules: {

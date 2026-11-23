@@ -2,150 +2,155 @@
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hpgt-com/flying-sites/badge)](https://scorecard.dev/viewer/?uri=github.com/hpgt-com/flying-sites)
 
-Source code for **[flysteder.hpgt.com](https://flysteder.hpgt.com)**, the flying site guide of Harstad Hang og
-Paragliderklubb (HPGT). It shows paragliding and speedflying sites around Harstad and Kvæfjord, Northern Norway, with
-wind directions, hazards, airspace, walking routes, weather forecasts, measured wind from the club's weather stations
-and a rough wind assessment based on MET data and the stations.
-The site is in Norwegian, with an [English version](https://flysteder.hpgt.com/en/).
+Kildekoden til **[flysteder.hpgt.com](https://flysteder.hpgt.com)**, flystedsguiden til Harstad Hang og
+Paragliderklubb (HPGT). Den viser paraglider- og speedflyingsteder rundt Harstad og Kvæfjord i Nord-Norge, med
+vindretninger, farer, luftrom, gangruter, værvarsel, målt vind fra klubbens værstasjoner og en grov vindvurdering
+basert på data fra MET og stasjonene.
+Siden er på norsk, med en [engelsk versjon](https://flysteder.hpgt.com/en/).
 
-It builds on Lars Sletten's old flying site guide, which he has handed over to the club.
+Den bygger på Lars Slettens gamle flystedsoversikt, som han har overlatt til klubben.
 
-> The guide is only a rough guide. The club takes no responsibility for information about safety, airspace or
-> landowners. Always check [IPPC](https://ippc.no) before you fly.
+> Guiden er bare en grov veiledning. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom eller
+> grunneiere. Sjekk alltid [IPPC](https://ippc.no) før du flyr.
 
-## Suggest a change
+## Foreslå en endring
 
-Do you have corrections, photos or new information about a site?
+Rettelser, bilder eller nye opplysninger om et flysted meldes på en av disse måtene:
 
-- Tell someone in the club, or open an issue here on GitHub (requires an account). A form on the site that does not
-  need a GitHub account is planned.
+- «Meld fra om endring» nederst på stedssiden, eller «Meld fra» i menyen. Skjemaet krever ingen konto og blir til en
+  sak her på GitHub.
+- Til noen i klubben, eller som en sak her på GitHub (krever konto).
 
-## Documentation
+## Dokumentasjon
 
-| Document | Contents |
+| Dokument | Innhold |
 |---|---|
-| [docs/open-data.md](docs/open-data.md) | The open data files (GeoJSON and KML): how each site is structured, the fields and the licence. For apps and other data users. |
-| [docs/architecture.md](docs/architecture.md) | How the site fits together, with diagrams: sources, build, browser, languages, publishing, what has been built and what is planned. |
-| [docs/site-files.md](docs/site-files.md) | The site file format: all fields, text, level, images, drawing and translation. |
-| [docs/adr/](docs/adr/README.md) | Architecture Decision Records: the important choices, why they were made and what was chosen instead. |
-| [docs/operations.md](docs/operations.md) | How-tos: new site, review, status page, wind forecast, airspace, images, statistics, new language, accounts and secrets, runbook, disaster recovery, troubleshooting. |
-| [SPEC.md](SPEC.md) | The specification: what the site shows, and how. |
-| [SECURITY.md](SECURITY.md) | Security: CSP, code scanning and GitHub settings. |
+| [docs/open-data.md](docs/open-data.md) | De åpne datafilene (GeoJSON og KML): hvordan hvert flysted er bygget opp, feltene og lisensen. For apper og andre som bruker dataene. |
+| [docs/architecture.md](docs/architecture.md) | Hvordan siden henger sammen, med diagrammer: kilder, bygget, nettleseren, språk, publisering, funksjoner og hva som er planlagt. |
+| [docs/site-files.md](docs/site-files.md) | Formatet på stedsfilene: alle felt, tekst, nivå, bilder, tegning og oversettelse. |
+| [docs/decisions/](docs/decisions/README.md) | Beslutningsnotater (Architecture Decision Records): de viktige valgene, hvorfor de ble tatt og hva som ble valgt bort. |
+| [docs/operations.md](docs/operations.md) | Fremgangsmåter: nytt flysted, gjennomgang, statussiden, vindvarsel, luftrom, bilder, statistikk, nytt språk, kontoer og hemmeligheter, runbook, katastrofegjenoppretting og feilsøking. |
+| [SPEC.md](SPEC.md) | Spesifikasjonen: hva siden viser, og hvordan. |
+| [SECURITY.md](SECURITY.md) | Sikkerhet (på engelsk): rapportering av sårbarheter, CSP, kodeskanning og GitHub-innstillinger. |
 
-The documentation is kept as code: it lives here, next to what it describes, the diagrams are Mermaid (text that
-GitHub renders), and it is changed in the same pull request as the code. Settings made in a dashboard (Cloudflare,
-GitHub, Backblaze) are written into [docs/operations.md](docs/operations.md) the same day. Larger choices get an ADR.
-Secrets are never written down, only where they live.
+Dokumentasjonen holdes som kode: den ligger her, ved siden av det den beskriver, diagrammene er Mermaid (tekst som
+GitHub viser som diagram), og den endres i samme pull request som koden. Innstillinger som gjøres i et dashbord
+(Cloudflare, GitHub, Backblaze), skrives inn i [docs/operations.md](docs/operations.md) samme dag. Større valg får et
+beslutningsnotat. Hemmeligheter skrives aldri ned, bare hvor de ligger.
 
-## Repository layout
+## Mappestruktur
 
-| Where | What |
+| Hvor | Hva |
 |---|---|
-| `src/sites/<id>/index.md` | One site: structured data at the top (front matter), text below. |
-| `src/sites/<id>/index.en.md` | English text for the site (optional, see `lib/translations.js`). If missing, the Norwegian text is shown with a notice. |
-| `src/sites/<id>/` | Images (`<id>-overview-1.jpg`, `<id>-takeoff-se-1.jpg`, `<id>-landing-1.jpg`, `<id>-landing-spg-1.jpg`), walking routes (`<id>-route.gpx`) and the map drawing (`<id>-drawing.geojson`: points, lines and areas, see `lib/drawing.js`). |
-| `src/_data/` | Towers (`towers.json`), shared wind limits (`windRules.json`), the weather (`forecast.js`, `windgram.js`, read from `lib/weather/`), cached airspace and power lines (`cache/`), and «Nytt på siden» (`news.json`). |
-| `src/_includes/` | Page templates for the home page and the site pages. |
-| `src/assets/` | CSS, JavaScript and images. |
-| `lib/`, `scripts/` | Validation, GPX, images, airspace, power lines, weather and maintenance scripts. See [Data modules](docs/architecture.md#data-modules). |
-| `workers/data/` | The data service on Cloudflare Workers: the MET forecast, the weather stations (Holfuy and MET's Frost), winds aloft, how well the forecast hit, pilots in the air and flying activity (Open Glider Network), and «Meld fra» as GitHub issues, with the archive in R2. See [operations](docs/operations.md#weather-stations-holfuy). |
-| `src/_i18n/` | Dictionaries for Norwegian and English (all fixed text in templates and scripts). |
-| `docs/` | Documentation, see above. |
+| `src/sites/<id>/index.md` | Ett flysted: strukturerte data øverst (front matter), tekst under. |
+| `src/sites/<id>/index.en.md` | Engelsk tekst for flystedet (valgfri, se `lib/translations.js`). Mangler den, vises den norske teksten med en merknad. |
+| `src/sites/<id>/` | Bilder (`<id>-overview-1.jpg`, `<id>-takeoff-se-1.jpg`, `<id>-landing-1.jpg`, `<id>-landing-spg-1.jpg`), gangruter (`<id>-route.gpx`) og karttegningen (`<id>-drawing.geojson`: punkter, linjer og områder, se `lib/drawing.js`). |
+| `src/_data/` | Tårn (`towers.json`), felles vindgrenser (`windRules.json`), været (`forecast.js`, `windgram.js`, lest fra `lib/weather/`), mellomlagret luftrom og kraftlinjer (`cache/`), og «Nytt på siden» (`news.json`). |
+| `src/_includes/` | Sidemaler for forsiden og stedssidene. |
+| `src/assets/` | CSS, JavaScript og bilder. |
+| `lib/`, `scripts/` | Validering, GPX, bilder, luftrom, kraftlinjer, vær og vedlikeholdsskript. Se [Datamoduler](docs/architecture.md#datamoduler). |
+| `workers/data/` | Datatjenesten på Cloudflare Workers: MET-varselet, værstasjonene (Holfuy og METs Frost), høydevind, hvor godt varselet treffer, piloter i lufta og flyaktivitet (Open Glider Network), og «Meld fra» som saker på GitHub, med arkivet i R2. Se [drift](docs/operations.md#værstasjoner-holfuy). |
+| `workers/site/` | Wrangler-oppsettet for Workeren `flysteder`, som serverer siden på Cloudflare. |
+| `src/_i18n/` | Ordbøker for norsk og engelsk (all fast tekst i maler og skript). |
+| `docs/` | Dokumentasjon, se over. |
 
-The site is available in Norwegian and English (`/en/`). The languages are defined in `src/_data/languages.js`, and
-all fixed text in templates and scripts lives in the dictionaries `src/_i18n/<language>.json`. To add a language, add
-it to `languages.js` and create a dictionary with the same keys as `nb.json` (see
-[docs/operations.md](docs/operations.md#adding-a-language)). Text missing in a language is shown in Norwegian.
+Siden finnes på norsk og engelsk (`/en/`). Språkene er definert i `src/_data/languages.js`, og all fast tekst i maler
+og skript ligger i ordbøkene `src/_i18n/<språk>.json`. Et nytt språk legges til i `languages.js`, med en ordbok med
+de samme nøklene som `nb.json` (se [docs/operations.md](docs/operations.md#nytt-språk)). Tekst som mangler i et
+språk, vises på norsk.
 
-Keys in the site files are in English; values and text are in Norwegian. Unknown keys and invalid values stop the
-build, so errors never reach the live site. The [status page](https://flysteder.hpgt.com/status/) shows what is
-missing for each site.
+Nøklene i stedsfilene er på engelsk; verdier og tekst er på norsk. Ukjente nøkler og ugyldige verdier stopper bygget,
+så feil når aldri den publiserte siden. [Statussiden](https://flysteder.hpgt.com/status/) viser hva som mangler for
+hvert flysted.
 
-## Running the site locally
+## Kjøre siden lokalt
 
-Requires [Node.js](https://nodejs.org) 20 or later.
+Krever [Node.js](https://nodejs.org) 26 eller nyere (`.nvmrc`, `engines` i `package.json`).
 
 ```bash
 npm ci
 npm start
 ```
 
-The site then runs at http://localhost:8080 and reloads when you save.
+Siden kjører da på http://localhost:8080 og lastes på nytt ved lagring.
 
-Other commands:
+Andre kommandoer:
 
-| Command | What |
+| Kommando | Hva |
 |---|---|
-| `npm run build` | Builds the site into `_site/`. |
-| `npm run lint` | ESLint with the recommended rules (`eslint.config.js`): undefined names, unused variables. Also runs in the PR check. |
-| `npm test` | Tests the wind assessment, validation, drawings, images, status page, language support, export, the weather stations, winds aloft, OGN, flight logs and power lines. |
-| `npm run images` | Checks all images (size, GPS data) and shrinks them if needed. |
-| `npm run images -- <files or folder>` | Imports images named by the convention, e.g. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (see [SPEC.md](SPEC.md#content)). All images are imported, and the build finds them by file name. |
-| `npm run images -- <id> <field> <file>` | Imports one image for a site with the correct name and size. |
-| `npm run airspace` | Fetches airspace from openAIP (requires `OPENAIP_API_KEY`). |
-| `npm run obstacles` | Fetches power lines and obstacles from NVE and OpenStreetMap (`-- --no-osm` for NVE only). |
-| `npm run check:links` | After the build: checks that every internal link and image in `_site/` points to a file that exists. |
-| `npm run check:html` | After the build: validates the HTML of every page (`.htmlvalidate.mjs`). |
-| `npm run check:output` | After the build: fails if a page has «[object Object]», «undefined», «NaN» or a placeholder that was not filled in. Also runs in the deploy build. |
-| `npm run check:a11y` | After the build: axe accessibility check of a few pages in Chromium (`npx playwright install chromium` first). |
-| `npm run check:budget` | After the build: the performance budget (bytes by kind, requests, DOM nodes, layout shift) of a few pages on a phone-sized screen, against the limits in `scripts/check-budget.mjs`. |
-| `npm run check:behaviour` | After the build: what the pages do in Chromium (map markers on zoom, «Piloter i lufta», data service down, «Meld fra», offline). |
+| `npm run build` | Bygger siden til `_site/`. |
+| `npm run lint` | ESLint med de anbefalte reglene (`eslint.config.js`): udefinerte navn, ubrukte variabler. Kjører også i PR-sjekken. |
+| `npm test` | Tester vindvurderingen, valideringen, tegningene, bildene, statussiden, språkstøtten, eksporten, værstasjonene, høydevinden, OGN, turloggene og kraftlinjene. |
+| `npm run images` | Sjekker alle bilder (størrelse, GPS-data) og krymper dem ved behov. |
+| `npm run images -- <filer eller mappe>` | Importerer bilder navngitt etter konvensjonen, f.eks. `Storlitinden_Takeoff_SE_1_DSC04968.jpg` (se [SPEC.md](SPEC.md#innhold)). Alle bildene importeres, og bygget finner dem på filnavnet. |
+| `npm run images -- <id> <felt> <fil>` | Importerer ett bilde for et flysted med riktig navn og størrelse. |
+| `npm run airspace` | Henter luftrom fra openAIP (krever `OPENAIP_API_KEY`). |
+| `npm run obstacles` | Henter kraftlinjer og hindre fra NVE og OpenStreetMap (`-- --no-osm` for bare NVE). |
+| `npm run check:links` | Etter bygget: sjekker at hver intern lenke og hvert bilde i `_site/` peker på en fil som finnes. |
+| `npm run check:html` | Etter bygget: validerer HTML-en på hver side (`.htmlvalidate.mjs`). |
+| `npm run check:output` | Etter bygget: feiler hvis en side har «[object Object]», «undefined», «NaN» eller en plassholder som ikke er fylt inn. Kjører også i publiseringsbygget. |
+| `npm run check:a11y` | Etter bygget: axe-sjekk av tilgjengeligheten på noen sider i Chromium (`npx playwright install chromium` først). |
+| `npm run check:budget` | Etter bygget: ytelsesbudsjettet (byte per type, forespørsler, DOM-noder, layoutskift) for noen sider på en skjerm på størrelse med en telefon, mot grensene i `scripts/check-budget.mjs`. |
+| `npm run check:behaviour` | Etter bygget: hva sidene gjør i Chromium (kartmarkører ved zoom, «Piloter i lufta», datatjenesten nede, «Meld fra», offline). |
 
-## Publishing
+## Publisering
 
-- Everything merged to `main` is published automatically to Cloudflare (flysteder.hpgt.com), and to GitHub Pages as a fallback.
-- The site is built only when its content changes. Each build starts from a forecast fetched in its own job
-  (`weather`); after loading, the pages fetch the forecast, the winds aloft and the weather stations from the data
-  service (`workers/data`) when it has newer, so they stay fresh between builds.
-- The image variants (`_site/img`) are cached between builds in CI, so a build without image changes skips them.
-  The cache is replaced whenever an image, the image code or a package changes.
-- Changes go through a branch and a pull request. The PR check builds the site and stops invalid site files, broken
-  internal links, invalid HTML and serious accessibility errors.
-- Airspace is fetched automatically on the 1st of each month. Changes arrive as a PR, which is reviewed before
-  publishing.
-- Dependabot proposes updates to packages and Actions once a month.
-- Security (Content-Security-Policy, CodeQL, dependency review, zizmor, GitHub settings): see
+- Alt som merges til `main`, publiseres automatisk til Cloudflare (flysteder.hpgt.com), og til GitHub Pages som
+  reserve.
+- Siden bygges bare når innholdet endres. Hvert bygg starter med et varsel som hentes i en egen jobb (`weather`);
+  etter lasting henter sidene varselet, høydevinden og værstasjonene fra datatjenesten (`workers/data`) når den har
+  nyere data, så de holder seg ferske mellom byggene.
+- Bildevariantene (`_site/img`) mellomlagres mellom byggene i CI, så et bygg uten bildeendringer hopper over dem.
+  Mellomlageret byttes når et bilde, bildekoden eller en pakke endres.
+- Endringer går via en gren og en pull request. PR-sjekken bygger siden og stopper ugyldige stedsfiler, brutte
+  interne lenker, ugyldig HTML og alvorlige tilgjengelighetsfeil.
+- Luftrom hentes automatisk den 1. hver måned, og kraftlinjer og hindre den 2. Endringer kommer som en PR, som
+  gjennomgås før publisering.
+- Dependabot foreslår oppdateringer av pakker og Actions én gang i måneden.
+- Sikkerhet (Content-Security-Policy, CodeQL, dependency review, zizmor, GitHub-innstillinger): se
   [SECURITY.md](SECURITY.md).
 
-## Sources
+## Kilder
 
-- Maps: [Kartverket](https://www.kartverket.no/) (topographic, greyscale and hillshade from
-  [høydedata.no](https://hoydedata.no)), [OpenTopoMap](https://opentopomap.org) and satellite imagery from
+- Kart: [Kartverket](https://www.kartverket.no/) (topografisk, gråtone og terrengskygge fra
+  [høydedata.no](https://hoydedata.no)), [OpenTopoMap](https://opentopomap.org) og satellittbilder fra
   [Sentinel-2 cloudless](https://s2maps.eu) (EOX, CC BY-NC-SA 4.0)
-- Heights of launches, landings and parking: Kartverket
-- Heights along walking routes: Kartverket
-- Wind forecast: [MET Norway](https://api.met.no/) and [Yr](https://www.yr.no/)
-- Winds aloft, thermals, clouds, rain and gusts for «Vind over starten» (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
-- Measured wind: the club's [Holfuy](https://holfuy.com/) stations and MET Norway's stations ([Frost](https://frost.met.no/), CC BY 4.0)
-- Pilots in the air and flying activity: [Open Glider Network](https://www.glidernet.org/) (ODbL)
-- Precipitation radar: [Rain Viewer](https://www.rainviewer.com/) (free for non-commercial use, with attribution)
-- Airspace: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
-- Power lines, masts and wind turbines: [NVE](https://www.nve.no/) (NLOD); low-voltage lines, lifts and masts: [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
-- Thermals: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)
-- Site descriptions: Lars Sletten's old flying site guide, Flightlog and local knowledge in the club
+- Høyder for start, landing og parkering: Kartverket
+- Høyder langs gangrutene: Kartverket
+- Vindvarsel: [Meteorologisk institutt](https://api.met.no/) og [Yr](https://www.yr.no/)
+- Høydevind, termikk, skyer, regn og vindkast for «Vind over starten» (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen): [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+- Målt vind: klubbens [Holfuy](https://holfuy.com/)-stasjoner og Meteorologisk institutts stasjoner ([Frost](https://frost.met.no/), CC BY 4.0)
+- Piloter i lufta og flyaktivitet: [Open Glider Network](https://www.glidernet.org/) (ODbL)
+- Nedbørsradar: [Rain Viewer](https://www.rainviewer.com/) (gratis for ikke-kommersiell bruk, med kreditering)
+- Luftrom: [openAIP](https://www.openaip.net/) (CC BY-NC 4.0)
+- Kraftlinjer, master og vindturbiner: [NVE](https://www.nve.no/) (NLOD); lavspentlinjer, taubaner og master: [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
+- Termikk: [thermal.kk7.ch](https://thermal.kk7.ch) (CC BY-NC-SA 4.0)
+- Beskrivelser av flystedene: Lars Slettens gamle flystedsoversikt, Flightlog og lokalkunnskap i klubben
 
-## Open data
+## Åpne data
 
-The sites are also published as open data files, generated on every build so they are always up to date:
+Flystedene publiseres også som åpne datafiler, som lages ved hvert bygg og derfor alltid er oppdaterte:
 
-- **GeoJSON:** <https://flysteder.hpgt.com/flysteder.geojson> (QGIS, Leaflet, MapLibre and other maps)
-- **KML:** <https://flysteder.hpgt.com/flysteder.kml> (Google Earth, norgeskart.no, map apps)
+- **GeoJSON:** <https://flysteder.hpgt.com/flysteder.geojson> (QGIS, Leaflet, MapLibre og andre kart)
+- **KML:** <https://flysteder.hpgt.com/flysteder.kml> (Google Earth, norgeskart.no, kartapper)
 
-The files contain launches with wind directions, landings, parking, walking routes and the club's map annotations,
-but not the site descriptions. They are generated in `lib/export.js`. Licence: CC BY 4.0, credited as
-«Flysteder: HPGT flysteder (https://flysteder.hpgt.com)». See [docs/open-data.md](docs/open-data.md) for the format
-and [LICENSE_DATA.md](LICENSE_DATA.md) for the licence.
+Filene inneholder starter med vindretninger, landinger, parkering, gangruter og klubbens kartmarkeringer, men ikke
+beskrivelsene av flystedene. De lages i `lib/export.js`. Lisens: CC BY 4.0, kreditert som
+«Flysteder: HPGT flysteder (https://flysteder.hpgt.com)». Se [docs/open-data.md](docs/open-data.md) for formatet
+og [LICENSE_DATA.md](LICENSE_DATA.md) for lisensen.
 
-## Licence
+<a id="licence"></a>
 
-The code (templates, scripts, CSS and JavaScript) is MIT-licensed, see [LICENSE](LICENSE).
+## Lisens
 
-The content belongs to the club and its contributors and is not covered by the MIT licence (the open data files have
-their own licence, see above). This covers the site texts, drawings and walking routes in `src/sites/`. Contact HPGT
-before using content from here elsewhere.
+Koden (maler, skript, CSS og JavaScript) er MIT-lisensiert, se [LICENSE](LICENSE).
 
-The images are licensed under CC BY-NC 4.0 with the photographer credited, see [LICENSE_IMAGES.md](LICENSE_IMAGES.md).
-Photographer, copyright and licence are embedded in each image (EXIF/XMP) and shown in the image viewer. The default
-photographer and licence are set in `src/_data/photoCredit.json`.
+Innholdet tilhører klubben og bidragsyterne og dekkes ikke av MIT-lisensen (de åpne datafilene har egen lisens, se
+over). Dette gjelder tekstene, tegningene og gangrutene i `src/sites/`. Kontakt HPGT før innhold herfra brukes andre
+steder.
 
-Data from other sources follows their own licences, see [Sources](#sources).
+Bildene er lisensiert under CC BY-NC 4.0 med fotografen kreditert, se [LICENSE_IMAGES.md](LICENSE_IMAGES.md).
+Fotograf, opphavsrett og lisens ligger i hvert bilde (EXIF/XMP) og vises i bildeviseren. Standard fotograf og
+lisens settes i `src/_data/photoCredit.json`.
+
+Data fra andre kilder følger sine egne lisenser, se [Kilder](#kilder).
