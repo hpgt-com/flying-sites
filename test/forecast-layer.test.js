@@ -1,7 +1,9 @@
 // Tests for «Prognose» on the home map (src/assets/js/forecast-layer.js). Run with `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { installDom, html } from "./helpers/dom.mjs";
 
+installDom();
 globalThis.FlyingSites = { formatNumber: (n, d) => Number(n).toFixed(d || 0).replace(".", ","), DIRECTION_LABELS: { N: "N", NE: "NØ", E: "Ø", SE: "SØ", S: "S", SW: "SV", W: "V", NW: "NV" } };
 await import("../src/assets/js/forecast-layer.js");
 const FC = globalThis.FlyingSitesForecast;
@@ -89,18 +91,20 @@ test("the thermal colours start at 1 m/s", () => {
 });
 
 test("wind barbs as on RASP: half 2.5, full 5, pennant 25, a ring for calm", () => {
+  const barb = (dir, speed) => html(FC.barbSvg(dir, speed));
   // The lines in the barb besides the staff.
   const count = (svg) => svg.match(/class="fc-barb__line" d="([^"]*)"/)[1].split("M").length - 2;
-  assert.match(FC.barbSvg(90, 0.5), /fc-barb__calm/);
-  assert.equal(FC.barbSvg(null, 3), "");
+  assert.match(barb(90, 0.5), /fc-barb__calm/);
+  assert.equal(FC.barbSvg(null, 3), null);
   // 7.5 m/s: one full and one half barb, besides the staff.
-  assert.equal(count(FC.barbSvg(90, 7.5)), 2);
-  assert.match(FC.barbSvg(90, 7.5), /rotate\(90\)/);
+  assert.equal(count(barb(90, 7.5)), 2);
+  assert.match(barb(90, 7.5), /rotate\(90\)/);
+  assert.equal(FC.barbSvg(90, 7.5).namespaceURI, "http://www.w3.org/2000/svg");
   // 27.5 m/s: a pennant and a half barb.
-  const strong = FC.barbSvg(0, 27.5);
+  const strong = barb(0, 27.5);
   assert.match(strong, /fc-barb__flag/);
   assert.equal(count(strong), 1);
-  assert.doesNotMatch(FC.barbSvg(0, 10), /fc-barb__flag/);
+  assert.doesNotMatch(barb(0, 10), /fc-barb__flag/);
 });
 
 test("the popup's lines: numbers and directions, only what is known", () => {

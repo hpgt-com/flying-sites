@@ -5,7 +5,7 @@
 // climb, and a line for its track over the last minutes (from the data service, so it shows at once), coloured by the
 // climb at each point, so where the lift and the sink were is easy to see; a small legend explains the colours while the
 // layer is on.
-// Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only; numbers only in the HTML.
+// Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only.
 // Exposed as window.FlyingSitesLive; tested in test/live.test.js.
 (function () {
   "use strict";
@@ -15,9 +15,12 @@
   var POLL_MS = 10000;
   // The wing seen from above, nose up (north) before it is turned to the track: a paraglider's curved wing with the lines
   // down to the pilot. The data service sends only paragliders (OGN's type 7).
-  var WING = '<path d="M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z" fill="currentColor"/>' +
-    '<path d="M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
-    '<circle cx="12" cy="17.8" r="2" fill="currentColor"/>';
+  // The parts as [tag, attributes], built with FlyingSites.svg.
+  var WING = [
+    ["path", { d: "M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z", fill: "currentColor" }],
+    ["path", { d: "M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6", fill: "none", stroke: "currentColor", "stroke-width": "0.8" }],
+    ["circle", { cx: "12", cy: "17.8", r: "2", fill: "currentColor" }],
+  ];
   // The track's colours, by the climb in m/s, from sink to lift (CSS .live-trail--…). A paraglider sinks about 1 m/s in
   // still air, so plain gliding is the grey middle, not sink.
   var CLIMB = [{ key: "sink2", below: -3 }, { key: "sink1", below: -1.5 }, { key: "glide", below: 0.5 }, { key: "lift1", below: 2 }, { key: "lift2", below: Infinity }];
@@ -154,12 +157,16 @@
       statusEl.appendChild(b);
     }
 
+    function shape(item) {
+      return isNum(item.track)
+        ? FS.svg("svg", { width: 24, height: 24, viewBox: "0 0 24 24", "aria-hidden": "true" },
+          FS.svg("g", { transform: "rotate(" + Math.round(item.track) + " 12 12)" }, WING.map(function (part) { return FS.svg(part[0], part[1]); })))
+        : FS.svg("svg", { width: 14, height: 14, viewBox: "0 0 24 24", "aria-hidden": "true" }, FS.svg("circle", { cx: 12, cy: 12, r: 8, fill: "currentColor" }));
+    }
     function icon(item) {
-      var shape = isNum(item.track)
-        ? '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(' + Math.round(item.track) + ' 12 12)">' + WING + '</g></svg>'
-        : '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
-      return L.divIcon({ className: "live-marker",
-        html: '<span class="live-marker__wing">' + shape + '</span><span class="live-marker__label"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
+      return FS.divIcon({ className: "live-marker",
+        content: function () { return FS.frag(FS.h("span", { class: "live-marker__wing" }, shape(item)), FS.h("span", { class: "live-marker__label" })); },
+        iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
     }
     function draw(data) {
       var now = Date.now(), seen = {};
@@ -179,14 +186,14 @@
         var m = markers[item.id];
         if (!m) {
           m = markers[item.id] = L.marker([item.lat, item.lon], { icon: icon(item), keyboard: true, title: item.name || text("live.unknown"), zIndexOffset: 1000 }).addTo(layer);
-          m.bindPopup("");
+          m.bindPopup(popup(item, now));
         } else {
           m.setLatLng([item.lat, item.lon]);
           m.setIcon(icon(item));
+          m.setPopupContent(popup(item, now));
         }
         var label = m.getElement() && m.getElement().querySelector(".live-marker__label");
         if (label) label.textContent = labelText(item);
-        m.setPopupContent(popup(item, now));
       });
       Object.keys(markers).forEach(function (id) { if (!seen[id]) { layer.removeLayer(markers[id]); delete markers[id]; } });
       Object.keys(trails).forEach(function (id) { if (!seen[id]) { layer.removeLayer(trails[id]); delete trails[id]; } });

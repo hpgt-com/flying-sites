@@ -38,21 +38,23 @@
   // Groups shown separately at the bottom of the list and slightly dimmed on the map.
   var WEAK = { unknown: true, nowind: true };
 
+  // The site's launch directions as badges (a list of elements).
   function directionBadges(site) {
     return FS.DIRECTIONS.filter(function (code) { return FS.directionType(site, code) !== "none"; })
       .map(function (code) {
         var active = filter.directions.indexOf(code) !== -1 ? " direction--active" : "";
-        return '<span class="direction direction--' + FS.directionType(site, code) + active + '">' + FS.DIRECTION_LABELS[code] + "</span>";
-      }).join("");
+        return FS.h("span", { class: "direction direction--" + FS.directionType(site, code) + active }, FS.DIRECTION_LABELS[code]);
+      });
   }
 
+  // Level, categories and review state as tags (a list of elements).
   function tags(site) {
-    var e = FS.escapeHtml;
-    var html = site.level ? '<span class="tag">' + site.level + "</span>" : '<span class="tag tag--missing">' + e(FS.t("home.levelNotSet")) + "</span>";
-    if (site.trainingSite) html += '<span class="tag">' + e(FS.t("home.trainingSite")) + "</span>";
-    site.categories.forEach(function (c) { html += '<span class="tag">' + e(FS.t("categories." + c)) + "</span>"; });
-    if (!site.reviewed) html += '<span class="tag tag--warning">' + e(FS.t("home.notReviewed")) + "</span>";
-    return html;
+    var tag = function (cls, text) { return FS.h("span", { class: cls }, text); };
+    var list = [site.level ? tag("tag", site.level) : tag("tag tag--missing", FS.t("home.levelNotSet"))];
+    if (site.trainingSite) list.push(tag("tag", FS.t("home.trainingSite")));
+    site.categories.forEach(function (c) { list.push(tag("tag", FS.t("categories." + c))); });
+    if (!site.reviewed) list.push(tag("tag tag--warning", FS.t("home.notReviewed")));
+    return list;
   }
 
   // --- Wind assessment from the MET forecast ---
@@ -88,7 +90,7 @@
     suggest = false;
     if (timelineEl) timelineEl.hidden = true;
     if (suggestButton) suggestButton.hidden = true;
-    forecastStatusEl.innerHTML = "<strong>" + FS.escapeHtml(FS.t("wind.staleTitle")) + "</strong> " + FS.escapeHtml(FS.t("wind.staleHome", { when: fetchedText() }));
+    forecastStatusEl.replaceChildren(FS.h("strong", null, FS.t("wind.staleTitle")), " " + FS.t("wind.staleHome", { when: fetchedText() }));
     return true;
   }
 
@@ -96,15 +98,12 @@
   function updateForecastStatus(index) {
     if (!forecast || stale) return;
     // MET's own update time (the model run) when the forecast has it, as well as when it was fetched.
-    var text = FS.escapeHtml(Number.isFinite(Date.parse(forecast.updated))
+    var text = (Number.isFinite(Date.parse(forecast.updated))
       ? FS.t("wind.fetchedUpdated", { updated: whenText(forecast.updated), when: fetchedText() })
-      : FS.t("wind.fetched", { when: fetchedText() }));
-    if (windSlot !== "off") {
-      text = index < 0
-        ? "<strong>" + FS.escapeHtml(FS.t("wind.notCovered")) + "</strong> " + text
-        : FS.escapeHtml(FS.t("wind.showingWhen", { when: whenLabel(index) }) + (W.stepAt(forecast.times, index) > 3600000 ? " " + FS.t("home.coarse") : "")) + " " + text;
-    }
-    forecastStatusEl.innerHTML = text + sunLine(index);
+      : FS.t("wind.fetched", { when: fetchedText() })) + sunLine(index);
+    if (windSlot === "off") forecastStatusEl.replaceChildren(text);
+    else if (index < 0) forecastStatusEl.replaceChildren(FS.h("strong", null, FS.t("wind.notCovered")), " " + text);
+    else forecastStatusEl.replaceChildren(FS.t("wind.showingWhen", { when: whenLabel(index) }) + (W.stepAt(forecast.times, index) > 3600000 ? " " + FS.t("home.coarse") : "") + " " + text);
   }
   // Sunrise and sunset in the middle of the home region, for the day shown (today when wind is off). The difference
   // between launches in the region is a few minutes.
@@ -113,7 +112,7 @@
     var lat = 0, lon = 0;
     bounds.forEach(function (b) { lat += b[0] / bounds.length; lon += b[1] / bounds.length; });
     var date = W.osloParts(index >= 0 ? Date.parse(forecast.times[index]) : Date.now()).date;
-    return " " + FS.escapeHtml(W.sunText(date, lat, lon));
+    return " " + W.sunText(date, lat, lon);
   }
 
   // --- Summary ---
@@ -128,7 +127,7 @@
   function renderSummary(sum) {
     if (!summaryEl) return;
     summaryEl.hidden = !sum;
-    if (!sum) { summaryEl.innerHTML = ""; return; }
+    if (!sum) { summaryEl.replaceChildren(); return; }
     var c = sum.counts, parts = [];
     if (c.ok) parts.push(c.ok + " " + FS.t("summary.ok"));
     if (c.maybe) parts.push(c.maybe + " " + maybeLabel(c.maybe));
@@ -153,18 +152,20 @@
     var order = [["ok", c.ok, FS.t("summary.ok")], ["maybe", c.maybe, maybeLabel(c.maybe)], ["high", c.high, FS.t("summary.high")],
       ["no", c.no - sum.noByRain, FS.t("summary.wrongDirection")], ["no", sum.noByRain, FS.t("summary.rain")]];
     var bar = order.map(function (o) {
-      return o[1] ? '<span class="wind-bar__part wind-dot--' + o[0] + '" data-grow="' + o[1] + '"></span>' : "";
-    }).join("");
+      return o[1] ? FS.h("span", { class: "wind-bar__part wind-dot--" + o[0], "data-grow": o[1] }) : null;
+    });
     var chips = order.map(function (o) {
-      return o[1] ? '<span><span class="wind-dot wind-dot--' + o[0] + '"></span>' + o[1] + " " + FS.escapeHtml(o[2]) + "</span>" : "";
-    }).join("");
-    summaryEl.innerHTML = '<p class="wind-summary__wind">' + FS.escapeHtml(wind) + "</p>" +
-      '<div class="wind-bar" role="img" aria-label="' + FS.escapeHtml(detail) + '" title="' + FS.escapeHtml(detail) + '">' + bar + "</div>" +
-      (sum.filtered ? '<p class="wind-summary__scope">' + FS.escapeHtml(FS.t("summary.scope", { places: places(sum.total + sum.missing) })) + "</p>" : "") +
-      '<p class="wind-summary__counts">' + chips + "</p>" +
-      (sum.missing ? '<p class="wind-summary__missing">' + FS.escapeHtml(FS.t("summary.missing", { places: places(sum.missing) })) + "</p>" : "") +
-      (c.ok + c.maybe === 0 ? '<p class="wind-summary__none">' + FS.escapeHtml(FS.t("summary.noneCanWork") + " " + noneReason(sum) + (sum.next ? " " + sum.next : "")) + "</p>" : "");
-    // The parts' widths set on the elements, not in the HTML: the page allows no inline styles (CSP style-src 'self').
+      return o[1] ? FS.h("span", null, FS.h("span", { class: "wind-dot wind-dot--" + o[0] }), o[1] + " " + o[2]) : null;
+    });
+    var p = function (cls, text) { return FS.h("p", { class: cls }, text); };
+    summaryEl.replaceChildren(FS.frag(
+      p("wind-summary__wind", wind),
+      FS.h("div", { class: "wind-bar", role: "img", "aria-label": detail, title: detail }, bar),
+      sum.filtered ? p("wind-summary__scope", FS.t("summary.scope", { places: places(sum.total + sum.missing) })) : null,
+      FS.h("p", { class: "wind-summary__counts" }, chips),
+      sum.missing ? p("wind-summary__missing", FS.t("summary.missing", { places: places(sum.missing) })) : null,
+      c.ok + c.maybe === 0 ? p("wind-summary__none", FS.t("summary.noneCanWork") + " " + noneReason(sum) + (sum.next ? " " + sum.next : "")) : null));
+    // The parts' widths set on the elements, not as inline styles: the page allows none (CSP style-src 'self').
     summaryEl.querySelectorAll(".wind-bar__part").forEach(function (el) { el.style.flexGrow = el.getAttribute("data-grow"); });
   }
   // The pill on the map: how many sites may work at the chosen time, with the best rating found, and the most common
@@ -280,17 +281,19 @@
   }
   // Mean wind and gust below the name, «5 (8) m/s», when zoomed in far enough for names to show. The direction is in the rose.
   function markerWind(assessment) {
-    if (!assessment) return "";
+    if (!assessment) return null;
     var w = assessment.wind;
-    return '<span class="rose-marker__wind">' + FS.escapeHtml(FS.t("wind.mapWind", { speed: Math.round(w.speed), gust: w.gust != null ? Math.round(w.gust) : "?" })) + "</span>";
+    return FS.h("span", { class: "rose-marker__wind" }, FS.t("wind.mapWind", { speed: Math.round(w.speed), gust: w.gust != null ? Math.round(w.gust) : "?" }));
   }
   function markerIcon(site, assessment, match, selected) {
     var ring = assessment ? " rose-marker__ring--" + assessment.rating : "";
-    return L.divIcon({
+    return FS.divIcon({
       className: "rose-marker" + (match === "no" ? " rose-marker--dimmed" : WEAK[match] ? " rose-marker--unknown" : "") +
         (selected ? " rose-marker--selected" : ""),
-      html: '<span class="rose-marker__ring' + ring + '">' + markerRose(site, assessment) + "</span>" +
-        '<span class="rose-marker__name">' + FS.escapeHtml(site.name) + markerWind(assessment) + "</span>",
+      content: function () {
+        return FS.frag(FS.h("span", { class: "rose-marker__ring" + ring }, markerRose(site, assessment)),
+          FS.h("span", { class: "rose-marker__name" }, site.name, markerWind(assessment)));
+      },
       iconSize: [46, 46],
       iconAnchor: [23, 23],
     });
@@ -314,10 +317,10 @@
     var shown = counts.match ? "match" : counts.unknown ? "unknown" : "no";
     var rating = best[shown];
     var ring = rating ? " rose-marker__ring--" + rating : "";
-    return L.divIcon({
+    return FS.divIcon({
       className: "rose-marker site-cluster" + (shown === "no" ? " rose-marker--dimmed" : shown === "unknown" ? " rose-marker--unknown" : "") +
         (selected ? " rose-marker--selected" : ""),
-      html: '<span class="rose-marker__ring site-cluster__ring' + ring + '">' + (shown === "no" ? children.length : counts[shown]) + "</span>",
+      content: function () { return FS.h("span", { class: "rose-marker__ring site-cluster__ring" + ring }, shown === "no" ? children.length : counts[shown]); },
       iconSize: [40, 40],
       iconAnchor: [20, 20],
     });
@@ -340,7 +343,7 @@
 
   sites.forEach(function (site) {
     var marker = L.marker([site.lat, site.lon], { icon: markerIcon(site, null, "match", false), title: site.name, alt: site.name, keyboard: true, riseOnHover: true, siteId: site.id });
-    marker.bindTooltip(FS.escapeHtml(site.name), { direction: "top", offset: [0, -14] });
+    marker.bindTooltip(document.createTextNode(site.name), { direction: "top", offset: [0, -14] });
     marker.on("click", function () { FS.track("map/select/" + site.id, site.name); select(site.id, "map"); });
     cluster.addLayer(marker);
     markers[site.id] = marker;
@@ -423,30 +426,33 @@
     if (noteEl) { noteEl.hidden = true; noteEl.replaceChildren(); }
   }
   function showCard(site, assessment, windOn) {
-    var e = FS.escapeHtml;
-    var html = '<button type="button" class="selected__close" data-close-card aria-label="' + e(FS.t("home.closeCard", { name: site.name })) + '">×</button>' +
-      '<div class="selected__top">' + FS.roseSvg(site, 84, true, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null) +
-      '<div class="selected__info"><h2 class="selected__name">' + e(site.name) + "</h2>" +
-      (site.elevation != null ? '<p class="selected__elev">' + e(FS.t("home.launchMasl", { m: site.elevation })) + "</p>" : "") +
-      '<div class="directions">' + directionBadges(site) + "</div>" +
-      '<div class="tags">' + tags(site) + "</div></div></div>";
+    var h = FS.h, p = function (cls, text) { return h("p", { class: cls }, text); };
+    var parts = [
+      h("button", { type: "button", class: "selected__close", "data-close-card": true, "aria-label": FS.t("home.closeCard", { name: site.name }) }, "×"),
+      h("div", { class: "selected__top" },
+        FS.roseSvg(site, 84, true, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating } : null),
+        h("div", { class: "selected__info" },
+          h("h2", { class: "selected__name" }, site.name),
+          site.elevation != null ? p("selected__elev", FS.t("home.launchMasl", { m: site.elevation })) : null,
+          h("div", { class: "directions" }, directionBadges(site)),
+          h("div", { class: "tags" }, tags(site)))),
+    ];
     if (assessment) {
-      html += '<p class="selected__wind"><span class="wind-dot wind-dot--' + assessment.rating + '"></span>' +
-        e(FS.t("home.windAt", { when: whenLabel(windIndex) })) +
-        e(windText(assessment.wind)) + ". <strong>" + e(RATINGS[assessment.rating].label) + "</strong></p>";
-      if (assessment.reasons.length) html += '<p class="selected__reasons">' + e(assessment.reasons.join(". ")) + ".</p>";
-      if (assessment.note) html += '<p class="selected__reasons">' + e(assessment.note) + "</p>";
-      if (site.maxWind != null && assessment.codes.indexOf("overSiteLimit") === -1) html += '<p class="selected__reasons">' + e(FS.t("home.siteLimit", { limit: site.maxWind })) + "</p>";
+      parts.push(h("p", { class: "selected__wind" }, h("span", { class: "wind-dot wind-dot--" + assessment.rating }),
+        FS.t("home.windAt", { when: whenLabel(windIndex) }) + windText(assessment.wind) + ". ", h("strong", null, RATINGS[assessment.rating].label)));
+      if (assessment.reasons.length) parts.push(p("selected__reasons", assessment.reasons.join(". ") + "."));
+      if (assessment.note) parts.push(p("selected__reasons", assessment.note));
+      if (site.maxWind != null && assessment.codes.indexOf("overSiteLimit") === -1) parts.push(p("selected__reasons", FS.t("home.siteLimit", { limit: site.maxWind })));
     } else if (windOn) {
-      html += '<p class="selected__wind muted">' + e(FS.t("home.noForecastNow")) + "</p>";
+      parts.push(p("selected__wind muted", FS.t("home.noForecastNow")));
     }
-    if (site.text) html += '<p class="selected__text">' + e(site.text) + "</p>";
-    html += '<a class="btn btn--primary btn--wide" href="' + e(site.url) + '">' + e(FS.t("home.seeSite")) + "</a>";
+    if (site.text) parts.push(p("selected__text", site.text));
+    parts.push(h("a", { class: "btn btn--primary btn--wide", href: site.url }, FS.t("home.seeSite")));
     if (site.flightlogId) {
-      html += '<a class="btn btn--wide" href="https://flightlog.org/fl.html?l=1&amp;a=22&amp;country_id=160&amp;start_id=' +
-        encodeURIComponent(site.flightlogId) + '" target="_blank" rel="noopener">' + e(FS.t("home.seeFlightlog")) + FS.EXTERNAL_MARK + "</a>";
+      parts.push(h("a", { class: "btn btn--wide", href: "https://flightlog.org/fl.html?l=1&a=22&country_id=160&start_id=" + encodeURIComponent(site.flightlogId),
+        target: "_blank", rel: "noopener" }, FS.t("home.seeFlightlog"), FS.externalMark()));
     }
-    cardEl.innerHTML = html;
+    cardEl.replaceChildren(FS.frag(parts));
     cardEl.classList.add("selected--active");
     showNote(site, assessment);
   }
@@ -454,10 +460,9 @@
   var noteEl = document.getElementById("map-note");
   function showNote(site, assessment) {
     if (!noteEl) return;
-    var e = FS.escapeHtml;
-    noteEl.innerHTML = "<span><strong>" + e(site.name) + "</strong>" +
-      (assessment ? " · " + e(windText(assessment.wind)) + " · " + e(RATINGS[assessment.rating].label) : "") + "</span>" +
-      '<a href="' + e(site.url) + '" aria-label="' + e(FS.t("home.seeName", { name: site.name })) + '">' + e(FS.t("home.see")) + "</a>";
+    noteEl.replaceChildren(
+      FS.h("span", null, FS.h("strong", null, site.name), assessment ? " · " + windText(assessment.wind) + " · " + RATINGS[assessment.rating].label : null),
+      FS.h("a", { href: site.url, "aria-label": FS.t("home.seeName", { name: site.name }) }, FS.t("home.see")));
     noteEl.hidden = false;
   }
 
@@ -532,12 +537,11 @@
     el.hidden = true;
     headingEls[g] = el;
   });
-  function headingHtml(g, n) {
-    return g === "nowind"
-      ? '<h3 class="results__group-title">' + FS.escapeHtml(FS.t("home.groupNoWind", { n: n })) + "</h3>" +
-        '<p class="muted">' + FS.escapeHtml(FS.t("home.groupNoWindText")) + "</p>"
-      : '<h3 class="results__group-title">' + FS.escapeHtml(FS.t("home.groupNoLevel", { n: n })) + "</h3>" +
-        '<p class="muted">' + FS.escapeHtml(FS.t("home.groupNoLevelText", { level: filter.level })) + "</p>";
+  function heading(g, n) {
+    var nowind = g === "nowind";
+    return FS.frag(
+      FS.h("h3", { class: "results__group-title" }, nowind ? FS.t("home.groupNoWind", { n: n }) : FS.t("home.groupNoLevel", { n: n })),
+      FS.h("p", { class: "muted" }, nowind ? FS.t("home.groupNoWindText") : FS.t("home.groupNoLevelText", { level: filter.level })));
   }
 
   // --- Fly windows per site ---
@@ -626,13 +630,13 @@
         li.hidden = match === "no";
         var button = li.querySelector("button");
         button.classList.toggle("results__item--selected", site.id === selectedId);
-        li.querySelector(".directions").innerHTML = directionBadges(site);
+        li.querySelector(".directions").replaceChildren(FS.frag(directionBadges(site)));
         // The same rose as in the map: the wind sector in the rating colour, and the ring. The rating is looked up in a
-        // fixed list, so only known class names reach the markup.
+        // fixed list, so only known class names reach the class attribute.
         var ringRating = assessment ? RATING_KEYS[assessment.rating] : null;
         var windCode = assessment ? DIRECTION_KEYS[W.directionCode(assessment.wind.dir)] : null;
-        li.querySelector(".results__rose").innerHTML = '<span class="results__ring' + (ringRating ? " results__ring--" + ringRating : "") + '">' +
-          FS.roseSvg(site, 34, false, ringRating && windCode ? { code: windCode, rating: ringRating, edge: true } : null) + "</span>";
+        li.querySelector(".results__rose").replaceChildren(FS.h("span", { class: "results__ring" + (ringRating ? " results__ring--" + ringRating : "") },
+          FS.roseSvg(site, 34, false, ringRating && windCode ? { code: windCode, rating: ringRating, edge: true } : null)));
         var windEl = button.querySelector(".results__wind");
         if (!windEl) {
           windEl = document.createElement("span");
@@ -641,10 +645,10 @@
         }
         windEl.hidden = !assessment && !(assessments && windOn);
         // The rating as a chip with a symbol, so it does not rest on colour alone, then the wind.
-        windEl.innerHTML = assessment
-          ? '<span class="rating-chip rating-chip--' + assessment.rating + '"><span aria-hidden="true">' + ICONS[assessment.rating] + "</span>" +
-            FS.escapeHtml(RATINGS[assessment.rating].label) + "</span>" + FS.escapeHtml(windText(assessment.wind))
-          : FS.escapeHtml(FS.t("home.noForecast"));
+        if (assessment) {
+          windEl.replaceChildren(FS.h("span", { class: "rating-chip rating-chip--" + assessment.rating },
+            FS.h("span", { "aria-hidden": "true" }, ICONS[assessment.rating]), RATINGS[assessment.rating].label), windText(assessment.wind));
+        } else windEl.replaceChildren(FS.t("home.noForecast"));
         renderWindowStrip(li, site, windOn && !!assessments);
       }
       if (site.id === selectedId) showCard(site, assessment, windOn);
@@ -666,7 +670,7 @@
       var el = headingEls[g];
       if (el.parentNode) listEl.removeChild(el);
       el.hidden = !counts[g];
-      el.innerHTML = counts[g] ? headingHtml(g, counts[g]) : "";
+      el.replaceChildren(counts[g] ? heading(g, counts[g]) : FS.frag());
     });
     var placed = {};
     items.forEach(function (li) {
@@ -840,12 +844,10 @@
     if (!searchHitsEl) return;
     var hits = filter.q.trim() ? visibleMatches() : [];
     searchHitsEl.hidden = !filter.q.trim();
-    if (!hits.length) { searchHitsEl.innerHTML = filter.q.trim() ? '<p class="muted">' + FS.escapeHtml(FS.t("home.noHits")) + "</p>" : ""; return; }
-    searchHitsEl.innerHTML = hits.length > MAX_HITS
-      ? '<p class="muted">' + FS.escapeHtml(FS.t("home.manyHits", { n: hits.length })) + "</p>"
-      : hits.map(function (s) {
-          return '<button type="button" class="pill" data-select="' + FS.escapeHtml(s.id) + '">' + FS.escapeHtml(s.name) + "</button>";
-        }).join("");
+    if (!hits.length) { searchHitsEl.replaceChildren(FS.frag(filter.q.trim() ? FS.h("p", { class: "muted" }, FS.t("home.noHits")) : null)); return; }
+    searchHitsEl.replaceChildren(FS.frag(hits.length > MAX_HITS
+      ? FS.h("p", { class: "muted" }, FS.t("home.manyHits", { n: hits.length }))
+      : hits.map(function (s) { return FS.h("button", { type: "button", class: "pill", "data-select": s.id }, s.name); })));
   }
   function visibleMatches() {
     return sites.filter(function (s) { var li = listEl.querySelector('[data-id="' + s.id + '"]'); return li && !li.hidden; });

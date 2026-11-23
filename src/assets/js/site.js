@@ -135,12 +135,16 @@
     var routeLines = [];
 
     function squareIcon(className, text) {
-      return L.divIcon({ className: "map-icon " + className, html: text || "", iconSize: [22, 22], iconAnchor: [11, 11] });
+      return FS.divIcon({ className: "map-icon " + className, content: text ? function () { return document.createTextNode(text); } : null, iconSize: [22, 22], iconAnchor: [11, 11] });
+    }
+    // A popup's content: the title in bold, and the text on the next line.
+    function popupContent(title, text) {
+      return function () { return FS.frag(FS.h("strong", null, title), text ? [FS.h("br"), text] : null); };
     }
 
     (data.routes || []).forEach(function (route) {
       var line = L.polyline(route.line, { color: INK, weight: 4, dashArray: "2 8", lineCap: "round", opacity: 0.9 }).addTo(map);
-      line.bindTooltip(FS.escapeHtml(FS.t("site.route") + (route.name ? " " + route.name : "")), { sticky: true });
+      line.bindTooltip(document.createTextNode(FS.t("site.route") + (route.name ? " " + route.name : "")), { sticky: true });
       routeLines.push(line);
       route.line.forEach(function (p) { bounds.push(p); });
     });
@@ -171,19 +175,22 @@
         if (o.kind === "launch") {
           if (launchDone) return;
           launchDone = true;
-          parts.push('<span class="map-combo__launch">' + (launches > 1 ? launches : "") + "</span>");
+          parts.push(["map-combo__launch", launches > 1 ? launches : ""]);
           names.push(launches > 1 ? FS.t("site.launchN", { n: launches }) : FS.t("site.launch"));
           return;
         }
-        if (o.kind === "landing") parts.push('<span class="map-symbol map-symbol--landing' + (o.alternative ? " map-symbol--alt" : "") + '"></span>');
-        else if (o.kind === "parking") parts.push('<span class="map-icon map-icon--parking">P</span>');
-        else parts.push('<span class="drawing-pin' + (o.hazard ? " drawing-pin--hazard" : "") + '">' + o.n + "</span>");
+        if (o.kind === "landing") parts.push(["map-symbol map-symbol--landing" + (o.alternative ? " map-symbol--alt" : ""), ""]);
+        else if (o.kind === "parking") parts.push(["map-icon map-icon--parking", "P"]);
+        else parts.push(["drawing-pin" + (o.hazard ? " drawing-pin--hazard" : ""), o.n]);
         names.push(o.title);
       });
       var title = FS.t("site.zoomIn", { names: names.join(", ") });
-      return L.divIcon({
+      // parts: [class, text] per symbol.
+      return FS.divIcon({
         className: "map-combo-anchor",
-        html: '<span class="map-combo" title="' + FS.escapeHtml(title) + '">' + parts.join("") + "</span>",
+        content: function () {
+          return FS.h("span", { class: "map-combo", title: title }, parts.map(function (part) { return FS.h("span", { class: part[0] }, part[1]); }));
+        },
         iconSize: [0, 0],
       });
     }
@@ -207,7 +214,7 @@
     (data.parking || []).forEach(function (p) {
       var name = p.name || FS.t("site.parking");
       L.marker([p.lat, p.lon], { icon: squareIcon("map-icon--parking", "P"), title: name, alt: name, kind: "parking" })
-        .bindTooltip(FS.escapeHtml(name), { direction: "top", offset: [0, -10] })
+        .bindTooltip(document.createTextNode(name), { direction: "top", offset: [0, -10] })
         .addTo(pointLayer);
       bounds.push([p.lat, p.lon]);
     });
@@ -216,9 +223,9 @@
     (data.landings || []).forEach(function (landing) {
       var isAlternative = landing.primary === false;
       var name = landing.name || (isAlternative ? FS.t("site.altLanding") : FS.t("site.landing"));
-      var icon = L.divIcon({ className: "map-symbol map-symbol--landing" + (isAlternative ? " map-symbol--alt" : ""), iconSize: [26, 26], iconAnchor: [13, 13] });
+      var icon = FS.divIcon({ className: "map-symbol map-symbol--landing" + (isAlternative ? " map-symbol--alt" : ""), iconSize: [26, 26], iconAnchor: [13, 13] });
       L.marker([landing.lat, landing.lon], { icon: icon, title: name, alt: name, kind: "landing", alternative: isAlternative })
-        .bindTooltip(FS.escapeHtml(name), { direction: "top", offset: [0, -12] })
+        .bindTooltip(document.createTextNode(name), { direction: "top", offset: [0, -12] })
         .addTo(pointLayer);
       bounds.push([landing.lat, landing.lon]);
     });
@@ -230,16 +237,16 @@
     // points, see above). Zooming in, or tapping it, splits them. The directions are in the
     // label on hover or tap.
     function launchIcon(count) {
-      return L.divIcon({
+      return FS.divIcon({
         className: "map-symbol map-symbol--launch-dot",
-        html: count > 1 ? '<span class="map-symbol__count">' + count + "</span>" : "",
+        content: count > 1 ? function () { return FS.h("span", { class: "map-symbol__count" }, count); } : null,
         iconSize: [20, 20],
         iconAnchor: [10, 10],
       });
     }
     FS.launchPoints(data).forEach(function (p) {
       L.marker([p.lat, p.lon], { icon: launchIcon(1), title: p.label, alt: p.label, zIndexOffset: 1000, kind: "launch" })
-        .bindTooltip(FS.escapeHtml(p.label), { direction: "top", offset: [0, -10] })
+        .bindTooltip(document.createTextNode(p.label), { direction: "top", offset: [0, -10] })
         .addTo(pointLayer);
       bounds.push([p.lat, p.lon]);
     });
@@ -274,7 +281,7 @@
         L.polyline(stem, Object.assign({ color: arc.color, weight: 3 }, opts)).addTo(arcLayer);
         L.polygon(head, Object.assign({ color: "#1C2B33", weight: 1.5, fillColor: arc.color, fillOpacity: 1 }, opts)).addTo(arcLayer);
         L.marker(ll(FS.offset(arc.center, arc.bearing, arc.radius + 40 * mpp)), {
-          icon: L.divIcon({ className: "arc-label-anchor", html: '<span class="arc-label">' + arc.label + "</span>", iconSize: [0, 0] }),
+          icon: FS.divIcon({ className: "arc-label-anchor", content: function () { return FS.h("span", { class: "arc-label" }, arc.label); }, iconSize: [0, 0] }),
           interactive: false, keyboard: false, pane: "arcs",
         }).addTo(arcLayer);
       });
@@ -303,7 +310,7 @@
       } else if (p.kind === "area") {
         layer = L.polygon(f.geometry.coordinates[0].map(ll), { color: color, weight: 2.5, fillColor: color, fillOpacity: 0.2 }).addTo(map);
       }
-      if (layer && p.title) layer.bindPopup("<strong>" + FS.escapeHtml(p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""));
+      if (layer && p.title) layer.bindPopup(popupContent(p.title, p.text));
     });
 
     // Numbered points, with the same numbers as the list below the map. Tapping a point shows its text and
@@ -312,9 +319,9 @@
     var pinMarkers = labels.map(function (f, i) {
       var p = f.properties, n = i + 1, hazard = p.style === "hazard";
       return L.marker(ll(f.geometry.coordinates), {
-        icon: L.divIcon({ className: "drawing-pin" + (hazard ? " drawing-pin--hazard" : ""), html: String(n), iconSize: [26, 26], iconAnchor: [13, 36] }),
+        icon: FS.divIcon({ className: "drawing-pin" + (hazard ? " drawing-pin--hazard" : ""), content: function () { return document.createTextNode(String(n)); }, iconSize: [26, 26], iconAnchor: [13, 36] }),
         title: n + ". " + p.title, alt: n + ". " + p.title, zIndexOffset: 1100, kind: "pin", n: n, hazard: hazard,
-      }).bindPopup("<strong>" + FS.escapeHtml(n + ". " + p.title) + "</strong>" + (p.text ? "<br>" + FS.escapeHtml(p.text) : ""), { offset: [0, -24] })
+      }).bindPopup(popupContent(n + ". " + p.title, p.text), { offset: [0, -24] })
         .on("click", function () { selectPoint(n); })
         .addTo(pointLayer);
     });

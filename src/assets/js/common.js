@@ -23,6 +23,49 @@
     return fill(n === 1 ? forms.one : forms.other, v);
   }
 
+  // --- Building elements ---
+  // h("p", { class: "muted" }, "text", node): an element built with DOM methods, so no text is ever parsed as markup
+  // (ready for Trusted Types). svg() is the same in the SVG namespace, frag() a fragment.
+  // Attributes that are null, undefined or false are left out; true gives an empty attribute. Children may be strings
+  // or numbers (text), nodes, arrays of them, or null, false and "" (left out).
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function append(parent, children) {
+    children.forEach(function (c) {
+      if (c == null || c === false || c === "") return;
+      if (Array.isArray(c)) append(parent, c);
+      else parent.appendChild(typeof c === "object" ? c : document.createTextNode(String(c)));
+    });
+    return parent;
+  }
+  function build(el, attrs, children) {
+    Object.keys(attrs || {}).forEach(function (k) {
+      var v = attrs[k];
+      if (v != null && v !== false) el.setAttribute(k, v === true ? "" : String(v));
+    });
+    return append(el, children);
+  }
+  function h(tag, attrs) { return build(document.createElement(tag), attrs, Array.prototype.slice.call(arguments, 2)); }
+  function svg(tag, attrs) { return build(document.createElementNS(SVG_NS, tag), attrs, Array.prototype.slice.call(arguments, 2)); }
+  function frag() { return append(document.createDocumentFragment(), Array.prototype.slice.call(arguments)); }
+
+  // L.divIcon without innerHTML: options.content is a function returning the icon's content (a node, a fragment or
+  // null), called for each new marker element, so no node is shared between markers. Other options as L.divIcon.
+  var NodeIcon = null;
+  function divIcon(options) {
+    if (!NodeIcon) {
+      NodeIcon = L.DivIcon.extend({
+        createIcon: function (oldIcon) {
+          var div = oldIcon && oldIcon.tagName === "DIV" ? oldIcon : document.createElement("div");
+          var content = this.options.content ? this.options.content() : null;
+          if (content) div.replaceChildren(content); else div.replaceChildren();
+          this._setIconStyles(div, "icon");
+          return div;
+        },
+      });
+    }
+    return new NodeIcon(options);
+  }
+
   var DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   var DIRECTION_LABELS = I18N.directions.labels;
 
@@ -49,37 +92,39 @@
   // the rating colour, so you can see whether the wind hits a launch direction without a separate arrow. With edge (the
   // home page markers) it runs from the centre out to the ring around the rose; otherwise (the card) it is «lifted» out slightly.
   var LIFT = 8;
+  // Returns the <svg> element.
   function roseSvg(site, size, labels, wind) {
     var lift = wind && !wind.edge;
     var viewBox = labels ? "-12 -12 184 184" : lift ? (18 - LIFT) + " " + (18 - LIFT) + " " + (124 + 2 * LIFT) + " " + (124 + 2 * LIFT) : "18 18 124 124";
-    var svg = '<svg class="rose" width="' + size + '" height="' + size + '" viewBox="' + viewBox + '" aria-hidden="true">';
-    var lifted = "";
+    var root = svg("svg", { class: "rose", width: size, height: size, viewBox: viewBox, "aria-hidden": "true" });
+    var lifted = null;
     DIRECTIONS.forEach(function (code, i) {
       if (wind && wind.code === code) {
         if (wind.edge) {
           // From the centre out to the edge (r = 62, where the ring around the marker is).
           var b0 = (i * 45 - 22.5 - 90) * Math.PI / 180, b1 = (i * 45 + 22.5 - 90) * Math.PI / 180;
-          lifted = '<path d="M80 80 L' + (80 + 62 * Math.cos(b0)).toFixed(1) + " " + (80 + 62 * Math.sin(b0)).toFixed(1) +
-            " A62 62 0 0 1 " + (80 + 62 * Math.cos(b1)).toFixed(1) + " " + (80 + 62 * Math.sin(b1)).toFixed(1) +
-            ' Z" class="sector sector--wind sector--wind-edge sector--wind-' + wind.rating + '"></path>';
+          lifted = svg("path", {
+            d: "M80 80 L" + (80 + 62 * Math.cos(b0)).toFixed(1) + " " + (80 + 62 * Math.sin(b0)).toFixed(1) +
+              " A62 62 0 0 1 " + (80 + 62 * Math.cos(b1)).toFixed(1) + " " + (80 + 62 * Math.sin(b1)).toFixed(1) + " Z",
+            class: "sector sector--wind sector--wind-edge sector--wind-" + wind.rating,
+          });
           return;
         }
         var a = i * 45 * Math.PI / 180;
-        lifted = '<path d="' + ROSE_PATHS[i] + '" class="sector sector--wind sector--wind-' + wind.rating + '" transform="translate(' +
-          (Math.sin(a) * LIFT).toFixed(1) + " " + (-Math.cos(a) * LIFT).toFixed(1) + ')"></path>';
+        lifted = svg("path", {
+          d: ROSE_PATHS[i], class: "sector sector--wind sector--wind-" + wind.rating,
+          transform: "translate(" + (Math.sin(a) * LIFT).toFixed(1) + " " + (-Math.cos(a) * LIFT).toFixed(1) + ")",
+        });
         return;
       }
-      svg += '<path d="' + ROSE_PATHS[i] + '" class="sector sector--' + directionType(site, code) + '"></path>';
+      root.appendChild(svg("path", { d: ROSE_PATHS[i], class: "sector sector--" + directionType(site, code) }));
     });
-    svg += lifted;
-    svg += '<circle cx="80" cy="80" r="9" class="rose__center"></circle>';
+    append(root, [lifted, svg("circle", { cx: 80, cy: 80, r: 9, class: "rose__center" })]);
     if (labels) {
-      // The letters come from the dictionary, so they are escaped like other text.
-      var lab = function (code) { return escapeHtml(DIRECTION_LABELS[code]); };
-      svg += '<text x="80" y="2" text-anchor="middle">' + lab("N") + '</text><text x="80" y="168" text-anchor="middle">' + lab("S") + "</text>" +
-        '<text x="-4" y="85" text-anchor="middle">' + lab("W") + '</text><text x="164" y="85" text-anchor="middle">' + lab("E") + "</text>";
+      var lab = function (x, y, code) { return svg("text", { x: x, y: y, "text-anchor": "middle" }, DIRECTION_LABELS[code]); };
+      append(root, [lab(80, 2, "N"), lab(80, 168, "S"), lab(-4, 85, "W"), lab(164, 85, "E")]);
     }
-    return svg + "</svg>";
+    return root;
   }
 
   // A tile in the lower layer is shown only once the tile above at the same spot has loaded. OpenTopoMap often loads faster
@@ -359,9 +404,16 @@
   // Buttons below the zoom buttons: «Vis hele …» (house) returns to the view fit() gives, and full screen
   // lays the map over the whole page. Not the browser's full screen, so it also works on iPhone. Esc or
   // the button again closes it. The view is refitted when the map changes size. Used on the home page and site page.
-  var ICON_HOME = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>';
-  var ICON_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>';
-  var ICON_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"></path></svg>';
+  // A line icon (24 × 24) with one path per d.
+  function lineIcon(size, strokeWidth, cls, paths) {
+    return svg("svg", {
+      class: cls, width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": strokeWidth,
+      "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true",
+    }, paths.map(function (d) { return svg("path", { d: d }); }));
+  }
+  function iconHome() { return lineIcon(20, 2.2, null, ["M3 11l9-7 9 7", "M5 10v10h5v-6h4v6h5V10"]); }
+  function iconExpand() { return lineIcon(20, 2.2, null, ["M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"]); }
+  function iconShrink() { return lineIcon(20, 2.2, null, ["M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"]); }
   function controlButton(onClick) {
     var bar = L.DomUtil.create("div", "leaflet-bar map-reset");
     var button = L.DomUtil.create("a", "", bar);
@@ -378,7 +430,7 @@
         var c = controlButton(function () { map.closePopup(); fit(); });
         c.button.title = resetLabel;
         c.button.setAttribute("aria-label", resetLabel);
-        c.button.innerHTML = ICON_HOME;
+        c.button.replaceChildren(iconHome());
         return c.bar;
       },
     });
@@ -388,7 +440,7 @@
     function setFullscreen(on, keepView) {
       mapEl.classList.toggle("map--fullscreen", on);
       document.body.classList.toggle("has-fullscreen-map", on);
-      fullscreenButton.innerHTML = on ? ICON_SHRINK : ICON_EXPAND;
+      fullscreenButton.replaceChildren(on ? iconShrink() : iconExpand());
       var label = on ? t("map.fullscreenClose") : t("map.fullscreenOpen");
       fullscreenButton.title = label;
       fullscreenButton.setAttribute("aria-label", label);
@@ -558,12 +610,17 @@
   }
 
   function airspacePopup(p) {
-    var e = escapeHtml;
     var rows = [[t("map.class"), p.class], [t("map.lower"), formatLimit(p.lower)], [t("map.upper"), formatLimit(p.upper)]]
       .filter(function (row) { return row[1]; })
-      .map(function (row) { return "<tr><th>" + row[0] + "</th><td>" + e(row[1]) + "</td></tr>"; }).join("");
-    return '<div class="airspace-popup"><strong>' + e(p.name) + "</strong><table>" + rows + "</table>" +
-      (p.byNotam ? '<p class="airspace-popup__notam">' + e(t("map.byNotam")) + "</p>" : "") + "</div>";
+      .map(function (row) { return h("tr", null, h("th", null, row[0]), h("td", null, row[1])); });
+    return h("div", { class: "airspace-popup" }, h("strong", null, p.name), h("table", null, h("tbody", null, rows)),
+      p.byNotam ? h("p", { class: "airspace-popup__notam" }, t("map.byNotam")) : null);
+  }
+
+  // The text in a status box below the layer control, with «Prøv igjen» after it when retry is set.
+  function setStatusText(el, text, retry) {
+    el.replaceChildren();
+    append(el, [retry ? text + " " : text, retry ? h("button", { type: "button", "data-retry": true }, t("map.retry")) : null]);
   }
 
   // Precipitation radar from RainViewer (free for non-commercial use, with attribution). Loaded only when the layer
@@ -597,9 +654,7 @@
       if (!statusEl) return;
       statusEl.hidden = !state;
       statusEl.classList.toggle("airspace-status--error", state === "error");
-      statusEl.innerHTML = state === "error"
-        ? escapeHtml(t("map.radarError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>"
-        : escapeHtml(text || "");
+      setStatusText(statusEl, state === "error" ? t("map.radarError") : text, state === "error");
     }
 
     function show(i) {
@@ -688,8 +743,7 @@
       if (!statusEl) return;
       statusEl.hidden = !state;
       statusEl.classList.toggle("airspace-status--error", state === "error");
-      statusEl.innerHTML = state === "loading" ? escapeHtml(t("map.airspaceLoading"))
-        : state === "error" ? escapeHtml(t("map.airspaceError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>" : "";
+      setStatusText(statusEl, state === "loading" ? t("map.airspaceLoading") : state === "error" ? t("map.airspaceError") : "", state === "error");
     }
 
     function load() {
@@ -711,7 +765,7 @@
               layer.on("mouseover", function () { layer.setStyle({ fillOpacity: 0.12, weight: 3 }); });
               layer.on("mouseout", function () { layer.setStyle({ fillOpacity: 0, weight: 2 }); });
             },
-          }).bindPopup(airspacePopup(f.properties)).addTo(g.layer);
+          }).bindPopup(function () { return airspacePopup(f.properties); }).addTo(g.layer);
         });
       });
       return loading;
@@ -763,14 +817,14 @@
   var OBSTACLE_SOURCES = { nve: "NVE (NLOD)", osm: "© OpenStreetMap (ODbL)" };
 
   function obstaclePopup(p) {
-    var e = escapeHtml, title;
+    var title;
     if (p.kind === "power") title = p.kv ? t("map.obstacle.power", { kv: formatNumber(p.kv) }) : t("map.obstacle.powerNoKv");
     else if (p.kind === "aerialway") title = lookup("map.obstacle.lifts." + p.sub) || t("map.obstacle.aerialway");
     else title = t("map.obstacle." + p.kind);
     var lines = [p.name, p.owner, p.height ? t("map.obstacle.height", { m: formatNumber(p.height) }) : null,
       t("map.obstacle.source", { source: p.src === "osm" ? "OpenStreetMap" : "NVE" })];
-    return '<div class="airspace-popup"><strong>' + e(title) + "</strong>" +
-      lines.filter(Boolean).map(function (l) { return "<br>" + e(l); }).join("") + "</div>";
+    return h("div", { class: "airspace-popup" }, h("strong", null, title),
+      lines.filter(Boolean).map(function (l) { return [h("br"), l]; }));
   }
 
   function addObstacleLayer(map, url) {
@@ -782,11 +836,11 @@
     map.createPane("obstaclePoints").style.zIndex = 450;
     var lines = L.geoJSON(null, {
       style: function (f) { return OBSTACLE_STYLE[f.properties.kind] || OBSTACLE_STYLE.power; },
-      onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
+      onEachFeature: function (f, layer) { layer.bindPopup(function () { return obstaclePopup(f.properties); }); },
     }).addTo(group);
     var points = L.geoJSON(null, {
       pointToLayer: function (f, latlng) { return L.circleMarker(latlng, Object.assign({ pane: "obstaclePoints" }, OBSTACLE_POINT[f.properties.kind] || OBSTACLE_POINT.mast)); },
-      onEachFeature: function (f, layer) { layer.bindPopup(obstaclePopup(f.properties)); },
+      onEachFeature: function (f, layer) { layer.bindPopup(function () { return obstaclePopup(f.properties); }); },
     }).addTo(group);
     // The tiles asked for (a promise each, dropped again if it fails) and the features shown, by id: a line across a
     // tile edge is in both tiles.
@@ -807,9 +861,8 @@
       if (!statusEl) return;
       statusEl.hidden = !state;
       statusEl.classList.toggle("airspace-status--error", state === "error");
-      statusEl.innerHTML = state === "loading" ? escapeHtml(t("map.obstaclesLoading"))
-        : state === "zoom" ? escapeHtml(t("map.obstaclesZoom"))
-        : state === "error" ? escapeHtml(t("map.obstaclesError")) + ' <button type="button" data-retry>' + escapeHtml(t("map.retry")) + "</button>" : "";
+      setStatusText(statusEl, state === "loading" ? t("map.obstaclesLoading") : state === "zoom" ? t("map.obstaclesZoom")
+        : state === "error" ? t("map.obstaclesError") : "", state === "error");
     }
     function getJson(u) {
       return fetch(u).then(function (r) {
@@ -875,12 +928,6 @@
     });
   }
 
-  function escapeHtml(s) {
-    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-
   // Number with the language's decimal separator (comma in Norwegian).
   function formatNumber(n, decimals) {
     return Number(n).toFixed(decimals || 0).replace(".", I18N.meta.decimal);
@@ -891,8 +938,10 @@
     return el ? JSON.parse(el.textContent) : null;
   }
 
-  // Same marking as the external() macro in macros.njk.
-  var EXTERNAL_MARK = '<svg class="external-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg><span class="visually-hidden"> ' + escapeHtml(I18N.opensNewTab || "") + "</span>";
+  // Same marking as the external() macro in macros.njk, as a fragment.
+  function externalMark() {
+    return frag(lineIcon(16, 2, "external-icon", ["M7 17L17 7", "M8 7h9v9"]), h("span", { class: "visually-hidden" }, " " + (I18N.opensNewTab || "")));
+  }
 
   // --- Colour mode ---
   // The script in <head> (base.njk) sets data-theme before the page is drawn. Here the buttons are wired up, and
@@ -1023,7 +1072,7 @@
     meta: I18N.meta,
     track: track,
     isDark: isDark,
-    EXTERNAL_MARK: EXTERNAL_MARK,
+    externalMark: externalMark,
     opensNewTab: I18N.opensNewTab || "",
     DIRECTIONS: DIRECTIONS,
     DIRECTION_LABELS: DIRECTION_LABELS,
@@ -1044,7 +1093,10 @@
     lazyOverlays: lazyOverlays,
     fitWhenVisible: fitWhenVisible,
     addViewControls: addViewControls,
-    escapeHtml: escapeHtml,
+    h: h,
+    svg: svg,
+    frag: frag,
+    divIcon: divIcon,
     formatNumber: formatNumber,
     readJson: readJson,
   };

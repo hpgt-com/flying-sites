@@ -17,14 +17,16 @@
   var dialog = document.createElement("dialog");
   dialog.className = "lightbox";
   dialog.setAttribute("aria-label", "Bildevisning");
-  dialog.innerHTML =
-    '<figure class="lightbox__figure">' +
-    '<picture><source type="image/webp" sizes="100vw"><img class="lightbox__image" sizes="100vw" alt=""></picture>' +
-    '<figcaption class="lightbox__caption"><span class="lightbox__text"></span> <span class="lightbox__counter"></span><span class="lightbox__credit"></span></figcaption>' +
-    "</figure>" +
-    '<button type="button" class="lightbox__button lightbox__close" aria-label="' + FS.escapeHtml(FS.t("lightbox.close")) + '">×</button>' +
-    '<button type="button" class="lightbox__button lightbox__prev" aria-label="' + FS.escapeHtml(FS.t("lightbox.prev")) + '">‹</button>' +
-    '<button type="button" class="lightbox__button lightbox__next" aria-label="' + FS.escapeHtml(FS.t("lightbox.next")) + '">›</button>';
+  var make = FS.h;
+  var navButton = function (cls, label, text) { return make("button", { type: "button", class: "lightbox__button " + cls, "aria-label": label }, text); };
+  dialog.append(
+    make("figure", { class: "lightbox__figure" },
+      make("picture", null, make("source", { type: "image/webp", sizes: "100vw" }), make("img", { class: "lightbox__image", sizes: "100vw", alt: "" })),
+      make("figcaption", { class: "lightbox__caption" },
+        make("span", { class: "lightbox__text" }), " ", make("span", { class: "lightbox__counter" }), make("span", { class: "lightbox__credit" }))),
+    navButton("lightbox__close", FS.t("lightbox.close"), "×"),
+    navButton("lightbox__prev", FS.t("lightbox.prev"), "‹"),
+    navButton("lightbox__next", FS.t("lightbox.next"), "›"));
   document.body.appendChild(dialog);
 
   var source = dialog.querySelector("source");

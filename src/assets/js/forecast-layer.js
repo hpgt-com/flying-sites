@@ -8,8 +8,8 @@
 //   lav sky og regn low cloud or fog as grey cells, rain as blue dots
 // The thermal strength is Deardorff's w* from the sun on the ground and the boundary layer, the cloud base 125 m per
 // degree between temperature and dew point: rough estimates, said so in the legend. A tap in the map gives all the
-// numbers for the nearest point. Labels are thinned by distance on screen, the close grid first. Built with numbers and
-// fixed strings only in the HTML. Exposed as window.FlyingSitesForecast; tested in test/forecast-layer.test.js.
+// numbers for the nearest point. Labels are thinned by distance on screen, the close grid first. Built with DOM
+// methods. Exposed as window.FlyingSitesForecast; tested in test/forecast-layer.test.js.
 (function () {
   "use strict";
 
@@ -82,10 +82,11 @@
 
   // A wind barb as on weather maps and RASP, in m/s: the staff points to where the wind comes from, with a half barb
   // for 2.5 m/s, a full one for 5 and a pennant for 25, on the clockwise side. Calm (under 1.25 m/s) is a ring.
+  // Returns the <svg> element, or null without wind.
   function barbSvg(dir, speed) {
-    var head = '<svg width="56" height="56" viewBox="-28 -28 56 56" aria-hidden="true">';
-    if (!isNum(speed) || !isNum(dir)) return "";
-    if (speed < 1.25) return head + '<circle r="5" class="fc-barb__calm"/></svg>';
+    if (!isNum(speed) || !isNum(dir)) return null;
+    var svg = svgEl("svg", { width: "56", height: "56", viewBox: "-28 -28 56 56", "aria-hidden": "true" });
+    if (speed < 1.25) return svgEl(svg, null, svgEl("circle", { r: "5", class: "fc-barb__calm" }));
     var n = Math.round(speed / 2.5), pennants = Math.floor(n / 10), fulls = Math.floor((n % 10) / 2), half = n % 2;
     var L = 22, y = -L, parts = ["M0 0V" + -L];
     var flags = "";
@@ -95,10 +96,11 @@
     // A half barb alone sits a step in from the end, so it is not read as a full one.
     if (half) { if (!pennants && !fulls) y += 4; parts.push("M0 " + y + "L5 " + (y - 2)); }
     var d = parts.join("");
-    return head + '<g transform="rotate(' + Math.round(dir) + ')">' +
-      '<path class="fc-barb__halo" d="' + d + '"/>' + (flags ? '<path class="fc-barb__halo" d="' + flags + '"/>' : "") +
-      '<path class="fc-barb__line" d="' + d + '"/>' + (flags ? '<path class="fc-barb__flag" d="' + flags + '"/>' : "") +
-      '</g><circle r="2" class="fc-barb__dot"/></svg>';
+    var path = function (cls, pd) { return pd ? svgEl("path", { class: cls, d: pd }) : null; };
+    return svgEl(svg, null,
+      svgEl("g", { transform: "rotate(" + Math.round(dir) + ")" },
+        path("fc-barb__halo", d), path("fc-barb__halo", flags), path("fc-barb__line", d), path("fc-barb__flag", flags)),
+      svgEl("circle", { r: "2", class: "fc-barb__dot" }));
   }
 
   // Where a stack of labels goes ({ x, y: [per row] } in px from the point): on the point without wind, otherwise out
@@ -148,6 +150,14 @@
     if (content != null) n.textContent = content;
     return n;
   }
+  // An SVG element (tag, or an element to add to) with attributes and child nodes (null is left out).
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var n = typeof tag === "string" ? document.createElementNS(SVG_NS, tag) : tag;
+    Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    for (var i = 2; i < arguments.length; i++) if (arguments[i]) n.appendChild(arguments[i]);
+    return n;
+  }
 
   // The layers on a map. urls: { close, wide }. Returns { setTime(ms) } for the page's timeline, or null.
   // existing: the layers already in the layer list, keyed thermal … cloud, when this script was fetched on first use
@@ -192,8 +202,9 @@
         Object.assign({ renderer: renderer, stroke: false, interactive: false }, options));
     }
     // A label centred dx px to the right of the point and dy px below it.
-    function label(p, cls, html, size, dx, dy) {
-      return L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "fc-label " + cls, html: html, iconSize: size, iconAnchor: [size[0] / 2 - dx, size[1] / 2 - dy] }), interactive: false, keyboard: false });
+    // content: a function that builds the label's element.
+    function label(p, cls, content, size, dx, dy) {
+      return L.marker([p.lat, p.lon], { icon: FS.divIcon({ className: "fc-label " + cls, content: content, iconSize: size, iconAnchor: [size[0] / 2 - dx, size[1] / 2 - dy] }), interactive: false, keyboard: false });
     }
     function windOf(p) { return level === "750" ? { dir: p.h.wd9, speed: p.h.ws9 } : { dir: p.h.wd, speed: p.h.ws }; }
     // Labels far enough apart on screen, inside the view: the first point in each square of the given size.
@@ -222,7 +233,9 @@
         list.forEach(function (p) { if (p.h.low) layers.cloud.addLayer(cell(p, { fillColor: "#7F9396", fillOpacity: 0.55 })); });
         thin(list, SPACING.cloud, function (p) { return p.h.rain; }).forEach(function (p) {
           var r = Math.min(9, 3 + p.h.pr * 2);
-          layers.cloud.addLayer(label(p, "fc-rain", '<svg width="20" height="20" viewBox="-10 -10 20 20" aria-hidden="true"><circle r="' + r.toFixed(1) + '"/></svg>', [20, 20]));
+          layers.cloud.addLayer(label(p, "fc-rain", function () {
+            return svgEl("svg", { width: "20", height: "20", viewBox: "-10 -10 20 20", "aria-hidden": "true" }, svgEl("circle", { r: r.toFixed(1) }));
+          }, [20, 20]));
         });
       }
       // The labels at the same points, thinned once. With the wind on, the barb is on the point and the speed, the top
@@ -234,19 +247,23 @@
       picked.forEach(function (p) {
         var wind = windOf(p), rows = [];
         if (on.wind && wind.speed !== null) {
-          layers.wind.addLayer(label(p, "fc-barb", barbSvg(wind.dir, wind.speed), [56, 56], 0, 0));
-          rows.push({ layer: layers.wind, html: '<b class="fc-speed">' + Math.round(wind.speed) + "</b>", size: [30, 16] });
+          layers.wind.addLayer(label(p, "fc-barb", function () { return barbSvg(wind.dir, wind.speed); }, [56, 56], 0, 0));
+          rows.push({ layer: layers.wind, size: [30, 16], content: function () { return make("b", "fc-speed", String(Math.round(wind.speed))); } });
         }
         if (on.top && p.h.w >= 1 && p.h.top !== null) {
-          rows.push({ layer: layers.top, size: [60, 20], html: p.h.cu
-            ? '<span class="fc-top fc-top--cu"><svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M3.5 9.5h7.5a2.5 2.5 0 0 0 .3-5A3.6 3.6 0 0 0 4.4 3.6 3 3 0 0 0 3.5 9.5z"/></svg>' + p.h.base + "</span>"
-            : '<span class="fc-top">↑' + p.h.top + "</span>" });
+          rows.push({ layer: layers.top, size: [60, 20], content: function () {
+            if (!p.h.cu) return make("span", "fc-top", "↑" + p.h.top);
+            var top = make("span", "fc-top fc-top--cu");
+            top.append(svgEl("svg", { width: "14", height: "10", viewBox: "0 0 14 10", "aria-hidden": "true" },
+              svgEl("path", { d: "M3.5 9.5h7.5a2.5 2.5 0 0 0 .3-5A3.6 3.6 0 0 0 4.4 3.6 3 3 0 0 0 3.5 9.5z" })), String(p.h.base));
+            return top;
+          } });
         }
         if (on.temp && p.h.T !== null) {
-          rows.push({ layer: layers.temp, size: [44, 20], html: '<span class="fc-temp ' + (p.h.T < 0 ? "fc-temp--cold" : "fc-temp--warm") + '">' + formatTemp(p.h.T) + "</span>" });
+          rows.push({ layer: layers.temp, size: [44, 20], content: function () { return make("span", "fc-temp " + (p.h.T < 0 ? "fc-temp--cold" : "fc-temp--warm"), formatTemp(p.h.T)); } });
         }
         var at = stackAt(on.wind && wind.speed !== null ? wind.dir : null, rows);
-        rows.forEach(function (r, k) { r.layer.addLayer(label(p, "", r.html, r.size, at.x, at.y[k])); });
+        rows.forEach(function (r, k) { r.layer.addLayer(label(p, "", r.content, r.size, at.x, at.y[k])); });
       });
     }
 
