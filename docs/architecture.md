@@ -1,63 +1,63 @@
-# Architecture
+# Arkitektur
 
-How flysteder.hpgt.com is put together: where the data comes from, what happens when the site is built, and what
-runs in the browser. The diagrams are Mermaid and render as diagrams on GitHub.
+Hvordan flysteder.hpgt.com henger sammen: hvor dataene kommer fra, hva som skjer når siden bygges, og hva som kjører
+i nettleseren. Diagrammene er Mermaid og vises som diagrammer på GitHub.
 
-In short: **a static site with no server and no database.** All content lives as files in the repository. GitHub
-Actions builds the site with Eleventy and publishes it to Cloudflare (with GitHub Pages as a fallback) on every change. Data that must be fresh (the
-wind forecast, winds aloft, weather stations) comes from the data service on Cloudflare, which the pages read after
-loading; each build also starts from a forecast fetched in its own job just before it. Data that is slow to fetch
-(airspace, heights, power lines) is cached in the repository. Each kind of external data is a module, see
-[Data modules](#data-modules).
+Kort sagt: **en statisk side uten server og uten database.** Alt innhold ligger som filer i repoet. GitHub Actions
+bygger siden med Eleventy og publiserer den til Cloudflare (med GitHub Pages som reserve) ved hver endring. Data som
+må være ferske (vindvarselet, høydevinden, værstasjonene), kommer fra datatjenesten på Cloudflare, som sidene leser
+etter lasting. Hvert bygg starter i tillegg fra et varsel som hentes i en egen jobb rett før. Data som er trege å
+hente (luftrom, høyder, kraftlinjer), mellomlagres i repoet. Hver type eksterne data er en modul, se
+[Datamoduler](#datamoduler).
 
-## Overview
+## Oversikt
 
 ```mermaid
 flowchart LR
-  subgraph repo["GitHub repository (hpgt-com/flying-sites)"]
-    sites["Site files<br/>src/sites/&lt;id&gt;/index.md<br/>+ index.en.md, images, GPX, drawing"]
-    data["Shared data<br/>src/_data/ and src/_i18n/"]
-    cache["Cache<br/>src/_data/cache/<br/>(airspace, heights,<br/>power lines)"]
-    code["Templates, scripts, CSS<br/>src/_includes/, src/assets/, lib/"]
+  subgraph repo["GitHub-repoet (hpgt-com/flying-sites)"]
+    sites["Stedsfiler<br/>src/sites/&lt;id&gt;/index.md<br/>+ index.en.md, bilder, GPX, tegning"]
+    data["Felles data<br/>src/_data/ og src/_i18n/"]
+    cache["Mellomlager<br/>src/_data/cache/<br/>(luftrom, høyder,<br/>kraftlinjer)"]
+    code["Maler, skript, CSS<br/>src/_includes/, src/assets/, lib/"]
   end
 
   subgraph actions["GitHub Actions"]
-    prcheck["PR check<br/>tests + build,<br/>links, HTML, axe"]
-    deploy["Build and deploy<br/>on merge<br/>(weather → build → deploy)"]
-    airspace["Update airspace<br/>1st of each month → PR"]
-    obstacles["Update power lines<br/>and obstacles<br/>2nd of each month → PR"]
-    dataworker["Data service deploy<br/>(workers/data)"]
-    scan["Code scanning<br/>CodeQL"]
+    prcheck["PR-sjekk<br/>tester + bygg,<br/>lenker, HTML, axe"]
+    deploy["Bygg og publiser<br/>ved merge<br/>(vær → bygg → publiser)"]
+    airspace["Oppdater luftrom<br/>den 1. hver måned → PR"]
+    obstacles["Oppdater kraftlinjer<br/>og hindre<br/>den 2. hver måned → PR"]
+    dataworker["Publisering av datatjenesten<br/>(workers/data)"]
+    scan["Kodeskanning<br/>CodeQL"]
   end
 
-  subgraph ext["External sources"]
-    met["MET Locationforecast<br/>(wind forecast)"]
-    kv["Kartverket elevation data<br/>(walking routes)"]
-    oaip["openAIP<br/>(airspace)"]
-    nve["NVE<br/>(power lines, masts,<br/>wind turbines)"]
-    osm["OpenStreetMap / Overpass<br/>(low voltage, lifts, masts)"]
+  subgraph ext["Eksterne kilder"]
+    met["MET Locationforecast<br/>(vindvarsel)"]
+    kv["Kartverkets høydedata<br/>(gangruter)"]
+    oaip["openAIP<br/>(luftrom)"]
+    nve["NVE<br/>(kraftlinjer, master,<br/>vindturbiner)"]
+    osm["OpenStreetMap / Overpass<br/>(lavspent, heiser, master)"]
   end
 
   subgraph cf["Cloudflare (data.hpgt.com)"]
-    worker["Data service<br/>forecast, stations, winds aloft,<br/>verification, flights, live,<br/>«Meld fra» → GitHub issues"]
+    worker["Datatjenesten<br/>varsel, stasjoner, høydevind,<br/>treffsikkerhet, turer, live,<br/>«Meld fra» → GitHub-saker"]
   end
 
   pages["Cloudflare (Worker flysteder)<br/>flysteder.hpgt.com"]
 
-  subgraph browser["The browser"]
-    ui["Home page and site pages<br/>Leaflet map, filters,<br/>wind assessment"]
+  subgraph browser["Nettleseren"]
+    ui["Forside og stedssider<br/>Leaflet-kart, filtre,<br/>vindvurdering"]
   end
 
-  subgraph runtime["Fetched by the browser"]
-    tiles["Map tiles<br/>Kartverket, høydedata.no, OpenTopoMap,<br/>EOX Sentinel-2, kk7 thermals"]
-    yr["Yr meteogram"]
-    gc["GoatCounter<br/>(anonymous statistics)"]
+  subgraph runtime["Hentes av nettleseren"]
+    tiles["Kartfliser<br/>Kartverket, høydedata.no, OpenTopoMap,<br/>EOX Sentinel-2, kk7-termikk"]
+    yr["Yr-meteogram"]
+    gc["GoatCounter<br/>(anonym statistikk)"]
   end
 
   sites & data & cache & code --> deploy
   sites & code --> prcheck
   met --> deploy
-  kv -. "new GPX" .-> cache
+  kv -. "ny GPX" .-> cache
   oaip --> airspace --> cache
   nve & osm --> obstacles --> cache
   code --> dataworker --> worker
@@ -66,40 +66,45 @@ flowchart LR
   ui <--> worker
 ```
 
-- **Content is files.** Each site is one folder. Changes go through a pull request, and the PR check stops invalid
-  site files before they go live.
-- **Automatic imports never write to the site files**, only to `src/_data/cache/`. Airspace arrives as a separate PR
-  that is reviewed.
-- **Fresh data from the data service.** The pages read the forecast, stations, winds aloft, flying activity and
-  pilots in the air from the Cloudflare Worker after loading, and post «Meld fra» to it. See [Data modules](#data-modules).
-- **No secrets in the browser.** `OPENAIP_API_KEY` is used only in the workflow; the data service's keys (`HOLFUY_KEY`,
-  `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`) are Cloudflare secrets, never in the repository or the pages.
+Innholdet ligger i repoet og bygges av GitHub Actions, som publiserer til Cloudflare. Luftrom og kraftlinjer hentes
+månedlig til mellomlageret som en PR. Nettleseren henter ferske data fra datatjenesten og kartfliser, Yr og statistikk
+direkte fra tjenestene.
 
-## The build
+- **Innholdet er filer.** Hvert flysted er én mappe. Endringer går via en pull request, og PR-sjekken stopper
+  ugyldige stedsfiler før de blir publisert.
+- **Automatiske importer skriver aldri til stedsfilene**, bare til `src/_data/cache/`. Luftrom kommer som en egen PR
+  som gjennomgås.
+- **Ferske data fra datatjenesten.** Sidene leser varselet, stasjonene, høydevinden, flyaktiviteten og piloter i
+  lufta fra Cloudflare-Workeren etter lasting, og sender «Meld fra» dit. Se [Datamoduler](#datamoduler).
+- **Ingen hemmeligheter i nettleseren.** `OPENAIP_API_KEY` brukes bare i arbeidsflyten. Nøklene til datatjenesten
+  (`HOLFUY_KEY`, `FROST_CLIENT_ID`, `TURNSTILE_SECRET`, `REPORTS_APP_*`) er hemmeligheter i Cloudflare, aldri i repoet
+  eller på sidene.
 
-Eleventy reads the data in a fixed order (the data cascade) and generates one HTML page per page and language.
+## Bygget
+
+Eleventy leser dataene i en fast rekkefølge (data cascade) og lager én HTML-side per side og språk.
 
 ```mermaid
 flowchart TB
-  subgraph global["Shared data (src/_data/)"]
-    lang["languages.js<br/>nb, en (prefix, URLs)"]
-    i18n["i18n.js ← src/_i18n/nb.json, en.json<br/>(Norwegian as fallback)"]
-    fc["forecast.js, windgram.js<br/>read .cache/weather/<br/>(lib/weather/)"]
+  subgraph global["Felles data (src/_data/)"]
+    lang["languages.js<br/>nb, en (prefiks, URL-er)"]
+    i18n["i18n.js ← src/_i18n/nb.json, en.json<br/>(norsk som reserve)"]
+    fc["forecast.js, windgram.js<br/>leser .cache/weather/<br/>(lib/weather/)"]
     rules["windRules.json, towers.json,<br/>site.js, photoCredit.json"]
-    comp["eleventyComputed.js<br/>lang and t (the dictionary) per page"]
+    comp["eleventyComputed.js<br/>lang og t (ordboken) per side"]
   end
 
-  subgraph site["Per site and language (sites.11tydata.js)"]
-    pag["Pagination over languages<br/>/flysteder/&lt;id&gt;/ and /en/sites/&lt;id&gt;/"]
-    derived["derived:<br/>walking routes (lib/gpx.js + Kartverket)<br/>images (lib/images.js)<br/>airspace (lib/airspace.js + cache)<br/>translation (lib/translations.js)<br/>last changed (lib/git.js)"]
+  subgraph site["Per sted og språk (sites.11tydata.js)"]
+    pag["Paginering over språkene<br/>/flysteder/&lt;id&gt;/ og /en/sites/&lt;id&gt;/"]
+    derived["avledet:<br/>gangruter (lib/gpx.js + Kartverket)<br/>bilder (lib/images.js)<br/>luftrom (lib/airspace.js + mellomlager)<br/>oversettelse (lib/translations.js)<br/>sist endret (lib/git.js)"]
   end
 
-  valid["The «sites» collection<br/>validation (lib/validation.js)<br/>the build stops on errors"]
+  valid["Samlingen «sites»<br/>validering (lib/validation.js)<br/>bygget stopper ved feil"]
 
-  subgraph out["Pages and files in _site/"]
-    home["/ and /en/<br/>home page"]
-    sitepg["site pages"]
-    towers["/tarn/ and /en/towers/"]
+  subgraph out["Sider og filer i _site/"]
+    home["/ og /en/<br/>forsiden"]
+    sitepg["stedssider"]
+    towers["/tarn/ og /en/towers/"]
     status["/status/<br/>(lib/status.js)"]
     exp["flysteder.geojson / .kml<br/>(lib/export.js)"]
     seo["sitemap.xml, robots.txt, 404"]
@@ -110,111 +115,118 @@ flowchart TB
   global --> towers
 ```
 
-| Part | Where | What it does |
+De felles dataene og hvert sted (per språk) går gjennom valideringen. Fra den gyldige samlingen lages forsiden,
+stedssidene, statussiden, de åpne datafilene og sitemap. Tårnsiden lages rett fra de felles dataene.
+
+| Del | Hvor | Hva den gjør |
 |---|---|---|
-| Site data | `src/sites/<id>/index.md` | Front matter (structured data) and Markdown text. See [site-files.md](site-files.md). |
-| Validation | `lib/validation.js` | Unknown keys, invalid directions, levels and categories, wrongly named images, missing walking routes. Errors stop the build. |
-| Walking routes | `lib/gpx.js` | Length, elevation gain, moving time and elevation profile. Heights from Kartverket, cached per file in `src/_data/cache/elevations/`. |
-| Images | `lib/images.js`, `lib/site-images.js` | WebP/JPEG at 400–2400 px without metadata, with photographer and licence embedded. Images are found by file name. |
-| Airspace | `lib/airspace.js`, `lib/airspace-profile.js`, `scripts/update-airspace.mjs` | openAIP per launch, the "ceiling" above the launch and its height profile, notes from the site file. The map layer uses `region.geojson`. |
-| Power lines and obstacles | `lib/obstacles.js`, `scripts/update-obstacles.mjs` | NVE's overhead power lines and wind turbines, and OpenStreetMap's low-voltage lines, lifts and masts, in the region 25 km around the sites (NVE's masts only within 1.5 km of each site), as tiles of 0.25° × 0.5° with an index. Copied to `/assets/obstacles/` for the map layer; nothing is computed at build time. |
-| Winds aloft | `lib/windgram.js`, `lib/weather/open-meteo.js` | The grid for «Vind over starten»: wind every 250 m, boundary layer, cloud base, clouds, rain, sun and gusts per hour. |
-| What's new | `src/_data/news.json`, `src/nytt.njk` | «Nytt på siden» (`/nytt/`): new features in both languages, and the plan with links to the issues. |
-| Weather | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | Five days of wind and precipitation per launch from MET (every hour for about 2½ days with gusts, then every 6 hours without), and winds aloft from Open-Meteo. Read from `.cache/weather/`, see [Data modules](#data-modules). If one site fails, only that site is missing. |
-| Languages | `lib/i18n.js`, `lib/translations.js` | Dictionaries, URLs per language and translated site text. See below. |
-| Status | `lib/status.js` | What is missing per site, for `/status/`. |
-| Open data | `lib/export.js` | GeoJSON and KML with launches, landings, parking and walking routes (CC BY 4.0). |
+| Stedsdata | `src/sites/<id>/index.md` | Front matter (strukturerte data) og Markdown-tekst. Se [site-files.md](site-files.md). |
+| Validering | `lib/validation.js` | Ukjente nøkler, ugyldige retninger, nivåer og kategorier, feil navngitte bilder, manglende gangruter. Feil stopper bygget. |
+| Gangruter | `lib/gpx.js` | Lengde, stigning, tid i bevegelse og høydeprofil. Høyder fra Kartverket, mellomlagret per fil i `src/_data/cache/elevations/`. |
+| Bilder | `lib/images.js`, `lib/site-images.js` | WebP/JPEG i 400–2400 px uten metadata, med fotograf og lisens innebygd. Bildene finnes ut fra filnavnet. |
+| Luftrom | `lib/airspace.js`, `lib/airspace-profile.js`, `scripts/update-airspace.mjs` | openAIP per start, «taket» over starten og høydeprofilen, merknader fra stedsfilen. Kartlaget bruker `region.geojson`. |
+| Kraftlinjer og hindre | `lib/obstacles.js`, `scripts/update-obstacles.mjs` | NVEs luftledninger og vindturbiner, og lavspentlinjer, heiser og master fra OpenStreetMap, i området 25 km rundt stedene (NVEs master bare innenfor 1,5 km fra hvert sted), som fliser på 0,25° × 0,5° med en indeks. Kopieres til `/assets/obstacles/` for kartlaget; ingenting beregnes i bygget. |
+| Høydevind | `lib/windgram.js`, `lib/weather/open-meteo.js` | Rutenettet til «Vind over starten»: vind for hver 250 m, grenselag, skybase, skyer, regn, sol og vindkast per time. |
+| Nytt på siden | `src/_data/news.json`, `src/nytt.njk` | «Nytt på siden» (`/nytt/`): nye funksjoner på begge språk, og planen med lenker til sakene. |
+| Vær | `lib/weather/`, `src/_data/forecast.js`, `src/_data/windgram.js` | Fem døgn med vind og nedbør per start fra MET (hver time i omtrent 2½ døgn med vindkast, deretter hver 6. time uten), og høydevind fra Open-Meteo. Leses fra `.cache/weather/`, se [Datamoduler](#datamoduler). Feiler ett sted, mangler bare det stedet. |
+| Språk | `lib/i18n.js`, `lib/translations.js` | Ordbøker, URL-er per språk og oversatt stedstekst. Se under. |
+| Status | `lib/status.js` | Hva som mangler per sted, til `/status/`. |
+| Åpne data | `lib/export.js` | GeoJSON og KML med starter, landinger, parkering og gangruter (CC BY 4.0). |
 
-## In the browser
+## I nettleseren
 
-The pages work without JavaScript for the essentials (text, images, links). The scripts add maps, filters and the
-wind assessment. The data is embedded in the page as JSON (`<script type="application/json">`), so the scripts do not
-need to fetch anything from the site themselves.
+Sidene virker uten JavaScript for det viktigste (tekst, bilder, lenker). Skriptene legger til kart, filtre og
+vindvurderingen. Dataene ligger i siden som JSON (`<script type="application/json">`), så skriptene trenger ikke selv
+hente noe fra siden.
 
 ```mermaid
 flowchart LR
-  subgraph page["HTML from the build"]
-    j1["#i18n-data<br/>text for the language"]
-    j2["#sites-data / #site-data<br/>sites, directions, routes"]
-    j3["#forecast-data / #site-wind-data<br/>forecast and rules"]
+  subgraph page["HTML fra bygget"]
+    j1["#i18n-data<br/>tekst for språket"]
+    j2["#sites-data / #site-data<br/>steder, retninger, ruter"]
+    j3["#forecast-data / #site-wind-data<br/>varsel og regler"]
   end
 
-  common["common.js<br/>FS.t(), maps and map layers,<br/>wind roses, airspace, power lines,<br/>radar, colour mode, statistics"]
-  assets["/assets/airspace.geojson<br/>/assets/obstacles/ (tiles)<br/>(loaded when a layer is turned on;<br/>the tiles in view from zoom 10)"]
+  common["common.js<br/>FS.t(), kart og kartlag,<br/>vindroser, luftrom, kraftlinjer,<br/>radar, fargemodus, statistikk"]
+  assets["/assets/airspace.geojson<br/>/assets/obstacles/ (fliser)<br/>(lastes når et lag slås på;<br/>flisene i utsnittet fra zoom 10)"]
   wind["wind.js<br/>rateWind(): Kan passe / Usikkert /<br/>For mye vind / Passer ikke"]
-  home["home.js<br/>home page: search, filters,<br/>card, summary"]
-  site["site.js<br/>site map, direction arcs,<br/>elevation profile"]
-  sitewind["site-wind.js<br/>«Vinden nå – kan det passe?» on the site page"]
-  stations["stations.js<br/>weather stations: map layer, rows,<br/>cards, charts, rating"]
-  weather["weather.js<br/>the weather page /vaer/"]
-  data["data service<br/>data.hpgt.com<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live, grid (.json),<br/>POST /v1/report"]
-  live["live.js<br/>«Piloter i lufta» map layer"]
-  forecastlayer["forecast-layer.js<br/>«Prognose» map layers: thermals,<br/>top and cloud base, wind barbs,<br/>temperature, low cloud and rain"]
+  home["home.js<br/>forsiden: søk, filtre,<br/>kort, oppsummering"]
+  site["site.js<br/>stedskart, retningsbuer,<br/>høydeprofil"]
+  sitewind["site-wind.js<br/>«Vinden nå – kan det passe?» på stedssiden"]
+  stations["stations.js<br/>værstasjoner: kartlag, rader,<br/>kort, grafer, vurdering"]
+  weather["weather.js<br/>værsiden /vaer/"]
+  data["datatjenesten<br/>data.hpgt.com<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live, grid (.json),<br/>POST /v1/report"]
+  live["live.js<br/>kartlaget «Piloter i lufta»"]
+  forecastlayer["forecast-layer.js<br/>kartlagene «Prognose»: termikk,<br/>topp og skybase, vindpiler,<br/>temperatur, lave skyer og regn"]
   windgram["windgram.js<br/>«Vind over starten»"]
-  flights["flights.js, activity.js<br/>flying activity: site page,<br/>/flyaktivitet/"]
-  report["report.js<br/>«Meld fra» form"]
-  lightbox["lightbox.js<br/>image viewer"]
-  goat["goatcounter.js<br/>(copy, CSP allows only own scripts)"]
-  pwa["pwa.js<br/>registers the service worker,<br/>«Du er offline» notice"]
-  sw["sw.js (service worker)<br/>pages, files, GPX and<br/>Kartverket tiles offline"]
+  flights["flights.js, activity.js<br/>flyaktivitet: stedssiden,<br/>/flyaktivitet/"]
+  report["report.js<br/>skjemaet «Meld fra»"]
+  lightbox["lightbox.js<br/>bildeviser"]
+  goat["goatcounter.js<br/>(kopi, CSP tillater bare egne skript)"]
+  pwa["pwa.js<br/>registrerer service workeren,<br/>merknaden «Du er offline»"]
+  sw["sw.js (service worker)<br/>sider, filer, GPX og<br/>Kartverket-fliser offline"]
 
   j1 --> common
   assets --> common
   common --> home & site & sitewind & lightbox
   j2 --> home & site
   j3 --> wind --> home & sitewind
-  data -- "fetch every minute" --> stations --> home & site & sitewind & weather
+  data -- "henter hvert minutt" --> stations --> home & site & sitewind & weather
   data --> live & windgram & flights
-  data -- "when a layer is turned on" --> forecastlayer
-  home -- "the time in the timeline" --> forecastlayer
+  data -- "når et lag slås på" --> forecastlayer
+  home -- "tidspunktet i tidslinjen" --> forecastlayer
   report -- "POST /v1/report" --> data
   common -- "FS.track()" --> goat
   common --> pwa --> sw
 ```
 
-- **The wind assessment** (`wind.js`) is pure logic without DOM access and is tested in `test/wind.test.js`. The rules
-  are in `src/_data/windRules.json`. It returns both text and codes (`gust`, `rain`, `overSiteLimit` …), so the home
-  page can count reasons independently of language. The ratings are «Kan passe» ("May work"), «Usikkert»
-  ("Uncertain"), «For mye vind» ("Too much wind") and «Passer ikke» ("Not suitable"). It never says «OK å fly»
-  ("OK to fly").
-- **Weather stations** (`stations.js`): the checks, texts and calculations (change over a period, how even the wind
-  is, the forecast for a site from this hour, the temperature range) are plain functions tested in
-  `test/stations.test.js`; the drawing uses DOM methods only, so nothing from the data is read as HTML. One fetch loop per
-  address is shared by everything on a page. The assessment for the hour now with a measurement (`rateNow` in wind.js)
-  is tested in `test/wind.test.js`.
-- **Category and direction are linked:** with SPG selected, the directions of the launches marked SPG are used
-  (`categoryDirections` in `lib/format.js`), in the filter, the rose and the assessment.
-- **Offline and app:** the site can be installed from the browser (`/manifest.webmanifest`, one per language). The
-  service worker (`/sw.js`, made by `src/sw.11ty.js` from `lib/service-worker.js` and `lib/pwa.js`) stores the pages
-  the visitor opens, the site's own files, GPX files and the Kartverket map tiles that have been shown (at most 300),
-  so a site checked at home also works on the mountain. Pages are fetched from the network first, so the forecast is
-  fresh when there is coverage. The pages, files and tiles are kept across deploys: CSS and JS carry their content hash
-  in the URL, and when a new service worker takes over it keeps the old versions a stored page still uses and removes
-  the rest (`referencedAssets` and `staticToKeep` in `lib/pwa.js`), so a site stored before a deploy still works
-  offline after it. Nothing is downloaded in advance beyond the front pages, the offline pages and the scripts.
-- **Speed:** Leaflet is loaded only on the pages with a map (`map: true` in the front matter: the home page and the
-  site pages). On the site page the map and the elevation profile are set up when they come near the screen
-  (`IntersectionObserver` in `site.js`), so the map tiles are only fetched when they are needed. The map's first view is
-  the fitted one (`fitWhenVisible` in `common.js`), not a temporary view first. On mobile the home page map keeps its
-  size while the page scrolls, and only its frame gets lower, so Leaflet does not redraw it. The scripts are loaded with
-  `defer` (in order, after the page is parsed), and OpenTopoMap below Kartverket's map (for the world outside Norway) is
-  added only once Kartverket's first tiles have loaded, so its slower tiles do not hold up the first view (`withUnderlay`
-  in `common.js`). Three font files, all preloaded. The home page opens the connections to the tile servers early (`preconnect` in the front matter). The
-  site page keeps space for «Vinden nå – kan det passe?» until `site-wind.js` has filled it in, so the boxes below do not jump.
-- **Security:** the Content-Security-Policy in `base.njk` allows scripts only from the site itself (and Cloudflare
-  Turnstile for «Meld fra om endring»), and images and
-  data only from the sources above. A new external source must be added there. See [SECURITY.md](../SECURITY.md).
+Dataene i HTML-en leses av `common.js`, `wind.js` og skriptene for forsiden og stedssiden. Stasjoner, høydevind,
+turer, piloter i lufta og prognoselagene hentes fra datatjenesten, og «Meld fra» sendes dit. Statistikk går til
+GoatCounter, og service workeren gjør sidene tilgjengelige offline.
 
-## Languages
+- **Vindvurderingen** (`wind.js`) er ren logikk uten DOM-tilgang og testes i `test/wind.test.js`. Reglene ligger i
+  `src/_data/windRules.json`. Den returnerer både tekst og koder (`gust`, `rain`, `overSiteLimit` …), så forsiden kan
+  telle årsaker uavhengig av språk. Vurderingene er «Kan passe», «Usikkert», «For mye vind» og «Passer ikke». Den sier
+  aldri «OK å fly».
+- **Værstasjoner** (`stations.js`): kontrollene, tekstene og beregningene (endring over en periode, hvor jevn vinden
+  er, varselet for et sted fra denne timen, temperaturspennet) er rene funksjoner som testes i
+  `test/stations.test.js`. Tegningen bruker bare DOM-metoder, så ingenting fra dataene leses som HTML. Én hentesløyfe
+  per adresse deles av alt på en side. Vurderingen av timen nå med en måling (`rateNow` i wind.js) testes i
+  `test/wind.test.js`.
+- **Kategori og retning henger sammen:** med SPG valgt brukes retningene til startene som er merket SPG
+  (`categoryDirections` i `lib/format.js`), i filteret, rosen og vurderingen.
+- **Offline og app:** siden kan installeres fra nettleseren (`/manifest.webmanifest`, én per språk). Service workeren
+  (`/sw.js`, laget av `src/sw.11ty.js` fra `lib/service-worker.js` og `lib/pwa.js`) lagrer sidene den besøkende åpner,
+  sidens egne filer, GPX-filer og Kartverket-flisene som er vist (høyst 300), så et sted som er sjekket hjemme, også
+  virker på fjellet. Sider hentes fra nettet først, så varselet er ferskt når det er dekning. Sidene, filene og
+  flisene beholdes på tvers av publiseringer: CSS og JS har innholdshashen i URL-en, og når en ny service worker tar
+  over, beholder den de gamle versjonene som en lagret side fortsatt bruker, og fjerner resten (`referencedAssets` og
+  `staticToKeep` i `lib/pwa.js`). Et sted som er lagret før en publisering, virker derfor offline også etterpå.
+  Ingenting lastes ned på forhånd utover forsidene, offline-sidene og skriptene.
+- **Hastighet:** Leaflet lastes bare på sidene med kart (`map: true` i front matter: forsiden og stedssidene). På
+  stedssiden settes kartet og høydeprofilen opp når de nærmer seg skjermen (`IntersectionObserver` i `site.js`), så
+  kartflisene bare hentes når de trengs. Kartets første visning er den tilpassede (`fitWhenVisible` i `common.js`),
+  ikke en midlertidig visning først. På mobil beholder forsidekartet størrelsen mens siden ruller, og bare rammen blir
+  lavere, så Leaflet ikke tegner det på nytt. Skriptene lastes med `defer` (i rekkefølge, etter at siden er lest inn),
+  og OpenTopoMap under Kartverkets kart (for verden utenfor Norge) legges til først når Kartverkets første fliser er
+  lastet, så de tregere flisene ikke holder igjen den første visningen (`withUnderlay` i `common.js`). Tre
+  fontfiler, alle forhåndslastet. Forsiden åpner forbindelsene til flisserverne tidlig (`preconnect` i front matter).
+  Stedssiden holder av plass til «Vinden nå – kan det passe?» til `site-wind.js` har fylt den ut, så boksene under
+  ikke hopper.
+- **Sikkerhet:** Content-Security-Policy i `base.njk` tillater skript bare fra siden selv (og Cloudflare Turnstile for
+  «Meld fra om endring»), og bilder og data bare fra kildene over. En ny ekstern kilde må legges inn der. Se
+  [SECURITY.md](../SECURITY.md).
+
+## Språk
 
 ```mermaid
 flowchart LR
-  langs["src/_data/languages.js<br/>code, name, prefix, slugs"]
+  langs["src/_data/languages.js<br/>kode, navn, prefiks, slugs"]
   dicts["src/_i18n/nb.json<br/>src/_i18n/en.json"]
   lib["lib/i18n.js<br/>dict(), t(), fmt(), localeUrl()"]
-  tr["index.en.md per site<br/>(lib/translations.js)"]
-  tpl["Templates: t.site.map,<br/>| fmt, | localeUrl"]
-  js["Scripts: FS.t('home.seeSite')"]
+  tr["index.en.md per sted<br/>(lib/translations.js)"]
+  tpl["Maler: t.site.map,<br/>| fmt, | localeUrl"]
+  js["Skript: FS.t('home.seeSite')"]
   pages["/flysteder/elgen/<br/>/en/sites/elgen/"]
 
   langs --> lib
@@ -223,182 +235,197 @@ flowchart LR
   tpl --> pages
 ```
 
-- **Norwegian is the main language** and has no prefix. Other languages live under their own prefix (`/en/`), with
-  their own URL names (`slugs`: `flysteder` → `sites`, `tarn` → `towers`). `localeUrl` translates URLs both ways and
-  is used by the language switcher in the menu, hreflang and the sitemap.
-- **Fixed text** (menu, filters, headings, script messages) lives in the dictionaries. Anything missing in a language
-  falls back to `nb.json`. `test/i18n.test.js` checks that every lookup in templates and scripts exists.
-- **Site text** is translated in `index.<language>.md` next to `index.md`. Text only: coordinates, level and
-  directions always come from `index.md`. If the translation is missing, the Norwegian text is shown with a notice.
-  The status page lists sites without a translation, and translations older than the Norwegian text.
-- **New language:** see [operations.md](operations.md#adding-a-language).
+Språkene og ordbøkene leses av `lib/i18n.js`, som gir tekst til malene og skriptene. Malene tar i tillegg med den
+oversatte stedsteksten og lager én side per språk.
 
-## Publishing and workflow
+- **Norsk er hovedspråket** og har ikke noe prefiks. Andre språk ligger under eget prefiks (`/en/`), med egne
+  URL-navn (`slugs`: `flysteder` → `sites`, `tarn` → `towers`). `localeUrl` oversetter URL-er begge veier og brukes av
+  språkvelgeren i menyen, hreflang og sitemap.
+- **Fast tekst** (meny, filtre, overskrifter, meldinger i skriptene) ligger i ordbøkene. Det som mangler i et språk,
+  hentes fra `nb.json`. `test/i18n.test.js` sjekker at alle oppslag i maler og skript finnes.
+- **Stedstekst** oversettes i `index.<språk>.md` ved siden av `index.md`. Bare tekst: koordinater, nivå og retninger
+  kommer alltid fra `index.md`. Mangler oversettelsen, vises den norske teksten med en merknad. Statussiden viser steder
+  uten oversettelse, og oversettelser som er eldre enn den norske teksten.
+- **Nytt språk:** se [operations.md](operations.md#nytt-språk).
+
+## Publisering og arbeidsflyt
 
 ```mermaid
 sequenceDiagram
-  participant Dev as Contributor / Claude
+  participant Dev as Bidragsyter / kodeagent
   participant PR as Pull request
-  participant CI as PR check
+  participant CI as PR-sjekk
   participant Main as main
-  participant Deploy as Build and deploy
+  participant Deploy as Bygg og publiser
   participant CF as Cloudflare (Worker flysteder)
-  participant Pages as GitHub Pages (fallback)
+  participant Pages as GitHub Pages (reserve)
 
-  Dev->>PR: branch + change
+  Dev->>PR: gren + endring
   PR->>CI: npm test, npm run build
-  CI-->>PR: green / red
+  CI-->>PR: grønn / rød
   PR->>Main: merge
-  Main->>Deploy: push to main
-  Deploy->>CF: _site/ is published (job cloudflare)
-  Deploy->>Pages: the same archive, as a fallback
+  Main->>Deploy: push til main
+  Deploy->>CF: _site/ publiseres (jobben cloudflare)
+  Deploy->>Pages: det samme arkivet, som reserve
 ```
 
-| Workflow | When | What |
+En endring går fra en gren via en pull request og PR-sjekken til `main`. En push til `main` starter «Build and
+deploy», som publiserer det samme arkivet til Cloudflare og til GitHub Pages som reserve.
+
+| Arbeidsflyt | Når | Hva |
 |---|---|---|
-| `pr-check.yml` | Every PR | Tests, build, link check, HTML validation and the check for template slips such as «[object Object]» (`build`), axe in Chromium on a few pages (`accessibility`), dependency review (packages with known vulnerabilities) and zizmor (workflow security). |
-| `deploy.yml` | Push to `main`, manually | Five jobs: `weather` fetches MET and Open-Meteo, `build` builds with that weather and the full Git history (for «Sist endret», "Last changed") and stops if a page has a template slip such as «[object Object]», `cloudflare` publishes to Cloudflare (flysteder.hpgt.com) with the token in the environment `cloudflare`, `deploy` publishes the same archive to GitHub Pages as a fallback, and `attest` signs build provenance and an SBOM for that archive (see [SECURITY.md](../SECURITY.md#verifying-a-publish)). |
-| `data-worker.yml` | Push to `main` when the data service, the MET code or the sites change, manually | Publishes the data service (`workers/data`) to Cloudflare Workers, with the token in the environment `cloudflare` (only `main`). |
-| `airspace.yml` | The 1st of each month, manually | Fetches airspace from openAIP and opens a PR if anything has changed. |
-| `obstacles.yml` | The 2nd of each month, manually | Fetches power lines and obstacles from NVE and OpenStreetMap and opens a PR if anything has changed. No secrets. |
-| `code-scanning.yml` | PR, push, Mondays | CodeQL (security issues in the code). |
-| `health.yml` | Every hour, manually | Checks the data service from outside (`/v1/status.json`) and opens an issue when a dataset is too old or the service does not answer; closes it when all is well again. |
-| `scorecard.yml` | Push to `main`, Mondays, branch protection changes | OpenSSF Scorecard (supply-chain good practice). Results in Code scanning and behind the README badge. |
-| `backup.yml` | Every night at 03:30 UTC, manually | Copies the whole archive bucket in R2 to Backblaze B2, checks the copy, and saves the issues (nightly) and the Git history (Sundays). Environment `backup`. |
-| `restore-drill.yml` | The 1st of each month, manually | Proves that the copy in B2 can be restored: runs the data service locally on the runner and checks that it reads every row back in. Touches nothing in Cloudflare. |
-| `recover.yml` | Manually only | Disaster recovery: writes the archive back to R2, publishes the data service and checks the restore. Environment `recovery` (required reviewer, normally no token). |
-| `browser-cache.yml` | `package-lock.json` changes on `main`, manually | Fills the Playwright browser cache that the PR check's accessibility job uses. No secrets. |
-| `dependabot-automerge.yml` | Dependabot PRs | Turns on auto-merge for patch and minor updates of npm packages and Actions (not Wrangler), with a token from the GitHub App, so the merge starts the publishing. |
-| Dependabot | Monthly | PRs with updated packages and Actions, 7 days after a release (30 for major). |
+| `pr-check.yml` | Hver PR | Tester, ESLint, bygg, lenkesjekk, HTML-validering og sjekken for malfeil som «[object Object]» (`build`); axe, atferdstester og ytelsesbudsjettet i Chromium på noen sider (`accessibility`); tørrkjøring av publiseringen av datatjenesten (`worker`); avhengighetsgjennomgang (pakker med kjente sårbarheter, `dependency-review`) og zizmor (sikkerhet i arbeidsflytene, `workflow-security`). |
+| `deploy.yml` | Push til `main`, manuelt | `weather` henter MET og Open-Meteo, `build` bygger med det været og hele Git-historikken (for «Sist endret») og stopper hvis en side har en malfeil som «[object Object]», `cloudflare` publiserer til Cloudflare (flysteder.hpgt.com) med tokenet i miljøet `cloudflare`, `deploy` publiserer det samme arkivet til GitHub Pages som reserve, og `attest` signerer byggeprovenance og en SBOM for arkivet (se [SECURITY.md](../SECURITY.md#verifying-a-publish)). `alert` åpner en sak når en jobb feiler. |
+| `data-worker.yml` | Push til `main` når datatjenesten, MET-koden eller stedene endres, manuelt | Publiserer datatjenesten (`workers/data`) til Cloudflare Workers, med tokenet i miljøet `cloudflare` (bare `main`). Ruller tilbake til forrige versjon hvis den nye ikke kjører, og åpner en sak når jobben feiler. |
+| `airspace.yml` | Den 1. hver måned, manuelt | Henter luftrom fra openAIP og åpner en PR hvis noe er endret. |
+| `obstacles.yml` | Den 2. hver måned, manuelt | Henter kraftlinjer og hindre fra NVE og OpenStreetMap og åpner en PR hvis noe er endret. Ingen hemmeligheter. |
+| `code-scanning.yml` | PR, push, mandager | CodeQL (sikkerhetsfeil i koden). |
+| `health.yml` | Hver time, manuelt | Sjekker datatjenesten utenfra (`/v1/status.json`) og åpner en sak når et datasett er for gammelt eller tjenesten ikke svarer, og lukker den når alt er i orden igjen. |
+| `scorecard.yml` | Push til `main`, mandager, endringer i grenbeskyttelsen | OpenSSF Scorecard (god praksis for forsyningskjeden). Resultatene ligger i Code scanning og bak merket i README. |
+| `zap.yml` | Den 3. hver måned, manuelt, PR som endrer filen | Passiv sikkerhetsskanning av den publiserte siden med OWASP ZAP (baseline). Rapporten er en artefakt på kjøringen. Ingen saker og ingen token. |
+| `backup.yml` | Hver natt kl. 03.30 UTC, manuelt | Kopierer hele arkivbøtta i R2 til Backblaze B2, kontrollerer kopien, og lagrer sakene (hver natt) og Git-historikken (søndager). Miljøet `backup`. |
+| `restore-drill.yml` | Den 1. hver måned, manuelt | Viser at kopien i B2 kan gjenopprettes: kjører datatjenesten lokalt på runneren og sjekker at den leser inn igjen hver rad. Rører ingenting i Cloudflare. |
+| `recover.yml` | Bare manuelt | Katastrofegjenoppretting: skriver arkivet tilbake til R2, publiserer datatjenesten og kontrollerer gjenopprettingen. Miljøet `recovery` (påkrevd godkjenner, vanligvis uten token). |
+| `browser-cache.yml` | Endringer i `package-lock.json` på `main`, manuelt | Fyller Playwright-nettleserens mellomlager som PR-sjekkens jobb `accessibility` bruker. Ingen hemmeligheter. |
+| `dependabot-automerge.yml` | PR-er fra Dependabot | Slår på automatisk merge for patch- og minor-oppdateringer av npm-pakker og Actions (ikke Wrangler), med et token fra GitHub-appen, så merge starter publiseringen. |
+| Dependabot | Månedlig | PR-er med oppdaterte pakker og Actions, 7 dager etter en utgivelse (30 for major). |
 
-## Data modules
+## Datamoduler
 
-External data is split into modules. Each module has one job: fetch from its source, write files in a fixed format,
-and let the site read the files. The templates never fetch anything themselves, so a module can change how or where
-it fetches (a workflow today, a backend later) without the site noticing.
+Eksterne data er delt i moduler. Hver modul har én oppgave: hente fra kilden, skrive filer i et fast format, og la
+siden lese filene. Malene henter aldri noe selv, så en modul kan endre hvordan eller hvor den henter, uten at siden
+merker det.
 
-| Module | Source | Code | Fetched | Stored in | Read by |
+| Modul | Kilde | Kode | Hentes | Lagres i | Leses av |
 |---|---|---|---|---|---|
-| Airspace | openAIP (key) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, the 1st of each month, as a PR | `src/_data/cache/airspace/` (committed) | `sites.11tydata.js`, the map layer |
-| Weather | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | The `weather` job in `deploy.yml`, before every build | `.cache/weather/` (artifact, not committed) | `src/_data/forecast.js`, `src/_data/windgram.js` |
-| Data service: forecast | MET Locationforecast | `workers/data/src/sources/forecast.js` (the same `lib/weather/met.js`) | Every 5 minutes, 6 launches per run | Durable Object (SQLite), served as `https://data.hpgt.com/v1/forecast.json`, with what the forecast said for each of the last 6 hours as `past` (`forecast_hours`, kept 30 days) | `home.js` and `site-wind.js`, at once and every 10 minutes while the page is in view (`watchForecast` in `wind.js`); `weather.js` for «Målt mot varslet» |
-| Data service: stations | Holfuy (key `HOLFUY_KEY` in Cloudflare): wind, temperature, humidity, pressure, rain, and other values in `extra` | `workers/data/src/sources/holfuy.js`, fields in `measurements.js`, stations in `stations.js` | Every minute | Durable Object (SQLite): the last 7 days, served with the last 6 hours as `/v1/stations.json`; older days as CSV in R2 (`archive.js`, bucket `hpgt-data-archive`) | `stations.js` on the home page (map layer, Vær tab, «Nå»), the weather page and the site pages (map layer; «Målt nå» and «Vinden nå – kan det passe?» on the station's site), refetched every minute |
-| Data service: winds aloft | Open-Meteo, for the launches in `WINDGRAM_SITES` (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen) | `workers/data/src/sources/windgram.js` (the same `lib/weather/open-meteo.js` and `lib/windgram.js`) | Every 10 minutes, 2 launches per run | Durable Object (SQLite), served as `https://data.hpgt.com/v1/windgram.json` | `windgram.js` on the site page, when newer than the grid in the page (or the page has none) |
-| Data service: verification | The forecast hours and the measurements already stored | `workers/data/src/sources/verify.js`, the sites in `siteLinks()` in `stations.js` | Twice an hour (:09, :39) | Durable Object (SQLite) `verify_hours`, kept a year; the last 30 days as `https://data.hpgt.com/v1/verification.json` | «Målt nå» on the site page and «Målt mot varslet» on /vaer/ (`verifyBlock` in `stations.js`) |
-| Data service: pilots in the air | Open Glider Network (live positions of paragliders, ODbL), from OGN's APRS stream when its live map is down | `workers/data/src/live.js`, `aprs.js` | On demand, when someone has «Piloter i lufta» on, every 10 seconds; cached 10 seconds | The last 10 minutes of each track, with the climb, in the store's memory only, never written down; served as `https://data.hpgt.com/v1/live.json` | `live.js` on the home and site maps |
-| Data service: forecast grids | Open-Meteo: temperature, dew point, wind at 10 m and 925 hPa, boundary layer, low cloud, rain, sunshine | `workers/data/src/sources/grid.js`, built in the store (`Store.refreshGrid`) | `grid` (0.1 × 0.25°, around the sites) every 3 hours at :21, `grid-wide` (0.2 × 0.5°, Saltfjellet–Tromsø–Kiruna) every 6 hours at :51 | Durable Object, served as `https://data.hpgt.com/v1/grid.json` and `/v1/grid-wide.json`: the day hours (04–20 UTC) of the next days | `forecast-layer.js`: the map layers «Prognose» on the home page |
-| Data service: backup | `flight_days` and `verify_hours` in the store | `workers/data/src/backup.js`, `Store.backup` | Every night at 02:14 UTC | R2 `backup/<table>/<day>.json` and `latest.json`, 90 days; a new, empty store reads `latest.json` back in | Restoring only |
-| Data service: status | The service's own runs and datasets | `workers/data/src/health.js` | Each scheduled run records which sources ran and how it went | Durable Object state `health`, served as `https://data.hpgt.com/v1/status.json` with each dataset's age against its limit, the launches missing and the last day archived | `health.yml` every hour |
-| Data service: flying activity | Open Glider Network (as above) | `workers/data/src/sources/flights.js` | Every 2 minutes | Per site and day the flights, pilots, minutes in the air, farthest and highest (`flight_days`, kept); the day's pilots by a salted key that is thrown away the next day; served as `https://data.hpgt.com/v1/flights.json` | `flights.js` on the site page, `activity.js` on /flyaktivitet/ |
-| Data service: MET stations | MET Frost (client ID `FROST_CLIENT_ID` in Cloudflare): the stations within 50 km of a launch (Lofoten to Bardu), found once a day | `workers/data/src/sources/frost.js` | Every 10 minutes | As the Holfuy stations (source `met`), served in `/v1/stations.json` together with them (`merge.js`) | As the Holfuy stations |
-| Power lines and obstacles | NVE Nettanlegg and Vindkraft (`kart.nve.no`, NLOD), OpenStreetMap via Overpass (ODbL) | `lib/obstacles.js`, `scripts/update-obstacles.mjs` (`npm run obstacles`) | `obstacles.yml`, the 2nd of each month, as a PR | `src/_data/cache/obstacles/` (`index.json` and `tiles/<row>_<column>.geojson`, committed, one feature per line) | The map layer «Kraftlinjer og hindre» (`addObstacleLayer` in `common.js`) |
-| Heights | Kartverket elevation data | `lib/gpx.js` | During the build, only for new or changed GPX files | `src/_data/cache/elevations/` (committed) | `sites.11tydata.js` |
-| Images | The site folders | `lib/images.js`, `lib/site-images.js` | During the build | `_site/img/` (cached in CI) | The site pages |
+| Luftrom | openAIP (nøkkel) | `lib/airspace.js`, `scripts/update-airspace.mjs` (`npm run airspace`) | `airspace.yml`, den 1. hver måned, som PR | `src/_data/cache/airspace/` (committet) | `sites.11tydata.js`, kartlaget |
+| Vær | MET Locationforecast, Open-Meteo | `lib/weather/`, `scripts/fetch-weather.mjs` (`npm run weather`) | Jobben `weather` i `deploy.yml`, før hvert bygg | `.cache/weather/` (artefakt, ikke committet) | `src/_data/forecast.js`, `src/_data/windgram.js` |
+| Datatjenesten: varsel | MET Locationforecast | `workers/data/src/sources/forecast.js` (den samme `lib/weather/met.js`) | Hvert 5. minutt, 6 starter per kjøring | Durable Object (SQLite), servert som `https://data.hpgt.com/v1/forecast.json`, med det varselet sa for hver av de siste 6 timene som `past` (`forecast_hours`, beholdes 30 dager) | `home.js` og `site-wind.js`, med én gang og hvert 10. minutt mens siden er synlig (`watchForecast` i `wind.js`); `weather.js` for «Målt mot varslet» |
+| Datatjenesten: stasjoner | Holfuy (nøkkelen `HOLFUY_KEY` i Cloudflare): vind, temperatur, luftfuktighet, trykk, regn og andre verdier i `extra` | `workers/data/src/sources/holfuy.js`, feltene i `measurements.js`, stasjonene i `stations.js` | Hvert minutt | Durable Object (SQLite): de siste 7 dagene, servert med de siste 6 timene som `/v1/stations.json`; eldre dager som CSV i R2 (`archive.js`, bøtta `hpgt-data-archive`) | `stations.js` på forsiden (kartlag, Vær-fanen, «Nå»), værsiden og stedssidene (kartlag; «Målt nå» og «Vinden nå – kan det passe?» på stasjonens sted), hentes på nytt hvert minutt |
+| Datatjenesten: høydevind | Open-Meteo, for startene i `WINDGRAM_SITES` (Sollifjellet, Sætertinden, Heia, Kilhusåsen, Elgen) | `workers/data/src/sources/windgram.js` (de samme `lib/weather/open-meteo.js` og `lib/windgram.js`) | Hvert 10. minutt, 2 starter per kjøring | Durable Object (SQLite), servert som `https://data.hpgt.com/v1/windgram.json` | `windgram.js` på stedssiden, når det er nyere enn rutenettet i siden (eller siden ikke har noe) |
+| Datatjenesten: treffsikkerhet | Varseltimene og målingene som allerede er lagret | `workers/data/src/sources/verify.js`, stedene i `siteLinks()` i `stations.js` | To ganger i timen (:09, :39) | Durable Object (SQLite) `verify_hours`, beholdes et år; de siste 30 dagene som `https://data.hpgt.com/v1/verification.json` | «Målt nå» på stedssiden og «Målt mot varslet» på /vaer/ (`verifyBlock` i `stations.js`) |
+| Datatjenesten: piloter i lufta | Open Glider Network (live posisjoner for paraglidere, ODbL), fra OGNs APRS-strøm når live-kartet deres er nede | `workers/data/src/live.js`, `aprs.js` | Ved behov, når noen har «Piloter i lufta» på, hvert 10. sekund; mellomlagret 10 sekunder | De siste 10 minuttene av hvert spor, med stigningen, bare i minnet til lageret, aldri skrevet ned; servert som `https://data.hpgt.com/v1/live.json` | `live.js` på kartene på forsiden og stedssidene |
+| Datatjenesten: prognoserutenett | Open-Meteo: temperatur, duggpunkt, vind i 10 m og 925 hPa, grenselag, lave skyer, regn, solskinn | `workers/data/src/sources/grid.js`, bygget i lageret (`Store.refreshGrid`) | `grid` (0,1 × 0,25°, rundt stedene) hver 3. time kl. :21, `grid-wide` (0,2 × 0,5°, Saltfjellet–Tromsø–Kiruna) hver 6. time kl. :51 | Durable Object, servert som `https://data.hpgt.com/v1/grid.json` og `/v1/grid-wide.json`: dagtimene (04–20 UTC) for de neste dagene | `forecast-layer.js`: kartlagene «Prognose» på forsiden |
+| Datatjenesten: sikkerhetskopi | `flight_days` og `verify_hours` i lageret | `workers/data/src/backup.js`, `Store.backup` | Hver natt kl. 02.14 UTC | R2 `backup/<table>/<day>.json` og `latest.json`, 90 dager; et nytt, tomt lager leser inn igjen `latest.json` | Bare ved gjenoppretting |
+| Datatjenesten: status | Tjenestens egne kjøringer og datasett | `workers/data/src/health.js` | Hver planlagte kjøring registrerer hvilke kilder som kjørte og hvordan det gikk | Durable Object-tilstanden `health`, servert som `https://data.hpgt.com/v1/status.json` med alderen på hvert datasett mot grensen, startene som mangler og siste arkiverte dag | `health.yml` hver time |
+| Datatjenesten: flyaktivitet | Open Glider Network (som over) | `workers/data/src/sources/flights.js` | Hvert minutt | Per sted og dag turene, pilotene, minutter i lufta, lengst og høyest (`flight_days`, beholdes); dagens piloter med en saltet nøkkel som kastes neste dag; servert som `https://data.hpgt.com/v1/flights.json` | `flights.js` på stedssiden, `activity.js` på /flyaktivitet/ |
+| Datatjenesten: METs stasjoner | MET Frost (klient-ID `FROST_CLIENT_ID` i Cloudflare): stasjonene innenfor 50 km fra en start (Lofoten til Bardu), funnet én gang i døgnet | `workers/data/src/sources/frost.js` | Hvert 10. minutt | Som Holfuy-stasjonene (kilde `met`), servert i `/v1/stations.json` sammen med dem (`merge.js`) | Som Holfuy-stasjonene |
+| Kraftlinjer og hindre | NVE Nettanlegg og Vindkraft (`kart.nve.no`, NLOD), OpenStreetMap via Overpass (ODbL) | `lib/obstacles.js`, `scripts/update-obstacles.mjs` (`npm run obstacles`) | `obstacles.yml`, den 2. hver måned, som PR | `src/_data/cache/obstacles/` (`index.json` og `tiles/<row>_<column>.geojson`, committet, ett objekt per linje) | Kartlaget «Kraftlinjer og hindre» (`addObstacleLayer` i `common.js`) |
+| Høyder | Kartverkets høydedata | `lib/gpx.js` | I bygget, bare for nye eller endrede GPX-filer | `src/_data/cache/elevations/` (committet) | `sites.11tydata.js` |
+| Bilder | Stedsmappene | `lib/images.js`, `lib/site-images.js` | I bygget | `_site/img/` (mellomlagret i CI) | Stedssidene |
 
-- **Committed or not:** data that changes rarely and should be reviewed (airspace, power lines) is committed and arrives as a PR.
-  Data that is only valid for a few hours (weather) is never committed.
-- **Failure:** a module that fails leaves out its own part, not the whole site. A weather source that fails is
-  written as `null`, and the site builds without the wind assessment or winds aloft.
-- **Locally**, `npm start` fetches the weather by itself when `.cache/weather/` is missing or older than 30 minutes.
-  In CI the build only reads the files (`WEATHER_FETCH=0`), and the PR check skips the weather (`FORECAST_OFFLINE=1`).
-- **Shared code:** `lib/site-files.js` reads the front matter of all sites for the scripts.
-- **Data service** (`workers/data`): one Cloudflare Worker with one module per source in `src/sources/`. Each module
-  fetches its source, checks and converts the data, and stores the dataset. Every dataset is served the same way, as
-  `/v1/<dataset>.json`, with the same frame (`dataset`, `source`, `fetched`, and `license` where the source's terms ask for it, then the dataset's own fields),
-  and a source that fails does not stop the others. One schedule runs every minute, and each source has its own interval
-  (`src/schedule.js`: Holfuy every minute, the flying activity every 2, forecast every 5, MET's stations and winds aloft every 10, the verification every 30, on different minutes so the heavier sources never share an invocation's 10 ms of CPU; pilots in the air are fetched on demand). The store is one Durable Object with SQLite
-  (`src/store.js`): the free plan allows far more writes per day there than in KV (1000). Hot and cold: the store keeps
-  the last 7 days for the pages; older days go to the archive in R2 as one CSV per station per day, laid out for loading
-  into a database later (the station in every row, `station=…/year=…` folders), and nothing is deleted before it is
-  archived (`src/archive.js`).
-- **Forecast in the data service:** GitHub skips many scheduled runs, so the forecast built into the pages can be hours old. The
-  data service fetches MET by itself, and the pages use its forecast when it is newer and well formed (hours in order,
-  without repeats; `isNewerForecast` in `wind.js`), fetching it at once, every 10 minutes while the page is in view, and
-  when it comes back into view or online (`watchForecast`). A launch missing from it only has no assessment; the site
-  page takes it only when it has its own launch (or the page has no usable forecast). A page built without a forecast
-  gets one this way too. It also brings the assessment back when the page's forecast has become too old. The free plan
-  gives 10 ms of CPU per run, so each run fetches the 6 launches tried longest ago (a failed try counts, so launches that
-  keep failing go to the back of the queue), and the whole forecast is renewed about every half hour.
-- **Winds aloft in the data service:** the same grid as the build's, two launches every 10 minutes (each renewed about
-  every half hour, a failed try counting as for the forecast); the site page asks again every 10 minutes, leaves out a
-  grid older than 12 hours, and draws the one
-  in the page and replaces it with the service's when that is newer, so the section also works when the build has none.
-- **No scheduled builds:** both weather sources are in the data service, so `deploy.yml` has no schedule, and the site
-  is built only when the content changes. The `weather` job stays, so each build starts from a fresh forecast.
+- **Committet eller ikke:** data som endres sjelden og bør gjennomgås (luftrom, kraftlinjer), committes og kommer som
+  en PR. Data som bare gjelder noen timer (vær), committes aldri.
+- **Feil:** en modul som feiler, utelater sin egen del, ikke hele siden. En værkilde som feiler, skrives som `null`,
+  og siden bygges uten vindvurdering eller høydevind.
+- **Lokalt** henter `npm start` været selv når `.cache/weather/` mangler eller er eldre enn 30 minutter. I CI leser
+  bygget bare filene (`WEATHER_FETCH=0`), og PR-sjekken hopper over været (`FORECAST_OFFLINE=1`).
+- **Felles kode:** `lib/site-files.js` leser front matter for alle steder til skriptene.
+- **Datatjenesten** (`workers/data`): én Cloudflare Worker med én modul per kilde i `src/sources/`. Hver modul henter
+  kilden sin, kontrollerer og konverterer dataene og lagrer datasettet. Alle datasett serveres på samme måte, som
+  `/v1/<dataset>.json`, med samme ramme (`dataset`, `source`, `fetched`, og `license` der kildens vilkår krever det,
+  deretter datasettets egne felter), og en kilde som feiler, stopper ikke de andre. Én tidsplan kjører hvert minutt,
+  og hver kilde har sitt eget intervall (`src/schedule.js`: Holfuy og flyaktiviteten hvert minutt, varselet hvert 5.,
+  METs stasjoner og høydevinden hvert 10., treffsikkerheten hvert 30., på ulike minutter så de tyngste kildene aldri
+  deler de 10 ms CPU-tid en kjøring har; piloter i lufta hentes ved behov). Lageret er ett Durable Object med SQLite
+  (`src/store.js`): gratisplanen tillater langt flere skrivinger per døgn der enn i KV (1000). Varmt og kaldt: lageret
+  har de siste 7 dagene for sidene; eldre dager går til arkivet i R2 som én CSV per stasjon per dag, lagt opp for å
+  lastes inn i en database senere (stasjonen i hver rad, mappene `station=…/year=…`), og ingenting slettes før det er
+  arkivert (`src/archive.js`).
+- **Varselet i datatjenesten:** siden bygges bare når innholdet endres, så varselet som er bygget inn i sidene, kan
+  være timer gammelt. Datatjenesten henter MET selv, og sidene bruker varselet derfra når det er nyere og velformet
+  (timene i rekkefølge, uten gjentakelser; `isNewerForecast` i `wind.js`). De henter det med én gang, hvert 10. minutt
+  mens siden er synlig, og når siden blir synlig igjen eller kommer på nett (`watchForecast`). En start som mangler i
+  det, får bare ingen vurdering; stedssiden tar det bare i bruk når det har stedets egen start (eller siden ikke har et
+  brukbart varsel). En side som er bygget uten varsel, får ett på denne måten. Det gir også vurderingen tilbake når
+  sidens eget varsel er blitt for gammelt. Gratisplanen gir 10 ms CPU-tid per kjøring, så hver kjøring henter de 6
+  startene som ble forsøkt for lengst siden (et mislykket forsøk teller, så starter som feiler gang på gang, havner
+  bakerst i køen), og hele varselet fornyes omtrent hver halvtime.
+- **Høydevinden i datatjenesten:** det samme rutenettet som byggets, to starter hvert 10. minutt (hver fornyes omtrent
+  hver halvtime, og et mislykket forsøk teller som for varselet). Stedssiden spør igjen hvert 10. minutt, utelater et
+  rutenett som er eldre enn 12 timer, tegner det som ligger i siden og bytter det ut med tjenestens når det er nyere,
+  så delen også virker når bygget ikke har noe.
+- **Ingen planlagte bygg:** begge værkildene ligger i datatjenesten, så `deploy.yml` har ingen tidsplan, og siden
+  bygges bare når innholdet endres. Jobben `weather` gjør at hvert bygg starter fra et ferskt varsel.
 
-## Data service, archive and backup
+## Datatjeneste, arkiv og sikkerhetskopi
 
-The data service keeps what must be fresh (forecast, stations, flights) in a Durable Object, archives the measurements
-in R2, and backs up the history every night. A copy of everything goes to another provider, and a monthly drill proves
-that it can be restored.
+Datatjenesten har det som må være ferskt (varsel, stasjoner, turer) i et Durable Object, arkiverer målingene i R2 og
+tar sikkerhetskopi av historikken hver natt. En kopi av alt går til en annen leverandør, og en månedlig øvelse viser
+at den kan gjenopprettes.
 
 ```mermaid
 flowchart LR
-  subgraph sources["Sources"]
-    met["MET Locationforecast<br/>and Frost"]
+  subgraph sources["Kilder"]
+    met["MET Locationforecast<br/>og Frost"]
     holfuy["Holfuy"]
     om["Open-Meteo"]
     ogn["Open Glider Network"]
   end
 
-  subgraph cf["Cloudflare (account HPGT)"]
-    cron["Worker «data»<br/>scheduled runs"]
-    store[("Durable Object<br/>SQLite store")]
-    r2[("R2 hpgt-data-archive<br/>holfuy/ … CSV per day<br/>backup/ … nightly JSON")]
+  subgraph cf["Cloudflare (kontoen HPGT)"]
+    cron["Workeren «data»<br/>planlagte kjøringer"]
+    store[("Durable Object<br/>SQLite-lager")]
+    r2[("R2 hpgt-data-archive<br/>holfuy/ … CSV per dag<br/>backup/ … JSON hver natt")]
     api["/v1/*.json"]
   end
 
   subgraph gh["GitHub Actions"]
-    backup["backup.yml<br/>nightly 03:30"]
-    drill["restore-drill.yml<br/>monthly, local only"]
-    recover["recover.yml<br/>by hand, reviewer"]
+    backup["backup.yml<br/>hver natt 03.30"]
+    drill["restore-drill.yml<br/>månedlig, bare lokalt"]
+    recover["recover.yml<br/>for hånd, godkjenner"]
   end
 
-  b2[("Backblaze B2<br/>hpgt-flysteder-backup<br/>old versions kept")]
-  browser["The browser<br/>flysteder.hpgt.com"]
+  b2[("Backblaze B2<br/>hpgt-flysteder-backup<br/>gamle versjoner beholdes")]
+  browser["Nettleseren<br/>flysteder.hpgt.com"]
 
   met & holfuy & om & ogn --> cron --> store
   store --> api --> browser
-  store -- "archive from 03:00<br/>backup 02:14" --> r2
-  r2 -- "read-only key" --> backup --> b2
+  store -- "arkiv fra 03.00<br/>sikkerhetskopi 02.14" --> r2
+  r2 -- "lesenøkkel" --> backup --> b2
   b2 --> drill
-  b2 --> recover -- "recovery token,<br/>made when needed" --> r2
-  r2 -. "empty store reads<br/>latest.json back in" .-> store
+  b2 --> recover -- "gjenopprettingstoken,<br/>lages ved behov" --> r2
+  r2 -. "tomt lager leser<br/>latest.json inn igjen" .-> store
 ```
 
-| Scenario | What happens | Where it is described |
+Workeren «data» henter fra kildene og lagrer i Durable Object-et, som serverer `/v1/*.json` til nettleseren og
+skriver arkiv og sikkerhetskopi til R2. `backup.yml` kopierer R2 til Backblaze B2 med en lesenøkkel. Kopien i B2
+brukes av den månedlige øvelsen og av `recover.yml`, som skriver tilbake til R2 med et token som bare lages ved
+behov. Et tomt lager leser selv inn igjen den siste sikkerhetskopien fra R2.
+
+| Scenario | Hva skjer | Hvor det er beskrevet |
 |---|---|---|
-| The store is lost | A new, empty store reads `backup/<table>/latest.json` from R2 by itself | [operations.md](operations.md#disaster-recovery), scenario 1 |
-| The R2 bucket is lost | Copy B2 back to R2 (rclone or `recover.yml`), then as above | Scenario 2 |
-| The Cloudflare account is lost | New account, tokens, then `recover.yml` | Scenario 3 |
-| The GitHub repository is lost | Push a clone or the bundle in B2 to a new repository | Scenario 4 |
+| Lageret er tapt | Et nytt, tomt lager leser selv inn `backup/<table>/latest.json` fra R2 | [operations.md](operations.md#katastrofegjenoppretting), scenario 1 |
+| R2-bøtta er tapt | Kopier B2 tilbake til R2 (rclone eller `recover.yml`), deretter som over | Scenario 2 |
+| Cloudflare-kontoen er tapt | Ny konto, nye tokens, deretter `recover.yml` | Scenario 3 |
+| GitHub-repoet er tapt | Push en klone eller bundlen i B2 til et nytt repo | Scenario 4 |
 
-## Environments and secrets
+## Miljøer og hemmeligheter
 
-Each job gets only the keys it needs, and every environment is limited to `main`. The Worker's own secrets are set in
-Cloudflare and never in GitHub. Values are never written down here; see
-[operations.md](operations.md#accounts-and-secrets) for where each one lives.
+Hver jobb får bare nøklene den trenger, og alle miljøer er begrenset til `main`. Workerens egne hemmeligheter settes i
+Cloudflare og aldri i GitHub. Verdiene skrives aldri ned her; se
+[operations.md](operations.md#kontoer-og-hemmeligheter) for hvor hver av dem ligger.
 
 ```mermaid
 flowchart TB
-  subgraph envs["GitHub environments (only main)"]
-    automation["automation<br/>openAIP key, GitHub App<br/>«HPGT Flying Sites»"]
-    cloudflare["cloudflare<br/>tokens: publish Worker «data» only,<br/>publish Worker «flysteder» only"]
-    backupenv["backup<br/>R2 read-only + B2 bucket key"]
-    backupread["backup-read<br/>B2 read-only key"]
-    recovery["recovery<br/>required reviewer<br/>token only during a recovery"]
+  subgraph envs["GitHub-miljøer (bare main)"]
+    automation["automation<br/>openAIP-nøkkel, GitHub-appen<br/>«HPGT Flying Sites»"]
+    cloudflare["cloudflare<br/>tokens: publiserer bare Workeren «data»,<br/>publiserer bare Workeren «flysteder»"]
+    backupenv["backup<br/>R2 med lesetilgang + B2-nøkkel for bøtta"]
+    backupread["backup-read<br/>B2-nøkkel med lesetilgang"]
+    recovery["recovery<br/>påkrevd godkjenner<br/>token bare under en gjenoppretting"]
   end
 
-  subgraph wf["Workflows"]
+  subgraph wf["Arbeidsflyter"]
     air["airspace.yml / obstacles.yml"]
     dw["data-worker.yml"]
     bk["backup.yml"]
     drillwf["restore-drill.yml"]
     rc["recover.yml"]
-    dep["deploy.yml<br/>(Cloudflare, and GitHub Pages as fallback)"]
+    dep["deploy.yml<br/>(Cloudflare, og GitHub Pages som reserve)"]
   end
 
-  subgraph cfsecrets["Cloudflare: Worker «data» secrets"]
+  subgraph cfsecrets["Cloudflare: hemmelighetene til Workeren «data»"]
     s["HOLFUY_KEY, FROST_CLIENT_ID,<br/>TURNSTILE_SECRET,<br/>REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY"]
   end
 
@@ -409,64 +436,74 @@ flowchart TB
   backupread --> drillwf
   backupread --> rc
   recovery --> rc
-  dw -. "publishes the Worker,<br/>never sees its secrets" .-> s
+  dw -. "publiserer Workeren,<br/>ser aldri hemmelighetene" .-> s
 ```
 
-## Decisions
+Hvert GitHub-miljø gir nøkler til bare de arbeidsflytene som trenger dem: `automation` til luftrom og hindre,
+`cloudflare` til publiseringen av datatjenesten og siden, `backup` til sikkerhetskopien, `backup-read` til øvelsen og
+gjenopprettingen, og `recovery` til gjenopprettingen. Workerens egne hemmeligheter ligger bare i Cloudflare.
 
-Why the site is built this way, and what was chosen instead of what, is recorded as Architecture Decision Records in
-[adr/](adr/README.md).
+## Beslutninger
 
-## What has been built
+Hvorfor siden er bygget slik, og hva som ble valgt fremfor hva, står i beslutningsnotatene (Architecture Decision
+Records) i [decisions/](decisions/README.md).
 
-The main features, roughly in the order they were added. Details are in [SPEC.md](../SPEC.md) and in the PRs.
+## Funksjoner
 
-- **Foundation:** an Eleventy site on GitHub Pages that replaces the old iframe-based guide. One file per site with
-  validation, a fixed page template, a Leaflet map with Kartverket as the base map, dark mode and colour-blind-friendly
-  colours.
-- **Home page:** map with wind roses and clusters (on mobile it stays at the top and shrinks while the list scrolls),
-  search, filters for direction, level and category, a card for the selected site, and tabs for Flysteder ("Sites")
-  and Vær ("Weather").
-- **Wind assessment from MET:** «Kan passe», «Usikkert», «For mye vind» and «Passer ikke» for any hour in the
-  forecast (a timeline on the map), with a summary that follows the filters, and «Vinden nå – kan det passe?» ("The wind now – may it
-  work?") with the next 12 hours on the site pages. Turned off when the forecast is too old.
-- **Site pages:** map with launches, direction arcs, landings, parking, walking routes and numbered points from the
-  drawing, elevation profile from Kartverket, hazards, airspace above the launch, Yr meteogram and image viewer.
-- **Data and quality:** Kartverket heights for launch, landing and parking, review of all 32 sites, the status page
-  with checks for missing content, open data (GeoJSON/KML).
-- **Airspace:** openAIP layer on the map (CTA/TMA, CTR, military areas, danger and restricted areas) with an error
-  message and «Prøv igjen» ("Try again"), monthly update via PR, and the towers page.
-- **Images:** import with fixed naming, downscaling, and photographer/licence in the metadata.
-- **Sharing and statistics:** previews on Facebook/Messenger, sitemap and hreflang, anonymous statistics with
-  GoatCounter (pages and clicks, no cookies).
-- **Languages:** Norwegian and English, with English text for all sites, and a structure for more languages.
-- **Data service and weather stations:** the MET forecast and the club's Holfuy stations on Cloudflare (Durable Object,
-  archive in R2). The stations on the maps, in the Vær tab and on the weather page `/vaer/` (change over a period, how
-  even the wind is, charts with temperature, «Målt mot varslet»), the «Målt nå» block on the station's site page, and the
-  assessment for the hour now from a fresh measurement. MET's own stations (Frost) on the same maps, and «Hvor godt
-  treffer varselet her?» from the forecast hours against the measurements.
-- **Winds aloft:** «Vind over starten», a windgram with wind every 250 m, the thermals as a line and the top of the
-  thermals in m asl, cloud base, gusts, clouds and rain, from Open-Meteo, in the build and in the data service.
-- **Open Glider Network (beta):** «Piloter i lufta», paragliders live on the maps with a track coloured by climb and
-  sink, and flying activity per site (the site page and `/flyaktivitet/`), counted from the same data.
-- **«Meld fra»:** a form on the site pages and `/meld-fra/` that becomes a labelled GitHub issue, with Turnstile and
-  no account.
-- **Power lines and obstacles:** a map layer with NVE's power lines and masts and OpenStreetMap's low-voltage lines,
-  lifts and masts for the whole region around the sites, as tiles loaded for the view, updated monthly via PR.
-- **«Nytt på siden»** (`/nytt/`): what is new and the plan, for the pilots.
-- **Flight logs:** `npm run logbook` sums IGC/KML logs per site (`lib/igc.js`); the box on the site page is hidden
-  until more pilots have added logs.
+Hovedfunksjonene. Detaljene står i [SPEC.md](../SPEC.md).
 
-## Planned
+- **Grunnlaget:** en Eleventy-side, med én fil per sted og validering, en fast sidemal, et Leaflet-kart med
+  Kartverket som bakgrunnskart, mørk modus og fargeblindvennlige farger.
+- **Forsiden:** kart med vindroser og klynger (på mobil blir det liggende øverst og krymper mens listen ruller), søk,
+  filtre for retning, nivå og kategori, et kort for valgt sted, og fanene Flysteder og Vær.
+- **Vindvurdering fra MET:** «Kan passe», «Usikkert», «For mye vind» og «Passer ikke» for hver time i varselet (en
+  tidslinje på kartet), med en oppsummering som følger filtrene, og «Vinden nå – kan det passe?» med de neste 12
+  timene på stedssidene. Slås av når varselet er for gammelt.
+- **Stedssidene:** kart med starter, retningsbuer, landinger, parkering, gangruter og nummererte punkter fra
+  tegningen, høydeprofil fra Kartverket, farer, luftrom over starten, Yr-meteogram og bildeviser.
+- **Data og kvalitet:** høyder fra Kartverket for start, landing og parkering, gjennomgang av flystedene, statussiden
+  med kontroll av manglende innhold, og åpne data (GeoJSON/KML).
+- **Luftrom:** openAIP-lag på kartet (CTA/TMA, CTR, militære områder, fare- og restriksjonsområder) med feilmelding
+  og «Prøv igjen», månedlig oppdatering via PR, og tårnsiden.
+- **Bilder:** import med faste navn, nedskalering, og fotograf og lisens i metadataene.
+- **Deling og statistikk:** forhåndsvisning på Facebook og Messenger, sitemap og hreflang, anonym statistikk med
+  GoatCounter (sider og klikk, uten informasjonskapsler).
+- **Språk:** norsk og engelsk, med engelsk tekst for alle steder, og en struktur for flere språk.
+- **Datatjenesten og værstasjoner:** MET-varselet og klubbens Holfuy-stasjoner på Cloudflare (Durable Object, arkiv
+  i R2). Stasjonene på kartene, i Vær-fanen og på værsiden `/vaer/` (endring over en periode, hvor jevn vinden er,
+  grafer med temperatur, «Målt mot varslet»), blokken «Målt nå» på stasjonens stedsside, og vurderingen av timen nå
+  fra en fersk måling. METs egne stasjoner (Frost) på de samme kartene, og «Hvor godt treffer varselet her?» fra
+  varseltimene mot målingene.
+- **Høydevind:** «Vind over starten», et vindgram med vind for hver 250 m, termikken som en linje og toppen av
+  termikken i moh., skybase, vindkast, skyer og regn, fra Open-Meteo, i bygget og i datatjenesten.
+- **Open Glider Network (beta):** «Piloter i lufta», paraglidere live på kartene med et spor farget etter stigning og
+  synk, og flyaktivitet per sted (stedssiden og `/flyaktivitet/`), telt fra de samme dataene.
+- **«Meld fra»:** et skjema på stedssidene og `/meld-fra/` som blir en merket GitHub-sak, med Turnstile og uten
+  konto.
+- **Kraftlinjer og hindre:** et kartlag med NVEs kraftlinjer og master og lavspentlinjer, heiser og master fra
+  OpenStreetMap for hele området rundt stedene, som fliser som lastes for utsnittet, oppdatert månedlig via PR.
+- **«Nytt på siden»** (`/nytt/`): hva som er nytt, og planen, for pilotene.
+- **Turlogger:** `npm run logbook` summerer IGC- og KML-logger per sted (`lib/igc.js`). Boksen på stedssiden er
+  skjult til flere piloter har lagt inn logger.
 
-- **Data service** (built): the forecast, the stations, winds aloft, the verification, the flying activity, pilots in
-  the air and «Meld fra», all in one Cloudflare Worker, see [Data modules](#data-modules). The Cloudflare account
-  «HPGT» is the club's.
-- **«Meld fra»** (built): reports become GitHub issues labelled by what they concern (`endringsforslag`, `site-data`,
-  `safety`, `bug`, `enhancement`), see `workers/data/src/report.js`. Still planned: an agent that summarises the issue
-  and makes the change as a PR once it is labelled `approved`.
-- **Distances to obstacles** on the site page, such as «Kraftlinje 63 m fra landing», computed at build time from
-  the power line tiles.
-- **Statistics from flight logs** (#105), once more pilots add logs or Flightlog/pgpilot get an API.
-- **NOTAM** as a separate map layer, once there is a safe and permitted way to fetch from IPPC. It needs a server-side
-  intermediary (the data service), the same way as the other sources.
+## Planlagt
+
+- **«Meld fra»:** en agent som oppsummerer saken og gjør endringen som en PR når den er merket `approved`. Sakene
+  merkes etter hva de gjelder (`endringsforslag`, `site-data`, `safety`, `bug`, `enhancement`), se
+  `workers/data/src/report.js`.
+- **Avstand til hindre** på stedssiden, for eksempel «Kraftlinje 63 m fra landing», beregnet i bygget fra
+  kraftlinjeflisene.
+- **Statistikk fra turlogger** (#105), når flere piloter legger inn logger, eller Flightlog eller pgpilot får et API.
+- **NOTAM** som eget kartlag, når det finnes en trygg og tillatt måte å hente fra IPPC på. Det trenger et mellomledd
+  på serversiden (datatjenesten), på samme måte som de andre kildene.
+- **Glidelinje til landing** på stedssiden: terrengprofil med høyder fra Kartverket langs rett linje fra start til
+  landing, med laveste klaring over terrenget. Sammen med et navn per start (`name` i `launches`) kan stedssiden også
+  anbefale en start for vinden («Bruk Toppen (S, SØ, Ø)»).
+- **Hvor godt varselet treffer, på forsiden:** avviket mellom målt og varslet vind (`/v1/verification.json`) også på
+  forsiden, ikke bare på stedssiden og værsiden.
+- **Varsel ved flyvindu:** web push fra datatjenesten når et valgt flysted går til «Kan passe» i dagslys. PWA og
+  service worker finnes.
+- **Delbart «i dag»-bilde** (SVG/PNG fra datatjenesten) for hpgt.com og sosiale medier, siden CSP-en ikke tillater
+  innbygging av siden.
+- **GitHub-innstillinger i repoet:** rulesettet for `main` eksportert til `.github/rulesets/main.json`, og et skript
+  som sjekker innstillingene med `gh api`.
