@@ -1,0 +1,62 @@
+name: Dependabot automerge
+
+# Slår på automatisk merge for Dependabot-PR-er som oppfyller kriteriene i
+# https://github.com/hpgt-com/guidelines/blob/main/github-security.md#automatisk-merge:
+# patch eller minor av npm-pakker og GitHub Actions, men ikke Wrangler (publiserer workerne). PR-en merges først når
+# alle påkrevde sjekker er grønne (regelsettet på main), så en oppdatering som bryter bygget, testene,
+# tilgjengeligheten eller ytelsesbudsjettet blir stående. Major-oppdateringer og Wrangler merges manuelt.
+#
+# Automatisk merge slås på med et token fra GitHub-appen «HPGT Flying Sites». En merge med GITHUB_TOKEN starter ikke
+# andre arbeidsflyter, så nettstedet ville ikke blitt publisert. Arbeidsflyter fra Dependabot får bare
+# Dependabot-secrets, så nøkkelen ligger i Dependabot-secreten APP_PRIVATE_KEY. Client ID er ikke hemmelig.
+#
+# pull_request_target: arbeidsflyten kjører alltid versjonen fra main og sjekker ikke ut koden i PR-en.
+
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] ingen checkout, kjører ingen kode fra PR-en
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ github.token }}
+
+      - id: decide
+        name: Vurder kriteriene
+        env:
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
+          NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          ok=true
+          case "$UPDATE_TYPE" in version-update:semver-patch|version-update:semver-minor) ;; *) ok=false ;; esac
+          case "$ECOSYSTEM" in npm_and_yarn|github_actions) ;; *) ok=false ;; esac
+          case ",$NAMES," in *wrangler*) ok=false ;; esac
+          echo "automerge=$ok" >> "$GITHUB_OUTPUT"
+          if [ "$ok" != true ]; then echo "::notice::$ECOSYSTEM ($UPDATE_TYPE: $NAMES) merges manuelt."; fi
+
+      - id: app
+        if: steps.decide.outputs.automerge == 'true'
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: Iv23liM7YaniiziilB30
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Slå på automatisk merge
+        if: steps.decide.outputs.automerge == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR"

@@ -53,7 +53,9 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   (`dependency-review`, stops packages with known vulnerabilities) and zizmor (`workflow-security`, security issues
   in the workflows).
 - CodeQL analyses the JavaScript and the workflows on PRs, on `main` and weekly.
-- Actions are pinned to commit SHAs and updated by Dependabot. Workflows have read-only access by default. Only the
+- Actions are pinned to commit SHAs and updated by Dependabot, with a cooldown of 7 days (30 for major versions).
+  Patch and minor updates of npm packages and Actions, except Wrangler, are merged automatically when all required
+  checks pass (`dependabot-automerge.yml`, with a token from the GitHub App). Workflows have read-only access by default. Only the
   deploy job has the publishing permissions (`pages`, `id-token`).
 - All workflows install with `npm ci --ignore-scripts`, so no package's install script runs in CI (none of the
   dependencies need one). A new dependency that needs one will fail the build and must be assessed first.

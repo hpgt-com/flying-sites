@@ -1,6 +1,6 @@
 # Dependabot opens PRs when new versions of GitHub Actions and the npm packages are released.
 # One grouped PR per ecosystem per month. The PR check builds the site, so it is safe to merge when green.
-# cooldown: new versions are only proposed after 7 days, so a compromised release
+# cooldown: new versions are only proposed after 7 days (major after 30), so a compromised release
 # has time to be discovered and pulled before it gets here.
 # labels: only "dependencies", so Dependabot does not add per-ecosystem labels (javascript, github_actions).
 version: 2
@@ -12,6 +12,7 @@ updates:
     labels: ["dependencies"]
     cooldown:
       default-days: 7
+      semver-major-days: 30
     groups:
       actions:
         patterns: ["*"]
@@ -23,6 +24,7 @@ updates:
     labels: ["dependencies"]
     cooldown:
       default-days: 7
+      semver-major-days: 30
     groups:
       npm:
         patterns: ["*"]
@@ -35,6 +37,7 @@ updates:
     labels: ["dependencies"]
     cooldown:
       default-days: 7
+      semver-major-days: 30
     groups:
       data-worker:
         patterns: ["*"]

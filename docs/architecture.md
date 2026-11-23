@@ -268,7 +268,8 @@ sequenceDiagram
 | `restore-drill.yml` | The 1st of each month, manually | Proves that the copy in B2 can be restored: runs the data service locally on the runner and checks that it reads every row back in. Touches nothing in Cloudflare. |
 | `recover.yml` | Manually only | Disaster recovery: writes the archive back to R2, publishes the data service and checks the restore. Environment `recovery` (required reviewer, normally no token). |
 | `browser-cache.yml` | `package-lock.json` changes on `main`, manually | Fills the Playwright browser cache that the PR check's accessibility job uses. No secrets. |
-| Dependabot | Monthly | PRs with updated packages and Actions. |
+| `dependabot-automerge.yml` | Dependabot PRs | Turns on auto-merge for patch and minor updates of npm packages and Actions (not Wrangler), with a token from the GitHub App, so the merge starts the publishing. |
+| Dependabot | Monthly | PRs with updated packages and Actions, 7 days after a release (30 for major). |
 
 ## Data modules
 
