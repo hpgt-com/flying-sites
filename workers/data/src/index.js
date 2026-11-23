@@ -22,6 +22,8 @@
 // - live: the aircraft the Open Glider Network hears in the area now (live.js), fetched on demand and cached a few
 //   seconds, for the map layer «Piloter i lufta» (src/assets/js/live.js).
 // - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
+// - POST /v1/csp-report: the browsers' reports of CSP violations on the site's pages, as short lines in the log without
+//   personal data (csp-report.js).
 // - status: how the sources and datasets are doing (health.js), for the hourly check in .github/workflows/health.yml.
 //
 // sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
@@ -37,6 +39,7 @@ import { HOLFUY_STATIONS, MET_STATION_SITES, MET_EXCLUDE, siteLinks } from "./st
 import { due, INTERVALS } from "./schedule.js";
 import { mergeStations } from "./merge.js";
 import { handleReport, ORIGINS } from "./report.js";
+import { handleCspReport } from "./csp-report.js";
 import { handleLive } from "./live.js";
 import { recordRuns, buildStatus, MAX_AGE } from "./health.js";
 import { cached, CACHE_SECONDS } from "./cache.js";
@@ -133,8 +136,17 @@ function reportCors(request, env) {
   return { allowed, cors };
 }
 
+// The headers of the answers from /v1/csp-report: the browser sends the reports without CORS (no-cors) and reads no
+// answer, so no CORS headers; only POST is allowed.
+const CSP_REPORT_HEADERS = { allow: "POST", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
+
 async function handle(request, env, ctx) {
   const { pathname } = new URL(request.url);
+  // CSP violation reports from the site's pages (csp-report.js).
+  if (pathname === "/v1/csp-report") {
+    if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CSP_REPORT_HEADERS });
+    return new Response(null, { status: await handleCspReport(request, env), headers: CSP_REPORT_HEADERS });
+  }
   // «Meld fra om endring» (report.js).
   if (pathname === "/v1/report") {
     const { allowed, cors } = reportCors(request, env);
