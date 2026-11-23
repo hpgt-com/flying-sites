@@ -1,6 +1,6 @@
 name: Restore drill
 
-# The monthly proof that the off-site copy can be restored (docs/operations.md «Disaster recovery»): the data service's
+# The monthly proof that the off-site copy can be restored (docs/operations.md «Katastrofegjenoppretting»): the data service's
 # own code is run here on the runner (wrangler dev, local workerd: its own empty store and its own local R2, nothing
 # in Cloudflare is touched), the latest backup of each table is fetched from the copy in B2 and put in that local R2,
 # the schedule is fired once, and the store must read every row back in (workers/data/src/store.js restore), as
@@ -104,5 +104,5 @@ jobs:
             if [ -n "$n" ]; then gh issue close "$n" --comment "I orden igjen: $RUN_URL"; fi
             exit 0
           fi
-          body="Den månedlige øvelsen som gjenoppretter historikken fra kopien i B2 i en lokal datatjeneste feilet ($RUN_URL). Se loggen for om det er kopien, filene eller innlesingen, og docs/operations.md «Disaster recovery». Saken lukkes av seg selv når en øvelse går gjennom igjen."
+          body="Den månedlige øvelsen som gjenoppretter historikken fra kopien i B2 i en lokal datatjeneste feilet ($RUN_URL). Se loggen for om det er kopien, filene eller innlesingen, og docs/operations.md «Katastrofegjenoppretting». Saken lukkes av seg selv når en øvelse går gjennom igjen."
           if [ -n "$n" ]; then gh issue comment "$n" --body "Fortsatt: $RUN_URL"; else gh issue create --title "$title" --label bug --body "$body"; fi

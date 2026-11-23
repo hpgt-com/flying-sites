@@ -1,6 +1,6 @@
 name: Recover
 
-# Scenario 3 in docs/operations.md «Disaster recovery», a lost Cloudflare account (or a lost archive bucket, or just a
+# Scenario 3 in docs/operations.md «Katastrofegjenoppretting», a lost Cloudflare account (or a lost archive bucket, or just a
 # lost store): everything that can be done from here, in one run, by hand from Actions → «Recover» → «Run workflow».
 # Before it: a recovery token and the account id in the environment «recovery» (see below), the bucket
 # hpgt-data-archive created, and the Worker's own secrets (HOLFUY_KEY, FROST_CLIENT_ID, TURNSTILE_SECRET,
@@ -13,7 +13,7 @@ name: Recover
 # The recovery token is not the everyday deploy token. «cloudflare» has a token that can only publish the Worker
 # `data`; writing the archive back to R2 also needs R2, so this job uses its own environment «recovery» (only
 # `main`, a required reviewer). The token there (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings:
-# Read, account HPGT only) is made when it is needed and deleted afterwards: docs/operations.md «Disaster recovery».
+# Read, account HPGT only) is made when it is needed and deleted afterwards: docs/operations.md «Katastrofegjenoppretting».
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ on:
         type: boolean
         default: true
       base_url:
-        description: "Datatjenestens adresse (en ny konto gir et nytt workers.dev-navn)"
+        description: "Datatjenestens adresse (det egne domenet, data.hpgt.com, når det er lagt til på den nye kontoen)"
         type: string
         default: "https://data.hpgt.com"
 

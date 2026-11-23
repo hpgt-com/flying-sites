@@ -10,7 +10,7 @@ export const INTERVALS = { forecast: 5, stations: 1, met: 10, windgram: 10, veri
 // Minute within the interval each source runs on. All sources run in the same invocation, and the free plan gives one
 // invocation 10 ms of CPU in all, so the heavier ones (the forecast, MET, the winds aloft) never share a minute: the
 // forecast at :00 and :05, MET at :03, the winds aloft at :07 (and so on every ten minutes), the verification at :09 and :39.
-// The flying activity is light (one small answer from OGN, mostly empty) and runs on the even minutes. The backup
+// The flying activity is light (one small answer from OGN, mostly empty) and runs every minute. The backup
 // (backup.js) once a day at 02:14 UTC, a minute no other heavy source has; its work is done in the store, not here. OGN's
 // list of devices that must not be tracked (for the APRS reserve, aprs.js) once a day at 05:14 UTC, also in the store.
 // The forecast grids (sources/grid.js): the close one every three hours at :21 (00:21, 03:21 …), the wide one every six
