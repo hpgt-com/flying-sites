@@ -900,6 +900,18 @@
   var THEME_COLORS = { light: "#F3F5F4", dark: "#11191D" };
   var darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
+  // Only https addresses and addresses on this site are used as image sources, so an attribute cannot point the image
+  // at another scheme (javascript:, data:).
+  function safeImageUrl(value) {
+    if (!value) return "";
+    try {
+      var url = new URL(value, location.href);
+      return url.protocol === "https:" || url.origin === location.origin ? url.href : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
 
   function applyTheme(choice) {
@@ -913,8 +925,8 @@
     // Images with their own dark variant, such as the Yr meteogram. The light URL is kept in data-src-light.
     document.querySelectorAll("img[data-src-dark]").forEach(function (img) {
       if (!img.hasAttribute("data-src-light")) img.setAttribute("data-src-light", img.getAttribute("src"));
-      var src = img.getAttribute(theme === "dark" ? "data-src-dark" : "data-src-light");
-      if (img.getAttribute("src") !== src) img.setAttribute("src", src);
+      var src = safeImageUrl(img.getAttribute(theme === "dark" ? "data-src-dark" : "data-src-light"));
+      if (src && img.src !== src) img.src = src;
     });
     document.querySelectorAll(".theme-toggle button").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-choice") === choice));
