@@ -26,6 +26,13 @@ new_sqlite_classes = ["Store"]
 binding = "ARCHIVE"
 bucket_name = "hpgt-data-archive"
 
+# The rate limit for CSP violation reports (src/csp-report.js): 30 requests a minute from one address, counted
+# by Cloudflare at each location under a hash of the address. namespace_id is any number unique in the account.
+[[ratelimits]]
+name = "CSP_LIMIT"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
 [triggers]
 # Every minute: each source has its own interval in src/index.js (INTERVALS), so one schedule serves them all.
 crons = ["* * * * *"]

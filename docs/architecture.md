@@ -155,7 +155,7 @@ flowchart LR
   sitewind["site-wind.js<br/>«Vinden nå – kan det passe?» på stedssiden"]
   stations["stations.js<br/>værstasjoner: kartlag, rader,<br/>kort, grafer, vurdering"]
   weather["weather.js<br/>værsiden /vaer/"]
-  data["datatjenesten<br/>data.hpgt.com<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live, grid (.json),<br/>POST /v1/report"]
+  data["datatjenesten<br/>data.hpgt.com<br/>/v1/stations, forecast, windgram,<br/>verification, flights, live, grid (.json),<br/>POST /v1/report, POST /v1/csp-report"]
   live["live.js<br/>kartlaget «Piloter i lufta»"]
   forecastlayer["forecast-layer.js<br/>kartlagene «Prognose»: termikk,<br/>topp og skybase, vindpiler,<br/>temperatur, lave skyer og regn"]
   windgram["windgram.js<br/>«Vind over starten»"]
@@ -176,6 +176,7 @@ flowchart LR
   data -- "når et lag slås på" --> forecastlayer
   home -- "tidspunktet i tidslinjen" --> forecastlayer
   report -- "POST /v1/report" --> data
+  common -- "CSP-brudd (nettleseren),<br/>POST /v1/csp-report" --> data
   common -- "FS.track()" --> goat
   common --> pwa --> sw
 ```
@@ -214,8 +215,10 @@ GoatCounter, og service workeren gjør sidene tilgjengelige offline.
   Stedssiden holder av plass til «Vinden nå – kan det passe?» til `site-wind.js` har fylt den ut, så boksene under
   ikke hopper.
 - **Sikkerhet:** Content-Security-Policy i `base.njk` tillater skript bare fra siden selv (og Cloudflare Turnstile for
-  «Meld fra om endring»), og bilder og data bare fra kildene over. En ny ekstern kilde må legges inn der. Se
-  [SECURITY.md](../SECURITY.md).
+  «Meld fra om endring»), og bilder og data bare fra kildene over. En ny ekstern kilde må legges inn der. Som hode
+  (`src/headers.njk`) har den også `report-uri` og `report-to`, så nettleserne melder brudd til datatjenesten
+  (`POST /v1/csp-report`, `workers/data/src/csp-report.js`), og Trusted Types prøves i report-only
+  (`Content-Security-Policy-Report-Only: require-trusted-types-for 'script'`). Se [SECURITY.md](../SECURITY.md).
 
 ## Språk
 

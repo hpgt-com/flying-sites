@@ -28,6 +28,22 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
   `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.com`). The station
   data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
+- Violations of the CSP are reported by the browsers to `POST https://data.hpgt.com/v1/csp-report`
+  (`workers/data/src/csp-report.js`): the header adds `report-uri` and `report-to csp` with
+  `Reporting-Endpoints: csp="https://data.hpgt.com/v1/csp-report"` (the meta tag cannot carry them, so `site.csp`
+  stays without). The browser sends the reports itself, not the pages' scripts, so `connect-src` does not need the
+  endpoint. Trusted Types are tried in report-only mode: `Content-Security-Policy-Report-Only:
+  require-trusted-types-for 'script'` with the same report directives. The site's own scripts assign no HTML strings,
+  but Leaflet still does (attribution, prefix, the layer control's names) and Turnstile is third-party, so the reports
+  show what must change before it can be enforced. `/sw.js` gets neither policy nor `Reporting-Endpoints`.
+- The CSP report endpoint stores nothing: each report becomes one line in the Worker's log with only the directive,
+  enforce or report, what was blocked reduced to scheme and host or a keyword (`inline`, `eval`, `data`, `blob`,
+  `trusted-types-sink` …), the page's path on `flysteder.hpgt.com` without query string, and for Trusted Types the
+  sink's name (`Element innerHTML`). Never the address, user agent, referrer, full addresses or the sample (the
+  blocked code or text). Reports from other pages are dropped. Only `POST` (others 405), only
+  `application/csp-report` and `application/reports+json` (others 415), the body is read up to 16 KB from the stream
+  whatever `Content-Length` says (413 over it), at most 20 reports per request, and 30 requests a minute from one
+  address (Cloudflare's rate limit binding `CSP_LIMIT`, counted under a hash of the address).
 - «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
   `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000
   characters, and makes at most 50 issues a day and 3 from one address. Turnstile's answer must be for

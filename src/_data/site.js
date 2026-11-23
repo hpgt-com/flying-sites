@@ -11,6 +11,9 @@ export default {
   // The Content-Security-Policy, in one place: in a <meta> in every page (base.njk) and as an HTTP header on Cloudflare
   // (src/headers.njk → _headers, with frame-ancestors, which a meta tag cannot set). Hosts the pages load from must be here.
   csp: "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://hpgt-flysteder.goatcounter.com https://cache.kartverket.no https://*.tile.opentopomap.org https://thermal.kk7.ch https://tiles.maps.eox.at https://hoydedata.no https://tilecache.rainviewer.com https://www.yr.no; font-src 'self'; connect-src 'self' https://hpgt-flysteder.goatcounter.com https://api.rainviewer.com https://data.hpgt.com; manifest-src 'self'; worker-src 'self'; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+  // Where the browsers send CSP violation reports (workers/data/src/csp-report.js): report-uri and report-to in the
+  // headers (src/headers.njk), not in the <meta>, which cannot carry them.
+  cspReportUrl: "https://data.hpgt.com/v1/csp-report",
   // Visitor statistics (GoatCounter): anonymous, no cookies. See src/assets/js/goatcounter.js.
   goatcounter: "https://hpgt-flysteder.goatcounter.com/count",
   // The data service on Cloudflare (workers/data): the MET forecast, renewed every few minutes, and the Holfuy stations.
