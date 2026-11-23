@@ -39,5 +39,10 @@ simple = { limit = 30, period = 60 }
 # Every minute: each source has its own interval in src/index.js (INTERVALS), so one schedule serves them all.
 crons = ["* * * * *"]
 
+# Bare Workerens egne linjer (kildene, feil, csp-report). Cloudflares logg per kall er av, fordi den tar med IP-adressen
+# og nettleseren.
 [observability]
 enabled = true
+
+[observability.logs]
+invocation_logs = false

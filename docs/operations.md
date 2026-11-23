@@ -246,6 +246,8 @@ lenger peker dit.
   Innholdet leses høyst 16 KB fra strømmen uansett hva `Content-Length` sier (413 over det), høyst 20 rapporter per
   forespørsel, og høyst 30 forespørsler i minuttet fra én adresse (Cloudflares rate limit-binding `CSP_LIMIT` i
   `workers/data/wrangler.toml`, telt under en hash av adressen; over grensen 429). Svaret er 204.
+- **Loggene** inneholder bare Workerens egne linjer. Cloudflares logg per kall er slått av i begge Workerne
+  (`invocation_logs = false` i `wrangler.toml`), fordi den tar med IP-adressen og nettleseren.
 - **Lese rapportene:** Cloudflare → Workers & Pages → data → Observability, og søk etter `csp-report`. Linjer med
   `disposition=enforce` er noe som faktisk ble stoppet på siden; en ny ekstern kilde som mangler i `site.csp`, viser seg
   her som `blocked=https://…`. Utvidelser i nettleseren gir også rapporter (`blocked=chrome-extension` og lignende), og
