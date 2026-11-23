@@ -97,7 +97,7 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
   `deploy.yml` (job `cloudflare`) with `CLOUDFLARE_SITE_TOKEN` in the same environment, made from the Worker
   `flysteder` so it can only publish that one; it expires 19.11.2027. The broader token that «Recover» needs to
   write the archive back to R2 (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read) is not kept:
-  it is made when needed, put in its own environment `recovery` (only `main`, a required reviewer) and deleted
+  it is made when needed, put in its own environment `recovery` (only `main`, review required from the team `maintainers`) and deleted
   afterwards. The account has
   two-factor sign-in with a security key and an authenticator app. The service's secrets are set in Cloudflare and
   never in GitHub or the code, and never logged: `HOLFUY_KEY` (sent only to api.holfuy.com), `FROST_CLIENT_ID` (MET's
