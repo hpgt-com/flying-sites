@@ -17,10 +17,12 @@ Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh 
 «Meld fra om endring».
 
 **The site**
-- Content-Security-Policy as a meta tag in `src/_includes/base.njk`: scripts only from the site itself (no inline
+- Content-Security-Policy as a meta tag in `src/_includes/base.njk`, with `default-src 'none'` so every kind of source
+  must be allowed explicitly: scripts only from the site itself (no inline
   scripts, and no inline styles either: `style-src 'self'`) and Cloudflare Turnstile (`challenges.cloudflare.com`, also the only `frame-src`; loaded only when someone
   opens «Meld fra om endring»), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
-  The header-only rules come from `src/_headers` on Cloudflare: `frame-ancestors 'none'` and `X-Frame-Options: DENY`,
+  The header-only rules come from `src/headers.njk` on Cloudflare: `frame-ancestors 'none'` and `X-Frame-Options: DENY`,
+  `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-site`,
   HSTS, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that turns off
   camera, microphone, location and payment.
   `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
