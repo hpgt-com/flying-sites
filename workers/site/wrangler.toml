@@ -1,7 +1,7 @@
 # The site on Cloudflare (Workers static assets): the same build as GitHub Pages (_site), published by the job
 # «cloudflare» in .github/workflows/deploy.yml. No code runs here, only files. flysteder.hpgt.com is a custom domain
 # on this Worker, added by hand in Cloudflare (Workers & Pages → flysteder → Settings → Domains & Routes) on
-# 19.11.2026; deploys keep it (docs/operations.md «The site on Cloudflare»). Wrangler comes from workers/data (the same
+# 19.11.2026; deploys keep it (docs/operations.md «Siden på Cloudflare»). Wrangler comes from workers/data (the same
 # pinned version).
 name = "flysteder"
 compatibility_date = "2026-09-30"

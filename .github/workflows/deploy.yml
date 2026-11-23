@@ -8,7 +8,7 @@ on:
 # stations from the data service (workers/data) when it has newer than what is built in, so they stay fresh between
 # builds.
 
-# Four jobs:
+# Six jobs:
 #   weather  fetches the MET wind forecast and the Open-Meteo winds aloft (lib/weather/, npm run weather) and hands
 #            them on as an artifact, so each build starts from a fresh forecast (the pages then use the data service's
 #            when it is newer). Read-only, no secrets. A source that fails is written as null, so the job does
@@ -16,8 +16,9 @@ on:
 #   build    builds the site with the fetched weather and never queries MET or Open-Meteo itself (WEATHER_FETCH=0).
 #   deploy   publishes. Only this job has publishing permissions (pages, id-token), and it runs no code from the repo.
 #   cloudflare publishes the same archive to Cloudflare (workers/site), with its own token. Skipped while the token is
-#            not set; see docs/operations.md «The site on Cloudflare».
+#            not set; see docs/operations.md «Siden på Cloudflare».
 #   attest   signs build provenance and the SBOM for the published archive (see the job below).
+#   alert    opens an issue when the run fails, or comments on the open one.
 # Actions are pinned to commit SHAs (Dependabot updates them).
 permissions:
   contents: read
