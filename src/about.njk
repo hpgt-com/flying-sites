@@ -10,8 +10,8 @@ eleventyComputed:
   name: "{{ t.about.title }}"
   description: "{{ t.about.description }}"
 ---
-{#- About the site: responsibility, sources and licences, privacy, open data and how to report changes. The home page and the
-    site pages link here, so they only need a short line each. -#}
+{#- Om siden: ansvar, kilder og lisenser, personvern, åpne data og hvordan man melder fra om endringer. Forsiden og
+    stedssidene lenker hit, så de trenger bare en kort linje hver. -#}
 {%- import "macros.njk" as m with context -%}
 {%- set ext = m.external() -%}
 <main class="simple-page about-page">
@@ -60,7 +60,7 @@ eleventyComputed:
       <li>{{ t.about.privacyThirdParty }}</li>
       <li>{{ t.about.privacyReport }}</li>
       <li>{{ t.about.privacyData }}</li>
-      {#- Flyaktivitet: what is kept from OGN (sources/flights.js), and how a pilot avoids being counted. -#}
+      {#- Flyaktivitet: hva som lagres fra OGN (sources/flights.js), og hvordan en pilot unngår å bli telt. -#}
       <li>{{ t.about.privacyFlights | fmt({ ddb: '<a href="https://ddb.glidernet.org/" target="_blank" rel="noopener">' ~ t.about.ognDdb ~ ext ~ '</a>', rules: '<a href="https://www.glidernet.org/ogn-data-usage/" target="_blank" rel="noopener">' ~ t.about.ognRules ~ ext ~ '</a>' }) | safe }}</li>
       <li>{{ t.about.privacyNoAccount }}</li>
     </ul>

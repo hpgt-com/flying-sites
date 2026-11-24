@@ -1,4 +1,4 @@
-// Tests for «Prognose» on the home map (src/assets/js/forecast-layer.js). Run with `npm test`.
+// Tester for «Prognose» på kartet på forsiden (src/assets/js/forecast-layer.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { installDom, html } from "./helpers/dom.mjs";
@@ -11,7 +11,7 @@ const texts = { "forecast.ms": "{v} m/s", "forecast.masl": "{m} moh", "forecast.
 FC.useText((key, vars) => (texts[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => vars[k]));
 
 const T0 = Date.UTC(2026, 9, 21, 10) / 1000;
-// A grid of 2 × 2 points, two hours: one point at sea, three on land; values per point the same for both hours.
+// Et nett med 2 × 2 punkter, to timer: ett punkt på sjøen, tre på land; verdiene per punkt er like begge timene.
 function grid(over = {}) {
   const per = (v) => [[v, v], [v, v], [v, v], [v, v]];
   return {
@@ -21,7 +21,7 @@ function grid(over = {}) {
   };
 }
 
-test("only data in the expected shape is used", () => {
+test("bare data med forventet form brukes", () => {
   assert.equal(FC.isGridData(grid()), true);
   assert.equal(FC.isGridData(grid({ dataset: "grid-wide" })), true);
   assert.equal(FC.isGridData(grid({ dataset: "stations" })), false);
@@ -38,7 +38,7 @@ test("only data in the expected shape is used", () => {
   assert.equal(FC.isGridData(nulls), true);
 });
 
-test("the hour that holds a time, and nothing outside the hours", () => {
+test("timen som inneholder et tidspunkt, og ingenting utenfor timene", () => {
   const g = grid();
   assert.equal(FC.hourIndex(g, T0 * 1000), 0);
   assert.equal(FC.hourIndex(g, T0 * 1000 + 3599999), 0);
@@ -47,22 +47,22 @@ test("the hour that holds a time, and nothing outside the hours", () => {
   assert.equal(FC.hourIndex(g, (T0 + 7200) * 1000), -1);
 });
 
-test("points row by row from the south", () => {
+test("punkter rad for rad fra sør", () => {
   assert.deepEqual(FC.pointAt(grid(), 0), { lat: 68.5, lon: 16 });
   assert.deepEqual(FC.pointAt(grid(), 3), { lat: 68.6, lon: 16.25 });
 });
 
-test("thermal strength, top and cloud base: land only, Cu when the base is under the top", () => {
+test("termikkstyrke, topp og skybase: bare land, Cu når basen er under toppen", () => {
   const g = grid();
   const sea = FC.hourAt(g, 0, 0);
   assert.equal(sea.land, false);
   assert.equal(sea.w, 0);
   assert.equal(sea.top, null);
   const land = FC.hourAt(g, 1, 0);
-  // w* = cbrt(9.81 / 287.15 · 240 / 1200 · 1200) ≈ 2.0 m/s
+  // w* = cbrt(9,81 / 287,15 · 240 / 1200 · 1200) ≈ 2,0 m/s
   assert.equal(land.w, 2);
   assert.equal(land.top, 1500);
-  // 300 + 125 × 8 = 1300, under the top: Cu
+  // 300 + 125 × 8 = 1300, under toppen: Cu
   assert.equal(land.base, 1300);
   assert.equal(land.cu, true);
   const dry = grid();
@@ -75,7 +75,7 @@ test("thermal strength, top and cloud base: land only, Cu when the base is under
   assert.equal(FC.hourAt(weak, 1, 0).w, 0);
 });
 
-test("low cloud and rain", () => {
+test("lave skyer og nedbør", () => {
   const g = grid();
   g.values.cl = g.values.cl.map(() => [95, 95]);
   g.values.Td = g.values.Td.map(() => [13, 13]);
@@ -86,28 +86,28 @@ test("low cloud and rain", () => {
   assert.equal(FC.hourAt(g, 2, 1).rain, false);
 });
 
-test("the thermal colours start at 1 m/s", () => {
+test("termikkfargene starter på 1 m/s", () => {
   assert.deepEqual([0, 0.9, 1, 1.6, 2.2, 2.7, 3.5, null].map(FC.scaleKey), [null, null, "t1", "t2", "t3", "t4", "t5", null]);
 });
 
-test("wind barbs as on RASP: half 2.5, full 5, pennant 25, a ring for calm", () => {
+test("vindfjær som på RASP: halv 2,5, hel 5, vimpel 25, en ring for stille", () => {
   const barb = (dir, speed) => html(FC.barbSvg(dir, speed));
-  // The lines in the barb besides the staff.
+  // Strekene i fjæren ved siden av staven.
   const count = (svg) => svg.match(/class="fc-barb__line" d="([^"]*)"/)[1].split("M").length - 2;
   assert.match(barb(90, 0.5), /fc-barb__calm/);
   assert.equal(FC.barbSvg(null, 3), null);
-  // 7.5 m/s: one full and one half barb, besides the staff.
+  // 7,5 m/s: én hel og én halv fjær, ved siden av staven.
   assert.equal(count(barb(90, 7.5)), 2);
   assert.match(barb(90, 7.5), /rotate\(90\)/);
   assert.equal(FC.barbSvg(90, 7.5).namespaceURI, "http://www.w3.org/2000/svg");
-  // 27.5 m/s: a pennant and a half barb.
+  // 27,5 m/s: en vimpel og en halv fjær.
   const strong = barb(0, 27.5);
   assert.match(strong, /fc-barb__flag/);
   assert.equal(count(strong), 1);
   assert.doesNotMatch(barb(0, 10), /fc-barb__flag/);
 });
 
-test("the popup's lines: numbers and directions, only what is known", () => {
+test("popupens linjer: tall og retninger, bare det som er kjent", () => {
   const rows = Object.fromEntries(FC.popupRows(FC.hourAt(grid(), 1, 0)));
   assert.equal(rows["forecast.thermal"], "2,0 m/s");
   assert.equal(rows["forecast.top"], "1300 moh");
@@ -122,16 +122,16 @@ test("the popup's lines: numbers and directions, only what is known", () => {
   assert.equal(FC.formatTemp(0.2), "0°");
 });
 
-test("the labels with a barb: stacked on the side the wind blows to, clear of the station", () => {
+test("etikettene med fjær: stablet på siden vinden blåser mot, klar av stasjonen", () => {
   const rows = [{ size: [30, 16] }, { size: [44, 20] }];
-  // From the south: the staff points down, the stack goes up.
+  // Fra sør: staven peker ned, stabelen går opp.
   const south = FC.stackAt(180, rows);
   assert.equal(south.x, 0);
-  assert.ok(south.y[1] + 10 <= -8, `bottom of the stack at ${south.y[1] + 10}`);
+  assert.ok(south.y[1] + 10 <= -8, `bunnen av stabelen ved ${south.y[1] + 10}`);
   assert.ok(south.y[0] < south.y[1]);
-  // From the west: the stack goes right, its left edge clear of the station.
+  // Fra vest: stabelen går til høyre, med venstre kant klar av stasjonen.
   const west = FC.stackAt(270, rows);
-  assert.ok(west.x - 22 >= 8, `left edge at ${west.x - 22}`);
-  // Without wind: on the point.
+  assert.ok(west.x - 22 >= 8, `venstre kant ved ${west.x - 22}`);
+  // Uten vind: på punktet.
   assert.deepEqual(FC.stackAt(null, rows), { x: 0, y: [-10, 8] });
 });

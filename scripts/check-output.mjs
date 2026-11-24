@@ -1,8 +1,8 @@
-// Checks the built site for template and script slips such as «[object Object]» (lib/output-check.js). Run after the build:
+// Sjekker det bygde nettstedet for feil fra maler og skript, som «[object Object]» (lib/output-check.js). Kjøres etter bygging:
 //
 //   npm run build && npm run check:output
 //
-// Fails with a list of the pages and what was found.
+// Feiler med en liste over sidene og hva som ble funnet.
 
 import { checkOutput } from "../lib/output-check.js";
 

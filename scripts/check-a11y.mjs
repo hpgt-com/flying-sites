@@ -1,11 +1,11 @@
-// Accessibility check of the built site with axe-core in Chromium (Playwright). Run after the build:
+// Sjekk av universell utforming for det bygde nettstedet med axe-core i Chromium (Playwright). Kjøres etter bygging:
 //
 //   npm run build && npm run check:a11y
 //
-// Serves _site/ on a local port and checks a few pages that cover the templates, in light and dark mode. Only
-// findings with impact «serious» or «critical» fail the check; the rest are listed. Requests to other hosts (map
-// tiles, Yr, statistics) are blocked, so the check needs no network and gives the same result every time.
-// CHROMIUM_PATH: a Chromium already installed (otherwise the one from `npx playwright install chromium`).
+// Serverer _site/ på en lokal port og sjekker noen sider som dekker malene, i lys og mørk modus. Bare funn med
+// alvorlighet «serious» eller «critical» stopper sjekken; resten listes opp. Forespørsler til andre verter
+// (kartfliser, Yr, statistikk) blokkeres, så sjekken trenger ikke nett og gir samme resultat hver gang.
+// CHROMIUM_PATH: en Chromium som alt er installert (ellers den fra `npx playwright install chromium`).
 
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -23,7 +23,7 @@ const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePa
 let failures = 0;
 try {
   for (const colorScheme of ["light", "dark"]) {
-    // bypassCSP: the pages only allow their own scripts, and axe is injected from outside.
+    // bypassCSP: sidene tillater bare sine egne skript, og axe sprøytes inn utenfra.
     const context = await browser.newContext({ colorScheme, bypassCSP: true, viewport: { width: 1280, height: 900 } });
     await context.route("**/*", (route) => (new URL(route.request().url()).origin === origin ? route.continue() : route.abort()));
     const page = await context.newPage();

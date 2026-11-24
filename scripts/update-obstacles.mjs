@@ -1,10 +1,10 @@
-// Fetches the power lines and other obstacles in the region around the sites (lib/obstacles.js) and saves them as tiles
-// with an index for the map layer «Kraftlinjer og hindre» (src/_data/cache/obstacles/index.json and tiles/). Needs no
-// key. Never writes to the site files; changes show up in the Git diff and are reviewed before publishing
+// Henter kraftlinjene og de andre hindrene i regionen rundt flystedene (lib/obstacles.js) og lagrer dem som ruter
+// med en indeks for kartlaget «Kraftlinjer og hindre» (src/_data/cache/obstacles/index.json og tiles/). Trenger ingen
+// nøkkel. Skriver aldri til flystedsfilene; endringer vises i diffen i Git og gås gjennom før publisering
 // (.github/workflows/obstacles.yml).
 //
 //   npm run obstacles
-//   npm run obstacles -- --no-osm     (NVE only, when Overpass cannot be reached; the index then says so)
+//   npm run obstacles -- --no-osm     (bare NVE, når Overpass ikke svarer; indeksen sier da det)
 
 import fs from "node:fs";
 import path from "node:path";
@@ -27,7 +27,7 @@ async function getJson(url, options = {}, tries = 3) {
   }
 }
 
-// All the features of one NVE layer in a box, page by page.
+// Alle objektene i ett lag fra NVE innenfor en boks, side for side.
 async function nveLayer(layer, box) {
   const out = [];
   for (let offset = 0; ; ) {
@@ -47,19 +47,19 @@ for (const layer of NVE_LAYERS) {
   for (const box of layer.nearSites ? boxes : [region]) features.push(...await nveLayer(layer, box));
 }
 if (withOsm) {
-  // One query for the whole region (Overpass allows few at a time).
+  // Én spørring for hele regionen (Overpass tillater få om gangen).
   const body = new URLSearchParams({ data: overpassQuery([region]) });
   features.push(...osmFeatures(await getJson(OVERPASS, { method: "POST", body })));
 }
 
 const tiles = obstacleTiles(features);
 const index = obstaclesIndex(tiles, { fetched: new Date().toISOString().slice(0, 10), sources: withOsm ? ["nve", "osm"] : ["nve"] });
-// The old tiles go, so a tile without features any more is removed.
+// De gamle rutene fjernes, så en rute som ikke lenger har objekter, forsvinner.
 fs.rmSync(path.join(OUT_DIR, "tiles"), { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT_DIR, "tiles"), { recursive: true });
 let bytes = 0;
 for (const [key, list] of tiles) {
-  // One feature per line, so the PR's diff shows what was added, changed or removed.
+  // Ett objekt per linje, så diffen i PR-en viser hva som er lagt til, endret eller fjernet.
   const text = '{"type":"FeatureCollection","features":[\n' + list.map((f) => JSON.stringify(f)).join(",\n") + "\n]}\n";
   fs.writeFileSync(path.join(OUT_DIR, "tiles", `${key}.geojson`), text);
   bytes += Buffer.byteLength(text);

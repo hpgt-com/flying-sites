@@ -1,8 +1,9 @@
-name: Data service
+name: Datatjenesten
 
-# Publishes the data service (workers/data) to Cloudflare Workers when it, the MET code or the sites change on main.
-# The service fetches its data by itself (a Cron Trigger every minute, each source on its own interval), so this only runs on changes.
-# After publishing it waits until the new version has run successfully, and rolls back to the one before if not.
+# Publiserer datatjenesten (workers/data) til Cloudflare Workers når den, MET-koden eller stedene endres på main.
+# Tjenesten henter dataene selv (en Cron Trigger hvert minutt, hver kilde med sitt eget intervall), så denne kjører
+# bare ved endringer.
+# Etter publisering venter den til den nye versjonen har kjørt uten feil, og ruller ellers tilbake til den forrige.
 on:
   push:
     branches: [main]
@@ -28,8 +29,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # The token and account are secrets in the environment «cloudflare», which only main may use. The token may only
-    # publish Workers in the HPGT account (see SECURITY.md).
+    # Tokenet og kontoen er hemmeligheter i miljøet «cloudflare», som bare main kan bruke. Tokenet kan bare
+    # publisere Workers i HPGT-kontoen (se SECURITY.md).
     environment: cloudflare
     permissions:
       contents: read
@@ -38,23 +39,23 @@ jobs:
         with:
           persist-credentials: false
 
-      # No npm cache here: a job that publishes should not restore files another run could have written.
+      # Ingen npm-buffer her: en jobb som publiserer, skal ikke hente fram filer en annen kjøring kan ha skrevet.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
 
-      # The launches from the site files (js-yaml from the root packages). --ignore-scripts as in the other workflows.
+      # Startene fra stedsfilene (js-yaml fra pakkene i roten). --ignore-scripts som i de andre arbeidsflytene.
       - run: npm ci --ignore-scripts
       - run: node scripts/data-sites.mjs
 
-      # The tests once more before publishing: the PR check ran them, but a merge of two PRs is a new combination.
+      # Testene én gang til før publisering: PR-sjekken kjørte dem, men en merge av to PR-er er en ny kombinasjon.
       - run: npm test
 
-      # Wrangler, at the version in workers/data/package-lock.json.
+      # Wrangler, i versjonen i workers/data/package-lock.json.
       - run: npm ci --ignore-scripts
         working-directory: workers/data
 
-      # The version that runs now, to roll back to if the new one does not work.
+      # Versjonen som kjører nå, å rulle tilbake til hvis den nye ikke virker.
       - name: Versjonen som kjører nå
         id: before
         working-directory: workers/data
@@ -62,7 +63,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          # Unknown (empty) if the answer cannot be read; the rollback then goes to the version before the new one.
+          # Ukjent (tom) hvis svaret ikke kan leses; da ruller den tilbake til versjonen før den nye.
           npx wrangler deployments status --json > before.json || true
           version=$(node -e 'try { const d = JSON.parse(require("fs").readFileSync("before.json", "utf8")); const v = (d.versions ?? []).slice().sort((a, b) => b.percentage - a.percentage)[0]; process.stdout.write(/^[0-9a-f-]{36}$/.test(v?.version_id ?? "") ? v.version_id : ""); } catch {}')
           echo "Kjører nå: ${version:-ukjent}"
@@ -78,15 +79,15 @@ jobs:
           npx wrangler deploy
           echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
-      # Waits until the new version has run a source successfully and serves a dataset (scripts/data-smoke.mjs).
+      # Venter til den nye versjonen har kjørt en kilde uten feil og serverer et datasett (scripts/data-smoke.mjs).
       - name: Sjekk den nye versjonen
         id: smoke
         env:
           PUBLISHED_AT: ${{ steps.deploy.outputs.at }}
         run: node scripts/data-smoke.mjs "$PUBLISHED_AT"
 
-      # If it does not, the version from before runs again, and the run fails (the alert job opens an issue). A store
-      # rebuilt by the new version keeps its tables: the old code reads them as they are.
+      # Gjør den ikke det, kjører versjonen fra før igjen, og kjøringen feiler (jobben alert åpner en sak). Et lager
+      # som den nye versjonen har bygget om, beholder tabellene: den gamle koden leser dem som de er.
       - name: Rull tilbake
         if: failure() && steps.smoke.outcome == 'failure'
         working-directory: workers/data
@@ -102,8 +103,9 @@ jobs:
             npx wrangler rollback --message "Sjekken etter publisering feilet: $RUN_URL" --yes
           fi
 
-  # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
-  # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.
+  # En sak når kjøringen feiler (en kommentar på den åpne hvis den feiler igjen), så en feilet kjøring ikke blir
+  # oversett: GitHub sier ikke fra selv om planlagte kjøringer, og de kan også komme timer for sent. Kjører ingen
+  # kode fra prosjektet.
   alert:
     needs: [deploy]
     if: failure()

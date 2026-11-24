@@ -1,32 +1,33 @@
-// The reserve for «Piloter i lufta» and the flying activity when OGN's web map (live.glidernet.org, live.js) does not
-// answer: the same positions read straight from OGN's APRS servers, the stream every receiver and app (pgpilot too)
-// sends to and the web map itself reads. A read-only connection (passcode -1) with an area filter for the sites' area
-// (live.js bounds) is kept open for a few seconds, the time it takes to hear every aircraft in the air at least once,
-// and each aircraft's newest position is kept. Only paragliders (aircraft type 7), as from the web map.
-// OGN's rules (glidernet.org/ogn-data-usage), which the web map follows for us and must be followed here instead: a
-// device that must not be tracked, by the no-tracking flag in its message or «tracked: N» in OGN's device database
-// (DDB), is left out, and no device is identified (every name is null, shown as unknown). The database's list of devices
-// that must not be tracked is fetched in the store once a day (Store.refreshNoTrack, a few MB, more CPU than a Worker run
-// has) and kept, so it is there when OGN goes down; without it the reserve gives nothing rather than risk showing one. Tested in test/data-worker.test.js.
+// Reserven for «Piloter i lufta» og flyaktiviteten når OGNs nettkart (live.glidernet.org, live.js) ikke svarer: de
+// samme posisjonene lest rett fra OGNs APRS-servere. Det er strømmen alle mottakere og apper (også pgpilot) sender til,
+// og som nettkartet selv leser. En tilkobling som bare leser (passcode -1), med et områdefilter for stedenes område
+// (live.js bounds), holdes åpen noen sekunder. Det er tiden det tar å høre hvert luftfartøy i lufta minst én gang. Den
+// nyeste posisjonen for hvert luftfartøy beholdes. Bare paraglidere (luftfartøytype 7), som fra nettkartet.
+// OGNs regler (glidernet.org/ogn-data-usage), som nettkartet følger for oss, må følges her i stedet. En enhet som ikke
+// skal spores, etter flagget i meldingen eller «tracked: N» i OGNs enhetsregister (DDB), utelates. Ingen enhet
+// identifiseres (alle navn er null og vises som ukjent). Registerets liste over enheter som ikke skal spores, hentes i
+// lageret én gang i døgnet (Store.refreshNoTrack; noen MB, mer CPU enn en Worker-kjøring har) og beholdes, så den
+// finnes når OGN er nede. Uten listen gir reserven ingenting heller enn å risikere å vise en slik enhet.
+// Testet i test/data-worker.test.js.
 
 import { bounds, MAX_AGE_SECONDS, PARAGLIDER } from "./live.js";
 
 export const APRS_HOST = "aprs.glidernet.org";
-// The port for a client's own filter (10152 is the whole world's stream).
+// Porten for en klients eget filter (10152 er strømmen for hele verden).
 export const APRS_PORT = 14580;
-// The device database as CSV (the JSON address, download/?j=1, redirects here since October 2026). Over HTTPS only: a
-// list fetched over HTTP could be changed on the way, and it decides who is shown.
+// Enhetsregisteret som CSV (JSON-adressen, download/?j=1, sender hit siden oktober 2026). Bare over HTTPS: en liste
+// hentet over HTTP kan endres underveis, og den avgjør hvem som vises.
 export const DDB_URL = "https://ddb.glidernet.org/download/ddb-cache.csv";
-// How long the list from the device database is used before it is fetched again.
+// Hvor lenge listen fra enhetsregisteret brukes før den hentes på nytt.
 export const DDB_MAX_AGE_HOURS = 24;
-// How long a kept list is still used when the database does not answer. After that the reserve gives nothing: a pilot
-// who asked OGN not to be tracked after the list was fetched must not be shown.
+// Hvor lenge en lagret liste fortsatt brukes når registeret ikke svarer. Etter det gir reserven ingenting: en pilot som
+// ba OGN om ikke å bli sporet etter at listen ble hentet, skal ikke vises.
 export const DDB_MAX_KEEP_HOURS = 7 * 24;
-// The database has tens of thousands of devices; an answer with far fewer is taken as broken, not as the list.
+// Registeret har titusenvis av enheter. Et svar med langt færre regnes som feil, ikke som listen.
 const DDB_MIN_DEVICES = 1000;
 const FEET = 0.3048, KNOTS = 0.5144;
 
-// The area filter: a/north/west/south/east.
+// Områdefilteret: a/nord/vest/sør/øst.
 export function aprsFilter(sites) {
   const b = bounds(sites);
   return `a/${b.n.toFixed(2)}/${b.w.toFixed(2)}/${b.s.toFixed(2)}/${b.e.toFixed(2)}`;
@@ -36,7 +37,7 @@ export function loginLine(sites) {
   return `user HPGTFS pass -1 vers hpgt-flysteder 1.0 filter ${aprsFilter(sites)}\r\n`;
 }
 
-// The time of a position, hhmmss UTC, on the day of now (or the day before, for a time just after midnight's other side).
+// Tiden for en posisjon, hhmmss UTC, på dagen til now (eller dagen før, for en tid like før midnatt).
 function positionTime(hhmmss, now) {
   const d = new Date(now);
   let t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), +hhmmss.slice(0, 2), +hhmmss.slice(2, 4), +hhmmss.slice(4, 6));
@@ -44,13 +45,13 @@ function positionTime(hhmmss, now) {
   return t;
 }
 
-// Degrees from APRS's ddmm.mm (or dddmm.mm), with the extra thousandth of a minute from «!Wab!».
+// Grader fra APRS-formatet ddmm.mm (eller dddmm.mm), med den ekstra tusendelen av et minutt fra «!Wab!».
 const degrees = (deg, min, extra, sign) => (Number(deg) + (Number(min) + extra / 1000) / 60) * (sign === "S" || sign === "W" ? -1 : 1);
 
-// One line of the stream as an item in the same shape as live.js parseLive gives (id = the device address in lower-case
-// hex, name always null), or null: comments and server lines, other messages than aircraft positions, other aircraft
-// than paragliders, devices that must not be tracked (the flag, or in noTrack: a Set of addresses in upper-case hex), and
-// positions older than MAX_AGE_SECONDS.
+// Én linje fra strømmen som et element med samme form som live.js parseLive gir (id = enhetsadressen i hex med små
+// bokstaver, name alltid null), eller null for: kommentarer og serverlinjer, andre meldinger enn posisjoner fra
+// luftfartøy, andre luftfartøy enn paraglidere, enheter som ikke skal spores (flagget, eller i noTrack: et Set med
+// adresser i hex med store bokstaver) og posisjoner eldre enn MAX_AGE_SECONDS.
 //   FLRDDA5BA>OGFLR,qAS,Rx:/160829h6847.41N/01622.03E'342/049/A=005524 !W52! id1EDDA5BA -454fpm -1.1rot 8.8dB
 const POSITION = /^[A-Z0-9]{3,9}>[A-Z0-9]+,[^:]*:[/@](\d{6})h(\d{2})(\d{2}\.\d{2})([NS]).(\d{3})(\d{2}\.\d{2})([EW]).(?:(\d{3})\/(\d{3}))?\/A=(-?\d{5,6})(.*)$/;
 export function parseAprsLine(line, now = Date.now(), noTrack = new Set()) {
@@ -59,7 +60,7 @@ export function parseAprsLine(line, now = Date.now(), noTrack = new Set()) {
   const comment = m[11];
   const id = /\bid([0-9A-F]{2})([0-9A-F]{6})\b/.exec(comment);
   if (!id) return null;
-  // The detail byte, STttttaa: stealth, no tracking, the aircraft type, the address type.
+  // Detaljbyten, STttttaa: skjult, ingen sporing, luftfartøytypen, adressetypen.
   const detail = parseInt(id[1], 16);
   const type = (detail & 0x3c) >> 2;
   if (detail & 0x40 || type !== PARAGLIDER || noTrack.has(id[2])) return null;
@@ -73,7 +74,7 @@ export function parseAprsLine(line, now = Date.now(), noTrack = new Set()) {
     lat: Math.round(degrees(m[2], m[3], extra ? +extra[1] : 0, m[4]) * 1e5) / 1e5,
     lon: Math.round(degrees(m[5], m[6], extra ? +extra[2] : 0, m[7]) * 1e5) / 1e5,
     alt: Math.round(Number(m[10]) * FEET),
-    // A course of 0 with no speed is APRS's «not known».
+    // Kurs 0 uten fart betyr «ukjent» i APRS.
     track: course === null || (course === 0 && !knots) ? null : course % 360,
     speed: knots === null ? null : Math.round(knots * KNOTS * 10) / 10,
     climb: climb ? Math.round((Number(climb[1]) * FEET) / 60 * 10) / 10 : null,
@@ -81,8 +82,8 @@ export function parseAprsLine(line, now = Date.now(), noTrack = new Set()) {
   };
 }
 
-// Listens to the stream for the sites' area for `seconds`, and returns each aircraft's newest position, newest first.
-// connect: Cloudflare's connect (cloudflare:sockets), or a stand-in in the tests.
+// Lytter på strømmen for stedenes område i `seconds` sekunder, og gir den nyeste posisjonen for hvert luftfartøy,
+// nyeste først. connect: Cloudflares connect (cloudflare:sockets), eller en erstatning i testene.
 export async function listenAprs(sites, noTrack, { seconds = 20, now = Date.now(), connect } = {}) {
   connect ??= (await import("cloudflare:sockets")).connect;
   const socket = connect({ hostname: APRS_HOST, port: APRS_PORT });
@@ -112,13 +113,13 @@ export async function listenAprs(sites, noTrack, { seconds = 20, now = Date.now(
   return [...newest.values()].sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
 }
 
-// From OGN's device database (DDB_URL): the addresses (upper-case hex) of the devices that must not be tracked. The
-// database is CSV, one device a line, the fields in single quotes:
+// Fra OGNs enhetsregister (DDB_URL): adressene (hex med store bokstaver) til enhetene som ikke skal spores. Registeret
+// er CSV, én enhet per linje, med feltene i enkle anførselstegn:
 //   #DEVICE_TYPE,DEVICE_ID,AIRCRAFT_MODEL,REGISTRATION,CN,TRACKED,IDENTIFIED
 //   'F','DDA5BA','Paraglider','','','N','Y'
-// Only the address and TRACKED are read, from each end of the line, so a comma or a quote in the model or the
-// registration does not matter. The old JSON form ({ devices: [{ device_id, tracked }] }) is still read, should OGN go
-// back to it. Throws when the answer does not look like the database.
+// Bare adressen og TRACKED leses, fra hver sin ende av linjen, så komma eller anførselstegn i modellen eller
+// registreringen gjør ingenting. Den gamle JSON-formen ({ devices: [{ device_id, tracked }] }) leses fortsatt, i
+// tilfelle OGN går tilbake til den. Kaster en feil når svaret ikke ser ut som registeret.
 export async function fetchNoTrack(fetchFn = fetch) {
   const r = await fetchFn(DDB_URL, { headers: { "user-agent": "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)" }, signal: AbortSignal.timeout(20000) });
   if (!r.ok) throw new Error(`OGN-registeret svarte ${r.status}`);
@@ -128,7 +129,7 @@ export async function fetchNoTrack(fetchFn = fetch) {
   return devices.filter((d) => d.tracked !== "Y").map((d) => d.id.toUpperCase());
 }
 
-// The devices in the database's answer, CSV or JSON, as [{ id, tracked }]; [] when it is neither.
+// Enhetene i svaret fra registeret, CSV eller JSON, som [{ id, tracked }]. [] når det er ingen av delene.
 export function parseDdb(text) {
   const s = String(text).trimStart();
   if (s.startsWith("{")) {

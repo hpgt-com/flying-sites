@@ -1,14 +1,15 @@
-// «Fra turlogger»: reads flight logs (IGC, and KML with times) from one or more folders on your own machine and writes
-// only the sums per site to src/_data/logbook.json (lib/igc.js): flights per month and the longest, highest and
-// farthest. The logs themselves, the tracks and the names in them are never written anywhere. The box on the site page
-// shows only while logbook.json exists; it is left out until more pilots have added logs. Run it again over all the folders when logs are added (the
-// file is written anew each time); the same flight in an IGC and a KML file counts once (the IGC is kept).
+// «Fra turlogger»: leser flylogger (IGC, og KML med tider) fra én eller flere mapper på din egen maskin og skriver
+// bare summene per flysted til src/_data/logbook.json (lib/igc.js): turer per måned og den lengste, høyeste og
+// fjerneste. Selve loggene, sporene og navnene i dem skrives aldri noe sted. Boksen på flystedssiden vises bare
+// så lenge logbook.json finnes; den er utelatt til flere piloter har lagt inn logger. Kjør på nytt over alle mappene
+// når det kommer nye logger (filen skrives på nytt hver gang); samme tur i en IGC- og en KML-fil telles én gang
+// (IGC-en beholdes).
 //
 //   npm run logbook -- ~/turer [~/turer-fra-andre …]
-//   npm run logbook -- --list ~/turer     (also lists the files without a flight, to see why)
-//   npm run logbook -- --skip 2020-05-01_10-54 ~/turer     (leaves out the files whose name holds it; repeatable)
+//   npm run logbook -- --list ~/turer     (lister også filene uten tur, så du ser hvorfor)
+//   npm run logbook -- --skip 2020-05-01_10-54 ~/turer     (utelater filene med dette i navnet; kan gjentas)
 //
-// Look over src/_data/logbook.json before committing it.
+// Se over src/_data/logbook.json før du committer den.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -52,7 +53,7 @@ for (const folder of folders) {
       if (!flight || !flight.date) { noFlight++; without.push(file); continue; }
       used[igc ? "igc" : "kml"]++;
       const key = flightKey(flight);
-      // The IGC wins over a KML of the same flight (it has the logger's own heights).
+      // IGC-en går foran en KML av samme tur (den har loggerens egne høyder).
       if (!byKey.has(key) || igc) byKey.set(key, flight);
     } catch {
       failed++;

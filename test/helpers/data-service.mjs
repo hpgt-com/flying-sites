@@ -1,9 +1,9 @@
-// A stand-in for Cloudflare around the data service (workers/data), for the tests: the Durable Object's SQLite on
-// node:sqlite, R2, the Cache API, and the sources' answers (MET, Holfuy, Frost, Open-Meteo, OGN, Kartverket) made up for
-// the time the clock says. It counts what the free plan counts per day: calls to the Durable Object, and rows read and
-// written in it. Rows read are estimated from SQLite's query plan: a scan reads the whole table, a search through an
-// index the rows in the index's range. Rows written count once for the table and once per index on it, as Cloudflare
-// counts them. Used by test/data-quota.test.js.
+// En stand-in for Cloudflare rundt datatjenesten (workers/data), for testene: Durable Objects SQLite på node:sqlite,
+// R2, Cache API, og kildenes svar (MET, Holfuy, Frost, Open-Meteo, OGN, Kartverket) laget for tidspunktet klokka viser.
+// Den teller det gratisplanen teller per døgn: kall til Durable Object, og rader lest og skrevet i det. Leste rader
+// anslås fra SQLites spørreplan: en scan leser hele tabellen, et søk gjennom en indeks radene i indeksens område.
+// Skrevne rader teller én gang for tabellen og én gang per indeks på den, slik Cloudflare teller dem. Brukes av
+// test/data-quota.test.js.
 
 import { DatabaseSync } from "node:sqlite";
 
@@ -15,14 +15,14 @@ export function sqliteStorage() {
   const count = (sql, params = []) => db.prepare(sql).get(...params).n;
   const indexes = (table) => count("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'index' AND tbl_name = ?", [table]);
 
-  // The rows a SELECT, UPDATE or DELETE reads, from its plan, counted before it runs.
+  // Radene en SELECT, UPDATE eller DELETE leser, fra planen, telt før den kjører.
   function rowsRead(query, params) {
     const table = (query.match(/\b(?:FROM|UPDATE)\s+(\w+)/i) ?? [])[1];
     if (!table) return 0;
     if (!plans.has(query)) plans.set(query, db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(...params.map(() => null)).map((r) => r.detail));
     const step = plans.get(query).find((d) => new RegExp(`^(SCAN|SEARCH) ${table}\\b`).test(d));
     if (!step || step.startsWith("SCAN")) return count(`SELECT COUNT(*) AS n FROM ${table}`);
-    // MIN or MAX of an indexed column reads one row.
+    // MIN eller MAX av en indeksert kolonne leser én rad.
     if (/\b(MIN|MAX)\(/i.test(query)) return 1;
     const used = [...(step.match(/\(([^)]*)\)\s*$/)?.[1] ?? "").matchAll(/(\w+)[=<>]/g)].map((m) => m[1]);
     const at = query.search(/\bWHERE\b/i);
@@ -68,8 +68,8 @@ export function sqliteStorage() {
   return { db, stats, storage };
 }
 
-// The store as the Worker reaches it: every method call is one request to the Durable Object, and what comes back is a
-// copy, as over RPC.
+// Lageret slik Workeren når det: hvert metodekall er én forespørsel til Durable Object, og det som kommer tilbake, er
+// en kopi, som over RPC.
 export function rpcStub(object, calls) {
   return new Proxy(object, {
     get(target, key) {
@@ -108,7 +108,7 @@ export function fakeCache() {
 const iso = (ms) => new Date(ms).toISOString();
 const json = (body) => new Response(JSON.stringify(body), { headers: { "content-type": "application/json" } });
 
-// The sources' answers for the time clock.now. frostStations: how many of MET's stations are in the area.
+// Kildenes svar for tidspunktet clock.now. frostStations: hvor mange av METs stasjoner som er i området.
 export function fakeFetch(clock, sites, { frostStations = 30 } = {}) {
   const requests = {};
   const fetch = async (input) => {
@@ -145,7 +145,7 @@ export function fakeFetch(clock, sites, { frostStations = 30 } = {}) {
       })) });
     }
     if (url.host === "api.open-meteo.com") {
-      // From midnight UTC, as Open-Meteo answers. Several points (the forecast grid) give a list, one answer per point.
+      // Fra midnatt UTC, slik Open-Meteo svarer. Flere punkter (varselnettet) gir en liste, ett svar per punkt.
       const day = Math.floor(now / 86400000) * 86400000;
       const time = Array.from({ length: 72 }, (_, i) => (day + i * 3600000) / 1000);
       const vars = (url.searchParams.get("hourly") ?? "").split(",");
@@ -154,7 +154,7 @@ export function fakeFetch(clock, sites, { frostStations = 30 } = {}) {
       return json(lats.length > 1 ? lats.map((_, k) => one(k)) : one(1));
     }
     if (url.host === "live.glidernet.org") {
-      // Three paragliders over the first site between 10 and 16 UTC, none otherwise.
+      // Tre paraglidere over det første stedet mellom 10 og 16 UTC, ingen ellers.
       const h = new Date(now).getUTCHours();
       const s = sites[0];
       const ms = h >= 10 && h < 16
@@ -163,7 +163,7 @@ export function fakeFetch(clock, sites, { frostStations = 30 } = {}) {
       return new Response(`<?xml version="1.0"?><markers>${ms}</markers>`);
     }
     if (url.host === "ddb.glidernet.org") {
-      // OGN's device database: 1200 devices, every hundredth not to be tracked.
+      // OGNs enhetsdatabase: 1200 enheter, hver hundrede skal ikke spores.
       return json({ devices: Array.from({ length: 1200 }, (_, i) => ({ device_type: "F", device_id: i.toString(16).toUpperCase().padStart(6, "0"), tracked: i % 100 ? "Y" : "N", identified: "Y" })) });
     }
     if (url.host === "ws.geonorge.no") {

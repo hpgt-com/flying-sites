@@ -1,24 +1,24 @@
-// Performance budget for the built site, in Chromium (Playwright). Run after the build:
+// Ytelsesbudsjett for det bygde nettstedet, i Chromium (Playwright). Kjøres etter bygging:
 //
 //   npm run build && npm run check:budget
 //
-// Serves _site/ on a local port and loads a few pages that cover the templates, on a phone-sized screen, with the
-// service worker off and every other host blocked (map tiles, the data service, statistics), so the numbers are the
-// site's own and the same every time. For each page: the bytes of the site's own files by kind (HTML, CSS, JS, fonts,
-// images, data), the number of requests, the number of DOM nodes, and the layout shift (CLS) during the first seconds.
-// Each is measured against BUDGET, set a little above what the site uses today, so a change that makes a page much
-// heavier or shiftier fails the PR check instead of reaching the visitors. Raise a budget on purpose, in the same PR as
-// the change that needs it, and say why. Bytes are uncompressed (the local server does not compress); GitHub Pages
-// sends gzip, so visitors get about a third over the wire.
-// CHROMIUM_PATH: a Chromium already installed (otherwise the one from `npx playwright install chromium`).
+// Serverer _site/ på en lokal port og laster noen sider som dekker malene, på en skjerm på størrelse med en
+// telefon, med service workeren av og alle andre verter blokkert (kartfliser, datatjenesten, statistikk), så tallene
+// er nettstedets egne og like hver gang. For hver side: bytene i nettstedets egne filer etter slag (HTML, CSS, JS,
+// skrifter, bilder, data), antall forespørsler, antall DOM-noder og layoutforskyvningen (CLS) de første sekundene.
+// Hvert tall måles mot BUDGET, satt litt over det nettstedet bruker i dag, så en endring som gjør en side mye tyngre
+// eller mer urolig, stopper sjekken av PR-en i stedet for å nå de besøkende. Hev et budsjett med vilje, i samme PR
+// som endringen som trenger det, og si hvorfor. Bytene er ukomprimerte (den lokale serveren komprimerer ikke);
+// GitHub Pages sender gzip, så besøkende får omtrent en tredjedel over nettet.
+// CHROMIUM_PATH: en Chromium som alt er installert (ellers den fra `npx playwright install chromium`).
 
 import { chromium, devices } from "playwright";
 import { serveSite } from "./site-server.mjs";
 
 const PAGES = ["/", "/flysteder/sollifjellet/", "/vaer/", "/en/"];
-// Per page: bytes by kind (KB, uncompressed), requests, DOM nodes, CLS. The home page's nodes move with the day's
-// forecast (a window strip per site with windows), so its budget has room for that. A kind missing from a page's budget is not
-// checked for it.
+// Per side: byte etter slag (KB, ukomprimert), forespørsler, DOM-noder, CLS. Nodene på forsiden varierer med dagens
+// varsel (en stripe med flyvinduer per flysted som har vinduer), så budsjettet der har rom for det. Et slag som mangler
+// i budsjettet for en side, sjekkes ikke for den.
 const BUDGET = {
   "/": { html: 140, css: 165, js: 440, font: 80, image: 20, data: 10, requests: 30, nodes: 2300, cls: 0.05 },
   "/flysteder/sollifjellet/": { html: 100, css: 165, js: 440, font: 80, image: 140, data: 10, requests: 32, nodes: 3400, cls: 0.1 },
@@ -36,7 +36,7 @@ try {
   for (const url of PAGES) {
     const context = await browser.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
     await context.route("**/*", (route) => (new URL(route.request().url()).origin === origin ? route.continue() : route.abort()));
-    // The layout shift, summed as Chrome's CLS does for a short page view (shifts after the visitor's own input left out).
+    // Layoutforskyvningen, summert slik CLS i Chrome gjør for en kort sidevisning (uten forskyvninger etter egen input).
     await context.addInitScript(() => {
       window.__cls = 0;
       new PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: "layout-shift", buffered: true });

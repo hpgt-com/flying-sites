@@ -16,7 +16,7 @@ npm run build   # bygger til _site/
 
 `FORECAST_OFFLINE=1 npm run build` bygger uten været (MET og Open-Meteo), som går raskere og virker uten nett.
 Ellers henter bygget været når `.cache/weather/` mangler eller er eldre enn 30 minutter. `npm run weather` henter det
-med en gang, på samme måte som jobben `weather` i «Build and deploy».
+med en gang, på samme måte som jobben `weather` i «Bygg og publiser».
 
 Kvalitetssjekkene i PR-sjekken kan kjøres lokalt etter bygget:
 
@@ -94,11 +94,11 @@ merket `noindex`. Den viser per sted:
   Cloudflare → Workers & Pages → data → Observability.
 - Er varselet mer enn 6 timer gammelt (`maxForecastAgeHours` i `src/_data/windRules.json`), eller kommer det fra en
   modellkjøring hos MET som er mer enn 12 timer gammel (`maxModelAgeHours`), slås vindvurderingen av, og siden sier fra.
-- **Hent et nytt varsel nå:** Actions → «Build and deploy» → «Run workflow».
+- **Hent et nytt varsel nå:** Actions → «Bygg og publiser» → «Run workflow».
 - Grensene for vurderingen står i `src/_data/windRules.json`. Et steds egen grense settes med `wind_limits.max_wind` i
   stedsfilen.
 - **Publisere datatjenesten:** skjer av seg selv når `workers/data/`, `lib/weather/met.js` eller en stedsfil endres på
-  `main` (Actions → «Data service»), eller med «Run workflow» der. Testes lokalt med `node scripts/data-sites.mjs` og
+  `main` (Actions → «Datatjenesten»), eller med «Run workflow» der. Testes lokalt med `node scripts/data-sites.mjs` og
   `cd workers/data && npm ci --ignore-scripts && npx wrangler dev --test-scheduled` (åpne så `/__scheduled` for å kjøre
   tidsplanen, og `/v1/forecast.json`). For Holfuy lokalt legges `HOLFUY_KEY=…` i `workers/data/.dev.vars` (ignoreres
   av Git).
@@ -108,14 +108,14 @@ merket `noindex`. Den viser per sted:
 flysteder.hpgt.com serveres av Cloudflare (Workers static assets, Workeren `flysteder`, `workers/site/wrangler.toml`),
 slik at den sender ekte sikkerhetshoder (`src/headers.njk` → `_headers`: HSTS, CSP-en fra `site.csp` med
 rapportering, Trusted Types i report-only, innramming, referrer, permissions; se [CSP-rapporter](#csp-rapporter)) og
-cacher bildene i et år. Bygget er det samme: jobben «cloudflare» i «Build and deploy»
+cacher bildene i et år. Bygget er det samme: jobben «cloudflare» i «Bygg og publiser»
 publiserer arkivet som lages for GitHub Pages, så begge får nøyaktig de samme filene. GitHub Pages får fortsatt hvert
 bygg som reserve. Det egne domenet under Settings → Pages kan bli stående; GitHub varsler bare at DNS-posten ikke
 lenger peker dit.
 
 - **Tokenet** er `CLOUDFLARE_SITE_TOKEN` i miljøet `cloudflare`, laget under Workers & Pages → flysteder → Settings →
   Builds → «API token for external CI/CD», så det bare kan publisere denne Workeren. Det utløper 19.11.2027. Lag et
-  nytt på samme måte et par uker før, bytt hemmeligheten og kjør «Build and deploy». Uten tokenet sier jobben at den
+  nytt på samme måte et par uker før, bytt hemmeligheten og kjør «Bygg og publiser». Uten tokenet sier jobben at den
   ble hoppet over, og siden blir som den var.
 - **Domenet** flysteder.hpgt.com er et eget domene på Workeren (Settings → Domains & Routes), lagt til for hånd.
   Cloudflare lager DNS-posten, og sertifikatet er Cloudflares eget for hpgt.com. Sjekk med
@@ -141,7 +141,7 @@ lenger peker dit.
   sist ble skrevet og om det er innenfor grensen (varsel 60 min, stasjoner 15, høydevind 90, verifisering 90), hvilke
   startsteder varselet og høydevinden mangler, og siste arkiverte dag per stasjonskilde. `"ok": false` når et datasett
   er for gammelt.
-- «Data service health» (`health.yml`) sjekker den utenfra hver time. Når noe er galt, åpner den saken
+- «Helsesjekk for datatjenesten» (`health.yml`) sjekker den utenfra hver time. Når noe er galt, åpner den saken
   «Datatjenesten: data mangler eller er for gamle» (eller kommenterer på den åpne), og lukker den når alt er i orden
   igjen. GitHub kan kjøre den sent, så et problem kan bruke en time eller to på å vises. Kjør den nå: Actions → «Data
   service health» → «Run workflow».
@@ -163,7 +163,7 @@ lenger peker dit.
   hentes hver 3. time og det vide (omtrent 380) hver 6., på ulike minutter, så et døgn bruker omtrent 5 800, og
   høydevinden omtrent 300 til. `test/data-store.test.js` feiler hvis et nett får over 600 punkter eller døgnet over
   7 000. Et større område eller et finere nett krever Open-Meteos betalte API.
-- Gjenoppretting: koden ligger i Git (publiser på nytt med Actions → «Data service» → «Run workflow»). Lageret (Durable
+- Gjenoppretting: koden ligger i Git (publiser på nytt med Actions → «Datatjenesten» → «Run workflow»). Lageret (Durable
   Object-et) har bare data som kommer tilbake av seg selv: varselet og høydevinden innen en halvtime, de siste 7 dagene
   med målinger fra kildenes egen korte historikk (Holfuy og Frost gir bare den siste, så et tapt lager mister dagene som
   ikke er arkivert ennå), og verifiseringen fra da av. Flyaktiviteten per dag (`flight_days`) og
@@ -375,7 +375,8 @@ lenger peker dit.
   1. Cloudflare → R2 → slå på R2 (Free: 10 GB og gratis nedlasting; Cloudflare kan be om et kort selv innenfor
      gratisgrensene) og lag bøtta `hpgt-data-archive` (privat, ingen offentlig tilgang).
   2. Det daglige publiseringstokenet (miljøet `cloudflare`, laget fra Workeren) kan publisere Workeren med
-     R2-bindingen; det trengs ingen ekstra rettighet. Bare «Recover» skriver objekter til R2, med sitt eget token.
+     R2-bindingen; det trengs ingen ekstra rettighet. Bare «Gjenoppretting» skriver objekter til R2, med sitt eget
+     token.
   3. Bindingen `[[r2_buckets]]` i `workers/data/wrangler.toml` (binding `ARCHIVE`, bøtte `hpgt-data-archive`). Først
      etter steg 1 og 2: en publisering med bindingen og uten bøtte feiler.
 - Lese filene til rapporter: R2 → `hpgt-data-archive` → Settings → R2 API tokens (bare lesing), og bruk dem med
@@ -395,8 +396,8 @@ lenger peker dit.
   (`--checksum`), så en natt koster noen få Class C-listinger hos B2 og ingen Class B-kall per fil; B2s gratis daglige
   tak (2 500 Class B- og 2 500 Class C-transaksjoner, under Caps & Alerts) er da langt unna. En full gjenoppretting
   laster ned hver fil én gang, som er ett Class B-kall per fil: øk Class B-taket for den dagen (det koster brøkdeler av
-  en cent per 10 000) før «Recover» kjøres med `restore_archive`. **Gjenopprette R2 fra kopien** (en tapt bøtte): lag
-  bøtta, og så fra en maskin med rclone og begge nøklene:
+  en cent per 10 000) før «Gjenoppretting» kjøres med `restore_archive`. **Gjenopprette R2 fra kopien** (en tapt bøtte):
+  lag bøtta, og så fra en maskin med rclone og begge nøklene:
   `rclone copy b2:hpgt-flysteder-backup/archive r2:hpgt-data-archive`. Datatjenesten leser så historikken inn igjen av
   seg selv innen ett minutt etter at lageret er tomt (`store.js` `restore`).
 
@@ -415,7 +416,7 @@ lenger peker dit.
   derfor luftrommet for Norge og Sverige (`country`) og velger selv ut området rundt stedene (`withinCircles` i
   `lib/airspace.js`). En ny nøkkel hjelper ikke mot en 403 som sier «fra Cloudflare foran openAIP»; mot en 403 med
   openAIPs egen melding (en utløpt nøkkel) hjelper den.
-- **Hent nå:** Actions → «Update airspace» → «Run workflow», eller `npm run airspace` lokalt.
+- **Hent nå:** Actions → «Oppdater luftrom» → «Run workflow», eller `npm run airspace` lokalt.
 - Nøkkelen `OPENAIP_API_KEY` ligger i miljøet `automation` (se [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)).
   Oppdateringen virker ikke uten den.
 - **GitHub App «HPGT Flying Sites»**. Klubbens app for automatisering i GitHub Actions, brukt av arbeidsflytene for
@@ -432,7 +433,7 @@ lenger peker dit.
   4. Variabelen `APP_CLIENT_ID` (Client ID) under flying-sites → Settings → Secrets and variables → Actions →
      Variables, og hemmeligheten `APP_PRIVATE_KEY` (hele innholdet i `.pem`-filen) i miljøet `automation`. Slett så
      `.pem`-filen.
-  5. Test appen: Actions → «Update airspace» → «Run workflow», kryss av «Test the GitHub App token only». Jobben
+  5. Test appen: Actions → «Oppdater luftrom» → «Run workflow», kryss av «Test bare tokenet fra GitHub-appen». Jobben
      `test-app-token` får et token med lesetilgang fra appen og leser repoet; den henter ikke luftrom og åpner ingen PR.
      Grønt betyr at appen virker. PR-ene kommer fra `hpgt-flying-sites[bot]`.
 - Merknader om luftrom (for eksempel at innflygingen går inn i Evenes CTR) står i stedsfilens `airspace`.
@@ -452,7 +453,7 @@ lenger peker dit.
   - **OpenStreetMap** (Overpass, ODbL, ett søk for hele regionen): lavspentlinjer (`power=minor_line`), skiheiser og
     andre taubaner (også `aerialway=yes`, som gamle vareløyper), og kommunikasjonsmaster. Bare der noen har tegnet dem.
 - Hentes den 2. hver måned (`obstacles.yml`); endringer kommer som en PR. Det trengs ingen hemmeligheter. **Hent nå:**
-  Actions → «Update power lines and obstacles» → «Run workflow», eller `npm run obstacles` lokalt.
+  Actions → «Oppdater kraftlinjer og hindringer» → «Run workflow», eller `npm run obstacles` lokalt.
   `npm run obstacles -- --no-osm` henter bare NVE (når Overpass ikke svarer); filen sier da fra om det, og kartets
   kreditering nevner bare NVE.
 - Ikke komplett: lavspent (230/400 V) er ikke i NVEs data og bare delvis i OpenStreetMap, og vaiere som ikke er
@@ -521,9 +522,9 @@ Navngiving før import: `Storlitinden_Takeoff_SE_1_DSC04968.jpg`, `Storlitinden_
 | `FROST_CLIENT_ID` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | METs stasjoner (Frost) |
 | `TURNSTILE_SECRET` | Cloudflare → Workers & Pages → data → Settings → Variables and Secrets | «Meld fra»: robotsjekken (site key er offentlig, i `src/_data/site.js`) |
 | GitHub App «HPGT Flying Sites Reports»: `REPORTS_APP_ID`, `REPORTS_APP_PRIVATE_KEY` | Cloudflare (som over); appen under hpgt-com → Developer settings → GitHub Apps | «Meld fra»: lager sakene (bare Issues: read and write) |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (bare `main`) | Publisering av datatjenesten. Tokenet er et kontotoken som bare kan publisere Workeren `data`, laget under Workers & Pages → data → Settings → Builds → «API token for external CI/CD» (står under Manage Account → Account API Tokens). Bytte det: lag et nytt der, oppdater hemmeligheten, kjør «Data service» én gang, og slett det gamle tokenet. |
-| `CLOUDFLARE_SITE_TOKEN` | flying-sites → Settings → Environments → `cloudflare` (bare `main`) | Publisering av siden til Cloudflare (jobben «cloudflare» i «Build and deploy»). Et kontotoken som bare kan publisere Workeren `flysteder`, laget fra Workeren. Utløper 19.11.2027. Se [Siden på Cloudflare](#siden-på-cloudflare). |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `recovery` (bare `main`, krever godkjenning fra teamet `maintainers`) | Bare «Recover». Tomt til vanlig: tokenet (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, bare kontoen HPGT, kort levetid) lages når en gjenoppretting trenger det, og slettes etterpå. Se [Katastrofegjenoppretting](#katastrofegjenoppretting). |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `cloudflare` (bare `main`) | Publisering av datatjenesten. Tokenet er et kontotoken som bare kan publisere Workeren `data`, laget under Workers & Pages → data → Settings → Builds → «API token for external CI/CD» (står under Manage Account → Account API Tokens). Bytte det: lag et nytt der, oppdater hemmeligheten, kjør «Datatjenesten» én gang, og slett det gamle tokenet. |
+| `CLOUDFLARE_SITE_TOKEN` | flying-sites → Settings → Environments → `cloudflare` (bare `main`) | Publisering av siden til Cloudflare (jobben «cloudflare» i «Bygg og publiser»). Et kontotoken som bare kan publisere Workeren `flysteder`, laget fra Workeren. Utløper 19.11.2027. Se [Siden på Cloudflare](#siden-på-cloudflare). |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | flying-sites → Settings → Environments → `recovery` (bare `main`, krever godkjenning fra teamet `maintainers`) | Bare «Gjenoppretting». Tomt til vanlig: tokenet (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read, bare kontoen HPGT, kort levetid) lages når en gjenoppretting trenger det, og slettes etterpå. Se [Katastrofegjenoppretting](#katastrofegjenoppretting). |
 | GoatCounter `hpgt-flysteder` | goatcounter.com | Besøksstatistikk |
 | Backblaze B2 (gratisplan; kontoen står på klubbens adresse) med bøtta `hpgt-flysteder-backup` (privat, EU-region, livssyklus «keep prior versions for 90 days»: en fil som skrives på nytt, beholder den gamle versjonen i 90 dager, og filer som skrives én gang, beholdes for godt) og nøkkelen `github-backup` (bare den bøtta, lese og skrive, utløper ikke) | backblaze.com | Kopien utenfor Cloudflare av arkivet, sikkerhetskopiene, sakene og koden (`backup.yml`) |
 | `B2_KEY_ID`, `B2_APPLICATION_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (hemmeligheter); `B2_ENDPOINT`, `R2_ENDPOINT` (variabler; `B2_BUCKET` og `R2_BUCKET` bare når navnene avviker fra standardverdiene i `backup.yml`) | flying-sites → Settings → Environments → `backup` (bare `main`) | `backup.yml`. R2-tokenet (et kontotoken, bare Object Read, bare `hpgt-data-archive`) lages under R2 → Manage R2 API Tokens → Create Account API token |
@@ -545,9 +546,9 @@ sidene viser dem med alderen, og vurderingen slås av når varselet er for gamme
 eller et datasett er over grensen sin.
 
 **Tidsplanen har stoppet.** GitHub slår av tidsplanen i et offentlig repo etter 60 dager uten commit, og kjører den sent
-når det er travelt. Tegn: den månedlige luftroms-PR-en kom ikke, eller «Data service health» har ikke kjørt på flere
-dager (Actions → arbeidsflyten → listen over kjøringer). Løsning: Actions → arbeidsflyten → «Enable workflow», og så
-«Run workflow». En commit av hvilken som helst type nullstiller de 60 dagene. Datatjenestens egen tidsplan kjører på
+når det er travelt. Tegn: den månedlige luftroms-PR-en kom ikke, eller «Helsesjekk for datatjenesten» har ikke kjørt på
+flere dager (Actions → arbeidsflyten → listen over kjøringer). Løsning: Actions → arbeidsflyten → «Enable workflow», og
+så «Run workflow». En commit av hvilken som helst type nullstiller de 60 dagene. Datatjenestens egen tidsplan kjører på
 Cloudflare og berøres ikke, og UptimeRobot (se [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)) overvåker siden og
 statusen utenfra GitHub uansett hva tidsplanen gjør: en e-post derfra er det første tegnet på et problem i en stille
 periode.
@@ -560,10 +561,10 @@ Klubbens offentlige statusside [status.hpgt.com](https://status.hpgt.com) (Uppti
 Workers & Pages → data → Observability (loggene navngir kilden og feilen) og Metrics (gratisplanens daglige grenser
 nullstilles kl. 00:00 UTC; Cloudflare sender e-post ved 90 %). En dårlig versjon: rull tilbake under Deployments (eller
 `npx wrangler rollback` i `workers/data`). Et tapt lager kommer tilbake av seg selv, se
-[Helsesjekk for datatjenesten](#helsesjekk-for-datatjenesten). Publisere på nytt fra koden: Actions → «Data service» →
+[Helsesjekk for datatjenesten](#helsesjekk-for-datatjenesten). Publisere på nytt fra koden: Actions → «Datatjenesten» →
 «Run workflow».
 
-**En publisering av siden gikk galt.** Actions → «Build and deploy» → en tidligere grønn kjøring → «Re-run all jobs»
+**En publisering av siden gikk galt.** Actions → «Bygg og publiser» → en tidligere grønn kjøring → «Re-run all jobs»
 publiserer den commiten igjen, med et ferskt varsel. Varig: `git revert` av mergen på `main` gjennom en PR. Ingenting
 går tapt: hver publisering bygges fra Git.
 
@@ -571,8 +572,8 @@ går tapt: hver publisering bygges fra Git.
 [Kontoer og hemmeligheter](#kontoer-og-hemmeligheter)); ingenting annet trenger å endres:
 
 - `CLOUDFLARE_API_TOKEN` i `cloudflare`: et nytt token fra Workeren (Workers & Pages → data → Settings → Builds → «API
-  token for external CI/CD»), så miljøet `cloudflare` i GitHub, kjør «Data service» én gang, og slett det gamle tokenet
-  under Manage Account → Account API Tokens. Når det utløper, feiler «Data service» med en autentiseringsfeil.
+  token for external CI/CD»), så miljøet `cloudflare` i GitHub, kjør «Datatjenesten» én gang, og slett det gamle tokenet
+  under Manage Account → Account API Tokens. Når det utløper, feiler «Datatjenesten» med en autentiseringsfeil.
 - `CLOUDFLARE_SITE_TOKEN` i `cloudflare`: på samme måte fra Workeren `flysteder`, se
   [Siden på Cloudflare](#siden-på-cloudflare).
 - `CLOUDFLARE_API_TOKEN` i `recovery`: til vanlig finnes det ikke. Ble det liggende igjen etter en gjenoppretting,
@@ -637,12 +638,12 @@ time, uten steg som krever en utviklermaskin.
    2. To tokener på den nye kontoen: det daglige publiseringstokenet fra Workeren (som under [Runbook](#runbook) «En
       hemmelighet eller et token kan ha lekket») i GitHub-miljøet `cloudflare`, og et gjenopprettingstoken (Manage
       Account → Account API Tokens → Create: Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read,
-      levetid på noen dager) i miljøet `recovery`, begge med konto-id-en. Slett gjenopprettingstokenet når «Recover»
-      har kjørt. (Workeren finnes ikke ennå på en ny konto, så den første publiseringen her bruker
+      levetid på noen dager) i miljøet `recovery`, begge med konto-id-en. Slett gjenopprettingstokenet når
+      «Gjenoppretting» har kjørt. (Workeren finnes ikke ennå på en ny konto, så den første publiseringen her bruker
       gjenopprettingstokenet; Workerens eget token lages etterpå.)
    3. En ny Turnstile-widget for `flysteder.hpgt.com` (site key inn i `src/_data/site.js` gjennom en PR, hemmeligheten
       inn i Workeren under), og en ny privat nøkkel på GitHub-appen «HPGT Flying Sites Reports».
-   4. Actions → «Recover» → «Run workflow» med `restore_archive` på, `lost_store` på og `base_url` satt til
+   4. Actions → «Gjenoppretting» → «Run workflow» med `restore_archive` på, `lost_store` på og `base_url` satt til
       datatjenestens adresse på den nye kontoen. Den henter kopien fra B2, skriver arkivet tilbake til R2 (ett objekt
       om gangen gjennom API-et, minutter for måneder med filer), publiserer datatjenesten, venter til den kjører (høyst
       6 minutter), og sjekker at lageret leste historikken inn igjen med nøyaktig radene i kopien.
@@ -654,7 +655,7 @@ time, uten steg som krever en utviklermaskin.
       vilje utenfor GitHub (SECURITY.md): en ekstra kopi der ville utvidet det en dårlig endring i en arbeidsflyt kunne
       nå, for et scenario der to av dem uansett må lages på nytt. Til de er satt, er stasjonene, «Meld fra» og METs
       stasjoner av; resten kjører.
-   6. Siden på den nye kontoen: Workeren `flysteder` publiseres av «Build and deploy» med et nytt
+   6. Siden på den nye kontoen: Workeren `flysteder` publiseres av «Bygg og publiser» med et nytt
       `CLOUDFLARE_SITE_TOKEN`, og domenet `flysteder.hpgt.com` legges til på den (se
       [Siden på Cloudflare](#siden-på-cloudflare)); til da kan siden serveres fra GitHub Pages. Får datatjenesten en
       annen adresse enn `data.hpgt.com`, må den inn i `src/_data/site.js` (`forecastUrl` og de andre) gjennom en PR, og
@@ -698,10 +699,10 @@ trengs bare hvis migreringer av lageret må prøves mot ekte Cloudflare før `ma
 | `gangruten … skal hete …` | Flere ruter skal hete `<id>-route-1.gpx`, `<id>-route-2.gpx`. |
 | `status er «reviewed», men reviewed …` | Fyll inn `reviewed.by` og `reviewed.date`. |
 | `index.en.md: ukjente nøkler …` | Skrivefeil i oversettelsen. Se [Oversettelse](site-files.md#oversettelse). |
-| Vindvurderingen mangler på siden | Varselet er for gammelt, eller MET svarte ikke. Sjekk `https://data.hpgt.com/v1/forecast.json`, og kjør «Build and deploy» for hånd. |
+| Vindvurderingen mangler på siden | Varselet er for gammelt, eller MET svarte ikke. Sjekk `https://data.hpgt.com/v1/forecast.json`, og kjør «Bygg og publiser» for hånd. |
 | En sak «Datatjenesten: data mangler eller er for gamle» | Se [Helsesjekk for datatjenesten](#helsesjekk-for-datatjenesten). Den lukkes av seg selv når statusen er i orden igjen. |
 | En sak «Jobben «…» feilet» | En kjøring feilet (jobben `alert` åpner den, eller kommenterer på den åpne). Åpne kjøringen fra lenken, rett årsaken, kjør arbeidsflyten igjen, og lukk saken. |
-| «Data service» feiler med en autentiseringsfeil | Cloudflare-tokenet har utløpt eller er endret. Lag et nytt (se [Runbook](#runbook)) og oppdater `CLOUDFLARE_API_TOKEN` i miljøet `cloudflare`. |
+| «Datatjenesten» feiler med en autentiseringsfeil | Cloudflare-tokenet har utløpt eller er endret. Lag et nytt (se [Runbook](#runbook)) og oppdater `CLOUDFLARE_API_TOKEN` i miljøet `cloudflare`. |
 | Luftromslaget sier «Kunne ikke hente luftrom» | `assets/airspace.geojson` mangler i bygget. Sjekk at `src/_data/cache/airspace/region.geojson` finnes. |
 
 | Annen melding | Løsning |

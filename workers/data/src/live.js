@@ -1,13 +1,14 @@
-// «Piloter i lufta»: the paragliders (and speedflyers) the Open Glider Network hears in the area right now (FANET from
-// varios and phone apps, FLARM), as /v1/live.json. Fetched on demand, not on the schedule: the map asks every few seconds
-// while the layer is on, and the answer is kept CACHE_SECONDS in Cloudflare's cache, so OGN gets at most one request per
-// ten seconds however many look. Each pilot's track over the last TRAIL_MINUTES, with the climb at each point, is kept in
-// memory in the store (never written down) and sent along as trail, so the map can draw it at once.
-// OGN's rules (glidernet.org/ogn-data-usage): ODbL, the device owners' privacy choices are followed (OGN's live data
-// already leaves out devices that must not be tracked, and gives those that must not be identified a random short name,
-// which is shown as unknown here), and nothing older than 24 hours is passed on (positions older than MAX_AGE_SECONDS are
-// left out). When the web map does not answer, the same positions are read from OGN's APRS stream (aprs.js), where those
-// rules are followed here. Tested in test/data-worker.test.js.
+// «Piloter i lufta»: paraglidere (og speedflyere) som Open Glider Network hører i området akkurat nå (FANET fra
+// varioer og mobilapper, FLARM), som /v1/live.json. Hentes ved behov, ikke etter timeplanen. Kartet spør med noen
+// sekunders mellomrom mens laget er på, og svaret holdes i CACHE_SECONDS sekunder i Cloudflares hurtigbuffer. Slik får
+// OGN høyst én forespørsel per ti sekunder, uansett hvor mange som ser. Sporet til hver pilot de siste TRAIL_MINUTES
+// minuttene, med stigningen i hvert punkt, holdes i minnet i lageret (skrives aldri ned) og sendes med som trail, så
+// kartet kan tegne det med én gang.
+// OGNs regler (glidernet.org/ogn-data-usage): ODbL, og eiernes personvernvalg følges. OGNs sanntidsdata utelater
+// allerede enheter som ikke skal spores, og gir dem som ikke skal identifiseres, et tilfeldig kortnavn, som vises som
+// ukjent her. Ingenting eldre enn 24 timer sendes videre (posisjoner eldre enn MAX_AGE_SECONDS utelates). Når
+// nettkartet ikke svarer, leses de samme posisjonene fra OGNs APRS-strøm (aprs.js), og da følges reglene her.
+// Testet i test/data-worker.test.js.
 
 import { listenAprs } from "./aprs.js";
 
@@ -15,19 +16,19 @@ export const DATASET = "live";
 export const SOURCE = "Open Glider Network";
 export const LICENSE = "ODbL, Open Glider Network";
 export const CACHE_SECONDS = 10;
-// After OGN and the APRS reserve have both failed, how long the answer is 503 at once, without asking again: otherwise
-// every request while they are down listens to APRS for APRS_LIVE_SECONDS, and the map asks every few seconds.
+// Når både OGN og APRS-reserven har feilet: hvor lenge svaret er 503 med én gang, uten å spørre på nytt. Ellers lytter
+// hver forespørsel til APRS i APRS_LIVE_SECONDS sekunder mens de er nede, og kartet spør med noen sekunders mellomrom.
 export const FAIL_SECONDS = 20;
-// How long the map's request listens to the APRS stream when the web map is down.
+// Hvor lenge forespørselen fra kartet lytter til APRS-strømmen når nettkartet er nede.
 export const APRS_LIVE_SECONDS = 8;
 export const MAX_AGE_SECONDS = 600;
 export const TRAIL_MINUTES = 10;
 const API = "https://live.glidernet.org/lxml.php";
-// OGN's aircraft type 7, paraglider (speed wings too), is the only one kept: the pilots this is for. Hang gliders are
-// not flown here, and planes, gliders and the rest would fill the map without telling a paraglider pilot much.
+// Bare OGNs luftfartøytype 7, paraglider (også speedwings), beholdes: det er pilotene dette er for. Det flys ikke
+// hangglider her, og fly, seilfly og resten ville fylt kartet uten å si en paragliderpilot stort.
 export const PARAGLIDER = 7;
 
-// The area: the flying sites (sites.json) with a margin, as OGN's bounds (north, south, east, west).
+// Området: flystedene (sites.json) med en margin, som OGNs grenser (nord, sør, øst, vest).
 export function bounds(sites, margin = 0.5) {
   const lats = sites.map((s) => s.lat), lons = sites.map((s) => s.lon);
   return { n: Math.max(...lats) + margin, s: Math.min(...lats) - margin, e: Math.max(...lons) + 2 * margin, w: Math.min(...lons) - 2 * margin };
@@ -35,8 +36,9 @@ export function bounds(sites, margin = 0.5) {
 
 const num = (v) => { const n = Number(v); return v !== "" && Number.isFinite(n) ? n : null; };
 
-// OGN's answer (<m a="lat,lon,short name,name,alt m,hh:mm:ss,age s,track,speed km/h,climb m/s,type,receiver,device,id"/>)
-// as items, newest first. now: the time of the answer, for each position's time (now − age).
+// Svaret fra OGN som elementer, nyeste først:
+//   <m a="lat,lon,short name,name,alt m,hh:mm:ss,age s,track,speed km/h,climb m/s,type,receiver,device,id"/>
+// now: tiden for svaret, for tiden til hver posisjon (now − age).
 export function parseLive(xml, now = Date.now()) {
   const items = [];
   for (const m of String(xml).matchAll(/<m a="([^"]*)"/g)) {
@@ -46,8 +48,8 @@ export function parseLive(xml, now = Date.now()) {
     if (lat === null || lon === null || age === null || age > MAX_AGE_SECONDS || type !== PARAGLIDER) continue;
     const id = /^[0-9a-f]{6,16}$/i.test(f[13]) ? f[13].toLowerCase() : null;
     if (!id) continue;
-    // A short name starting with «_» (and the id as the name) is OGN's way of showing a device that must not be identified,
-    // or is not registered: shown as unknown.
+    // Et kortnavn som begynner med «_» (og ID-en som navn) er OGNs måte å vise en enhet som ikke skal identifiseres,
+    // eller som ikke er registrert. Den vises som ukjent.
     const anonymous = f[2].startsWith("_") || !f[3] || f[3].toLowerCase() === id;
     const name = anonymous ? null : f[3].slice(0, 20);
     const speed = num(f[8]);
@@ -59,9 +61,9 @@ export function parseLive(xml, now = Date.now()) {
   return items.sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
 }
 
-// Adds the positions ([{ id, time, lat, lon, climb }]) to the tracks (a Map id → [[ms, lat, lon, climb], ...]), drops what
-// is older than keepMs before now, and returns { id: [[lat, lon, climb], ...] } oldest first for the ids given, so the map
-// can colour the track by climb and sink (climb in m/s, or null when OGN did not give it).
+// Legger posisjonene ([{ id, time, lat, lon, climb }]) til sporene (et Map id → [[ms, lat, lon, climb], ...]), fjerner
+// det som er eldre enn keepMs før now, og gir { id: [[lat, lon, climb], ...] }, eldste først, for de gitte ID-ene. Da
+// kan kartet fargelegge sporet etter stigning og synk (climb i m/s, eller null når OGN ikke ga den).
 export function mergeTrails(tracks, positions, now, keepMs) {
   for (const p of positions) {
     const t = Date.parse(p.time);
@@ -77,9 +79,10 @@ export function mergeTrails(tracks, positions, now, keepMs) {
   return Object.fromEntries(positions.map((p) => [p.id, (tracks.get(p.id) ?? []).map((x) => [x[1], x[2], x[3]])]));
 }
 
-// The paragliders OGN hears in the area of the sites now, as parseLive gives them. Also used for the flying activity
-// (sources/flights.js). When the web map fails and a store is given, from the APRS stream instead (aprs.js), listening
-// aprsSeconds; items then has via: "aprs". Throws the web map's error when the reserve cannot be used either.
+// Paraglidere OGN hører i stedenes område nå, slik parseLive gir dem. Brukes også for flyaktiviteten
+// (sources/flights.js). Når nettkartet feiler og et lager er gitt, hentes de fra APRS-strømmen i stedet (aprs.js), med
+// lytting i aprsSeconds sekunder. items har da via: "aprs". Kaster feilen fra nettkartet når heller ikke reserven
+// kan brukes.
 export async function fetchLive(sites, now = Date.now(), { store = null, aprsSeconds = 20, connect } = {}) {
   const b = bounds(sites);
   const url = `${API}?a=0&b=${b.n.toFixed(2)}&c=${b.s.toFixed(2)}&d=${b.e.toFixed(2)}&e=${b.w.toFixed(2)}`;
@@ -102,7 +105,7 @@ export async function fetchLive(sites, now = Date.now(), { store = null, aprsSec
   }
 }
 
-// The answer to GET /v1/live.json, from OGN, or from the cache when it is fresh. store: for the tracks (mergeLive).
+// Svaret på GET /v1/live.json, fra OGN, eller fra hurtigbufferen når den er fersk. store: for sporene (mergeLive).
 export async function handleLive(sites, now = Date.now(), cache = globalThis.caches?.default, store = null) {
   const key = new Request("https://data.hpgt.com/v1/live.json");
   const hit = cache && (await cache.match(key));
@@ -112,7 +115,7 @@ export async function handleLive(sites, now = Date.now(), cache = globalThis.cac
   if (cache && (await cache.match(failKey))) return unavailable();
   let body;
   try {
-    // A short listen when the reserve is needed: the map asks again in a few seconds.
+    // Kort lytting når reserven trengs: kartet spør igjen om noen sekunder.
     const items = await fetchLive(sites, now, { store, aprsSeconds: APRS_LIVE_SECONDS });
     if (store && items.length) {
       const trails = await store.mergeLive(items.map(({ id, time, lat, lon, climb }) => ({ id, time, lat, lon, climb })), now, TRAIL_MINUTES * 60000);

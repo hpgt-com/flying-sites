@@ -1,8 +1,8 @@
-// Makes the PNG app icons (web app manifest, apple-touch-icon) from src/assets/img/icon.svg.
+// Lager PNG-ikonene for appen (web app-manifestet, apple-touch-icon) fra src/assets/img/icon.svg.
 //
 //   node scripts/app-icons.mjs
 //
-// Run it after changing icon.svg, and commit the PNG files.
+// Kjør den etter at icon.svg er endret, og commit PNG-filene.
 
 import sharp from "sharp";
 

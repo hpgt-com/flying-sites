@@ -1,21 +1,21 @@
-name: Update power lines and obstacles
+name: Oppdater kraftlinjer og hindringer
 
-# Fetches the power lines and other obstacles in the region around the sites once a month, for the map layer
-# «Kraftlinjer og hindre» (scripts/update-obstacles.mjs): NVE's power lines, masts and wind turbines, and from
-# OpenStreetMap the low-voltage lines, lifts and masts, saved as tiles with an index. Changes arrive as a PR, so someone reviews the diff before publishing. Without changes nothing
-# happens. Needs no secrets. The PR is created with the club's GitHub App, as in airspace.yml
-# (repository variable APP_CLIENT_ID and secret APP_PRIVATE_KEY).
+# Henter kraftlinjene og andre hindre i området rundt stedene én gang i måneden, til kartlaget
+# «Kraftlinjer og hindre» (scripts/update-obstacles.mjs): NVEs kraftlinjer, master og vindturbiner, og fra
+# OpenStreetMap lavspentlinjene, taubanene og mastene, lagret som fliser med en indeks. Endringer kommer som en PR,
+# så noen ser over diffen før publisering. Uten endringer skjer ingenting. Trenger ingen hemmeligheter. PR-en lages
+# med klubbens GitHub-app, som i airspace.yml (repo-variabelen APP_CLIENT_ID og hemmeligheten APP_PRIVATE_KEY).
 #
-# Two jobs, so third-party code never runs with write access:
-#   fetch  installs the npm packages and runs the script, with read-only access. The result is handed on as an artifact.
-#   pr     has write access to push the branch and open the PR, but installs and runs nothing from npm.
+# To jobber, så kode fra tredjeparter aldri kjører med skrivetilgang:
+#   fetch  installerer npm-pakkene og kjører skriptet, med bare lesetilgang. Resultatet sendes videre som en artefakt.
+#   pr     har skrivetilgang for å pushe grenen og åpne PR-en, men installerer og kjører ingenting fra npm.
 
 on:
   schedule:
-    - cron: "17 6 2 * *" # the 2nd of every month at 06:17 UTC (the day after the airspace)
+    - cron: "17 6 2 * *" # den 2. hver måned kl. 06:17 UTC (dagen etter luftrommet)
   workflow_dispatch:
 
-# No access by default. Each job asks for what it needs.
+# Ingen tilgang som standard. Hver jobb ber om det den trenger.
 permissions: {}
 
 jobs:
@@ -36,18 +36,18 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      # --ignore-scripts: ingen pakkers installasjonsskript kjører (ingen av avhengighetene trenger det).
       - run: npm ci --ignore-scripts
 
       - name: Hent kraftlinjer og hindre
-        # shell: bash enables pipefail, so a script error stops the job even though output goes through tee.
+        # shell: bash slår på pipefail, så en feil i skriptet stopper jobben selv om utdataene går gjennom tee.
         shell: bash
         run: npm run --silent obstacles | tee hindre.txt
 
       - name: Sjekk om noe er endret
         id: diff
-        # The date in the index changes every time, so only the tiles (added, changed or removed) and the rest of the
-        # index count as a change.
+        # Datoen i indeksen endres hver gang, så bare flisene (lagt til, endret eller fjernet) og resten av
+        # indeksen regnes som en endring.
         run: |
           dir=src/_data/cache/obstacles
           if [ -z "$(git status --porcelain -- "$dir" ":(exclude)$dir/index.json")" ] &&
@@ -73,13 +73,13 @@ jobs:
     if: needs.fetch.outputs.changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # APP_PRIVATE_KEY lives in the environment «automation», which only main may use (see airspace.yml).
+    # APP_PRIVATE_KEY ligger i miljøet «automation», som bare main kan bruke (se airspace.yml).
     environment: automation
     permissions:
       contents: read
     steps:
-      # Short-lived token from the club's GitHub App, limited to this repository and to the two permissions the
-      # job needs. It is revoked when the job ends. The job fails if the app is not set up.
+      # Kortlivet token fra klubbens GitHub-app, begrenset til dette repoet og de to tillatelsene jobben
+      # trenger. Det trekkes tilbake når jobben er ferdig. Jobben feiler hvis appen ikke er satt opp.
       - id: app
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -88,7 +88,7 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      # The token is kept because the job pushes a branch for the PR. It uploads no artifacts and runs no npm code.
+      # Tokenet beholdes fordi jobben pusher en gren for PR-en. Den laster ikke opp artefakter og kjører ingen npm-kode.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
         with:
           token: ${{ steps.app.outputs.token }}
@@ -120,8 +120,9 @@ jobs:
           } > pr.md
           gh pr create --title "Kraftlinjer og hindre $(date +%d.%m.%Y)" --body-file pr.md
 
-  # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
-  # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.
+  # En sak når kjøringen feiler (en kommentar på den åpne hvis den feiler igjen), så en feilet kjøring ikke blir
+  # oversett: GitHub sier ikke fra selv om planlagte kjøringer, og de kan også komme timer for sent. Kjører ingen
+  # kode fra prosjektet.
   alert:
     needs: [fetch, pr]
     if: failure()

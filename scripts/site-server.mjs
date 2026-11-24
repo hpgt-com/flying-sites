@@ -1,6 +1,6 @@
-// A minimal static server for the built site (_site/), for the checks that run it in a browser (check-a11y.mjs,
-// check-behaviour.mjs): /tarn/ serves tarn/index.html. Nothing outside _site/ is served. stop() also cuts the open
-// connections, so a page can be tested as offline.
+// En minimal statisk server for det bygde nettstedet (_site/), for sjekkene som kjører det i en nettleser
+// (check-a11y.mjs, check-behaviour.mjs): /tarn/ gir tarn/index.html. Ingenting utenfor _site/ serveres. stop() kutter
+// også de åpne forbindelsene, så en side kan testes som uten nett.
 
 import fs from "node:fs";
 import http from "node:http";

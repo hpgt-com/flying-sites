@@ -1,4 +1,4 @@
-// Tests for language support (lib/i18n.js, src/_i18n/*.json). Run with `npm test`.
+// Tester for språkstøtten (lib/i18n.js, src/_i18n/*.json). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -12,7 +12,7 @@ function keys(obj, prefix = "") {
 }
 const has = (dict, key) => key.split(".").reduce((o, k) => (o == null ? undefined : o[k]), dict) !== undefined;
 
-test("each language has a dictionary, with no keys missing from Norwegian", () => {
+test("hvert språk har en ordbok, uten nøkler som mangler i norsk", () => {
   const nb = new Set(keys(read("nb")));
   for (const { code } of languages) {
     const extra = keys(read(code)).filter((k) => !nb.has(k));
@@ -20,17 +20,17 @@ test("each language has a dictionary, with no keys missing from Norwegian", () =
   }
 });
 
-test("the English dictionary has all keys (no Norwegian fallback on English pages)", () => {
+test("den engelske ordboka har alle nøkler (ingen norsk reserve på engelske sider)", () => {
   const en = new Set(keys(read("en")));
   assert.deepEqual(keys(read("nb")).filter((k) => !en.has(k)), []);
 });
 
-test("text missing in a language falls back to Norwegian", () => {
+test("tekst som mangler på et språk, faller tilbake til norsk", () => {
   assert.equal(DICTIONARIES.en.home.title, read("en").home.title);
   assert.equal(t("home.title", "xx"), read("nb").home.title);
 });
 
-test("all t. lookups in the templates and FS.t lookups in the scripts exist in nb.json", () => {
+test("alle t.-oppslag i malene og FS.t-oppslag i skriptene finnes i nb.json", () => {
   const nb = read("nb");
   const missing = [];
   const dir = (d) => fs.readdirSync(d).map((f) => path.join(d, f));
@@ -42,7 +42,7 @@ test("all t. lookups in the templates and FS.t lookups in the scripts exist in n
   }
   for (const f of dir("src/assets/js").filter((f) => f.endsWith(".js"))) {
     for (const m of fs.readFileSync(f, "utf8").matchAll(/FS\.tn?\("([\w.]+)"/g)) {
-      // «"wind.slots." + slot» is a lookup with a variable ending. It is checked by verifying that the group exists.
+      // «"wind.slots." + slot» er et oppslag med variabel slutt. Det sjekkes ved å se at gruppen finnes.
       const key = m[1].endsWith(".") ? m[1].slice(0, -1) : m[1];
       if (!has(nb.js, key)) missing.push(`${f}: ${m[1]}`);
     }
@@ -50,8 +50,8 @@ test("all t. lookups in the templates and FS.t lookups in the scripts exist in n
   assert.deepEqual(missing, []);
 });
 
-test("text printed in the templates is text, not a group of keys", () => {
-  // «{{ t.site.profile }}» printed «[object Object]» when a group got the same name as a heading.
+test("tekst som skrives ut i malene, er tekst og ikke en gruppe nøkler", () => {
+  // «{{ t.site.profile }}» skrev ut «[object Object]» da en gruppe fikk samme navn som en overskrift.
   const nb = read("nb");
   const groups = [];
   const dir = (d) => fs.readdirSync(d).map((f) => path.join(d, f));
@@ -64,7 +64,7 @@ test("text printed in the templates is text, not a group of keys", () => {
   assert.deepEqual(groups, []);
 });
 
-test("URLs in another language", () => {
+test("URL-er på et annet språk", () => {
   assert.equal(localeUrl("/flysteder/ryten/", "en"), "/en/sites/ryten/");
   assert.equal(localeUrl("/en/sites/ryten/", "nb"), "/flysteder/ryten/");
   assert.equal(localeUrl("/en/", "nb"), "/");
@@ -75,7 +75,7 @@ test("URLs in another language", () => {
   assert.equal(localeUrl("/status/", "nb"), "/status/");
 });
 
-test("values are inserted into the text", () => {
+test("verdier settes inn i teksten", () => {
   assert.equal(fmt("{n} av {total}", { n: 3, total: 32 }), "3 av 32");
   assert.equal(fmt("{ukjent}", {}), "{ukjent}");
 });

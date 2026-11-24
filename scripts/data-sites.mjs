@@ -1,6 +1,6 @@
-// Writes the launches the data service fetches the forecast for (workers/data/src/sites.json) from the site files,
-// before deploy. The same fields as the build sends to MET: the launch position and height (lib/weather/met.js), and the
-// name, for the issues from «Meld fra om endring» (src/report.js).
+// Skriver startene datatjenesten henter varsel for (workers/data/src/sites.json) fra flystedsfilene, før publisering.
+// De samme feltene som byggingen sender til MET: posisjonen og høyden til start (lib/weather/met.js), og navnet,
+// for sakene fra «Meld fra om endring» (src/report.js).
 //
 //   node scripts/data-sites.mjs
 

@@ -1,20 +1,20 @@
 name: Scorecard
 
-# OpenSSF Scorecard: checks the repository against supply-chain good practice (pinned actions, token permissions,
-# branch protection, code review, dependency updates and more). The results go to Code scanning and to the public
-# Scorecard API, which the badge in README reads.
-# Follows the template from ossf/scorecard-action. With publish_results the job may only contain these steps.
+# OpenSSF Scorecard: sjekker repoet mot god praksis for forsyningskjeden (låste actions, tillatelser for tokener,
+# grenbeskyttelse, kodegjennomgang, oppdatering av avhengigheter med mer). Resultatene går til Code scanning og til
+# det offentlige Scorecard-API-et, som merket i README leser.
+# Følger malen fra ossf/scorecard-action. Med publish_results kan jobben bare ha disse stegene.
 
-# Weekly, not on every push: the checks look at the repository's settings and history, which one merge rarely changes,
-# and the badge reads the API, which the weekly run updates.
+# Ukentlig, ikke ved hver push: sjekkene ser på innstillingene og historikken til repoet, som én merge sjelden endrer,
+# og merket leser API-et, som den ukentlige kjøringen oppdaterer.
 on:
   schedule:
-    - cron: "23 4 * * 1" # Mondays at 04:23 UTC
-  # Rerun when branch protection changes, since it is one of the checks.
+    - cron: "23 4 * * 1" # mandager kl. 04:23 UTC
+  # Kjøres på nytt når grenbeskyttelsen endres, siden den er en av sjekkene.
   branch_protection_rule:
   workflow_dispatch:
 
-# No access by default. The job asks for what it needs.
+# Ingen tilgang som standard. Jobben ber om det den trenger.
 permissions: {}
 
 jobs:
@@ -23,8 +23,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read # checkout
-      security-events: write # uploads the results to Code scanning
-      id-token: write # signs the results published to the Scorecard API
+      security-events: write # laster opp resultatene til Code scanning
+      id-token: write # signerer resultatene som publiseres til Scorecard-API-et
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

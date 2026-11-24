@@ -1,7 +1,7 @@
-// Wind forecast from MET for each launch (lib/weather/met.js), for the wind assessment on the front page and
-// «Vind nå» on the site pages. Read from .cache/weather/forecast.json, see lib/weather/index.js.
-// The workflow builds the site twice an hour, but GitHub may delay or skip scheduled runs, so the forecast can be
-// older (see maxForecastAgeHours).
+// Vindprognose fra MET for hver start (lib/weather/met.js), til vindvurderingen på forsiden og
+// «Vind nå» på stedssidene. Leses fra .cache/weather/forecast.json, se lib/weather/index.js.
+// Arbeidsflyten bygger siden to ganger i timen, men GitHub kan forsinke eller hoppe over planlagte kjøringer,
+// så prognosen kan være eldre (se maxForecastAgeHours).
 
 import { loadWeather } from "../../lib/weather/index.js";
 

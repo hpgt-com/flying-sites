@@ -1,7 +1,7 @@
-// The weather page (vaer.njk): all the weather stations, first as a table, then a card per station with the change over the
-// chosen period, the wind rose of its flying site, the chart of the last hours, and «Målt mot varslet» with the forecast for
-// the site. Everything is built with DOM methods (stations.js), so nothing from the data is read as HTML. Refreshed every
-// minute (stations.js watch); the forecast is fetched from the data service every ten minutes.
+// Værsiden (vaer.njk): alle værstasjonene, først som tabell, så et kort per stasjon med endringen over valgt
+// periode, vindrosen for flystedet, grafen for de siste timene og «Målt mot varslet» med varselet for stedet.
+// Alt bygges med DOM-metoder (stations.js), så ingenting fra dataene leses som HTML. Oppdateres hvert minutt
+// (stations.js watch). Varselet hentes fra datatjenesten hvert tiende minutt.
 (function () {
   "use strict";
 
@@ -16,22 +16,22 @@
   var period = 30, sort = "club", data = null, forecast = null, verification = null;
   ST.useRules(FS.readJson("weather-rules"));
   var assess = ST.assess, chip = ST.ratingChip, anchor = ST.anchor, hasWind = ST.hasWind;
-  // The «Målt mot varslet» parts that are open, so they stay open when the page is redrawn.
+  // Delene av «Målt mot varslet» som er åpne, så de forblir åpne når siden tegnes på nytt.
   var openVs = {};
 
   function periodText() { return t("stations.period_" + period); }
 
-  // «▲ +0,8 siste 30 min», or nothing without a change.
+  // «▲ +0,8 siste 30 min», eller ingenting uten endring.
   function changeText(v) { return isNum(v) ? t("stations.change", { v: ST.signed(v), period: periodText() }) : ""; }
   function characterText(ch) {
     var c = ST.character(ch);
     return c ? t("stations.char_" + c.kind) + t("stations.trend_" + c.trend) : "";
   }
 
-  // --- The table: one row per station (stations.js), a link to its card below ---
+  // --- Tabellen: én rad per stasjon (stations.js), med lenke til kortet lenger ned ---
   function row(item, now) { return ST.row(item, now, period, "#" + anchor(item)); }
 
-  // --- The card ---
+  // --- Kortet ---
   function tile(label, big, lines) {
     var el = make("div", "weather-tile");
     el.appendChild(make("span", "weather-tile__label", label));
@@ -40,8 +40,8 @@
     return el;
   }
 
-  // «Målt mot varslet»: the wind, gusts and direction now against the forecast for this hour, the chart with the forecast
-  // after the latest measurement, and the next hours. Folded, since it is for those who want to look closer.
+  // «Målt mot varslet»: vind, kast og retning nå mot varselet for denne timen, grafen med varselet etter siste
+  // måling, og de neste timene. Foldet, siden det er for dem som vil se nærmere på det.
   function versus(item, site) {
     var fc = ST.forecastFrom(forecast, item.site, Date.now(), 6);
     var box = make("details", "weather-vs");
@@ -150,7 +150,7 @@
     return el;
   }
 
-  // The club's own order (Heia first, as in workers/data/src/stations.js), or the strongest wind first.
+  // Klubbens egen rekkefølge (Heia først, som i workers/data/src/stations.js), eller sterkest vind først.
   function sorted(items, now) {
     var list = items.slice();
     if (sort === "wind") {
@@ -164,7 +164,7 @@
     if (!data) return;
     var now = Date.now(), items = sorted(data.items, now);
     statusEl.hidden = true;
-    // The club's stations as rows and cards; MET's only as a small folded table under the rows (stations.js metTable).
+    // Klubbens stasjoner som rader og kort. METs bare som en liten foldet tabell under radene (stations.js metTable).
     var club = ST.groups(items).club;
     rowsEl.replaceChildren.apply(rowsEl, club.map(function (i) { return row(i, now); }));
     var oldMet = rowsEl.parentNode.querySelector(".met-stations"), met = ST.metTable(items, now, oldMet && oldMet.open);
@@ -188,7 +188,7 @@
   choose("sort", "data-sort", function (v) { sort = v; });
 
   ST.watch(cardsEl.getAttribute("data-url"), function (d) { data = d; render(); });
-  // Without an answer after a while, say so; the page keeps trying every minute.
+  // Kommer det ikke noe svar etter en stund, sier siden fra. Den prøver igjen hvert minutt.
   setTimeout(function () { if (!data) statusEl.textContent = t("weather.failed"); }, 15000);
 
   var forecastUrl = cardsEl.getAttribute("data-forecast-url");

@@ -1,34 +1,34 @@
-// «Piloter i lufta» on the maps: the paragliders (and speedflyers) the Open Glider Network hears in the area right now
-// (FANET from varios and phone apps, FLARM), from the data service (/v1/live.json, workers/data/src/live.js). A layer
-// that is off by default; while it is on and the page is in view, it asks every POLL_MS and moves the markers. Each
-// marker is the wing seen from above, with the lines down to the pilot, pointing where it flies, with the height and the
-// climb, and a line for its track over the last minutes (from the data service, so it shows at once), coloured by the
-// climb at each point, so where the lift and the sink were is easy to see; a small legend explains the colours while the
-// layer is on.
-// Pilots who must not be identified are shown as «Ukjent». Built with DOM methods only.
-// Exposed as window.FlyingSitesLive; tested in test/live.test.js.
+// «Piloter i lufta» på kartene: paragliderne (og speedflyerne) Open Glider Network hører i området akkurat nå
+// (FANET fra varioer og mobilapper, FLARM), fra datatjenesten (/v1/live.json, workers/data/src/live.js). Et lag
+// som er av som standard. Mens det er på og siden er synlig, spør det hvert POLL_MS og flytter markørene. Hver
+// markør er vingen sett ovenfra, med linene ned til piloten, pekende dit den flyr, med høyden og
+// stigningen, og en strek for sporet de siste minuttene (fra datatjenesten, så det vises med en gang), farget etter
+// stigningen i hvert punkt, så det er lett å se hvor løftet og synken var. En liten tegnforklaring forklarer fargene
+// mens laget er på.
+// Piloter som ikke skal kunne identifiseres, vises som «Ukjent». Bygges bare med DOM-metoder.
+// Eksponert som window.FlyingSitesLive. Testet i test/live.test.js.
 (function () {
   "use strict";
 
-  // Every 10 seconds: a paraglider moves 100–150 m in that time, and each ask counts against the data service's
-  // requests per day (the data service keeps the answer as long, CACHE_SECONDS in workers/data/src/live.js).
+  // Hvert 10. sekund: en paraglider flytter seg 100–150 m på den tiden, og hver spørring teller mot datatjenestens
+  // forespørsler per dag (datatjenesten holder på svaret like lenge, CACHE_SECONDS i workers/data/src/live.js).
   var POLL_MS = 10000;
-  // The wing seen from above, nose up (north) before it is turned to the track: a paraglider's curved wing with the lines
-  // down to the pilot. The data service sends only paragliders (OGN's type 7).
-  // The parts as [tag, attributes], built with FlyingSites.svg.
+  // Vingen sett ovenfra, med nesa opp (nord) før den snus etter sporet: en paragliders buede vinge med linene
+  // ned til piloten. Datatjenesten sender bare paraglidere (OGNs type 7).
+  // Delene som [tag, attributes], bygd med FlyingSites.svg.
   var WING = [
     ["path", { d: "M0.8 11.2Q12 3 23.2 11.2Q22.6 12.9 21.4 13.1Q12 7.6 2.6 13.1Q1.4 12.9 0.8 11.2Z", fill: "currentColor" }],
     ["path", { d: "M2.6 12.8L12 17.6L21.4 12.8M7 9.6L12 17.6L17 9.6", fill: "none", stroke: "currentColor", "stroke-width": "0.8" }],
     ["circle", { cx: "12", cy: "17.8", r: "2", fill: "currentColor" }],
   ];
-  // The track's colours, by the climb in m/s, from sink to lift (CSS .live-trail--…). A paraglider sinks about 1 m/s in
-  // still air, so plain gliding is the grey middle, not sink.
+  // Fargene på sporet etter stigningen i m/s, fra synk til løft (CSS .live-trail--…). En paraglider synker ca. 1 m/s i
+  // stille luft, så vanlig gliding er den grå midten, ikke synk.
   var CLIMB = [{ key: "sink2", below: -3 }, { key: "sink1", below: -1.5 }, { key: "glide", below: 0.5 }, { key: "lift1", below: 2 }, { key: "lift2", below: Infinity }];
   var text = function (key, vars) { var FS = globalThis.FlyingSites; return FS && FS.t ? FS.t(key, vars) : key; };
   function useText(fn) { text = fn; }
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
 
-  // Only data in the expected shape: items with an id, a position and numbers or null.
+  // Bare data i forventet form: elementer med id, posisjon og tall eller null.
   function isLiveData(d) {
     if (!d || d.dataset !== "live" || !Array.isArray(d.items)) return false;
     return d.items.every(function (i) {
@@ -40,14 +40,14 @@
         })));
     });
   }
-  // The colour of a climb (m/s): sink2 … lift2; glide when it is not known.
+  // Fargen for en stigning (m/s): sink2 … lift2. glide når den ikke er kjent.
   function climbKey(v) {
     if (!isNum(v)) return "glide";
     for (var k = 0; k < CLIMB.length; k++) if (v < CLIMB[k].below) return CLIMB[k].key;
     return "lift2";
   }
-  // The track ([[lat, lon, climb], ...], oldest first) as runs of one colour, [{ key, points }]: each piece takes the
-  // colour of the climb where it ends, and the runs share their end points so the line is unbroken.
+  // Sporet ([[lat, lon, climb], ...], eldste først) som strekk med én farge, [{ key, points }]: hver bit får
+  // fargen til stigningen der den slutter, og strekkene deler endepunkter, så streken er sammenhengende.
   function trailRuns(points) {
     var runs = [];
     for (var k = 1; k < points.length; k++) {
@@ -58,14 +58,14 @@
     }
     return runs;
   }
-  // «+1,2» / «−0,8» / «0», the climb in m/s with a sign.
+  // «+1,2» / «−0,8» / «0», stigningen i m/s med fortegn.
   function climbText(v) {
     var FS = globalThis.FlyingSites;
     if (!isNum(v)) return "";
     var r = Math.round(v * 10) / 10;
     return r === 0 ? "0" : (r > 0 ? "+" : "−") + FS.formatNumber(Math.abs(r), 1);
   }
-  // The label beside the wing: «1240 m · +1,2».
+  // Etiketten ved siden av vingen: «1240 m · +1,2».
   function labelText(item) {
     return [isNum(item.alt) ? text("live.alt", { m: Math.round(item.alt) }) : "", climbText(item.climb)].filter(Boolean).join(" · ");
   }
@@ -92,8 +92,8 @@
     return box;
   }
 
-  // The legend for the track's colours, from sink to lift, under the layer button while the layer is on. Each colour has
-  // its words for screen readers and as a tooltip, and the limits between them are written under the bar.
+  // Tegnforklaringen for fargene på sporet, fra synk til løft, under lagknappen mens laget er på. Hver farge har
+  // ord for skjermlesere og som verktøytips, og grensene mellom dem står under stolpen.
   function legendControl(L) {
     var control = L.control({ position: "topright" });
     control.onAdd = function () {
@@ -121,8 +121,8 @@
     return control;
   }
 
-  // existing: the layer already in the layer list when this script was fetched on first use (common.js lazyOverlays);
-  // it is taken over, and when it is on the map already, the pilots are fetched at once.
+  // existing: laget som allerede var i laglista da skriptet ble hentet ved første bruk (common.js lazyOverlays).
+  // Det tas over, og når det allerede er på kartet, hentes pilotene med en gang.
   function addMapLayer(map, url, existing) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !url || !map.layersControl) return null;
@@ -130,8 +130,8 @@
     if (!existing) map.layersControl.addOverlay(layer, FS.layerLabel(map, "live", text("live.layer")));
     var markers = {}, trails = {}, timer = null, on = false, legend = legendControl(L);
 
-    // What the layer says when the pilots cannot be fetched (the data service down, or no network): a box with «Prøv
-    // igjen», like the radar's and the airspace's (common.js), so an empty map is never mistaken for an empty sky.
+    // Det laget sier når pilotene ikke kan hentes (datatjenesten nede, eller uten nett): en boks med «Prøv
+    // igjen», som for radaren og luftrommet (common.js), så et tomt kart aldri forveksles med en tom himmel.
     var statusEl = null;
     var Status = L.Control.extend({
       options: { position: "topright" },
@@ -172,8 +172,8 @@
       var now = Date.now(), seen = {};
       data.items.forEach(function (item) {
         seen[item.id] = true;
-        // The track, ending at the marker, under it: a light edge under the whole line so every colour shows on the map,
-        // then the runs of one colour.
+        // Sporet, som slutter ved markøren, under den: en lys kant under hele streken så alle farger synes på kartet,
+        // så strekkene med én farge.
         var points = (item.trail || []).concat([[item.lat, item.lon, item.climb]]);
         var group = trails[item.id] || (trails[item.id] = L.layerGroup().addTo(layer));
         group.clearLayers();

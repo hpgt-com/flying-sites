@@ -1,26 +1,26 @@
-// «Vind over starten» on the site page: the wind at heights above the launch hour by hour, with the rows under it for
-// the wind at the launch, the gusts near the ground, the thermals, the clouds and the rain, from Open-Meteo. The grid is
-// computed at build time (lib/windgram.js) and stored in #windgram-data; the data service has the same grid
-// (workers/data/src/sources/windgram.js) every half hour, and it replaces the built one when newer.
-// Drawn as SVG: the heights to scale in metres from just under the ground, each cell coloured by the site's wind rules
-// (below the minimum pale, suitable green, near the limit yellow, above red) with an arrow where the wind blows and the
-// speed. The thermals are a line: solid up to the cloud base (what a pilot can use), dashed above it (in cloud). The
-// height axis and the row names stay put at the left while the hours scroll sideways, on a phone and on a wide screen
-// alike. Built with DOM methods only, nothing from the data is parsed as HTML. The section stays hidden until there is
-// a grid. Exposed as window.FlyingSitesWindgram (the pure helpers); tested in test/windgram.test.js.
+// «Vind over starten» på stedssiden: vinden i høydene over starten time for time, med radene under for
+// vinden ved starten, kastene nær bakken, termikken, skyene og regnet, fra Open-Meteo. Rutenettet
+// regnes ut ved bygging (lib/windgram.js) og lagres i #windgram-data. Datatjenesten har det samme rutenettet
+// (workers/data/src/sources/windgram.js) hver halvtime, og det erstatter det bygde når det er nyere.
+// Tegnet som SVG: høydene i målestokk i meter fra like under bakken, hver celle farget etter stedets vindregler
+// (under minimum blek, passende grønn, nær grensen gul, over rød) med en pil for hvor vinden blåser og
+// farten. Termikken er en strek: heltrukket opp til skybasen (det en pilot kan bruke), stiplet over (i sky).
+// Høydeaksen og radnavnene blir stående til venstre mens timene ruller sidelengs, på mobil og på bred skjerm
+// likt. Bygges bare med DOM-metoder, ingenting fra dataene tolkes som HTML. Seksjonen er skjult til det finnes
+// et rutenett. Eksponert som window.FlyingSitesWindgram (de rene hjelperne). Testet i test/windgram.test.js.
 (function () {
   "use strict";
 
   var NS = "http://www.w3.org/2000/svg";
   var CW = 34, TOP = 14, BOT = 290, MTOP = 2600, AXIS_W = 66;
-  // The oldest grid drawn (the data service renews it about every half hour; the build's can be older).
+  // Det eldste rutenettet som tegnes (datatjenesten fornyer det omtrent hver halvtime, byggets kan være eldre).
   var MAX_AGE_MS = 12 * 3600000;
-  // The rows under the grid (y in the drawing).
+  // Radene under rutenettet (y i tegningen).
   var Y = { hour: BOT + 16, day: BOT + 30, launch: BOT + 40, gust: BOT + 80, thermal: BOT + 110, clouds: BOT + 140, rain: BOT + 184, end: BOT + 222 };
   var CLOUD = "M-8,3 C-11,3 -11,-3 -7,-3 C-6,-7 0,-8 2,-4 C6,-6 10,-2 7,1 C9,3 7,4 6,3 Z";
   var ARROW = "M0,-5.5 L4,3.5 L0,1.3 L-4,3.5 Z";
 
-  // The class of a speed by the site's rules: calm, ok, maybe, high or storm.
+  // Klassen for en fart etter stedets regler: calm, ok, maybe, high eller storm.
   function speedClass(speed, rules) {
     if (speed < rules.minWind) return "calm";
     if (speed <= rules.maxWind - 2) return "ok";
@@ -28,12 +28,12 @@
     if (speed <= rules.maxGust) return "high";
     return "storm";
   }
-  // The gusts near the ground: plain, near the limit (over the site's max wind) or over the max gust.
+  // Kastene nær bakken: vanlig, nær grensen (over stedets maks vind) eller over maks kast.
   function gustClass(gust, rules) { return gust > rules.maxGust ? "high" : gust > rules.maxWind ? "maybe" : "calm"; }
-  // How high the thermals go that a pilot can use: to the boundary layer, or to the cloud base when it is lower. { top
-  // (m a.s.l.), masl (the top rounded to 50, as shown), over (m over the launch, rounded to 50), capped (the clouds are
-  // the ceiling) }, or null without a top. The row shows the top in metres above sea level, as the height axis and other
-  // tools (RASP, Windy, soundings) do; less than 100 m over the launch shows as «–».
+  // Hvor høyt termikken går som en pilot kan bruke: til grenselaget, eller til skybasen når den er lavere. { top
+  // (moh.), masl (toppen avrundet til 50, som vist), over (m over starten, avrundet til 50), capped (skyene er
+  // taket) }, eller null uten topp. Raden viser toppen i meter over havet, som høydeaksen og andre
+  // verktøy (RASP, Windy, sonderinger) gjør. Mindre enn 100 m over starten vises som «–».
   function usableThermal(blh, cloudBase, launch) {
     if (blh == null) return null;
     var capped = cloudBase != null && cloudBase < blh;
@@ -76,21 +76,21 @@
       return ms < s.rise || ms > s.set;
     }
 
-    // Draws the grid and the rows. false when there are no hours left.
-    // fetched: when the grid was fetched. A grid older than MAX_AGE_MS, or fetched in the future, is not drawn, and the
-    // section is hidden again (the forecast it shows would be too old to go by).
+    // Tegner rutenettet og radene. false når det ikke er noen timer igjen.
+    // fetched: når rutenettet ble hentet. Et rutenett eldre enn MAX_AGE_MS, eller hentet fram i tid, tegnes ikke, og
+    // seksjonen skjules igjen (varselet det viser, ville vært for gammelt å gå etter).
     function render(data, fetched) {
       if (!data || !data.times || !data.times.length) return false;
       var now = Date.now(), at = Date.parse(fetched);
       if (Number.isFinite(at) && (now - at > MAX_AGE_MS || at > now + 15 * 60000)) { if (box) box.hidden = true; return false; }
-      // Only hours from now on (the build or the data service can be some hours old).
+      // Bare timer fra nå av (bygget eller datatjenesten kan være noen timer gammelt).
       var first = 0;
       while (first < data.times.length - 1 && data.times[first + 1] <= now) first++;
       if (data.times[first] + 3600000 <= now) return false;
       var cols = [];
       for (var i = first; i < data.times.length; i++) cols.push(i);
       var launch = data.launch, ground = Math.min(data.elevation == null ? launch : data.elevation, launch == null ? Infinity : launch);
-      // The height axis starts just under the ground, so the heights that matter get the room.
+      // Høydeaksen starter like under bakken, så høydene som betyr noe, får plassen.
       var base = Math.max(0, Math.floor((ground - 80) / 50) * 50), top = launch != null && launch > 1500 ? 3000 : MTOP;
       var y = function (m) { return Math.round((BOT - ((m - base) / (top - base)) * (BOT - TOP)) * 10) / 10; };
       var rows = [];
@@ -98,7 +98,7 @@
       var launchK = data.heights.indexOf(launch);
       var width = cols.length * CW + 4;
 
-      // The axis at the left: heights, the launch and the names of the rows.
+      // Aksen til venstre: høyder, starten og navnene på radene.
       var axis = svg("svg", { class: "windgram__axis", width: AXIS_W, height: Y.end, viewBox: "0 0 " + AXIS_W + " " + Y.end, "aria-hidden": "true" });
       text(axis, AXIS_W - 4, 10, t("masl"), "windgram__muted", "end");
       for (var m = Math.ceil((ground + 50) / 500) * 500; m <= top - 100; m += 500) text(axis, AXIS_W - 4, y(m) + 4, m, "windgram__muted", "end");
@@ -114,7 +114,7 @@
       cols.forEach(function (i, j) {
         var x = 2 + j * CW, mid = x + CW / 2, night = isNight(data.times[i]);
         var g = svg("g", {}, chart);
-        // Each cell of the grid.
+        // Hver celle i rutenettet.
         rows.forEach(function (row, n) {
           var c = data.cells[i][row.k];
           if (!c) return;
@@ -128,44 +128,44 @@
           }
         });
         if (night) svg("rect", { x: x, y: TOP, width: CW, height: BOT - TOP, class: "windgram__night" }, g);
-        // The thermals: the boundary layer, and what a pilot can use of it.
+        // Termikken: grenselaget, og det en pilot kan bruke av det.
         var th = usableThermal(data.blh[i], data.cloudBase[i], launch);
         if (th) { blhLine.push(mid + "," + y(Math.min(data.blh[i], top))); usableLine.push(mid + "," + y(Math.min(th.top, top))); }
         var cb = data.cloudBase[i];
         if (cb != null && cb > base && cb < top) svg("path", { d: CLOUD, transform: "translate(" + mid + "," + y(cb) + ")", class: "windgram__cloudbase" }, g);
-        // The hour, and the day at the first hour and at midnight.
+        // Timen, og dagen ved første time og ved midnatt.
         var parts = W.osloParts(data.times[i]);
         text(g, mid, Y.hour, parts.hour, night ? "windgram__muted" : "windgram__strong", "middle");
         if (j === 0 || parts.hour === "00") {
           text(g, x + 3, Y.day, parts.date === W.osloParts(now).date ? t("today") : parts.date.slice(8, 10) + "." + parts.date.slice(5, 7) + ".", "windgram__muted");
           if (j > 0) svg("line", { x1: x, x2: x, y1: TOP, y2: Y.end - 4, class: "windgram__midnight" }, g);
         }
-        // At the launch: colour, arrow and speed.
+        // Ved starten: farge, pil og fart.
         var lw = launchK >= 0 ? data.cells[i][launchK] : null;
         if (lw) {
           svg("rect", { x: x + 2, y: Y.launch, width: CW - 4, height: 32, rx: 6, class: "windgram__cell windgram--" + speedClass(lw[1], rules) }, g);
           svg("path", { d: ARROW, transform: "translate(" + mid + "," + (Y.launch + 10) + ") rotate(" + ((Number(lw[0]) + 180) % 360) + ")", class: "windgram__arrow" }, g);
           text(g, mid, Y.launch + 27, Math.round(lw[1]), "windgram__value windgram__strong", "middle");
         }
-        // The gusts near the ground.
+        // Kastene nær bakken.
         var gust = data.gust && data.gust[i];
         if (gust != null) {
           svg("rect", { x: x + 2, y: Y.gust, width: CW - 4, height: 22, rx: 6, class: "windgram__pill windgram__pill--" + gustClass(gust, rules) }, g);
           text(g, mid, Y.gust + 15, Math.round(gust), "windgram__value windgram__strong", "middle");
         }
-        // The thermals over the launch, on yellow as strong as the sun.
+        // Termikken over starten, på gult like sterkt som sola.
         svg("rect", { x: x + 2, y: Y.thermal, width: CW - 4, height: 22, rx: 6, class: "windgram__pill" }, g);
         var sw = data.sun && data.sun[i];
         if (sw) svg("rect", { x: x + 2, y: Y.thermal, width: CW - 4, height: 22, rx: 6, class: "windgram__sun", "fill-opacity": Math.min(1, sw / 250).toFixed(2) }, g);
         var over = th && th.over != null && th.over >= 100;
         text(g, mid, Y.thermal + 15, over ? th.masl : "–", "windgram__small windgram__strong", "middle");
         if (over && th.capped) svg("path", { d: CLOUD, transform: "translate(" + (x + 27) + "," + (Y.thermal + 3) + ") scale(0.4)", class: "windgram__cloudbase" }, g);
-        // The clouds in three layers, darker for more.
+        // Skyene i tre lag, mørkere for mer.
         var cl = (data.clouds && data.clouds[i]) || [];
         [2, 1, 0].forEach(function (layer, n) {
           svg("rect", { x: x + 2, y: Y.clouds + n * 12, width: CW - 4, height: 10, rx: 2, class: "windgram__cloudcover", "fill-opacity": ((cl[layer] || 0) / 100 * 0.85).toFixed(2) }, g);
         });
-        // The rain, mm in the hour.
+        // Regnet, mm i timen.
         var mm = data.rain && data.rain[i];
         svg("rect", { x: x + 2, y: Y.rain, width: CW - 4, height: 30, rx: 4, class: "windgram__pill" }, g);
         if (mm > 0) {
@@ -173,7 +173,7 @@
           svg("rect", { x: x + 2, y: Y.rain + 30 - bh, width: CW - 4, height: bh, rx: 3, class: "windgram__rainbar" }, g);
         }
         text(g, mid, Y.rain + 25, mm > 0 ? num(mm, 1) : "·", mm > 1 ? "windgram__small windgram__onbar" : "windgram__small", "middle");
-        // The whole hour in words, on hover.
+        // Hele timen i ord, ved hover.
         var hit = svg("rect", { x: x, y: 0, width: CW, height: Y.end, class: "windgram__hit" }, g);
         svg("title", {}, hit).textContent = t("hourTitle", {
           hour: parts.hour,
@@ -183,7 +183,7 @@
           rain: mm == null ? "–" : num(mm, 1),
         });
       });
-      // The ground, the launch and the thermal lines over the cells.
+      // Bakken, starten og termikkstrekene over cellene.
       svg("rect", { x: 0, y: y(ground), width: width, height: BOT - y(ground), class: "windgram__ground" }, chart);
       if (launch != null) svg("line", { x1: 0, x2: width, y1: y(launch) - 1, y2: y(launch) - 1, class: "windgram__launch" }, chart);
       svg("polyline", { points: blhLine.join(" "), class: "windgram__incloud" }, chart);
@@ -201,8 +201,8 @@
       return true;
     }
 
-    // What the colours, lines and rows mean, under the drawing (once): the colour scale always shown, the lines and the
-    // notes on the rows folded under «Slik leser du dette», so they are there for those who wonder.
+    // Hva fargene, strekene og radene betyr, under tegningen (én gang): fargeskalaen vises alltid, strekene og
+    // merknadene om radene er foldet under «Slik leser du dette», så de er der for dem som lurer.
     function legend() {
       if (!box || box.querySelector(".windgram__legend")) return;
       var r = rules, wrap = node("div", "windgram__legend");
@@ -226,9 +226,9 @@
     }
 
     var shown = { grid: page, fetched: page.fetched };
-    // The data service's grid, when it is newer than the one shown (or the page has none): at once, every ten minutes
-    // while the page is in view, and when it comes back into view. The one shown is drawn again each time, so the hours
-    // move on and a grid that has become too old is taken away.
+    // Rutenettet fra datatjenesten, når det er nyere enn det som vises (eller siden ikke har noe): med en gang, hvert
+    // tiende minutt mens siden er synlig, og når den blir synlig igjen. Det som vises, tegnes på nytt hver gang, så
+    // timene flytter seg og et rutenett som har blitt for gammelt, fjernes.
     function refresh() {
       if (document.hidden) return;
       render(shown.grid, shown.fetched);

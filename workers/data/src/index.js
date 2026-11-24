@@ -1,32 +1,31 @@
-// The data service for flysteder.hpgt.com on Cloudflare Workers (deployed by .github/workflows/data-worker.yml).
+// Datatjenesten for flysteder.hpgt.com på Cloudflare Workers (publiseres av .github/workflows/data-worker.yml).
 //
-// One module per source in sources/ fetches, checks and converts its data, and stores the dataset in the store
-// (store.js). Every dataset is served the same way, as /v1/<dataset>.json, with the same frame: dataset, source and
-// fetched (and license where the source's terms ask for one, as MET's do), then the dataset's own fields. A source that fails does not stop the others.
+// Én modul per kilde i sources/ henter, sjekker og gjør om dataene sine, og lagrer datasettet i lageret (store.js).
+// Alle datasett sendes på samme måte, som /v1/<dataset>.json, med samme ramme: dataset, source og fetched (og license
+// der kildens vilkår krever det, som METs gjør), så datasettets egne felt. En kilde som feiler, stopper ikke de andre.
 //
-// - forecast: the MET forecast for each launch (sources/forecast.js), used by the pages when it is newer than the one
-//   built into the page (fetchNewerForecast in src/assets/js/wind.js).
-// - stations: measured wind from Holfuy's stations (sources/holfuy.js, stations in stations.js) and MET's stations in
-//   the area (sources/frost.js), served together; each station carries its own source.
-// - windgram: winds aloft from Open-Meteo for the launches in WINDGRAM_SITES (sources/windgram.js), used by the site
-//   page when newer than the one built into it (src/assets/js/windgram.js).
-// - verification: how well the forecast hit at each flying site with its own station (sources/verify.js), on the weather
-//   page and the site page.
-// - flights: how many paragliders are seen in the air from each flying site, per month, from the Open Glider Network
-//   (sources/flights.js), on the site page (src/assets/js/flights.js).
+// - forecast: METs varsel for hvert startsted (sources/forecast.js). Sidene bruker det når det er nyere enn varselet
+//   som er bygget inn i siden (fetchNewerForecast i src/assets/js/wind.js).
+// - stations: målt vind fra Holfuys stasjoner (sources/holfuy.js, stasjonene i stations.js) og METs stasjoner i
+//   området (sources/frost.js), sendt samlet. Hver stasjon har sin egen kilde.
+// - windgram: høydevind fra Open-Meteo for startstedene i WINDGRAM_SITES (sources/windgram.js). Stedssiden bruker den
+//   når den er nyere enn den som er bygget inn (src/assets/js/windgram.js).
+// - verification: hvor godt varselet traff på hvert flysted med egen stasjon (sources/verify.js), på værsiden og
+//   stedssiden.
+// - flights: hvor mange paraglidere som ses i lufta fra hvert flysted, per måned, fra Open Glider Network
+//   (sources/flights.js), på stedssiden (src/assets/js/flights.js).
 //
-// - grid, grid-wide: Open-Meteo's forecast for a grid close around the sites every three hours, and a coarser one over
-//   a wider area every six (sources/grid.js), for the map layers
-//   «Prognose» (src/assets/js/forecast-layer.js).
+// - grid, grid-wide: Open-Meteos varsel for et rutenett tett rundt stedene hver tredje time, og et grovere over et
+//   større område hver sjette (sources/grid.js), for kartlagene «Prognose» (src/assets/js/forecast-layer.js).
 //
-// - live: the aircraft the Open Glider Network hears in the area now (live.js), fetched on demand and cached a few
-//   seconds, for the map layer «Piloter i lufta» (src/assets/js/live.js).
-// - POST /v1/report: «Meld fra om endring» from the site pages, as a GitHub issue (report.js).
-// - POST /v1/csp-report: the browsers' reports of CSP violations on the site's pages, as short lines in the log without
-//   personal data (csp-report.js).
-// - status: how the sources and datasets are doing (health.js), for the hourly check in .github/workflows/health.yml.
+// - live: luftfartøyene Open Glider Network hører i området nå (live.js), hentet ved behov og bufret noen sekunder,
+//   for kartlaget «Piloter i lufta» (src/assets/js/live.js).
+// - POST /v1/report: «Meld fra om endring» fra stedssidene, som en sak på GitHub (report.js).
+// - POST /v1/csp-report: nettlesernes rapporter om CSP-brudd på sidene, som korte linjer i loggen uten
+//   personopplysninger (csp-report.js).
+// - status: hvordan det går med kildene og datasettene (health.js), for timesjekken i .github/workflows/health.yml.
 //
-// sites.json (the launches) is written from the site files before deploy (scripts/data-sites.mjs).
+// sites.json (startstedene) skrives fra stedsfilene før publisering (scripts/data-sites.mjs).
 
 import * as forecast from "./sources/forecast.js";
 import * as holfuy from "./sources/holfuy.js";
@@ -53,9 +52,9 @@ const DATASETS = { "/v1/forecast.json": forecast.DATASET, "/v1/stations.json": h
 
 const store = (env) => env.STORE.get(env.STORE.idFromName("main"));
 
-// Public data, read by the pages on flysteder.hpgt.com (and anyone else), so any origin may read it. Short cache: the
-// data changes every few minutes. The answers are data, never a page: opened as a document or in a frame they can do
-// nothing (content-security-policy), and other sites may load them (cross-origin-resource-policy).
+// Åpne data, lest av sidene på flysteder.hpgt.com (og alle andre), så alle opphav kan lese dem. Kort hurtigbuffer:
+// dataene endres med få minutters mellomrom. Svarene er data, aldri en side. Åpnet som dokument eller i en ramme kan
+// de ikke gjøre noe (content-security-policy), og andre nettsteder kan laste dem (cross-origin-resource-policy).
 const INERT = { "content-security-policy": "default-src 'none'; frame-ancestors 'none'", "cross-origin-resource-policy": "cross-origin" };
 const HEADERS = {
   "access-control-allow-origin": "*",
@@ -68,13 +67,14 @@ export default {
   async scheduled(controller, env, ctx) {
     const s = store(env);
     const now = controller.scheduledTime;
-    // When each source last ran, and whether that run failed, for the ones that are caught up after a missed minute
-    // or retried after a failure (schedule.js CATCH_UP).
+    // Når hver kilde sist kjørte, og om kjøringen feilet. Brukes for kildene som tar igjen et tapt minutt eller prøves
+    // på nytt etter en feil (schedule.js CATCH_UP).
     const last = (await s.getState("health")) ?? {};
     const failed = (r) => Boolean(r?.errorAt && (!r.ok || r.errorAt > r.ok));
     const isDue = (name) => due(name, now, last[name]?.tried, failed(last[name]));
-    // Each run timed, so the status shows how long each source takes (health.js recordRuns): a source that fails after
-    // twenty seconds has timed out, one that succeeds in eight is slow, and a change over the days is visible.
+    // Hver kjøring tas tiden på, så statusen viser hvor lang tid hver kilde bruker (health.js recordRuns). En kilde
+    // som feiler etter tjue sekunder, har gått ut på tid. En som lykkes på åtte, er treg. Endringer over dager blir
+    // synlige.
     const runs = {};
     const timed = (name, start) => {
       if (!isDue(name)) return;
@@ -92,13 +92,14 @@ export default {
     if (isDue("backup")) {
       const day = new Date(now).toISOString().slice(0, 10);
       timed("backup", () => s.backup(day));
-      // The salts and address hashes of «Meld fra» from earlier days (report.js): deleted with the day, not only when
-      // the next report comes.
+      // Saltene og adressehashene for «Meld fra» fra tidligere dager (report.js): slettes med dagen, ikke først når
+      // neste rapport kommer.
       ctx.waitUntil(s.pruneReports(day));
     }
     timed("ognDdb", () => s.refreshNoTrack(now));
-    // A store without a successful restore in its health state is new (or lost): the latest backup is read back in,
-    // every minute until it succeeds (store.js restore). A store that has done it once, or has no archive, is left alone.
+    // Et lager uten en vellykket gjenoppretting i helsetilstanden er nytt (eller tapt). Da leses den siste
+    // sikkerhetskopien inn igjen, hvert minutt til det lykkes (store.js restore). Et lager som har gjort det én gang,
+    // eller som ikke har arkiv, får være i fred.
     if (env.ARCHIVE && !last.restore?.ok) timed("restore", () => s.restore(now));
     ctx.waitUntil(Promise.allSettled(Object.values(runs)).then(async (results) => {
       const outcome = {};
@@ -107,14 +108,14 @@ export default {
         if (failed) console.warn(`${name}: ${results[i].reason?.message}`);
         outcome[name] = { error: failed ? results[i].reason?.message || "feil" : null, ms: failed ? results[i].reason?.ms ?? null : results[i].value.ms };
       });
-      // When each source last ran and last succeeded, for /v1/status.json.
+      // Når hver kilde sist kjørte og sist lyktes, for /v1/status.json.
       if (Object.keys(outcome).length) await s.putState("health", recordRuns(await s.getState("health"), outcome, now));
     }));
   },
 
-  // Whatever goes wrong (the store overloaded or out of its daily quota, a bug), the answer is still JSON with the CORS
-  // headers, so the page sees a 503 it can handle, not Cloudflare's error page without them (which the browser reports
-  // as a CORS failure).
+  // Uansett hva som går galt (lageret er overbelastet eller tom for dagskvoten, en feil i koden), er svaret fortsatt
+  // JSON med CORS-hodene. Da får siden en 503 den kan håndtere, ikke Cloudflares feilside uten hodene (som nettleseren
+  // melder som en CORS-feil).
   async fetch(request, env, ctx) {
     try {
       return await handle(request, env, ctx);
@@ -126,7 +127,7 @@ export default {
   },
 };
 
-// The CORS headers for /v1/report, and whether the request's origin is allowed: the site itself (or REPORT_ORIGINS when
+// CORS-hodene for /v1/report, og om opphavet til forespørselen er tillatt: nettstedet selv (eller REPORT_ORIGINS under
 // testing).
 function reportCors(request, env) {
   const origin = request.headers.get("origin") || "";
@@ -136,13 +137,13 @@ function reportCors(request, env) {
   return { allowed, cors };
 }
 
-// The headers of the answers from /v1/csp-report: the browser sends the reports without CORS (no-cors) and reads no
-// answer, so no CORS headers; only POST is allowed.
+// Hodene i svarene fra /v1/csp-report. Nettleseren sender rapportene uten CORS (no-cors) og leser ikke svaret, så det
+// er ingen CORS-hoder. Bare POST er tillatt.
 const CSP_REPORT_HEADERS = { allow: "POST", "x-content-type-options": "nosniff", "cache-control": "no-store", ...INERT };
 
 async function handle(request, env, ctx) {
   const { pathname } = new URL(request.url);
-  // CSP violation reports from the site's pages (csp-report.js).
+  // Rapporter om CSP-brudd fra sidene (csp-report.js).
   if (pathname === "/v1/csp-report") {
     if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CSP_REPORT_HEADERS });
     return new Response(null, { status: await handleCspReport(request, env), headers: CSP_REPORT_HEADERS });
@@ -171,25 +172,26 @@ async function handle(request, env, ctx) {
 
 const JSON_HEADERS = { ...HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${CACHE_SECONDS}` };
 
-// How the sources and datasets are doing (health.js).
+// Hvordan det går med kildene og datasettene (health.js).
 async function status(env) {
   const s = store(env);
   const [runs, snapshots, holfuyArchive, metArchive, backup, restore] = await Promise.all([
     s.getState("health"), s.snapshotsFor([...Object.keys(MAX_AGE), frost.DATASET]),
     s.getState(`${holfuy.KEY}-archive`), s.getState(`${frost.KEY}-archive`), s.getState("backup"), s.getState("restore"),
   ]);
-  // The stations dataset is served merged from Holfuy's and MET's; the status counts the newer of the two.
+  // Stasjonsdatasettet sendes slått sammen fra Holfuys og METs. Statusen regner med det nyeste av de to.
   const st = [snapshots[holfuy.DATASET], snapshots[frost.DATASET]].filter(Boolean).sort((a, b) => (a.updated < b.updated ? 1 : -1))[0];
   if (st) snapshots[holfuy.DATASET] = st;
   const body = buildStatus({ runs, snapshots, now: Date.now(),
     expected: { forecast: SITES.map((x) => x.id), windgram: WINDGRAM_SITES.filter((id) => SITES.some((x) => x.id === id)) },
     archive: { [holfuy.KEY]: holfuyArchive?.through ?? null, [frost.KEY]: metArchive?.through ?? null },
-    // Without the archive (no R2 binding) there is no backup to report on.
+    // Uten arkivet (ingen R2-binding) er det ingen sikkerhetskopi å melde om.
     backup: env.ARCHIVE ? backup ?? null : undefined, restore });
   return Response.json(body, { headers: JSON_HEADERS });
 }
 
-// A dataset as stored; the stations are Holfuy's and MET's merged. 503 (not cached) until the first run has stored it.
+// Et datasett slik det er lagret. Stasjonene er Holfuys og METs slått sammen. 503 (uten hurtigbuffer) til den første
+// kjøringen har lagret det.
 async function dataset(env, name) {
   const s = store(env);
   const body = name === holfuy.DATASET

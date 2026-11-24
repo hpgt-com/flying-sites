@@ -17,33 +17,33 @@ scripts:
 {%- import "macros.njk" as m with context -%}
 {%- set routes = derived.routes -%}
 {%- set notReviewed = not (reviewed and reviewed.by and reviewed.date) -%}
-{#- The text in the page's language: the translation (index.en.md etc.) when it exists, otherwise the Norwegian. The fields
-    in local are the site file's texts with the translation laid over them (lib/translations.js). -#}
+{#- Teksten på sidens språk: oversettelsen (index.en.md osv.) når den finnes, ellers den norske. Feltene i local
+    er tekstene i stedsfilen med oversettelsen lagt over (lib/translations.js). -#}
 {%- set local = derived.local -%}
 {%- set body = derived.translation.html if derived.translation else content -%}
 {%- set untranslated = lang != "nb" and not derived.translation -%}
 {%- set intro = body | section("intro") -%}
 <div class="site-page site-v2">
-  {#- The logo at the top left as on the home page, so the site is recognised, and «‹ Alle flysteder» on the image below. -#}
+  {#- Logoen øverst til venstre som på forsiden, så siden kjennes igjen, og «‹ Alle flysteder» på bildet under. -#}
   <header class="topbar">
     <a class="logo" href="{{ '/' | localeUrl }}"><img src="{{ '/assets/img/icon.svg' | url }}" width="28" height="28" alt="">{{ t.common.siteTitle }}</a>
     <div class="topbar__end">{{ m.siteMenu() }}</div>
   </header>
 
-  {#- Hero: the site's first overview image with the name and key facts on top. Without an image, a calm gradient. -#}
+  {#- Hero: stedets første oversiktsbilde med navnet og nøkkeltall oppå. Uten bilde en rolig fargeovergang. -#}
   {%- set heroImage = null -%}
   {%- for img in derived.images %}{% if not heroImage and img.field == "overview" %}{% set heroImage = img %}{% endif %}{% endfor %}
   <section class="hero{% if not heroImage %} hero--plain{% endif %}" aria-labelledby="site-name">
     <a class="hero__back" href="{{ '/' | localeUrl }}">{{ m.chevron("left") }}{{ t.common.allSites }}</a>
     {% if heroImage %}<img class="hero__img" src="{{ heroImage.fullUrl }}" srcset="{{ heroImage.srcsetWebp }}" sizes="(min-width: 1100px) 1120px, (min-width: 800px) 760px, 100vw" alt="" fetchpriority="high">{% endif %}
-    {#- The directions the site suits, on the image, so they are seen first. Only the site's own directions: the wind now
-        is in «Vinden nå – kan det passe?» right below. -#}
+    {#- Retningene stedet passer for, på bildet, så de ses først. Bare stedets egne retninger: vinden nå står i
+        «Vinden nå – kan det passe?» rett under. -#}
     {% if wind_directions.primary.length %}<div class="hero__rose">{{ m.rose(wind_directions, 104) }}</div>{% endif %}
     <div class="hero__text">
       {% if region %}<span class="hero__eyebrow">{{ region }}</span>{% endif %}
       <h1 id="site-name">{{ name }}</h1>
       <ul class="hero__chips" aria-label="{{ t.site.keyFacts }}">
-        {#- The assessment now from «Vinden nå – kan det passe?» (site-wind.js), so it is seen first. Links down to the box. -#}
+        {#- Vurderingen nå fra «Vinden nå – kan det passe?» (site-wind.js), så den ses først. Lenker ned til boksen. -#}
         <li class="hero__status" id="hero-status" data-pending><a href="#vaer"><span class="hero__status-icon" aria-hidden="true"></span><span class="hero__status-text">{{ t.site.canIFly }}</span></a></li>
         {% if elevation and elevation.launch_masl %}<li>{{ elevation.launch_masl }} {{ t.units.masl }}</li>{% endif %}
         {% if elevation and elevation.difference_m %}<li>{{ t.site.heightDown | fmt({ m: elevation.difference_m }) }}</li>{% endif %}
@@ -55,8 +55,9 @@ scripts:
       </ul>
     </div>
   </section>
-  {#- Links to the parts of the page in a row right under the image, which stays at the top while scrolling. The part in view
-      is marked (site.js). Outside <main>, so it can stay at the top of the whole page, also in the two columns on desktop. -#}
+  {#- Lenker til delene av siden på en rad rett under bildet, som blir stående øverst når man ruller. Delen som
+      vises, er markert (site.js). Utenfor <main>, så den kan stå øverst på hele siden, også i de to kolonnene
+      på desktop. -#}
   <nav class="section-nav" aria-label="{{ t.site.sectionNav }}">
     <a href="#vaer">{{ t.site.navNow }}</a>
     <a href="#h-hazards">{{ t.site.hazardsTitle }}</a>
@@ -65,19 +66,20 @@ scripts:
     <a href="#h-images">{{ t.site.images }}</a>
     <a href="#h-log">{{ t.site.linksTitle }}</a>
   </nav>
-  {#- Desktop: two columns under the image. Left: the introduction and «Vinden nå – kan det passe?», then Start og landing and
-      Adkomst. Right: «Før du starter» (hazards and airspace) beside them, then Bilder and Lenker. The HTML order is the mobile order,
-      so screen readers and the keyboard follow what is seen. -#}
+  {#- Desktop: to kolonner under bildet. Venstre: innledningen og «Vinden nå – kan det passe?», så Start og landing
+      og Adkomst. Høyre: «Før du starter» (farer og luftrom) ved siden av, så Bilder og Lenker. Rekkefølgen i HTML
+      er den på mobil, så skjermlesere og tastaturet følger det som ses. -#}
   <main class="site-page__body" id="content" tabindex="-1">
     <div class="site-page__top">
     {% if untranslated %}<p class="translation-note" lang="{{ lang }}">{{ t.site.notTranslated }}</p>{% endif %}
     {% if intro %}<div class="lead"{% if untranslated %} lang="nb"{% endif %}>{{ intro | safe }}</div>{% endif %}
-    {#- «Vinden nå – kan det passe?»: the assessment now in large type, the next 12 hours as cards, and folded below the periods that
-        may work and the next 48 hours as bars (site-wind.js). The details (Yr meteogram and winds aloft) are folded too. -#}
+    {#- «Vinden nå – kan det passe?»: vurderingen nå med stor skrift, de neste 12 timene som kort, og brettet under
+        periodene som kan passe og de neste 48 timene som søyler (site-wind.js). Detaljene (meteogrammet fra Yr
+        og høydevind) er også brettet sammen. -#}
     <section class="block block--now{% if (forecast and forecast.sites and forecast.sites[id]) or site.forecastUrl %} block--now-wait{% endif %}" id="vaer" aria-labelledby="h-weather">
       <h2 id="h-weather" class="now-eyebrow">{{ t.site.canIFly }}</h2>
       <div class="site-wind" id="site-wind" aria-live="polite" hidden></div>
-      {#- Scrolls sideways when the cards do not fit, so it can take focus and be scrolled with the arrow keys. -#}
+      {#- Ruller sidelengs når kortene ikke får plass, så den kan få fokus og rulles med piltastene. -#}
       <ol class="hour-cards" id="hour-cards" aria-label="{{ t.site.next12 }}" tabindex="0" hidden></ol>
       <p class="hour-cards__key" id="hour-cards-key" hidden>{{ t.site.hourCardsKey }}</p>
       {% if wind_limits and wind_limits.max_wind %}<p class="now-limit">{{ t.site.siteMaxWind | fmt({ m: wind_limits.max_wind }) }}</p>{% endif %}
@@ -91,7 +93,7 @@ scripts:
         <summary><h3>{{ t.site.weatherDetails }}</h3></summary>
         {% if external.yr_id %}
         <figure class="meteogram">
-          {#- Yr shows the meteogram in the same language as the page (nb/en in the URL). -#}
+          {#- Yr viser meteogrammet på samme språk som siden (nb/en i URL-en). -#}
           <a href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener"><span class="visually-hidden">{{ t.site.yrForecast }} {{ t.common.opensNewTab }}</span><img src="{{ t.site.meteogramBase }}{{ external.yr_id }}/meteogram.svg" data-src-dark="{{ t.site.meteogramBase }}{{ external.yr_id }}/meteogram.svg?mode=dark" alt="{{ t.site.meteogramAlt | fmt({ name: name }) }}" width="782" height="391" loading="lazy"></a>
           <figcaption>{{ t.site.meteogramCaption }}</figcaption>
         </figure>
@@ -109,10 +111,10 @@ scripts:
       </details>
     </section>
     </div>
-    {#- The weather station on this flying site, when it has one: the wind measured now, with a link to the station
-        (stations.js; the stations and their sites are in workers/data/src/stations.js). Right after «Vinden nå – kan det passe?»
-        on mobile; on desktop site.js moves it to the top of the right column (under «Før du starter»), where the chart is
-        not too big. -#}
+    {#- Værstasjonen på dette flystedet, når det har en: vinden målt nå, med lenke til stasjonen (stations.js;
+        stasjonene og stedene deres står i workers/data/src/stations.js). Rett etter «Vinden nå – kan det passe?»
+        på mobil. På desktop flytter site.js den øverst i høyre kolonne (under «Før du starter»), der grafen ikke
+        blir for stor. -#}
     <section class="block block--station station-now" id="station-now" aria-label="{{ t.home.stationsTitle }}" data-url="{{ site.stationsUrl }}" data-verify-url="{{ site.verificationUrl }}" data-site="{{ id }}" hidden></section>
     <section class="block block--notice{% if not local.hazards.length %} block--notice-empty{% endif %}" aria-labelledby="h-hazards">
       <h2 id="h-hazards"><span class="notice-icon" aria-hidden="true">!</span>{{ t.site.hazardsTitle }}</h2>
@@ -122,34 +124,36 @@ scripts:
         <span>{{ hazard.text }}</span>
       </div>
       {% else %}
-      {#- If not reviewed, an empty list only means nobody has entered hazards, not that there are none. -#}
+      {#- Er stedet ikke gjennomgått, betyr en tom liste bare at ingen har lagt inn farer, ikke at det ikke
+          finnes noen. -#}
       {% if notReviewed %}
       <p>{{ t.site.hazardsNotReviewed | safe }}</p>
       {% else %}
       <p>{{ t.site.hazardsNone }}</p>
       {% endif %}
       {% endfor %}
-      {#- The airspace over the launch belongs here too: the lowest fixed airspace above it, with the height profile, and notes
-          about nearby airspace. One box with what to watch out for, as in «Pass på» in the v3 prototype. -#}
+      {#- Luftrommet over starten hører også hjemme her: det laveste faste luftrommet over den, med høydeprofilen, og
+          merknader om luftrom i nærheten. Én boks med det man må passe på, som «Pass på» i v3-prototypen. -#}
       <h3 class="notice-sub" id="h-airspace">{{ t.site.airspace }}</h3>
     <div class="airspace">
           {% if derived.airspace %}
-          {#- Fetched automatically from openAIP (npm run airspace). Shows only the ceiling above launch: the lowest fixed
-              airspace above the launch site. Names from the site file's airspace override when type and lower limit match. -#}
+          {#- Hentes automatisk fra openAIP (npm run airspace). Viser bare taket over starten: det laveste faste
+              luftrommet over startstedet. Navn fra airspace i stedsfilen overstyrer når type og nedre grense
+              stemmer. -#}
           {% set ceiling = derived.airspaceCeiling %}
           {% if ceiling %}
           {% set a = ceiling.airspace %}
-          {#- The figure shows the name, class and floor. Airspace from the ground has no figure, so it is said in text. -#}
+          {#- Figuren viser navnet, klassen og gulvet. Luftrom fra bakken har ingen figur, så det sies i tekst. -#}
           {% if ceiling.fromGround %}<p class="airspace__ground"><strong>{{ a.name }}</strong>{% if a["class"] %} · {{ t.site.class | fmt({ c: a["class"] }) }}{% endif %}: {{ t.site.fromGround }}</p>{% endif %}
-          {#- Terrain, launch, landing and the airspace floor, with the height over the launch (lib/airspace-profile.js).
-              Only fixed airspace: areas activated by NOTAM are not part of the ceiling. -#}
+          {#- Terreng, start, landing og gulvet i luftrommet, med høyden over starten (lib/airspace-profile.js).
+              Bare fast luftrom: områder som aktiveres med NOTAM, er ikke en del av taket. -#}
           {{ ceiling | airspaceProfile(elevation.launch_masl, elevation.landing_masl) | safe }}
           {% if a.note %}<span class="muted">{{ a.note }}</span>{% endif %}
           {% else %}
           <span class="muted">{{ t.site.noAirspace }}</span>
           {% endif %}
-          {#- Nearby airspace is only shown when the site file has a note about it, for example that the approach
-              to the landing enters Evenes CTR. -#}
+          {#- Luftrom i nærheten vises bare når stedsfilen har en merknad om det, for eksempel at innflygingen
+              til landingen går inn i Evenes CTR. -#}
           {% for n in derived.airspace.airspaces %}{% if n.note and not (ceiling and n.name == ceiling.airspace.name) %}
           <span class="muted airspace__nearby"><strong>{{ n.name }}</strong>{% if not n.overLaunch %} ({{ t.site.kmAway | fmt({ km: n.distanceKm | replace(".", t.meta.decimal) }) }}){% endif %}: {{ n.note }}</span>
           {% endif %}{% endfor %}
@@ -172,15 +176,16 @@ scripts:
     </section>
 
     <div class="site-page__main">
-      {#- Start og landing: the map with launch, direction arcs, points, landing, parking and walking route first, then the launch
-          and the landing in words. -#}
+      {#- Start og landing: kartet med start, retningsbuer, punkter, landing, parkering og gangrute først, så starten
+          og landingen i ord. -#}
       <section class="block block--launch" aria-labelledby="h-launch">
         <h2 id="h-launch">{{ t.site.launchAndLanding }}</h2>
         <div id="site-map" class="map map--site" data-live-url="{{ site.liveUrl }}" data-live-script="{{ '/assets/js/live.js' | asset }}" data-obstacles-url="{{ '/assets/obstacles/index.json' | url }}" role="region" aria-label="{{ t.site.mapLabel | fmt({ name: name }) }}"></div>
         <ul class="map-legend" aria-label="{{ t.site.mapLegend }}">
           <li><span class="map-symbol map-symbol--launch-dot"></span>{{ t.site.launch }}</li>
           {% if landings.length %}<li><span class="map-symbol map-symbol--landing"></span>{{ t.site.landing }}</li>{% endif %}
-          {#- Other landings with their own name (for example «SPG-landing») are shown by name, otherwise «Alternativ landing». -#}
+          {#- Andre landinger med eget navn (for eksempel «SPG-landing») vises med navnet, ellers
+              «Alternativ landing». -#}
           {% for l in local.landings | rejectattr("primary") %}{% if l.name and l.name != "Landing" %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>{{ l.name }}</li>{% elif loop.first %}<li><span class="map-symbol map-symbol--landing map-symbol--alt"></span>{{ t.site.altLanding }}</li>{% endif %}{% endfor %}
           {% if parking.length %}<li><span class="symbol symbol--parking">P</span>{{ t.site.parking }}</li>{% endif %}
           {% if routes.length %}<li><span class="symbol symbol--route"></span>{{ t.site.route }}</li>{% endif %}
@@ -192,7 +197,7 @@ scripts:
           {% if hasHazard %}<li><span class="drawing-pin drawing-pin--hazard drawing-pin--legend">!</span>{{ t.site.hazard }}</li>{% endif %}
         </ul>
         {% if not parking.length %}<p class="missing">{{ t.site.parkingMissing }}</p>{% endif %}
-        {#- Points from the drawing (<id>-drawing.geojson), with the same numbers as in the map (site.js). -#}
+        {#- Punkter fra tegningen (<id>-drawing.geojson), med de samme numrene som i kartet (site.js). -#}
         {%- set points = [] -%}
         {%- if derived.drawing %}{% for f in derived.drawing.features %}{% if f.properties.kind == "label" and f.properties.title %}{% set points = (points.push(f), points) %}{% endif %}{% endfor %}{% endif %}
         {% if points.length %}
@@ -218,14 +223,15 @@ scripts:
         {% set launchText = body | section([t.site.launch, "Start"]) %}
         {% if launchText %}<div class="prose"{% if untranslated %} lang="nb"{% endif %}>{{ launchText | safe }}</div>{% endif %}
         {% if launches.length %}
-        {#- Category (PG/SPG) in its own column between the directions and the text, only when some launch has a category. -#}
+        {#- Kategori (PG/SPG) i egen kolonne mellom retningene og teksten, bare når en av startene har kategori. -#}
         {%- set hasLaunchCategories = false -%}
         {%- for group in derived.launchGroups %}{% if group.categories.length %}{% set hasLaunchCategories = true %}{% endif %}{% endfor %}
-        {#- Folded on mobile (site.js), so the page is shorter: the rose and the text above give the overview. Open on desktop. -#}
+        {#- Brettet sammen på mobil (site.js), så siden blir kortere: rosen og teksten over gir oversikten. Åpen på
+            desktop. -#}
         <details class="fold launch-fold" data-fold-mobile open>
         <summary><h4>{{ t.site.launchesLabel }} ({{ derived.launchGroups.length }})</h4></summary>
         <ul class="launch-list{% if hasLaunchCategories %} launch-list--categories{% endif %}" aria-label="{{ t.site.launchesLabel }}">
-          {#- Launches with the same directions are merged into one line (groupLaunches in sites.11tydata.js). -#}
+          {#- Starter med de samme retningene slås sammen til én linje (groupLaunches i sites.11tydata.js). -#}
           {% for group in derived.launchGroups %}
           <li data-dirs="{{ group.directions | join(' ') }}">
             <span class="launch-list__badges">
@@ -247,14 +253,14 @@ scripts:
         {% endif %}
         {% set landingText = body | section([t.site.landing, "Landing"]) %}
         {% if landingText %}<div class="prose"{% if untranslated %} lang="nb"{% endif %}>{{ landingText | safe }}</div>{% else %}<p class="missing">{{ t.site.noLandingText }}</p>{% endif %}
-        {#- Applies to all sites, so it is in the template and not in each site file. -#}
+        {#- Gjelder alle steder, så det står i malen og ikke i hver stedsfil. -#}
         <p class="landing-note">{{ t.site.landingNote }}</p>
       </section>
 
-      {#- Adkomst: the way up, with the walking route as numbers and elevation profile, parking, and directions and GPX. -#}
+      {#- Adkomst: veien opp, med gangruten som tall og høydeprofil, parkering, og veibeskrivelse og GPX. -#}
       <section class="block block--landing" aria-labelledby="h-access">
         <h2 id="h-access">{{ t.site.access }}</h2>
-        {#- Access as numbers when the site has one walking route: length, elevation gain and walking time. -#}
+        {#- Adkomsten som tall når stedet har én gangrute: lengde, stigning og gangtid. -#}
         {% set oneRoute = routes[0] if routes.length == 1 else null %}
         {% if oneRoute %}
         <div class="access-stats" role="group" aria-label="{{ t.site.routeStats }}">
@@ -263,8 +269,8 @@ scripts:
           {% if oneRoute.walkTimeMin %}<div><strong>{{ oneRoute.walkTimeMin }}</strong> <span>{{ t.units.minutes }}</span><small>{{ t.site.onFoot }}</small></div>{% endif %}
         </div>
         {% endif %}
-        {#- The elevation profile of the walking route, open and near the top, since the way up is what the part is mostly about.
-            The slider shows the position in the map above. -#}
+        {#- Høydeprofilen til gangruten, åpen og høyt oppe, siden det er veien opp delen mest handler om.
+            Glidebryteren viser posisjonen i kartet over. -#}
         {% if routes | selectattr("profile") | list | length %}
         <details class="fold profile-fold" open>
           <summary><h3>{{ t.site.profile }}</h3></summary>
@@ -291,7 +297,7 @@ scripts:
         <dl class="row-list">
           <div>
             <dt>{{ t.site.parking }}</dt>
-            {#- Parking in the map without a description is not «ikke registrert»: it is then only shown in the map. -#}
+            {#- Parkering i kartet uten beskrivelse er ikke «ikke registrert»: den vises da bare i kartet. -#}
             <dd>{% if local.access.parking_text %}{{ local.access.parking_text }}{% elif parking and parking.length %}{{ t.site.parkingInMap }} <span class="missing">{{ t.site.descriptionMissing }}</span>{% else %}<span class="missing">{{ t.common.notRegistered }}</span>{% endif %}</dd>
           </div>
           <div>
@@ -329,10 +335,10 @@ scripts:
     </div>
     <div class="site-page__aside">
 
-      {#- 8. Images: the first overview image (aerial, from the landing towards launch, or the view from launch) large at the top
-          (same as the preview image when the page is shared), the first launch and first landing image below. If the site
-          has more images, «Se alle N bilder» opens the lightbox with all of them, in the order overview, launch, landing.
-          If some types are missing, only those that exist are shown, plus one line about submitting images. -#}
+      {#- 8. Bilder: det første oversiktsbildet (fra lufta, fra landingen mot starten, eller utsikten fra starten)
+          stort øverst (samme som forhåndsvisningen når siden deles), det første start- og landingsbildet under.
+          Har stedet flere bilder, åpner «Se alle N bilder» lysboksen med alle, i rekkefølgen oversikt, start,
+          landing. Mangler noen typer, vises bare de som finnes, pluss én linje om å sende inn bilder. -#}
       {%- set shown = derived.images | selectattr("featured") | list -%}
       {%- set extra = derived.images | rejectattr("featured") | list -%}
       <section class="block block--images" aria-labelledby="h-images">
@@ -349,31 +355,34 @@ scripts:
         </div>
         {% endif %}
         {% if extra.length %}
-        {#- The button is shown by lightbox.js. Without JavaScript only the images above exist. -#}
+        {#- Knappen vises av lightbox.js. Uten JavaScript finnes bare bildene over. -#}
         <button type="button" class="big-btn images-all" data-lightbox-all hidden><span>{{ t.site.seeAllImages | fmt({ n: derived.images.length }) }}</span></button>
         {% for image in extra %}{{ m.lightboxLink(image, image.caption, false) }}{% endfor %}
         {% endif %}
-        {#- The photographers and the licence, once per photographer. Also in the image metadata and the lightbox. -#}
+        {#- Fotografene og lisensen, én gang per fotograf. Står også i metadataene til bildene og i lysboksen. -#}
         {%- set creators = [] -%}{%- set creatorNames = [] -%}
         {%- for image in derived.images %}{% if image.credit and not (image.credit.creator in creatorNames) %}{% set creatorNames = (creatorNames.push(image.credit.creator), creatorNames) %}{% set creators = (creators.push(image.credit), creators) %}{% endif %}{% endfor %}
         {% if creators.length %}
         <p class="images-credit">{{ t.site.photo }}: {% for c in creators %}{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.creator }}</a>{% else %}{{ c.creator }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %} · <a href="{{ creators[0].licenseUrl }}" target="_blank" rel="noopener">{{ creators[0].license }}</a></p>
         {% endif %}
-        {#- Sending in photos goes through a form without a GitHub account once it exists. Until then only that there are none. -#}
+        {#- Bilder skal sendes inn via et skjema uten GitHub-konto når det finnes. Til da står det bare at det ikke er
+            noen. -#}
         {% if not shown.length %}<p class="images-missing">{{ t.site.noImages }}</p>{% endif %}
         </details>
       </section>
-      {#- Flyaktivitet: how many paragliders the Open Glider Network has seen in the air from this site (flights.js, the
-          data service's /v1/flights.json). Hidden until the data has come. -#}
+      {#- Flyaktivitet: hvor mange paraglidere Open Glider Network har sett i lufta fra dette stedet (flights.js,
+          datatjenestens /v1/flights.json). Skjult til dataene har kommet. -#}
       <section class="block block--flights" id="flights" data-url="{{ site.flightsUrl }}" data-log-url="{{ site.flightLogUrl }}" data-site="{{ id }}" aria-labelledby="h-flights" hidden>
         <h2 id="h-flights">{{ t.site.flightsTitle }}</h2>
         <div class="flights"></div>
-        {#- The link to a flight on /flyaktivitet/ («Siste turer herfra», flights.js): the address is in the page, the script only sets the hash. -#}
+        {#- Lenken til en tur på /flyaktivitet/ («Siste turer herfra», flights.js): adressen står i siden, skriptet
+            setter bare hashen. -#}
         <template id="flights-recent-link"><a href="{{ '/flyaktivitet/' | localeUrl }}"></a></template>
       </section>
-      {#- «Fra turlogger»: sums from the flight logs the club's pilots have added (scripts/logbook.mjs, lib/igc.js,
-          src/_data/logbook.json): flights and years, the records and the flights per calendar month. Only when the logs have
-          flights from this site; hidden while there is no logbook.json (left out until more pilots have added logs). -#}
+      {#- «Fra turlogger»: summer fra turloggene klubbens piloter har lagt inn (scripts/logbook.mjs, lib/igc.js,
+          src/_data/logbook.json): turer og år, rekordene og turene per kalendermåned. Bare når loggene har
+          turer fra dette stedet. Skjult så lenge det ikke finnes noen logbook.json (den er utelatt til flere
+          piloter har lagt inn logger). -#}
       {%- set lb = logbook.sites[id] if logbook and logbook.sites and logbook.sites[id] else null -%}
       {% if lb %}
       <section class="block block--logbook" aria-labelledby="h-logbook">
@@ -402,9 +411,10 @@ scripts:
         </details>
       </section>
       {% endif %}
-      {# 9. Log and more #}
-      {#- Links: the weather for this launch (Yr and Windy; Flybart covers only a few stations and is on the home page), the flight log and the site's own links (links in the site file, for
-          example the ski resort with lift opening hours). In the right column on desktop. -#}
+      {# 9. Logg og mer #}
+      {#- Lenker: været for denne starten (Yr og Windy; Flybart dekker bare noen få stasjoner og står på forsiden),
+          turloggen og stedets egne lenker (links i stedsfilen, for eksempel skianlegget med åpningstidene for
+          heisen). I høyre kolonne på desktop. -#}
       <section class="block block--log" aria-labelledby="h-log">
         <details class="fold" data-fold-mobile open>
         <summary><h2 id="h-log">{{ t.site.linksTitle }}</h2></summary>
@@ -413,7 +423,7 @@ scripts:
         <div class="now-links">
           {% if external.yr_id %}<a class="btn" href="{{ t.site.yrBase }}{{ external.yr_id }}" target="_blank" rel="noopener">{{ m.icon("cloud") }}Yr{{ m.external() }}</a>{% endif %}
           <a class="btn" href="https://www.windy.com/{{ launch.lat }}/{{ launch.lon }}?{{ launch.lat }},{{ launch.lon }},12" target="_blank" rel="noopener">{{ m.icon("wind") }}Windy{{ m.external() }}</a>
-          {#- The site's weather station at Holfuy, shown by stations.js when the site has one. -#}
+          {#- Stedets værstasjon hos Holfuy, vist av stations.js når stedet har en. -#}
           <a class="btn" id="station-link" href="https://holfuy.com/" target="_blank" rel="noopener" hidden>{{ m.icon("wind") }}Holfuy{{ m.external() }}</a>
         </div>
         </div>
@@ -435,8 +445,9 @@ scripts:
         {% endif %}
         </details>
       </section>
-      {#- 10. «Meld fra om endring»: a short form that becomes an issue for the club (report.js, the data service's
-          /v1/report), checked with Cloudflare Turnstile. Only when the site key is set (src/_data/site.js). -#}
+      {#- 10. «Meld fra om endring»: et kort skjema som blir en issue for klubben (report.js, datatjenestens
+          /v1/report), sjekket med Cloudflare Turnstile. Bare når nøkkelen for nettstedet er satt
+          (src/_data/site.js). -#}
       {% if site.turnstileSiteKey %}
       <section class="block block--report" aria-labelledby="h-report">
         <details class="fold report" id="report" data-url="{{ site.reportUrl }}" data-sitekey="{{ site.turnstileSiteKey }}" data-site="{{ id }}">
@@ -448,7 +459,7 @@ scripts:
       </section>
       {% endif %}
     </div>
-    {# Footer #}
+    {# Bunntekst #}
   <footer class="page-footer">
     <dl class="metadata">
       <dt>{{ t.site.lastModified }}</dt>
@@ -456,15 +467,15 @@ scripts:
       <dt>{{ t.site.reviewed }}</dt>
       <dd>{% if notReviewed %}<strong class="danger">{{ t.common.notReviewed }}</strong>{% else %}{{ reviewed.date | formatDate }} {{ t.site.by }} {{ reviewed.by }}{% endif %}</dd>
       <dt>{{ t.site.sources }}</dt>
-      {#- The source names on one line, and what each field comes from folded below, for those who want to check. -#}
+      {#- Kildenavnene på én linje, og hva hvert felt kommer fra, brettet under, for dem som vil sjekke. -#}
       <dd>{{ derived.sourcesShort }}{% if derived.sources %} <details class="sources-details"><summary>{{ t.site.sourcesDetails }}</summary>{{ derived.sources }}</details>{% endif %}</dd>
     </dl>
-    {#- When the page was last stored for offline use (pwa.js), when it is. -#}
+    {#- Når siden sist ble lagret for bruk uten nett (pwa.js), hvis den er det. -#}
     <p class="offline-saved muted" id="offline-saved" hidden></p>
     <p class="disclaimer">{{ t.site.footerDisclaimer }} <a href="{{ '/om/' | localeUrl }}">{{ t.common.aboutLink }}</a></p>
   </footer>
   </main>
-  {#- Mobile: the three things you need on the way, always at the bottom of the screen. -#}
+  {#- Mobil: de tre tingene du trenger på veien, alltid nederst på skjermen. -#}
   <nav class="action-bar" aria-label="{{ t.site.quickActions }}">
     {% if parking.length %}<a class="action-bar__primary" href="https://www.google.com/maps/dir/?api=1&destination={{ parking[0].lat }},{{ parking[0].lon }}" target="_blank" rel="noopener">{{ m.icon("directions") }}{{ t.site.directions }}</a>{% endif %}
     <a href="#site-map">{{ m.icon("map") }}{{ t.site.map }}</a>
@@ -482,7 +493,7 @@ scripts:
   routes: derived.routes,
   drawing: derived.drawing
 } | json | safe }}</script>
-{#- The winds aloft built into the page (empty when the build has none), and where newer ones are (windgram.js). -#}
+{#- Høydevinden som er bygd inn i siden (tom når bygget ikke har noen), og hvor det finnes nyere (windgram.js). -#}
 {% if windgram and (id in windgram.enabled or (windgram.sites and windgram.sites[id])) %}
 {%- set wg = windgram.sites[id] if windgram.sites and windgram.sites[id] else {} -%}
 <script type="application/json" id="windgram-data">{{ {
@@ -493,8 +504,8 @@ scripts:
   rules: { minWind: windRules.minWind, maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else windRules.maxWind), maxGust: windRules.maxGust }
 } | json | safe }}</script>
 {% endif %}
-{#- The forecast for this launch, for «vind nå» in Vær (site-wind.js). Only this site, so the page stays small. Without
-    one in the build (MET failed then) the box asks the data service for it. -#}
+{#- Prognosen for denne starten, for «vind nå» i Vær (site-wind.js). Bare dette stedet, så siden blir liten.
+    Finnes den ikke i bygget (MET feilet da), ber boksen datatjenesten om den. -#}
 {% set builtWind = forecast and forecast.sites and forecast.sites[id] %}
 {% if builtWind or site.forecastUrl %}
 <script type="application/json" id="site-wind-data">{{ {
@@ -507,8 +518,8 @@ scripts:
   site: { id: id, lat: launch.lat, lon: launch.lon, primary: wind_directions.primary or [], possible: wind_directions.possible or [], maxWind: (wind_limits.max_wind if wind_limits and wind_limits.max_wind else null), soarMinWind: (wind_limits.soar_min_wind if wind_limits and wind_limits.soar_min_wind else null) }
 } | json | safe }}</script>
 {% endif %}
-{#- Structured data for search engines (schema.org): the site as a place to go paragliding, with the launch's position
-    and height. Data only, never run, so it needs nothing in the Content-Security-Policy. -#}
+{#- Strukturerte data for søkemotorer (schema.org): stedet som et sted å fly paraglider, med posisjonen og
+    høyden til starten. Bare data som aldri kjøres, så det trenger ingenting i Content-Security-Policy. -#}
 {%- set ldImage = derived.images[0].shareUrl if (derived and derived.images and derived.images.length) else null -%}
 <script type="application/ld+json">{{ {
   "@context": "https://schema.org",

@@ -1,4 +1,4 @@
-// Tests for the page «Flyaktivitet» (src/assets/js/activity.js). Run with `npm test`.
+// Tester for siden «Flyaktivitet» (src/assets/js/activity.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -19,33 +19,33 @@ const data = {
 };
 const sites = [{ id: "heia", name: "Heia", url: "/flysteder/heia/" }, { id: "sollifjellet", name: "Sollifjellet", url: "/flysteder/sollifjellet/" }];
 
-test("today and the last 30 days by the page's own clock, most flights first", () => {
+test("i dag og de siste 30 dagene etter sidens egen klokke, flest turer først", () => {
   const s = AC.summarize(data, sites, NOW);
   assert.deepEqual(s.today.map((r) => [r.id, r.flights]), [["heia", 3]]);
   assert.equal(s.totals.today, 3);
   assert.deepEqual(s.recent.map((r) => [r.id, r.flights, r.days, r.minutes, r.last]), [["heia", 5, 2, 130, "2026-10-19"], ["sollifjellet", 4, 2, 100, "2026-10-18"]],
-    "10 September is more than 30 days ago");
+    "10. september er mer enn 30 dager siden");
   assert.deepEqual(s.totals, { today: 3, recent: 9, recentSites: 2, recentMinutes: 230 });
   assert.deepEqual(s.all.map((r) => r.id), ["heia", "sollifjellet", "gammel"]);
-  assert.equal(s.all[2].name, "gammel", "a site the page does not know is shown by its id");
+  assert.equal(s.all[2].name, "gammel", "et sted siden ikke kjenner, vises med id-en sin");
   assert.equal(s.all[2].url, null);
   assert.deepEqual(s.months, { "2026-08": { flights: 2, days: 0 }, "2026-09": { flights: 7, days: 0 }, "2026-10": { flights: 9, days: 0 } });
 });
 
-test("the next day, today is empty and the window moves on", () => {
+test("dagen etter er i dag tom, og vinduet flytter seg", () => {
   const s = AC.summarize(data, sites, NOW + 86400000);
   assert.deepEqual(s.today, []);
   assert.equal(s.totals.recent, 9);
 });
 
-test("the flight log: only the expected shape is used, and the rows carry the site's name", () => {
+test("flyloggen: bare forventet form brukes, og radene har stedets navn", () => {
   const log = { dataset: "flight-log", flights: [
     { id: "ab12cd34ef56", day: "2026-10-19", site: "heia", start: "2026-10-19T10:04:00.000Z", end: "2026-10-19T10:22:00.000Z", minutes: 18, maxAlt: 1200, maxDist: 5.3, maxSpeed: 12.5, counted: true, points: [["2026-10-19T10:04:00.000Z", 68.8, 16.5, 500, 8, 1]] },
     { id: "0123456789ab", day: "2026-10-18", site: "ukjent", start: "2026-10-18T09:00:00.000Z", end: "2026-10-18T09:10:00.000Z", minutes: 10, maxAlt: 70, maxDist: 27.4, maxSpeed: 25, counted: false, points: [] },
   ] };
   assert.equal(AC.isFlightLog(log), true);
-  assert.equal(AC.isFlightLog({ dataset: "flight-log", flights: [{ id: "<script>", site: "heia", start: "x", minutes: 1, points: [] }] }), false, "an id that is not hex is refused");
+  assert.equal(AC.isFlightLog({ dataset: "flight-log", flights: [{ id: "<script>", site: "heia", start: "x", minutes: 1, points: [] }] }), false, "en id som ikke er heks, avvises");
   assert.equal(AC.isFlightLog({ dataset: "flights", flights: [] }), false);
   const rows = AC.logRows(log, sites);
-  assert.deepEqual(rows.map((r) => [r.id, r.name, r.day, r.minutes]), [["ab12cd34ef56", "Heia", "2026-10-19", 18]], "a flight not counted (from before) is left out");
+  assert.deepEqual(rows.map((r) => [r.id, r.name, r.day, r.minutes]), [["ab12cd34ef56", "Heia", "2026-10-19", 18]], "en tur som ikke er telt (fra før), utelates");
 });

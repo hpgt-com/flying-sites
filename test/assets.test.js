@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { assetUrl } from "../lib/assets.js";
 
-test("CSS and JS get a version number from their content", () => {
+test("CSS og JS får et versjonsnummer fra innholdet", () => {
   assert.match(assetUrl("/assets/css/styles.css"), /^\/assets\/css\/styles\.css\?v=[0-9a-f]{8}$/);
   assert.match(assetUrl("/assets/js/site.js"), /^\/assets\/js\/site\.js\?v=[0-9a-f]{8}$/);
   assert.match(assetUrl("/assets/leaflet/leaflet.js"), /\?v=[0-9a-f]{8}$/);
@@ -10,7 +10,7 @@ test("CSS and JS get a version number from their content", () => {
   assert.notEqual(assetUrl("/assets/js/site.js"), assetUrl("/assets/js/home.js"));
 });
 
-test("unknown files and other URLs are left unchanged", () => {
+test("ukjente filer og andre URL-er står uendret", () => {
   assert.equal(assetUrl("/assets/js/finnes-ikke.js"), "/assets/js/finnes-ikke.js");
   assert.equal(assetUrl("https://example.com/a.js"), "https://example.com/a.js");
 });

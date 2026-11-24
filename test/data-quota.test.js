@@ -1,8 +1,8 @@
-// The data service (workers/data) within the free plan: one day of the schedule, every source answering, against a
-// store already as full as it gets (7 days of measurements, 30 days of forecast hours, a year of verification), counts
-// the calls to the Durable Object and the rows read and written in it. Each must stay under BUDGET of the day's limit,
-// so the rest is left for the pages. Also the cache in front of the datasets (cache.js) and the backup (backup.js).
-// The stand-ins for Cloudflare and the sources are in test/helpers/data-service.mjs. Run with `npm test`.
+// Datatjenesten (workers/data) innenfor gratisplanen: ett døgn av tidsplanen, med svar fra alle kilder, mot et lager
+// som allerede er så fullt det blir (7 dager med målinger, 30 dager med varseltimer, et år med verifisering), teller
+// kallene til Durable Object og radene som leses og skrives i det. Hver av dem må holde seg under BUDGET av døgnets
+// grense, så resten blir igjen til sidene. Også cachen foran datasettene (cache.js) og sikkerhetskopien (backup.js).
+// Stand-in-ene for Cloudflare og kildene ligger i test/helpers/data-service.mjs. Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { register } from "node:module";
@@ -14,7 +14,7 @@ const { Store } = await import("../workers/data/src/store.js");
 const { siteLinks, HOLFUY_STATIONS } = await import("../workers/data/src/stations.js");
 const SITES = (await import("../workers/data/src/sites.json")).default;
 
-// The free plan's limits per day (Workers and Durable Objects), and the share of each one day of the schedule may use.
+// Gratisplanens grenser per døgn (Workers og Durable Objects), og andelen av hver som ett døgn av tidsplanen kan bruke.
 export const FREE = { doRequests: 100000, rowsRead: 5000000, rowsWritten: 100000 };
 export const BUDGET = 0.3;
 
@@ -31,8 +31,8 @@ function service() {
   return { db, stats, storage, archive, env, store, calls };
 }
 
-// The store as full as it gets: what each source keeps (7 days of measurements, deleted day by day as the window moves),
-// up to START.
+// Lageret så fullt det blir: det hver kilde beholder (7 dager med målinger, slettet dag for dag mens vinduet flytter
+// seg), fram til START.
 function seed(db) {
   const day = (ms) => new Date(ms).toISOString().slice(0, 10);
   db.exec("BEGIN");
@@ -45,7 +45,7 @@ function seed(db) {
   for (let t = START - 365 * DAY; t < START; t += 3600000) for (const l of siteLinks()) v.run(l.site, l.station, new Date(t).toISOString());
   const d = db.prepare("INSERT INTO flight_days (day, site, flights, pilots, minutes, max_dist, max_alt) VALUES (?, ?, 3, 2, 90, 2.5, 900)");
   for (let t = START - 365 * DAY; t < START; t += DAY) for (const s of SITES.slice(0, 2)) d.run(day(t), s.id);
-  // The archive has every day up to the one before yesterday, as after a normal night.
+  // Arkivet har hver dag fram til dagen før i går, som etter en vanlig natt.
   const st = db.prepare("INSERT INTO state (key, value) VALUES (?, ?)");
   for (const k of ["holfuy-archive", "met-archive"]) st.run(k, JSON.stringify({ through: day(START - 2 * DAY) }));
   db.exec("COMMIT");
@@ -60,7 +60,7 @@ async function withGlobals(fetch, cache, fn) {
   try { return { out: await fn(), warnings }; } finally { globalThis.fetch = saved.fetch; globalThis.caches = saved.caches; console.warn = saved.warn; }
 }
 
-test("one day of the schedule stays well within the free plan, with every source succeeding", { timeout: 300000 }, async () => {
+test("ett døgn av tidsplanen holder seg godt innenfor gratisplanen, når alle kilder lykkes", { timeout: 300000 }, async () => {
   const svc = service();
   seed(svc.db);
   Object.assign(svc.stats, { rowsRead: 0, rowsWritten: 0, statements: 0 });
@@ -77,12 +77,12 @@ test("one day of the schedule stays well within the free plan, with every source
   const doRequests = Object.values(svc.calls).reduce((a, b) => a + b, 0);
   const use = { doRequests, rowsRead: svc.stats.rowsRead, rowsWritten: svc.stats.rowsWritten };
   const report = Object.entries(use).map(([k, v]) => `${k} ${v} (${((v / FREE[k]) * 100).toFixed(1)} %)`).join(", ");
-  console.log(`one day: ${report}; calls ${JSON.stringify(svc.calls)}; requests ${JSON.stringify(requests)}`);
+  console.log(`ett døgn: ${report}; kall ${JSON.stringify(svc.calls)}; forespørsler ${JSON.stringify(requests)}`);
 
   if (process.env.QUOTA_DETAIL) console.table(Object.fromEntries(Object.entries(svc.stats.byQuery).sort((a, b) => b[1].read + b[1].written * 50 - a[1].read - a[1].written * 50).slice(0, 15)));
-  assert.deepEqual(warnings, [], "every source ran without a warning (the stand-ins answer as the sources do)");
+  assert.deepEqual(warnings, [], "alle kilder kjørte uten advarsel (stand-in-ene svarer som kildene gjør)");
   const health = svc.store.getState("health");
-  for (const [name, run] of Object.entries(health)) assert.ok(run.ok && !run.error, `${name} succeeded`);
-  for (const name of ["forecast", "stations", "met", "windgram", "verify", "flights", "backup", "grid", "gridWide", "ognDdb"]) assert.ok(health[name], `${name} ran`);
-  for (const [k, v] of Object.entries(use)) assert.ok(v <= FREE[k] * BUDGET, `${k}: ${v} is over ${BUDGET * 100} % of ${FREE[k]}`);
+  for (const [name, run] of Object.entries(health)) assert.ok(run.ok && !run.error, `${name} lyktes`);
+  for (const name of ["forecast", "stations", "met", "windgram", "verify", "flights", "backup", "grid", "gridWide", "ognDdb"]) assert.ok(health[name], `${name} kjørte`);
+  for (const [k, v] of Object.entries(use)) assert.ok(v <= FREE[k] * BUDGET, `${k}: ${v} er over ${BUDGET * 100} % av ${FREE[k]}`);
 });

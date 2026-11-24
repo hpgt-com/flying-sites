@@ -1,15 +1,16 @@
-name: Data service health
+name: Helsesjekk for datatjenesten
 
-# Checks the data service from outside once an hour (/v1/status.json, workers/data/src/health.js): that it answers, that
-# every dataset is within its age limit, that the backup is not behind, and that no source has been failing for a day.
-# Opens an issue when something is wrong (a comment on the open one when the problems change), and closes it when all
-# is well again; the run fails while there are problems, so they show in the Actions history too. GitHub may run it
-# late, which is fine for a check like this; it also turns the schedule off after 60 days without a commit, so an
-# outside monitor (see SECURITY.md) is the real watch. Runs no project code and needs no secrets.
+# Sjekker datatjenesten utenfra én gang i timen (/v1/status.json, workers/data/src/health.js): at den svarer, at
+# hvert datasett er innenfor aldersgrensen, at sikkerhetskopien ikke henger etter, og at ingen kilde har feilet i et
+# døgn. Åpner en sak når noe er galt (en kommentar på den åpne når problemene endres), og lukker den når alt er i
+# orden igjen; kjøringen feiler så lenge det er problemer, så de vises i historikken under Actions også. GitHub kan
+# kjøre den sent, og det går fint for en sjekk som denne; GitHub slår også av tidsplanen etter 60 dager uten commit,
+# så en ekstern overvåking (se SECURITY.md) er den egentlige vakten. Kjører ingen kode fra prosjektet og trenger
+# ingen hemmeligheter.
 
 on:
   schedule:
-    - cron: "41 * * * *" # every hour at :41
+    - cron: "41 * * * *" # hver time, 41 minutter over
   workflow_dispatch:
 
 permissions: {}
@@ -29,11 +30,11 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="Datatjenesten: data mangler eller er for gamle"
-          # What counts as a problem: a dataset over its age limit, launches missing from one, the backup behind, and a
-          # source whose last run failed and whose last success is more than a day ago (or never). A source that failed
-          # once and then succeeded is not a problem: the sources talk to other people's servers and fail now and then,
-          # and a dataset that is still fresh shows the service coped. The error texts come from those servers, so
-          # they go in backticks with backticks and line breaks removed.
+          # Hva som regnes som et problem: et datasett over aldersgrensen, starter som mangler i et datasett,
+          # sikkerhetskopien på etterskudd, og en kilde der siste kjøring feilet og siste vellykkede er mer enn et døgn
+          # siden (eller aldri). En kilde som feilet én gang og så lyktes, er ikke et problem: kildene snakker med
+          # andres servere og feiler av og til, og et datasett som fortsatt er ferskt, viser at tjenesten klarte seg.
+          # Feiltekstene kommer fra de serverne, så de settes i backticks, med backticks og linjeskift fjernet.
           if body=$(curl -fsS --max-time 30 --retry 2 "$STATUS_URL") && echo "$body" | jq -e . > /dev/null; then
             problems=$(echo "$body" | jq -r '
               def t: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601;
@@ -56,8 +57,8 @@ jobs:
           fi
           echo "$problems"
           if [ -n "$n" ]; then
-            # A comment only when the list of problems has changed since the last one, so the issue is not filled with
-            # one comment an hour saying the same.
+            # En kommentar bare når listen over problemer har endret seg siden forrige, så saken ikke fylles med
+            # én kommentar i timen som sier det samme.
             last=$(gh issue view "$n" --json body,comments --jq '[.body] + (.comments | map(.body)) | last' | grep '^- ' || true)
             if [ "$last" = "$problems" ]; then
               echo "Uendret siden forrige melding på #$n."
@@ -73,5 +74,5 @@ jobs:
 
           Se loggene i Cloudflare (Workers → data → Observability) og docs/operations.md. Saken lukkes av seg selv når alt er i orden igjen."
           fi
-          # The run fails, so the problem shows in the Actions history and the badge, not only in the issue.
+          # Kjøringen feiler, så problemet vises i historikken under Actions og i merket, ikke bare i saken.
           exit 1

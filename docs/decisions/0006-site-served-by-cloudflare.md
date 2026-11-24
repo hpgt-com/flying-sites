@@ -11,7 +11,7 @@ gjennom Cloudflare ville hindret GitHub i å fornye sertifikatet.
 
 ## Beslutning
 Siden serveres av Cloudflare som statiske filer (Workeren `flysteder`, Workers static assets,
-`workers/site/wrangler.toml`), på flysteder.hpgt.com som custom domain på Workeren. «Build and deploy» bygger én gang
+`workers/site/wrangler.toml`), på flysteder.hpgt.com som custom domain på Workeren. «Bygg og publiser» bygger én gang
 og publiserer det samme arkivet både til Cloudflare (jobben `cloudflare`) og til GitHub Pages, som står klar som
 reserve. Headerne lages fra `src/headers.njk` (bygget til `_site/_headers`). Datatjenesten har egen adresse,
 data.hpgt.com, og workers.dev-adressene er slått av.

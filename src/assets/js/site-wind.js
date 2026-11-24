@@ -1,8 +1,8 @@
-// «Vinden nå – kan det passe?» on the site page: a rough assessment for the launch from the MET forecast, using the same rules as
-// the home page (wind.js). The verdict in large type, the next 12 hours as cards, and folded below the periods that may
-// work and 48 hours as bars. The data is in #site-wind-data (site.njk). Without a forecast, or when it is too old or does
-// not cover the current hour, the box says so instead of assessing. When the site has a weather station with a fresh
-// measurement, the hour now is assessed from it as well (wind.js rateNow), and the box says so.
+// «Vinden nå – kan det passe?» på stedssiden: en grov vurdering for starten ut fra MET-varselet, med de samme
+// reglene som forsiden (wind.js). Dommen med stor skrift, de neste 12 timene som kort, og foldet under periodene som
+// kan passe og 48 timer som søyler. Dataene ligger i #site-wind-data (site.njk). Uten varsel, eller når det er for
+// gammelt eller ikke dekker inneværende time, sier boksen det i stedet for å vurdere. Når stedet har en værstasjon med
+// fersk måling, vurderes timen nå også ut fra den (wind.js rateNow), og boksen sier det.
 (function () {
   "use strict";
 
@@ -10,26 +10,26 @@
   var W = window.FlyingSitesWind;
   var el = document.getElementById("site-wind");
   var data = FS && W && el ? FS.readJson("site-wind-data") : null;
-  // The verdict chip in the image keeps its room until it is filled in (site.njk data-pending); without an assessment
-  // it is taken away.
+  // Dommen som merke i bildet holder av plassen til den er fylt inn (site.njk data-pending). Uten vurdering
+  // fjernes den.
   var heroStatus = document.getElementById("hero-status");
   if (!data || !(data.series || data.live)) {
     if (heroStatus) { heroStatus.hidden = true; heroStatus.removeAttribute("data-pending"); }
     return;
   }
 
-  // The forecast built into the page, or null until the data service has answered (the build had none).
+  // Varselet som er bygd inn i siden, eller null til datatjenesten har svart (bygget hadde ikke noe).
   var forecast = null, failed = false;
   if (data.series) {
     forecast = { fetched: data.fetched, updated: data.updated, times: data.times, sites: {} };
     forecast.sites[data.site.id] = data.series;
   }
-  // The symbol in the circle before each rating, so the rating does not rest on colour alone.
+  // Symbolet i sirkelen foran hver vurdering, så vurderingen ikke hviler på farge alene.
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×", none: "–" };
   var block = el.closest(".block--now");
-  // The same verdict as a chip in the image at the top (site.njk), so it is seen before scrolling. Not without an assessment.
-  // Built with DOM methods, not innerHTML, so nothing from the data is parsed as HTML. The first part is the verdict:
-  // the icon and the rating in large type.
+  // Samme dom som merke i bildet øverst (site.njk), så den ses før man ruller. Ikke uten vurdering.
+  // Bygd med DOM-metoder, ikke innerHTML, så ingenting fra dataene tolkes som HTML. Den første delen er dommen:
+  // ikonet og vurderingen med stor skrift.
   function show(rating, parts) {
     el.className = "site-wind site-wind--" + rating;
     if (block) block.setAttribute("data-rating", rating);
@@ -47,14 +47,14 @@
     }
   }
 
-  // Today's sunrise and sunset at the launch, at the bottom of the box.
+  // Soloppgang og solnedgang i dag ved starten, nederst i boksen.
   function sun(now) {
     return ["span", W.sunText(W.osloParts(now).date, data.site.lat, data.site.lon), "site-wind__sun"];
   }
 
   function render() {
     var now = Date.now();
-    // No forecast yet: fetching it, or, when the data service did not answer, the same as a forecast too old.
+    // Ikke noe varsel ennå: det hentes, eller, når datatjenesten ikke svarte, det samme som et for gammelt varsel.
     if (!forecast && !failed) {
       show("none", [FS.t("wind.loading"), sun(now)]);
       hideDetails();
@@ -82,7 +82,7 @@
     var fcLine = FS.t("wind.windNow", { time: W.formatClock(Date.parse(forecast.times[index])) }) + ": " + text;
     var reasons = (rating.reasons.length ? rating.reasons.join(". ") + ". " : "") + (rating.note ? rating.note + " " : "");
     if (assessed.basis === "measured") {
-      // Assessed from the station: what it measured first, then the forecast for the hour for comparison.
+      // Vurdert ut fra stasjonen: det den målte først, så varselet for timen til sammenligning.
       show(rating.rating, [
         W.RATINGS[rating.rating].label,
         ["strong", FS.t("wind.measuredNow", { time: W.formatClock(Date.parse(m.item.time)), name: m.item.name }) + ": " + windText(m.wind, measuredValue)],
@@ -99,7 +99,7 @@
     ]);
   }
 
-  // «NØ 5 m/s, kast 8» (forecast, rounded) or «NØ 4,3 m/s, kast 7,2» (measured, as sent), with rain from the forecast.
+  // «NØ 5 m/s, kast 8» (varsel, avrundet) eller «NØ 4,3 m/s, kast 7,2» (målt, som sendt), med regn fra varselet.
   function windText(w, num) {
     return FS.DIRECTION_LABELS[W.directionCode(w.dir)] + " " + num(w.speed) + " m/s" +
       (w.gust != null ? ", " + FS.t("wind.gust", { g: num(w.gust) }) : "") +
@@ -107,8 +107,8 @@
   }
   function measuredValue(v) { return ST ? ST.value(v) : String(v); }
 
-  // The site's weather station (stations.js), when it has one: its latest measurement while it is fresh, and whether the
-  // wind is steady (stations.js measurement).
+  // Værstasjonen til stedet (stations.js), når det har en: siste måling mens den er fersk, og om
+  // vinden er jevn (stations.js measurement).
   var ST = window.FlyingSitesStations;
   var stationItem = null;
   function measurement(now) { return ST && stationItem ? ST.measurement(stationItem, now) : null; }
@@ -123,8 +123,8 @@
     [cardsEl, cardsKeyEl, foldEl].forEach(function (n) { if (n) n.hidden = true; });
   }
 
-  // The next 12 hours as cards: the hour, the rating symbol, a bar for the mean wind with a line for the gust, an arrow for
-  // where the wind blows and the numbers. The current hour is marked.
+  // De neste 12 timene som kort: timen, vurderingssymbolet, en stolpe for middelvinden med en strek for kastet, en pil
+  // for hvor vinden blåser, og tallene. Inneværende time er markert.
   var cardsEl = document.getElementById("hour-cards");
   var cardsKeyEl = document.getElementById("hour-cards-key");
   var foldEl = document.getElementById("now-48");
@@ -158,9 +158,9 @@
     if (foldEl) foldEl.hidden = false;
   }
 
-  // The next 48 hours as bars: height is the mean wind, the light top is the gust, the colour is the assessment for
-  // that hour, and an arrow every third hour shows where the wind comes from. Heights are set through element.style,
-  // which the CSP allows.
+  // De neste 48 timene som søyler: høyden er middelvinden, den lyse toppen er kastet, fargen er vurderingen for
+  // den timen, og en pil hver tredje time viser hvor vinden kommer fra. Høydene settes gjennom element.style,
+  // som CSP tillater.
   var chartEl = document.getElementById("wind-chart");
   var MAX_MS = 14;
   function make(tag, cls, text) {
@@ -204,7 +204,7 @@
     chartEl.hidden = false;
   }
 
-  // The periods in daylight the next two days that may work («Kan passe» or «Usikkert»), as chips.
+  // Periodene i dagslys de neste to dagene som kan passe («Kan passe» eller «Usikkert»), som merker.
   var windowsEl = document.getElementById("wind-windows");
   function renderWindows() {
     if (!windowsEl) return;
@@ -225,11 +225,11 @@
   }
 
   render();
-  // The space kept for the box while it was empty (site.njk, styles.css) is no longer needed.
+  // Plassen som ble holdt av til boksen mens den var tom (site.njk, styles.css), trengs ikke lenger.
   if (block) block.classList.remove("block--now-wait");
-  // A newer forecast for this launch from the data service (workers/data): at once, every ten minutes while the page is
-  // in view, and when it comes back into view or online (wind.js watchForecast). Only one that has this launch replaces
-  // the page's own forecast while that is still usable.
+  // Et nyere varsel for denne starten fra datatjenesten (workers/data): med en gang, hvert tiende minutt mens siden er
+  // synlig, og når den blir synlig eller kommer på nett igjen (wind.js watchForecast). Bare et som har denne starten,
+  // erstatter sidens eget varsel mens det fortsatt kan brukes.
   W.watchForecast(data.live, function () { return forecast && !W.isStale(forecast, data.rules, Date.now()) ? forecast : null; }, function (newer) {
     forecast = { fetched: newer.fetched, updated: newer.updated, times: newer.times, sites: {} };
     forecast.sites[data.site.id] = newer.sites[data.site.id] || null;
@@ -237,7 +237,7 @@
   }, data.site.id, function () {
     if (!forecast && !failed) { failed = true; render(); }
   });
-  // The current hour and the forecast's age change while the page is open.
+  // Inneværende time og alderen på varselet endrer seg mens siden er åpen.
   setInterval(render, 60000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });
 })();

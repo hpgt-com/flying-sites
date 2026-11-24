@@ -1,10 +1,10 @@
-// «Flyaktivitet» (/flyaktivitet/): the flights from all the flying sites, from the data service (/v1/flights.json,
-// workers/data/src/sources/flights.js), counted from the Open Glider Network. Today and the last 30 days are counted by
-// this page's own clock from the days the data service sends (recent), so they are right even when nobody has flown for
-// a while: four numbers, who is in the air today, the sites used most in the last 30 days, the flights per month for all
-// sites together (flights.js chart, once more than one month has flying), and every site since the counting began. The
-// site names and links come from the page (#sites-data). Built with DOM methods only. Exposed as
-// window.FlyingSitesActivity; tested in test/activity.test.js.
+// «Flyaktivitet» (/flyaktivitet/): turene fra alle flystedene, fra datatjenesten (/v1/flights.json,
+// workers/data/src/sources/flights.js), talt fra Open Glider Network. I dag og de siste 30 dagene telles etter
+// sidens egen klokke ut fra dagene datatjenesten sender (recent), så de stemmer selv når ingen har fløyet på
+// en stund: fire tall, hvem som er i lufta i dag, de mest brukte stedene de siste 30 dagene, turene per måned for alle
+// stedene samlet (flights.js chart, når mer enn én måned har flyging), og alle stedene siden tellingen begynte.
+// Stedsnavn og lenker kommer fra siden (#sites-data). Bygges bare med DOM-metoder. Eksponert som
+// window.FlyingSitesActivity. Testet i test/activity.test.js.
 (function () {
   "use strict";
 
@@ -14,9 +14,9 @@
   var DAY = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" });
   function osloDay(ms) { return DAY.format(new Date(ms)); }
 
-  // The numbers for the page: { today: [rows], recent: [rows], all: [rows], totals, months } where a row is a site with
-  // its name and link and its flights, days, minutes, farthest, highest and last day (for the period), most flights first.
-  // sites: [{ id, name, url }] from the page; a site the page does not know is shown by its id, without a link.
+  // Tallene til siden: { today: [rows], recent: [rows], all: [rows], totals, months } der en rad er et sted med
+  // navn og lenke og turer, dager, minutter, lengst, høyest og siste dag (for perioden), flest turer først.
+  // sites: [{ id, name, url }] fra siden. Et sted siden ikke kjenner, vises med id-en, uten lenke.
   function summarize(data, sites, now) {
     var info = {};
     (sites || []).forEach(function (s) { info[s.id] = s; });
@@ -68,7 +68,7 @@
     if (row.url) { var a = th.appendChild(make("a", null, row.name)); a.href = row.url; } else th.textContent = row.name;
     return th;
   }
-  // A table of rows; columns: [[label key, (row) => text]].
+  // En tabell med rader. Kolonner: [[label key, (row) => text]].
   function table(rows, columns, caption) {
     var wrap = make("div", "activity-table-wrap");
     var t = wrap.appendChild(make("table", "activity-table"));
@@ -92,7 +92,7 @@
     return div;
   }
 
-  // The page's content: [nodes].
+  // Innholdet på siden: [nodes].
   function render(data, sites, now) {
     var FS = globalThis.FlyingSites, FL = globalThis.FlyingSitesFlights, sum = summarize(data, sites, now), out = [];
     var note = make("p", "activity-note", text("flights.note", { date: dateText(data.since, true) }));
@@ -131,8 +131,8 @@
     return out;
   }
 
-  // «Siste turer»: the flight log (/v1/flight-log.json), one row per flight, newest first; a chosen flight is drawn on
-  // a map (Leaflet, common.js createMap) with OGN's positions, below the table. A link #tur-<id> opens that flight.
+  // «Siste turer»: turloggen (/v1/flight-log.json), én rad per tur, nyeste først. En valgt tur tegnes på
+  // et kart (Leaflet, common.js createMap) med OGNs posisjoner, under tabellen. En lenke #tur-<id> åpner den turen.
   function isFlightLog(d) {
     return !!(d && d.dataset === "flight-log" && Array.isArray(d.flights) && d.flights.every(function (f) {
       return f && typeof f.id === "string" && /^[0-9a-f]{6,16}$/.test(f.id) && typeof f.site === "string" && typeof f.start === "string" && typeof f.minutes === "number" && Array.isArray(f.points);
@@ -150,8 +150,8 @@
         maxAlt: f.maxAlt, maxDist: f.maxDist, maxSpeed: f.maxSpeed, counted: f.counted !== false, points: f.points };
     });
   }
-  // The height curve of a flight: height against time since takeoff from OGN's positions (one every other minute), the
-  // top marked. The pointer on the curve (mouse or finger) marks the time and height there and the spot on the map.
+  // Høydekurven for en tur: høyde mot tid siden start, fra OGNs posisjoner (én annethvert minutt), med toppen
+  // markert. Pekeren på kurven (mus eller finger) viser tid og høyde der og stedet på kartet.
   var SVG = "http://www.w3.org/2000/svg";
   function svgEl(tag, attrs, parent) {
     var el = document.createElementNS(SVG, tag);
@@ -229,7 +229,7 @@
       if (!map.hasLayer(cursor)) cursor.addTo(map);
     });
   }
-  // The address of what is open (#tur-<id> or #dag-<date>), so it can be shared; cleared when closed.
+  // Adressen til det som er åpent (#tur-<id> eller #dag-<date>), så den kan deles. Tømmes når det lukkes.
   function setHash(hash) {
     try { history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search); } catch (e) { /* not allowed: fine */ }
   }
@@ -239,8 +239,8 @@
     if (disabled) b.disabled = true; else b.addEventListener("click", onClick);
     return b;
   }
-  // One flight: its numbers, «‹ Forrige» (the one before in time) and «Neste ›» (the one after), «Alle turer denne
-  // dagen» when there were others that day, the map and the height curve. rows: the list, newest first.
+  // Én tur: tallene, «‹ Forrige» (den før i tid) og «Neste ›» (den etter), «Alle turer denne
+  // dagen» når det var andre den dagen, kartet og høydekurven. rows: listen, nyeste først.
   function renderLogDetail(holder, f, rows) {
     var FS = globalThis.FlyingSites;
     rows = rows || [f];
@@ -261,8 +261,8 @@
     card.scrollIntoView({ block: "nearest" });
   }
 
-  // All the flights of one day on one map, each in its own colour, and their height curves on one clock-time axis, so
-  // flights at the same time can be compared. The pointer on the curves marks where each one was at that time.
+  // Alle turene én dag på ett kart, hver i sin farge, og høydekurvene på én klokkeslettakse, så
+  // turer på samme tid kan sammenlignes. Pekeren på kurvene viser hvor hver av dem var på det tidspunktet.
   var DAY_COLOURS = ["#FFD23F", "#4FB3BF", "#E8743A", "#B57EDC", "#7BC86C", "#F06292", "#90A4AE", "#FFB74D"];
   function renderDayDetail(holder, day, rows) {
     var FS = globalThis.FlyingSites, L = globalThis.L;
@@ -278,7 +278,7 @@
     smallButton(nav, text("activity.dayPrev"), function () { renderDayDetail(holder, days[di + 1], rows); }, di < 0 || di >= days.length - 1);
     smallButton(nav, text("activity.dayNext"), function () { renderDayDetail(holder, days[di - 1], rows); }, di <= 0);
     smallButton(nav, text("activity.logClose"), function () { holder.replaceChildren(); setHash(null); });
-    // The flights, each with its colour, opening the flight on its own.
+    // Turene, hver med sin farge, og hver åpner turen for seg.
     var list = card.appendChild(make("ul", "activity-day-list"));
     flights.forEach(function (f, k) {
       var li = list.appendChild(make("li"));
@@ -320,8 +320,8 @@
     setHash("dag-" + day);
     card.scrollIntoView({ block: "nearest" });
   }
-  // The day's height curves against the clock. onSpots(spots): for each flight the position nearest the pointer's
-  // time, or null when that flight was not in the air then (or the pointer left).
+  // Høydekurvene for dagen mot klokka. onSpots(spots): for hver tur posisjonen nærmest pekerens
+  // tid, eller null når turen ikke var i lufta da (eller pekeren forlot kurven).
   function dayCurve(holder, flights, onSpots) {
     var FS = globalThis.FlyingSites;
     var series = flights.map(function (f) { return f.points.filter(function (p) { return typeof p[3] === "number" && typeof p[0] === "string"; }).map(function (p) { return { t: Date.parse(p[0]), p: p }; }); });

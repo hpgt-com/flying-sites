@@ -1,16 +1,15 @@
-// How well the forecast hit (dataset «verification»): for each flying site with its own station (stations.js), every
-// finished hour the forecast for that hour (forecast_hours, as it stood during the hour, sources/forecast.js) is set
-// against what the station measured in it: the mean wind, the highest gust and the direction, and, where the station
-// measures them, the temperature and the air pressure (both at sea level: MET's forecast gives it so, and the stations
-// report it so). The pairs are kept for a year (store.js verify_hours), and the dataset sums up the last DAYS days per
-// site. Tested in test/data-worker.test.js.
+// Hvor godt varselet traff (datasettet «verification»). For hvert flysted med egen stasjon (stations.js) settes
+// varselet for hver ferdige time (forecast_hours, slik det sto i løpet av timen, sources/forecast.js) opp mot det
+// stasjonen målte i timen: middelvinden, det høyeste kastet og retningen, og der stasjonen måler dem, temperaturen og
+// lufttrykket (begge ved havnivå: METs varsel gir det slik, og stasjonene rapporterer det slik). Parene beholdes i et
+// år (store.js verify_hours), og datasettet summerer de siste DAYS dagene per sted. Testet i test/data-worker.test.js.
 
 export const DATASET = "verification";
 export const DAYS = 30;
 export const KEEP_DAYS = 365;
-// The hours looked at again on each run, so an hour whose measurements came late (MET's hourly) is still paired.
+// Timene som ses på igjen i hver kjøring, så en time der målingene kom sent (METs timesverdier), likevel blir paret.
 export const BACK_HOURS = 3;
-// A sector needs this many hours before its own error is shown, and the direction counts only in some wind.
+// En sektor trenger så mange timer før dens egen feil vises, og retningen teller bare når det er litt vind.
 export const SECTOR_MIN_HOURS = 5;
 export const DIR_MIN_SPEED = 2;
 const HOUR = 3600000;
@@ -20,12 +19,12 @@ const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 const round1 = (v) => Math.round(v * 10) / 10;
 
 export function sector(dir) { return CODES[Math.round((((dir % 360) + 360) % 360) / 45) % 8]; }
-// The smallest angle between two directions, 0–180.
+// Den minste vinkelen mellom to retninger, 0–180.
 export function angle(a, b) { return Math.abs(((a - b + 540) % 360) - 180); }
 
-// What a station measured in the hour from `start` (ms): rows with a time after the start up to and including the end of
-// the hour (MET stamps its hourly value at the end). { speed (mean), gust (highest), dir (vector mean), temp and pressure
-// (means, null without), n }, or null.
+// Det en stasjon målte i timen fra `start` (ms): rader med tid etter starten til og med slutten av timen (MET stempler
+// timesverdien ved slutten). { speed (middel), gust (høyest), dir (vektormiddel), temp og pressure (middel, null uten),
+// n }, eller null.
 export function measuredHour(rows, start) {
   const part = rows.filter((r) => { const t = Date.parse(r.time); return t > start && t <= start + HOUR && num(r.speed) !== null; });
   if (!part.length) return null;
@@ -43,8 +42,9 @@ export function measuredHour(rows, start) {
   };
 }
 
-// The pairs for the finished hours from `from` to `now`: one per linked site with both a forecast and a measurement.
-// links: [{ site, source, station }]; hours: forecast_hours rows; rows: measurements rows of every linked station.
+// Parene for de ferdige timene fra `from` til `now`: ett per koblet sted med både et varsel og en måling.
+// links: [{ site, source, station }]. hours: rader fra forecast_hours. rows: rader fra measurements for alle koblede
+// stasjoner.
 export function pairs(links, hours, rows, from, now) {
   const out = [];
   for (const link of links) {
@@ -62,10 +62,10 @@ export function pairs(links, hours, rows, from, now) {
   return out;
 }
 
-// One site's pairs summed up: the mean error of the mean wind and the gust (measured − forecast, so + means stronger than
-// forecast), the mean absolute error, the share of hours the direction was within 45° (in DIR_MIN_SPEED or more), and the
-// error of the mean wind per sector the wind came from. The temperature and the pressure the same way (bias and mean
-// absolute error, measured − forecast), over the hours that have both, null without any. null without pairs.
+// Parene for ett sted summert: middelfeilen for middelvinden og kastet (målt − varslet, så + betyr sterkere enn
+// varslet), den gjennomsnittlige absolutte feilen, andelen timer retningen var innenfor 45° (ved DIR_MIN_SPEED eller
+// mer), og feilen i middelvinden per sektor vinden kom fra. Temperaturen og trykket på samme måte (bias og
+// gjennomsnittlig absolutt feil, målt − varslet), over timene som har begge, null uten noen. null uten par.
 export function summarize(list) {
   if (!list.length) return null;
   const mean = (xs) => xs.reduce((t, x) => t + x, 0) / xs.length;
@@ -90,7 +90,7 @@ export function summarize(list) {
   };
 }
 
-// The dataset from the stored pairs: per site its station and the summary of the last DAYS days.
+// Datasettet fra de lagrede parene: per sted stasjonen og sammendraget for de siste DAYS dagene.
 export function buildVerification(stored, now = Date.now()) {
   const sites = {};
   for (const p of stored) (sites[p.site] ??= []).push(p);
@@ -100,7 +100,8 @@ export function buildVerification(stored, now = Date.now()) {
   };
 }
 
-// One run: pairs the last BACK_HOURS finished hours, stores them, prunes those older than KEEP_DAYS, and stores the dataset.
+// Én kjøring: parer de siste BACK_HOURS ferdige timene, lagrer dem, rydder bort dem eldre enn KEEP_DAYS dager, og
+// lagrer datasettet.
 export async function run(store, links, now = Date.now()) {
   if (!links.length) return;
   const from = Math.floor(now / HOUR) * HOUR - BACK_HOURS * HOUR;

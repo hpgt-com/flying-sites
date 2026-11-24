@@ -1,25 +1,26 @@
-name: Build and deploy
+name: Bygg og publiser
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-# No schedule: the site is built only when its content changes. The pages fetch the forecast, the winds aloft and the
-# stations from the data service (workers/data) when it has newer than what is built in, so they stay fresh between
-# builds.
+# Ingen tidsplan: siden bygges bare når innholdet endres. Sidene henter varselet, høydevinden og stasjonene fra
+# datatjenesten (workers/data) når den har nyere data enn det som er bygget inn, så de holder seg ferske mellom
+# byggene.
 
-# Six jobs:
-#   weather  fetches the MET wind forecast and the Open-Meteo winds aloft (lib/weather/, npm run weather) and hands
-#            them on as an artifact, so each build starts from a fresh forecast (the pages then use the data service's
-#            when it is newer). Read-only, no secrets. A source that fails is written as null, so the job does
-#            not stop publishing.
-#   build    builds the site with the fetched weather and never queries MET or Open-Meteo itself (WEATHER_FETCH=0).
-#   deploy   publishes. Only this job has publishing permissions (pages, id-token), and it runs no code from the repo.
-#   cloudflare publishes the same archive to Cloudflare (workers/site), with its own token. Skipped while the token is
-#            not set; see docs/operations.md «Siden på Cloudflare».
-#   attest   signs build provenance and the SBOM for the published archive (see the job below).
-#   alert    opens an issue when the run fails, or comments on the open one.
-# Actions are pinned to commit SHAs (Dependabot updates them).
+# Seks jobber:
+#   weather  henter vindvarselet fra MET og høydevinden fra Open-Meteo (lib/weather/, npm run weather) og sender dem
+#            videre som en artefakt, så hvert bygg starter fra et ferskt varsel (sidene bruker så datatjenestens når
+#            det er nyere). Bare lesetilgang, ingen hemmeligheter. En kilde som feiler, skrives som null, så jobben
+#            ikke stopper publiseringen.
+#   build    bygger siden med det hentede været og spør aldri MET eller Open-Meteo selv (WEATHER_FETCH=0).
+#   deploy   publiserer. Bare denne jobben har rettigheter til å publisere (pages, id-token), og den kjører ingen kode
+#            fra repoet.
+#   cloudflare publiserer det samme arkivet til Cloudflare (workers/site), med sitt eget token. Hoppes over så lenge
+#            tokenet ikke er satt; se docs/operations.md «Siden på Cloudflare».
+#   attest   signerer byggeproveniens og SBOM for det publiserte arkivet (se jobben nedenfor).
+#   alert    åpner en sak når kjøringen feiler, eller kommenterer på den åpne.
+# Actions er låst til commit-SHA-er (Dependabot oppdaterer dem).
 permissions:
   contents: read
 
@@ -27,8 +28,8 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
-# instead of blocking for up to 6 hours.
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   weather:
     runs-on: ubuntu-latest
@@ -45,7 +46,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      # --ignore-scripts: ingen pakkers installasjonsskript kjører (ingen av avhengighetene trenger det).
       - run: npm ci --ignore-scripts
 
       - run: npm run weather
@@ -54,7 +55,7 @@ jobs:
         with:
           name: weather
           path: .cache/weather
-          # .cache starts with a dot, and hidden folders are left out by default.
+          # .cache begynner med punktum, og skjulte mapper utelates som standard.
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
@@ -67,13 +68,13 @@ jobs:
       digest: ${{ steps.digest.outputs.digest }}
     permissions:
       contents: read
-      pages: read # configure-pages reads the Pages settings
+      pages: read # configure-pages leser Pages-innstillingene
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Full history, so «Sist endret» per site can be read from Git.
+          # Hele historikken, så «Sist endret» per sted kan leses fra Git.
           fetch-depth: 0
-          # The token is not needed after checkout and must not stay in .git while the site is built and uploaded.
+          # Tokenet trengs ikke etter checkout og skal ikke bli liggende i .git mens siden bygges og lastes opp.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -81,17 +82,17 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      # --ignore-scripts: ingen pakkers installasjonsskript kjører (ingen av avhengighetene trenger det).
       - run: npm ci --ignore-scripts
 
-      # Provides the path the site is published under: "/flying-sites" on hpgt-com.github.io, empty with a custom domain.
+      # Gir stien siden publiseres under: "/flying-sites" på hpgt-com.github.io, tom med eget domene.
       - id: pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-      # The image variants (lib/images.js) take most of the build time. eleventy-img skips a variant whose file already
-      # exists (the file name holds a hash of the source image and the options), so the folder is kept between builds.
-      # The key changes when an image, the image code or a package changes, and then every variant is made again:
-      # there are no restore-keys, so variants of removed images are never carried over and published.
+      # Bildevariantene (lib/images.js) tar mesteparten av byggetiden. eleventy-img hopper over en variant når filen
+      # allerede finnes (filnavnet har en hash av kildebildet og valgene), så mappen beholdes mellom byggene.
+      # Nøkkelen endres når et bilde, bildekoden eller en pakke endres, og da lages alle variantene på nytt:
+      # det er ingen restore-keys, så varianter av fjernede bilder blir aldri tatt med videre og publisert.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: _site/img
@@ -102,30 +103,30 @@ jobs:
           name: weather
           path: .cache/weather
 
-      # Fails if a site file is invalid. The weather comes from the weather job only (WEATHER_FETCH=0).
+      # Feiler hvis en stedsfil er ugyldig. Været kommer bare fra jobben weather (WEATHER_FETCH=0).
       - run: npm run build
         env:
           PATH_PREFIX: ${{ steps.pages.outputs.base_path }}/
           WEATHER_FETCH: "0"
 
-      # Stops the deploy if a page has «[object Object]», «undefined», «NaN» or an unfilled placeholder
-      # (lib/output-check.js), so a slip from a merge never goes live.
+      # Stopper publiseringen hvis en side har «[object Object]», «undefined», «NaN» eller en plassholder som ikke er
+      # fylt ut (lib/output-check.js), så en glipp fra en merge aldri blir publisert.
       - run: npm run check:output
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
-          # /.well-known/security.txt starts with a dot, and hidden files are left out by default.
-          # The build writes no other hidden files (.git and .github are always left out).
+          # /.well-known/security.txt begynner med punktum, og skjulte filer utelates som standard.
+          # Bygget skriver ingen andre skjulte filer (.git og .github utelates alltid).
           include-hidden-files: true
 
-      # The SHA-256 of the archive upload-pages-artifact just made ($RUNNER_TEMP/artifact.tar), which is the exact
-      # file deploy-pages publishes. The attest job signs this digest.
+      # SHA-256 av arkivet upload-pages-artifact nettopp laget ($RUNNER_TEMP/artifact.tar), som er nøyaktig den
+      # filen deploy-pages publiserer. Jobben attest signerer denne digesten.
       - id: digest
         run: echo "digest=sha256:$(sha256sum "$RUNNER_TEMP/artifact.tar" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
-      # SBOM (SPDX 2.3) of every npm package the build used, from package-lock.json, with npm's own command
-      # (no third-party action).
+      # SBOM (SPDX 2.3) av alle npm-pakkene bygget brukte, fra package-lock.json, med npms egen kommando
+      # (ingen action fra tredjeparter).
       - run: npm sbom --sbom-format spdx --package-lock-only > sbom.spdx.json
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -135,17 +136,17 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-  # Signs what was published: build provenance (which workflow, commit and run built the site) and the SBOM, both
-  # tied to the digest of the Pages archive. A separate job, so the build job never gets id-token. It checks out
-  # no code and runs nothing from the repo. Deploy does not wait for it, so a failed attestation never stops
-  # publishing. Verify with `gh attestation verify`, see SECURITY.md.
+  # Signerer det som ble publisert: byggeproveniens (hvilken arbeidsflyt, commit og kjøring som bygget siden) og SBOM,
+  # begge knyttet til digesten av Pages-arkivet. En egen jobb, så byggejobben aldri får id-token. Den sjekker ikke ut
+  # kode og kjører ingenting fra repoet. Deploy venter ikke på den, så en attestasjon som feiler, stopper aldri
+  # publiseringen. Verifiser med `gh attestation verify`, se SECURITY.md.
   attest:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      id-token: write # Sigstore signing certificate for the attestation
-      attestations: write # stores the attestation on the repository
+      id-token: write # Sigstore-sertifikatet som signerer attestasjonen
+      attestations: write # lagrer attestasjonen på repoet
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -176,9 +177,9 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
-  # The same files on Cloudflare (Workers static assets, workers/site/wrangler.toml), from the archive the build made
-  # for GitHub Pages, so both serve exactly the same build. The token (CLOUDFLARE_SITE_TOKEN in the environment
-  # «cloudflare», only main) may only publish Workers in the HPGT account; without it the job does nothing.
+  # De samme filene på Cloudflare (Workers static assets, workers/site/wrangler.toml), fra arkivet bygget laget for
+  # GitHub Pages, så begge serverer nøyaktig det samme bygget. Tokenet (CLOUDFLARE_SITE_TOKEN i miljøet «cloudflare»,
+  # bare main) kan bare publisere Workers i HPGT-kontoen; uten det gjør jobben ingenting.
   cloudflare:
     needs: build
     runs-on: ubuntu-latest
@@ -191,12 +192,12 @@ jobs:
         with:
           persist-credentials: false
 
-      # No npm cache here: a job that publishes should not restore files another run could have written.
+      # Ingen npm-buffer her: en jobb som publiserer, skal ikke hente fram filer en annen kjøring kan ha skrevet.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
 
-      # Wrangler, at the version in workers/data/package-lock.json.
+      # Wrangler, i versjonen i workers/data/package-lock.json.
       - run: npm ci --ignore-scripts
         working-directory: workers/data
 
@@ -219,8 +220,9 @@ jobs:
           fi
           npx wrangler deploy --config ../site/wrangler.toml
 
-  # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
-  # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.
+  # En sak når kjøringen feiler (en kommentar på den åpne hvis den feiler igjen), så en feilet kjøring ikke blir
+  # oversett: GitHub sier ikke fra selv om planlagte kjøringer, og de kan også komme timer for sent. Kjører ingen
+  # kode fra prosjektet.
   alert:
     needs: [weather, build, attest, deploy, cloudflare]
     if: failure()

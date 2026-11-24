@@ -1,8 +1,8 @@
-// Fetches the MET wind forecast and the Open-Meteo winds aloft and writes them to .cache/weather/ (lib/weather/).
+// Henter vindvarselet fra MET og høydevinden fra Open-Meteo og skriver dem til .cache/weather/ (lib/weather/).
 //
 //   npm run weather
 //
-// Always ends without error: a source that fails is written as null, and the site builds without it.
+// Avslutter alltid uten feil: en kilde som feiler, skrives som null, og nettstedet bygges uten den.
 
 import { FETCHERS, WEATHER_DIR, fetchWeather } from "../lib/weather/index.js";
 import { readSites } from "../lib/site-files.js";

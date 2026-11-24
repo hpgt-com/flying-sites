@@ -1,8 +1,8 @@
-// Checks that every internal link in the built site works (lib/link-check.js). Run after the build:
+// Sjekker at alle interne lenker i det bygde nettstedet virker (lib/link-check.js). Kjøres etter bygging:
 //
 //   npm run build && npm run check:links
 //
-// Fails with a list of broken links. External links are not checked.
+// Feiler med en liste over brutte lenker. Eksterne lenker sjekkes ikke.
 
 import site from "../src/_data/site.js";
 import { checkLinks } from "../lib/link-check.js";

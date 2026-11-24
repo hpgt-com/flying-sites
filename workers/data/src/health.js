@@ -1,21 +1,21 @@
-// The data service's health, as /v1/status.json: for each source when it last ran, when it last succeeded and its last
-// error, and for each dataset when it was last written, how old it is and whether that is within its limit (MAX_AGE).
-// The launches missing from the forecast and the winds aloft, and the last day archived per station source, are listed
-// too. Nothing in it is secret or about a visitor. Read by the hourly check .github/workflows/health.yml, which opens an
-// issue when something is too old. Tested in test/data-worker.test.js.
+// Helsen til datatjenesten, som /v1/status.json. For hver kilde: når den sist kjørte, når den sist lyktes og den siste
+// feilen. For hvert datasett: når det sist ble skrevet, hvor gammelt det er og om det er innenfor grensen (MAX_AGE).
+// Startstedene som mangler i varselet og i høydevinden, og den siste arkiverte dagen per stasjonskilde, er også med.
+// Ingenting i den er hemmelig eller handler om en besøkende. Leses av timesjekken .github/workflows/health.yml, som
+// åpner en sak når noe er for gammelt. Testet i test/data-worker.test.js.
 
-// Minutes a dataset may go without being written before it counts as too old: a few runs of its source missed
-// (schedule.js), so one slow or failed run is not an alarm. The flights are written only when someone is in the air,
-// the verification twice an hour, the forecast grids every three and six hours.
+// Minutter et datasett kan gå uten å bli skrevet før det regnes som for gammelt: noen tapte kjøringer av kilden
+// (schedule.js), så én treg eller feilet kjøring gir ikke alarm. Flyturene skrives bare når noen er i lufta,
+// verifiseringen to ganger i timen, og varselrutenettene hver tredje og sjette time.
 export const MAX_AGE = { forecast: 60, stations: 15, windgram: 90, verification: 90, grid: 400, "grid-wide": 760 };
 
-// An error message as it may be shown: addresses are left out (Holfuy's has the key in it), and it is kept short.
+// En feilmelding slik den kan vises: adresser utelates (Holfuys adresse har nøkkelen i seg), og den holdes kort.
 export const cleanError = (message) => String(message).replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi, "[adresse]").replace(/[?&][^\s=]+=\S+/g, "").slice(0, 200);
 
-// The sources' runs recorded: { name: { tried, ok, error, errorAt, lastMs, avgMs, maxMs } } from the previous one and
-// this run's results ({ name: null for success, the error message, or { error, ms } with how long the run took }).
-// lastMs is the latest run, avgMs a running average (a fifth of each new run, so a day's changes show without one slow
-// run swinging it), maxMs the slowest run today (reset with the day).
+// Kjøringene til kildene: { name: { tried, ok, error, errorAt, lastMs, avgMs, maxMs } }, fra den forrige og resultatene
+// fra denne kjøringen ({ name: null ved suksess, feilmeldingen, eller { error, ms } med hvor lang tid kjøringen tok }).
+// lastMs er den siste kjøringen, avgMs et glidende snitt (en femtedel av hver ny kjøring, så endringer gjennom dagen
+// vises uten at én treg kjøring svinger det), maxMs den tregeste kjøringen i dag (nullstilles med dagen).
 export function recordRuns(prev, results, now) {
   const out = { ...(prev ?? {}) };
   const at = new Date(now).toISOString();
@@ -33,14 +33,16 @@ export function recordRuns(prev, results, now) {
   return out;
 }
 
-// Days the nightly backup (store.js backup) may be behind before it counts as a problem: one missed run is not an alarm.
+// Dager sikkerhetskopien om natten (store.js backup) kan ligge etter før det regnes som et problem. Én tapt kjøring gir
+// ikke alarm.
 export const BACKUP_MAX_DAYS = 2;
 
-// The status. snapshots: { dataset: { updated, body } } as stored; expected: { forecast: [ids], windgram: [ids] }, the
-// launches each should have; archive: { source: last day archived }; backup: { day, rows } from the last nightly backup,
-// or null when none has been made (ok then only while the archive is not set up, env.ARCHIVE missing); restore: { at, rows }
-// when this store read the latest backup in at its start (store.js restore), shown under backup as restored.
-// The source that writes a dataset, where its name differs (index.js scheduled).
+// Statusen. snapshots: { dataset: { updated, body } } som lagret. expected: { forecast: [ids], windgram: [ids] },
+// startstedene hver skal ha. archive: { source: siste arkiverte dag }. backup: { day, rows } fra den siste
+// sikkerhetskopien om natten, eller null når ingen er laget (da bare ok så lenge arkivet ikke er satt opp, uten
+// env.ARCHIVE). restore: { at, rows } når dette lageret leste inn den siste sikkerhetskopien ved start (store.js
+// restore), vist under backup som restored.
+// Kilden som skriver et datasett, der navnet er et annet (index.js scheduled).
 const SOURCE_OF = { verification: "verify", "grid-wide": "gridWide" };
 
 export function buildStatus({ runs, snapshots, expected, archive, backup, restore, now }) {
@@ -50,12 +52,12 @@ export function buildStatus({ runs, snapshots, expected, archive, backup, restor
     const snap = snapshots[name];
     const updated = snap?.updated ?? null;
     const age = updated ? Math.round((now - Date.parse(updated)) / 60000) : null;
-    // A dataset whose source has never run (a new one, before its first turn on the schedule) is pending, not an alarm.
+    // Et datasett der kilden aldri har kjørt (en ny kilde, før første tur i timeplanen), venter. Det gir ikke alarm.
     const pending = !snap && !runs?.[SOURCE_OF[name] ?? name];
     const d = { updated, ageMinutes: age, maxAgeMinutes: max, ok: pending || (age !== null && age <= max), ...(pending ? { pending: true } : {}) };
     if (expected[name] && snap?.body) {
       let sites = {};
-      try { sites = JSON.parse(snap.body).sites ?? {}; } catch { /* not JSON */ }
+      try { sites = JSON.parse(snap.body).sites ?? {}; } catch { /* ikke JSON */ }
       d.missing = expected[name].filter((id) => !Object.hasOwn(sites, id));
     }
     if (!d.ok) ok = false;

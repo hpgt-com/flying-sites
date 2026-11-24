@@ -1,35 +1,35 @@
-// The MET forecast for each launch (dataset «forecast»), in the same format as the build's (lib/weather/met.js), so the
-// pages can use either.
+// METs varsel for hvert startsted (datasettet «forecast»), i samme format som i bygget (lib/weather/met.js), så sidene
+// kan bruke begge.
 //
-// The free plan gives each run 10 ms of CPU time, and reading MET's answer for all launches takes about 15 ms. So each run
-// (every 5 minutes) fetches only the PER_RUN launches that were fetched longest ago, and the whole forecast is renewed
-// about every half hour. The state keeps each launch's rows with when they were fetched. Tested in
+// Gratisplanen gir hver kjøring 10 ms CPU-tid, og å lese svaret fra MET for alle startstedene tar omtrent 15 ms. Derfor
+// henter hver kjøring (hvert femte minutt) bare de PER_RUN startstedene som ble hentet for lengst siden, og hele
+// varselet fornyes omtrent hver halvtime. Tilstanden har radene for hvert startsted med når de ble hentet. Testet i
 // test/data-worker.test.js.
 //
-// Each fetch also stores the forecast for the hour going on then (store.js forecast_hours), the latest fetch during the
-// hour winning, so it is known afterwards what the forecast said for each hour; with the hour's temperature and pressure
-// (met.js metExtras, kept per launch as extras), which the verification compares with the stations' own. The dataset carries the last PAST_HOURS of
-// them as past, for «Målt mot varslet» on the weather page; they are kept for KEEP_DAYS.
+// Hver henting lagrer også varselet for timen som pågår (store.js forecast_hours), der den siste hentingen i timen
+// vinner. Slik vet vi etterpå hva varselet sa for hver time. Med følger timens temperatur og trykk (met.js metExtras,
+// beholdt per startsted som extras), som verifiseringen sammenligner med stasjonenes egne. Datasettet har de siste
+// PAST_HOURS timene av dem som past, for «Målt mot varslet» på værsiden. De beholdes i KEEP_DAYS dager.
 
 import { fetchSite, mergeSites } from "../../../../lib/weather/met.js";
 
 export const DATASET = "forecast";
 export const LICENSE = "CC BY 4.0, MET Norge";
-// MET's product the forecast comes from (api.met.no). MET does not say which weather model behind it in the answer.
+// Produktet hos MET som varselet kommer fra (api.met.no). MET sier ikke i svaret hvilken værmodell som ligger bak.
 export const PRODUCT = "Locationforecast 2.0 (complete)";
 export const PER_RUN = 6;
-// Launches fetched longer ago than this are left out of the forecast (the site turns the assessment off after 6 hours).
+// Startsteder hentet for lengre tid siden enn dette, utelates fra varselet (siden slår av vurderingen etter 6 timer).
 export const MAX_AGE_HOURS = 6;
 export const PAST_HOURS = 6;
 export const KEEP_DAYS = 30;
 const HOUR = 3600000;
 
-// The row of a launch's forecast for the hour going on at `now` ([time, dir, speed, gust, rain]), or null.
+// Raden i varselet for et startsted for timen som pågår ved `now` ([time, dir, speed, gust, rain]), eller null.
 export function hourNow(rows, now) {
   return rows.find((r) => { const t = Date.parse(r[0]); return t <= now && now < t + HOUR; }) ?? null;
 }
 
-// The stored hours as { site: [[time, dir, speed, gust], ...] }, oldest first, for the dataset's past.
+// De lagrede timene som { site: [[time, dir, speed, gust], ...] }, eldste først, for past i datasettet.
 export function groupPast(hours) {
   const past = {};
   for (const h of [...hours].sort((a, b) => Date.parse(a.time) - Date.parse(b.time))) {
@@ -38,22 +38,23 @@ export function groupPast(hours) {
   return past;
 }
 
-// The launches to fetch now: those missing from the state first, then those tried longest ago. A failed try counts
-// (tried), so launches that keep failing go to the back of the queue instead of taking every run's places.
+// Startstedene som skal hentes nå: de som mangler i tilstanden først, så de som ble forsøkt for lengst siden. Et
+// mislykket forsøk teller (tried), så startsteder som fortsetter å feile, havner bakerst i køen i stedet for å ta
+// plassene i hver kjøring.
 export function pickSites(sites, state, count = PER_RUN) {
   const age = (id) => Math.max(Date.parse(state.sites[id]?.fetched) || 0, Date.parse(state.sites[id]?.tried) || 0);
   return [...sites].sort((a, b) => age(a.id) - age(b.id)).slice(0, count);
 }
 
-// The state with only the launches that still exist (a removed site disappears at the next run).
+// Tilstanden med bare startstedene som fortsatt finnes (et fjernet sted forsvinner ved neste kjøring).
 export function keepSites(state, sites) {
   const ids = new Set(sites.map((s) => s.id));
   return { sites: Object.fromEntries(Object.entries(state?.sites ?? {}).filter(([id]) => ids.has(id))) };
 }
 
-// The forecast from the launches fetched in the last MAX_AGE_HOURS. fetched is the oldest launch's fetch time, so the
-// page's age check never counts a launch as newer than it is. The hours follow the launch whose rows start latest, and
-// the others are placed by time. null when empty.
+// Varselet fra startstedene hentet de siste MAX_AGE_HOURS timene. fetched er hentetiden til det eldste startstedet, så
+// alderssjekken på siden aldri regner et startsted som nyere enn det er. Timene følger startstedet der radene begynner
+// senest, og de andre plasseres etter tid. null når det er tomt.
 export function buildForecast(state, now = Date.now(), past = null) {
   const fresh = Object.entries(state.sites)
     .filter(([, s]) => now - Date.parse(s.fetched) < MAX_AGE_HOURS * 3600000 && s.rows?.length)
@@ -67,10 +68,11 @@ export function buildForecast(state, now = Date.now(), past = null) {
   return forecast;
 }
 
-// One run: fetches the launches fetched longest ago, one after another (MET gets at most one request at a time from
-// us), and stores the state and the forecast. A launch that fails keeps its previous rows. MET's Expires and
-// Last-Modified are kept per launch (lib/weather/met.js fetchSite): a launch is not asked for again before Expires, and
-// an unchanged forecast comes back as a 304; both count as fetched now, since MET has said the rows are current.
+// Én kjøring: henter startstedene som ble hentet for lengst siden, ett etter ett (MET får høyst én forespørsel om
+// gangen fra oss), og lagrer tilstanden og varselet. Et startsted som feiler, beholder de forrige radene. Expires og
+// Last-Modified fra MET beholdes per startsted (lib/weather/met.js fetchSite). Det spørres ikke etter et startsted på
+// nytt før Expires, og et uendret varsel kommer tilbake som 304. Begge regnes som hentet nå, siden MET har sagt at
+// radene er gjeldende.
 export async function run(store, sites, now = Date.now()) {
   const state = keepSites(await store.getState(DATASET), sites);
   const hours = [];

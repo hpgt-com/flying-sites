@@ -1,18 +1,18 @@
-// The forecast grids for the map layers «Prognose»: Open-Meteo's forecast for grids of points (GRIDS): «grid», close
-// around the flying sites every 0.1 × 0.25 degrees (about 11 × 10 km), and «grid-wide», coarser over a wider area from
-// Saltfjellet to Tromsø and Kiruna, so what comes over the mountains from Sweden in a south-easterly is on the map too.
-// For the hours of the day in the next days: temperature and dew point, wind at 10 m and at 925 hPa (about 750 m), the boundary layer, CAPE, cloud and rain,
-// and the sunshine on the ground. The page works out the rest from these (src/assets/js/forecast-layer.js): the thermal
-// strength, the thermal top, the cloud base and Cu, and low cloud.
+// Varselrutenettene for kartlagene «Prognose»: Open-Meteos varsel for rutenett av punkter (GRIDS). «grid» ligger tett
+// rundt flystedene med 0,1 × 0,25 grader mellom punktene (omtrent 11 × 10 km). «grid-wide» er grovere og dekker et
+// større område fra Saltfjellet til Tromsø og Kiruna, så det som kommer over fjellet fra Sverige i sørøstlig vind, også
+// er på kartet. For timene på dagen de neste dagene: temperatur og duggpunkt, vind i 10 m og i 925 hPa (omtrent 750 m),
+// grenselaget, CAPE, skyer og nedbør, og solinnstrålingen på bakken. Siden regner ut resten fra disse
+// (src/assets/js/forecast-layer.js): termikkstyrken, termikktoppen, skybasen og Cu, og lave skyer.
 //
-// The close grid every three hours and the wide one every six (schedule.js), at different minutes: Open-Meteo's free
-// use allows 600 points a minute and 10 000 a day (a request counts once per point, more with over 10 variables), and
-// each grid stays under 600. The answers are large (hundreds of points × the hours × the variables), more than the
-// 10 ms of CPU a run of the Worker may use, so the fetching and the building are done in the store's Durable Object
-// (Store.refreshGrid), which may use far more. A run that fails keeps the previous dataset. Tested in
-// test/data-store.test.js.
+// Det tette rutenettet hver tredje time og det store hver sjette (schedule.js), på ulike minutter. Gratisbruken av
+// Open-Meteo tillater 600 punkter i minuttet og 10 000 i døgnet (en forespørsel teller én gang per punkt, mer med over
+// 10 variabler), og hvert rutenett holder seg under 600. Svarene er store (hundrevis av punkter × timene ×
+// variablene), mer enn de 10 ms CPU en kjøring av Workeren kan bruke. Derfor gjøres hentingen og byggingen i lagerets
+// Durable Object (Store.refreshGrid), som kan bruke langt mer. En kjøring som feiler, beholder det forrige datasettet.
+// Testet i test/data-store.test.js.
 
-// box: a fixed area { s, w, n, e }; otherwise the launches with margin [lat, lon] around them.
+// box: et fast område { s, w, n, e }. Ellers startstedene med margin [lat, lon] rundt seg.
 export const GRIDS = {
   grid: { dLat: 0.1, dLon: 0.25, margin: [0.35, 0.9] },
   "grid-wide": { dLat: 0.2, dLon: 0.5, box: { s: 66.6, w: 11.5, n: 70.0, e: 21.5 } },
@@ -20,30 +20,30 @@ export const GRIDS = {
 export const SOURCE = "Open-Meteo";
 export const LICENSE = "CC BY 4.0, Open-Meteo";
 export const API = "https://api.open-meteo.com/v1/forecast";
-// Points per request (the addresses stay short).
+// Punkter per forespørsel (adressene holdes korte).
 export const PER_REQUEST = 100;
-// Five days, as far as the timeline on the home page goes (lib/weather/met.js). Every hour for the first HOURLY_HOURS,
-// as MET has; after that MET has only 00, 06, 12 and 18 UTC, so only 06, 12 and 18 are kept: the timeline shows no
-// other hours there, and every hour of five days would come near the 2 MB a value in the store may be.
+// Fem dager, så langt tidslinjen på forsiden går (lib/weather/met.js). Hver time de første HOURLY_HOURS timene, som MET
+// har. Etter det har MET bare 00, 06, 12 og 18 UTC, så bare 06, 12 og 18 beholdes. Tidslinjen viser ingen andre timer
+// der, og hver time i fem dager ville kommet nær de 2 MB en verdi i lageret kan være.
 export const FORECAST_DAYS = 5;
 export const HOURLY_HOURS = 60;
-// The hours kept, in UTC: 04–20 is 05/06–21/22 in Norway, the hours anyone flies.
+// Timene som beholdes, i UTC: 04–20 er 05/06–21/22 i Norge, timene noen flyr.
 export const FIRST_HOUR = 4;
 export const LAST_HOUR = 20;
-// Open-Meteo's names, and the short keys in the dataset with their decimals. Ten, so a point counts once.
+// Navnene hos Open-Meteo, og de korte nøklene i datasettet med antall desimaler. Ti, så et punkt teller én gang.
 export const VARS = [
   ["temperature_2m", "T", 1], ["dew_point_2m", "Td", 1], ["wind_speed_10m", "ws", 1], ["wind_direction_10m", "wd", 0],
   ["wind_speed_925hPa", "ws9", 1], ["wind_direction_925hPa", "wd9", 0], ["boundary_layer_height", "blh", 0],
   ["cloud_cover_low", "cl", 0], ["precipitation", "pr", 1], ["shortwave_radiation", "sw", 0],
 ];
 
-// Down or up to a whole step, so the margin is never cut (the small epsilon keeps 68.4 from becoming 68.3).
+// Ned eller opp til et helt steg, så marginen aldri kuttes (den lille epsilon hindrer at 68.4 blir 68.3).
 const floorTo = (v, step) => Math.floor(v / step + 1e-9) * step;
 const ceilTo = (v, step) => Math.ceil(v / step - 1e-9) * step;
 const round = (v, d) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v * 10 ** d) / 10 ** d : null);
 
-// A grid (GRIDS): its box, or the launches with the margin around them, out to whole steps. { dLat, dLon, lat0, lon0,
-// rows, cols, points: [[lat, lon], ...] } row by row from the south.
+// Et rutenett (GRIDS): boksen, eller startstedene med marginen rundt, ut til hele steg. { dLat, dLon, lat0, lon0,
+// rows, cols, points: [[lat, lon], ...] }, rad for rad fra sør.
 export function gridPoints(spec, sites = []) {
   let box = spec.box;
   if (!box) {
@@ -60,7 +60,7 @@ export function gridPoints(spec, sites = []) {
   return { dLat, dLon, lat0, lon0, rows, cols, points };
 }
 
-// The request for some points: all the variables, hourly, in m/s and Unix time.
+// Forespørselen for noen punkter: alle variablene, per time, i m/s og Unix-tid.
 export function gridUrl(points) {
   const u = new URL(API);
   u.searchParams.set("latitude", points.map((p) => p[0]).join(","));
@@ -72,9 +72,10 @@ export function gridUrl(points) {
   return u.toString();
 }
 
-// The dataset from Open-Meteo's answers, one per point in the grid's order (an answer for several points is a list):
-// the hours from the one going on, within FIRST_HOUR–LAST_HOUR UTC (beyond HOURLY_HOURS only every sixth); for each
-// variable one list per point; the model's height of each point (0 at sea). Throws when an answer is missing or has other hours than the first.
+// Datasettet fra svarene fra Open-Meteo, ett per punkt i rekkefølgen i rutenettet (et svar for flere punkter er en
+// liste). Timene fra den som pågår, innenfor FIRST_HOUR–LAST_HOUR UTC (etter HOURLY_HOURS bare hver sjette). For hver
+// variabel én liste per punkt. Modellens høyde for hvert punkt (0 på havet). Kaster en feil når et svar mangler eller
+// har andre timer enn det første.
 export function buildGrid(name, grid, answers, now = Date.now()) {
   if (answers.length !== grid.points.length) throw new Error(`Open-Meteo: ${answers.length} svar for ${grid.points.length} punkter`);
   const all = answers[0]?.hourly?.time;
@@ -98,7 +99,7 @@ export function buildGrid(name, grid, answers, now = Date.now()) {
   };
 }
 
-// Fetches a grid from Open-Meteo, PER_REQUEST points at a time, and builds its dataset. Run in the Durable Object.
+// Henter et rutenett fra Open-Meteo, PER_REQUEST punkter om gangen, og bygger datasettet. Kjøres i Durable Object-et.
 export async function fetchGrid(name, sites, now = Date.now(), fetchFn = fetch) {
   const grid = gridPoints(GRIDS[name], sites);
   const answers = [];
@@ -112,7 +113,7 @@ export async function fetchGrid(name, sites, now = Date.now(), fetchFn = fetch) 
   return buildGrid(name, grid, answers, now);
 }
 
-// One run, from the Worker: the store fetches and stores the grid (Store.refreshGrid).
+// Én kjøring, fra Workeren: lageret henter og lagrer rutenettet (Store.refreshGrid).
 export async function run(store, name, sites, now = Date.now()) {
   await store.refreshGrid(name, sites.map((s) => ({ lat: s.lat, lon: s.lon })), now);
 }

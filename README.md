@@ -31,7 +31,7 @@ Rettelser, bilder eller nye opplysninger om et flysted meldes på en av disse m�
 | [docs/decisions/](docs/decisions/README.md) | Beslutningsnotater (Architecture Decision Records): de viktige valgene, hvorfor de ble tatt og hva som ble valgt bort. |
 | [docs/operations.md](docs/operations.md) | Fremgangsmåter: nytt flysted, gjennomgang, statussiden, vindvarsel, luftrom, bilder, statistikk, nytt språk, kontoer og hemmeligheter, runbook, katastrofegjenoppretting og feilsøking. |
 | [SPEC.md](SPEC.md) | Spesifikasjonen: hva siden viser, og hvordan. |
-| [SECURITY.md](SECURITY.md) | Sikkerhet (på engelsk): rapportering av sårbarheter, CSP, kodeskanning og GitHub-innstillinger. |
+| [SECURITY.md](SECURITY.md) | Sikkerhet: rapportering av sårbarheter, CSP, kodeskanning og GitHub-innstillinger. |
 
 Dokumentasjonen holdes som kode: den ligger her, ved siden av det den beskriver, diagrammene er Mermaid (tekst som
 GitHub viser som diagram), og den endres i samme pull request som koden. Innstillinger som gjøres i et dashbord

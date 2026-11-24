@@ -1,18 +1,19 @@
-// Measured wind from the weather stations, from the data service (workers/data, /v1/stations.json): on the home map as
-// the layers «Klubbens værstasjoner» and «METs værstasjoner», as «Målt vind nå» in the Vær tab, and on the site page of the station's flying site.
-// Refetched every minute while the page is in view. The checks and texts are plain functions, tested in
-// test/stations.test.js; the drawing uses DOM methods only, so nothing from the data is read as HTML.
-// Loaded after common.js and wind.js, and exposed as window.FlyingSitesStations.
+// Målt vind fra værstasjonene, fra datatjenesten (workers/data, /v1/stations.json): på forsidekartet som
+// lagene «Klubbens værstasjoner» og «METs værstasjoner», som «Målt vind nå» i Vær-fanen, og på stedssiden for
+// flystedet til stasjonen.
+// Hentes på nytt hvert minutt mens siden er synlig. Sjekkene og tekstene er rene funksjoner, testet i
+// test/stations.test.js; tegningen bruker bare DOM-metoder, så ingenting fra dataene leses som HTML.
+// Lastes etter common.js og wind.js, og gjøres tilgjengelig som window.FlyingSitesStations.
 (function () {
   "use strict";
 
   var REFRESH_MS = 60000;
-  // A measurement older than this is shown as old (the station may be down), and not as the wind now. The club's Holfuy
-  // stations send every minute or two; MET's stations mostly once an hour, and Frost has them some minutes after, so theirs
-  // are old only after OLD_MINUTES_MET.
+  // En måling som er eldre enn dette, vises som gammel (stasjonen kan være nede), og ikke som vinden nå. Klubbens
+  // Holfuy-stasjoner sender hvert minutt eller annethvert; METs stasjoner stort sett én gang i timen, og Frost har dem
+  // noen minutter etter, så deres blir gamle først etter OLD_MINUTES_MET.
   var OLD_MINUTES = 30;
   var OLD_MINUTES_MET = 90;
-  // The trend line on the cards (the site page, the home page) is over this many minutes; the weather page lets you choose.
+  // Trendlinjen på kortene (stedssiden, forsiden) går over så mange minutter; på værsiden kan du velge.
   var TREND_MINUTES = 30;
   var SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -26,7 +27,7 @@
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
   var okNum = function (v) { return v === null || isNum(v); };
 
-  // Only data in the expected shape is used: items with an id, a name, and numbers or null where numbers belong.
+  // Bare data i forventet form brukes: elementer med id, navn, og tall eller null der det skal være tall.
   function isStationsData(d) {
     if (!d || d.dataset !== "stations" || !Array.isArray(d.items)) return false;
     return d.items.every(function (i) {
@@ -49,20 +50,20 @@
     return age === null || age > oldMinutes(item);
   }
 
-  // A value as the station sent it, with the page's decimal separator: 4.4 → «4,4», 7 → «7». Not rounded to whole
-  // numbers, so the page shows what was measured.
+  // En verdi slik stasjonen sendte den, med desimaltegnet til siden: 4.4 → «4,4», 7 → «7». Ikke rundet av til hele
+  // tall, så siden viser det som ble målt.
   function value(v) {
     var FS = globalThis.FlyingSites;
     if (!isNum(v)) return "";
     return Number.isInteger(v) ? String(v) : FS.formatNumber(v, Math.min(2, (String(v).split(".")[1] || "").length));
   }
 
-  // «SV 225°», the direction the wind comes from as the compass point and the degrees as measured.
+  // «SV 225°», retningen vinden kommer fra, som kompassretning og gradene slik de ble målt.
   function dirText(dir) {
     return isNum(dir) ? globalThis.FlyingSites.DIRECTION_LABELS[W().directionCode(dir)] + " " + Math.round(dir) + "°" : "";
   }
 
-  // «SV 225°, 4,4 m/s, kast 7,2», with the numbers as measured, or null without wind.
+  // «SV 225°, 4,4 m/s, kast 7,2», med tallene slik de ble målt, eller null uten vind.
   function windText(item) {
     var w = item.wind;
     if (!w || !isNum(w.speed)) return null;
@@ -70,7 +71,7 @@
     return (dir ? dir + ", " : "") + text("stations.speed", { speed: value(w.speed) }) + (isNum(w.gust) ? text("stations.gust", { gust: value(w.gust) }) : "");
   }
 
-  // «for 3 min siden», «Nå nettopp», or «Gammel måling, kl. 13.05» when it is old.
+  // «for 3 min siden», «Nå nettopp», eller «Gammel måling, kl. 13.05» når den er gammel.
   function ageText(item, now) {
     var age = ageMinutes(item, now);
     if (age === null) return text("stations.noData");
@@ -78,7 +79,7 @@
     return age < 1 ? text("stations.justNow") : text("stations.minutesAgo", { n: age });
   }
 
-  // Temperature, humidity, pressure and rain (when it rains), those the station has, as measured: «6,2 °C · 81 % · 1012,4 hPa».
+  // Temperatur, fuktighet, trykk og regn (når det regner), de stasjonen har, som målt: «6,2 °C · 81 % · 1012,4 hPa».
   function otherText(item) {
     var parts = [];
     if (isNum(item.temperature)) parts.push(value(item.temperature) + " °C");
@@ -88,11 +89,11 @@
     return parts.join(" · ");
   }
 
-  // «460 moh», the station's height above sea level from the source, or "" when it does not send it.
+  // «460 moh», høyden over havet til stasjonen fra kilden, eller "" når den ikke sender den.
   function altitudeText(item) { return isNum(item.altitude) ? text("stations.masl", { m: Math.round(item.altitude) }) : ""; }
 
-  // The lowest and highest temperature in the history (the last hours), { min, max, hours }, or null when the station does
-  // not send temperature (rows without a sixth value, from before the data service kept it).
+  // Laveste og høyeste temperatur i historikken (de siste timene), { min, max, hours }, eller null når stasjonen ikke
+  // sender temperatur (rader uten en sjette verdi, fra før datatjenesten tok vare på den).
   function temperatureRange(item) {
     var rows = item.history.filter(function (r) { return isNum(r[5]); });
     if (rows.length < 2) return null;
@@ -107,12 +108,12 @@
     return r ? text("stations.tempRange", { hours: r.hours, min: value(r.min), max: value(r.max) }) : "";
   }
 
-  // The station's own page at its source: the address the data service gives (url), or Holfuy's for a Holfuy station
-  // from before it gave one. null when the source has no page per station (MET).
+  // Stasjonens egen side hos kilden: adressen datatjenesten gir (url), eller Holfuys for en Holfuy-stasjon
+  // fra før den ga en. null når kilden ikke har en side per stasjon (MET).
   function isHolfuy(item) { return !item.source || /holfuy/i.test(item.source); }
 
-  // The club's stations (Holfuy, where we fly) first, then MET's (in the area, often by the sea or at an airport), each in
-  // its own order: { club: [...], met: [...] }.
+  // Klubbens stasjoner (Holfuy, der vi flyr) først, så METs (i området, ofte ved sjøen eller på en flyplass), hver i
+  // sin egen rekkefølge: { club: [...], met: [...] }.
   function groups(items) {
     return { club: items.filter(isHolfuy), met: items.filter(function (i) { return !isHolfuy(i); }) };
   }
@@ -122,11 +123,11 @@
     return isHolfuy(item) ? holfuyUrl(item) : null;
   }
 
-  // --- Change over a period (the weather page) ---
-  // How the wind has changed over the last `minutes`: the latest measurement against the one closest to that long before,
-  // and over the measurements in between the highest gust and how far the gusts lie above the mean wind on average.
-  // { speed, gust, dir (degrees, the shortest way, + clockwise), spread, maxGust, minutes } with null for what is missing,
-  // or null without two measurements in the period.
+  // --- Endring over en periode (værsiden) ---
+  // Hvordan vinden har endret seg de siste `minutes`: den siste målingen mot den som er nærmest så lenge før, og
+  // over målingene imellom det høyeste kastet og hvor langt kastene i snitt ligger over middelvinden.
+  // { speed, gust, dir (grader, korteste vei, + med klokka), spread, maxGust, minutes } med null for det som mangler,
+  // eller null uten to målinger i perioden.
   function change(item, minutes) {
     var rows = chartRows(item);
     if (rows.length < 2) return null;
@@ -147,15 +148,15 @@
     };
   }
 
-  // «▲ +0,8», «▼ −0,4» or «● 0»: a change with an arrow and a sign, so it is not told by colour alone.
+  // «▲ +0,8», «▼ −0,4» eller «● 0»: en endring med pil og fortegn, så den ikke vises med farge alene.
   function signed(v) {
     if (!isNum(v)) return "";
     if (v === 0) return "● 0";
     return (v > 0 ? "▲ +" : "▼ −") + value(Math.abs(v));
   }
 
-  // How even the wind is, from how far the gusts lie above the mean wind on average: "steady" below 2.5 m/s, "gusty"
-  // below 4, else "turbulent". And whether the mean wind rises or falls: "stable" within ±0.5 m/s.
+  // Hvor jevn vinden er, ut fra hvor langt kastene i snitt ligger over middelvinden: "steady" under 2,5 m/s, "gusty"
+  // under 4, ellers "turbulent". Og om middelvinden øker eller avtar: "stable" innenfor ±0,5 m/s.
   function character(ch) {
     if (!ch || !isNum(ch.spread)) return null;
     return {
@@ -164,9 +165,9 @@
     };
   }
 
-  // The forecast for a flying site from the hour now: { now: { dir, speed, gust }, next: [{ time, dir, speed, gust }] } for
-  // `hours` hours after this one, and past: what the forecast said for the hours before (when the data service has them).
-  // Null without a forecast for the site.
+  // Prognosen for et flysted fra timen nå: { now: { dir, speed, gust }, next: [{ time, dir, speed, gust }] } for
+  // `hours` timer etter denne, og past: hva prognosen sa for timene før (når datatjenesten har dem).
+  // Null uten prognose for stedet.
   function forecastFrom(forecast, siteId, now, hours) {
     var Wn = W();
     if (!forecast || !siteId || !forecast.sites || !forecast.sites[siteId] || !Wn) return null;
@@ -175,7 +176,7 @@
     var at = function (k) { var w = Wn.windAt(forecast, siteId, k); return w ? { time: Date.parse(forecast.times[k]), dir: w.dir, speed: w.speed, gust: w.gust } : null; };
     var next = [];
     for (var k = i + 1; k < forecast.times.length && next.length < hours; k++) { var w = at(k); if (w) next.push(w); }
-    // The forecast as it stood during the hours before this one (the data service's past), in the same shape.
+    // Prognosen slik den sto i timene før denne (past fra datatjenesten), i samme form.
     var start = Date.parse(forecast.times[i]);
     var past = ((forecast.past && forecast.past[siteId]) || []).filter(function (r) {
       return Array.isArray(r) && typeof r[0] === "string" && Date.parse(r[0]) < start && isNum(r[2]) && okNum(r[1]) && okNum(r[3]);
@@ -183,9 +184,9 @@
     return { now: at(i), next: next, past: past };
   }
 
-  // A station's latest measurement for the assessment of the hour now (wind.js rateNow), while it is at most FRESH_MINUTES
-  // old: { item, wind, steady, rising }, where steady means the wind over the last half hour is neither rising nor gusty,
-  // which a measurement that is better than the forecast needs to count. Null without a fresh measurement.
+  // Den siste målingen fra en stasjon til vurderingen av timen nå (wind.js rateNow), så lenge den er høyst FRESH_MINUTES
+  // gammel: { item, wind, steady, rising }, der steady betyr at vinden den siste halvtimen verken øker eller er byget,
+  // som en måling som er bedre enn prognosen, trenger for å telle. Null uten en fersk måling.
   var FRESH_MINUTES = 15;
   function measurement(item, now) {
     if (!item || !item.wind || !isNum(item.wind.speed) || !isNum(item.wind.dir)) return null;
@@ -200,21 +201,21 @@
     };
   }
 
-  // --- Rating and table rows (the weather page and the Vær tab) ---
-  // The wind rules (src/_data/windRules.json), given by the page: the home page from its forecast data, the weather page
-  // from its own.
+  // --- Vurdering og tabellrader (værsiden og Vær-fanen) ---
+  // Vindreglene (src/_data/windRules.json), som siden gir: forsiden fra prognosedataene sine, værsiden
+  // fra sine egne.
   var rules = null;
   function useRules(r) { rules = r || null; }
-  // The symbol in each rating chip, so the rating does not rest on colour alone (as on the home page).
+  // Symbolet i hver vurderingsbrikke, så vurderingen ikke hviler på farge alene (som på forsiden).
   var ICONS = { ok: "✓", maybe: "?", high: "!", no: "×" };
 
   function hasWind(item, now) { return !isOld(item, now) && !!item.wind && isNum(item.wind.speed); }
-  // The id of a station's card on the weather page, «stasjon-490».
+  // id-en til kortet for en stasjon på værsiden, «stasjon-490».
   function anchor(item) { return "stasjon-" + String(item.id).replace(/[^\w-]/g, ""); }
 
-  // A rough assessment of the measured wind, with the same rules as the forecast (wind.js): for a station on a flying site
-  // against the site's launch directions and limits; for a station that is not, only the strength (too much wind or too
-  // strong gusts), since without launch directions it cannot say that it may work. { rating, reasons } or null.
+  // En grov vurdering av den målte vinden, med de samme reglene som prognosen (wind.js): for en stasjon på et flysted
+  // mot startretningene og grensene til stedet; for en stasjon som ikke er det, bare styrken (for mye vind eller for
+  // kraftige kast), siden den uten startretninger ikke kan si at det kan passe. { rating, reasons } eller null.
   function assess(item, now) {
     if (!rules || !hasWind(item, now)) return null;
     var w = item.wind, site = siteInfo(item.site);
@@ -232,10 +233,10 @@
     return el;
   }
 
-  // One station as a row, a link to `href` (its card): the site's wind rose with the measured arrow, the name, the rating
-  // chip, the site, the source, height and age, the direction against the launch directions, and on the right the wind (gust), the
-  // change over `minutes` and how even the wind is. compact (the Vær tab, about as tall as the site cards beside it): the
-  // change without the period on screen (the note under the list gives it), so the right column stays narrow.
+  // Én stasjon som en rad, en lenke til `href` (kortet): vindrosen til stedet med den målte pilen, navnet,
+  // vurderingsbrikken, stedet, kilden, høyde og alder, retningen mot startretningene, og til høyre vinden (kast),
+  // endringen over `minutes` og hvor jevn vinden er. compact (Vær-fanen, omtrent like høy som stedskortene ved siden
+  // av): endringen uten perioden på skjermen (merknaden under listen oppgir den), så den høyre kolonnen holder seg smal.
   function row(item, now, minutes, href, compact) {
     var li = make("li");
     var a = make("a", "weather-row" + (hasWind(item, now) ? "" : " weather-row--old"));
@@ -247,7 +248,7 @@
     var info = make("span", "weather-row__info");
     info.appendChild(make("strong", "weather-row__name", item.name));
     if (rating) info.appendChild(ratingChip(rating));
-    // Compact: the source and height are left to the weather page, and the direction comes beside the chip (CSS).
+    // Kompakt: kilden og høyden overlates til værsiden, og retningen kommer ved siden av brikken (CSS).
     var sub = make("span", "weather-row__sub", (compact ? [site && site.name ? text("stations.site", { name: site.name }) : "", ageText(item, now)]
       : [site && site.name ? text("stations.site", { name: site.name }) : "", item.source || "", altitudeText(item), ageText(item, now)]).filter(Boolean).join(" · "));
     if (!compact) info.appendChild(sub);
@@ -277,8 +278,8 @@
     return li;
   }
 
-  // How far (km) a station is from the nearest launch the page knows (sites-data), for the order of MET's table; Infinity
-  // when unknown, so those come last.
+  // Hvor langt (km) en stasjon er fra det nærmeste startstedet siden kjenner (sites-data), for rekkefølgen i METs
+  // tabell; Infinity når det er ukjent, så de kommer sist.
   function nearestKm(item, list) {
     if (!isNum(item.lat) || !isNum(item.lon)) return Infinity;
     return list.reduce(function (best, s) {
@@ -288,9 +289,9 @@
     }, Infinity);
   }
 
-  // MET's stations as a small folded table under the club's (the Vær tab, the weather page): there are many, and they say
-  // little about the wind at the launches, so they get no cards. One row per station: name and height, the wind (gust), the
-  // direction and when it was measured. open: whether it was open before the page was redrawn. Null without MET stations.
+  // METs stasjoner som en liten sammenbrettet tabell under klubbens (Vær-fanen, værsiden): de er mange, og de sier
+  // lite om vinden på startstedene, så de får ingen kort. Én rad per stasjon: navn og høyde, vinden (kast),
+  // retningen og når den ble målt. open: om den var åpen før siden ble tegnet på nytt. Null uten METs stasjoner.
   function metTable(items, now, open) {
     var FS = globalThis.FlyingSites, launches = FS && FS.readJson ? FS.readJson("sites-data") || [] : [];
     var met = groups(items).met.map(function (i) { return { item: i, km: nearestKm(i, launches) }; })
@@ -318,8 +319,8 @@
     return box;
   }
 
-  // The station's name as a link to its page at the source, in a new tab, which screen readers are told (as the external()
-  // macro does); just the name when the source has no such page.
+  // Navnet på stasjonen som en lenke til siden dens hos kilden, i en ny fane, som skjermlesere får beskjed om (slik
+  // external()-makroen gjør); bare navnet når kilden ikke har en slik side.
   function stationLink(item, cls) {
     var url = stationUrl(item);
     if (!url) return make("span", cls, item.name);
@@ -331,7 +332,7 @@
     return a;
   }
 
-  // --- Drawing ---
+  // --- Tegning ---
   function make(tag, cls, content) {
     var n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -345,22 +346,22 @@
     return n;
   }
 
-  // Rows from the history with a mean wind: [time ms, dir, speed, gust, min, temperature], oldest first.
+  // Rader fra historikken med middelvind: [time ms, dir, speed, gust, min, temperature], eldste først.
   function chartRows(item) {
     return item.history.filter(function (r) { return isNum(r[2]); })
       .map(function (r) { return [Date.parse(r[0]), r[1], r[2], isNum(r[3]) ? r[3] : null, isNum(r[4]) ? r[4] : null, isNum(r[5]) ? r[5] : null]; });
   }
 
-  // The scale of the chart: 0 up to a round number above the highest gust, with 2, 5 or 10 m/s between the lines.
+  // Skalaen på grafen: 0 opp til et rundt tall over det høyeste kastet, med 2, 5 eller 10 m/s mellom linjene.
   function scale(max) {
     var step = max <= 8 ? 2 : max <= 20 ? 5 : 10;
     return { top: Math.max(4, Math.ceil(max / step) * step), step: step };
   }
 
-  // The flying site of a station, from the page: its launch directions (primary, possible) and the position of the launch
-  // (lat, lon), and its name and address where the page has them. The site page has its own site (site-data), the home page
-  // and the weather page all sites (sites-data). Null for a station
-  // that is not on a flying site, or a site the page does not know.
+  // Flystedet til en stasjon, fra siden: startretningene (primary, possible) og posisjonen til startstedet
+  // (lat, lon), og navnet og adressen der siden har dem. Stedssiden har sitt eget sted (site-data), forsiden
+  // og værsiden alle steder (sites-data). Null for en stasjon
+  // som ikke står på et flysted, eller et sted siden ikke kjenner.
   var sites = null;
   function siteInfo(siteId) {
     var FS = globalThis.FlyingSites;
@@ -378,22 +379,22 @@
   }
   var launchDirs = siteInfo;
 
-  // Where to show a station on a map: its own position from the source, else the launch of its flying site (the station
-  // stands at the launch), else nowhere ([lat, lon] or null).
+  // Hvor en stasjon skal vises på et kart: sin egen posisjon fra kilden, ellers startstedet til flystedet (stasjonen
+  // står ved startstedet), ellers ingen steder ([lat, lon] eller null).
   function position(item) {
     if (isNum(item.lat) && isNum(item.lon)) return [item.lat, item.lon];
     var site = siteInfo(item.site);
     return site && isNum(site.lat) && isNum(site.lon) ? [site.lat, site.lon] : null;
   }
 
-  // «startretning», «mulig retning» or «utenfor startretningene»: where the measured wind is on the site's wind rose.
+  // «startretning», «mulig retning» eller «utenfor startretningene»: hvor den målte vinden er på vindrosen til stedet.
   function launchText(dir, dirs) {
     if (!isNum(dir) || !dirs) return "";
     return text("stations.launch_" + globalThis.FlyingSites.directionType({ primary: dirs.primary || [], possible: dirs.possible || [] }, W().directionCode(dir)));
   }
 
-  // The wind rose, as on the site page: the site's launch directions in the sectors (all blank for a station that is not
-  // on a flying site), with the measured wind as an arrow across it in the direction the wind blows.
+  // Vindrosen, som på stedssiden: startretningene til stedet i sektorene (alle blanke for en stasjon som ikke
+  // står på et flysted), med den målte vinden som en pil tvers over i retningen vinden blåser.
   function compass(dir, dirs) {
     var FS = globalThis.FlyingSites, L = FS.DIRECTION_LABELS;
     var svg = svgEl("svg", { class: "rose station-compass", viewBox: "-14 -14 188 188", "aria-hidden": "true" });
@@ -406,7 +407,7 @@
     });
     if (isNum(dir)) {
       var g = svgEl("g", { transform: "rotate(" + Math.round(dir) + " 80 80)" }, svg);
-      // The arrow twice: wide in the card colour under it, so it stands out on both blank and filled sectors.
+      // Pilen to ganger: bred i kortfargen under, så den skiller seg ut på både blanke og fylte sektorer.
       ["station-compass__halo", "station-compass__arrow"].forEach(function (cls) {
         var a = svgEl("g", { class: cls }, g);
         svgEl("line", { x1: 80, y1: 36, x2: 80, y2: 108 }, a);
@@ -418,7 +419,7 @@
     return svg;
   }
 
-  // The wind now: the compass and the numbers as measured, «4,4 m/s» large, then «kast 7,2 · min 2» and «SV 225°».
+  // Vinden nå: kompasset og tallene slik de ble målt, «4,4 m/s» stort, så «kast 7,2 · min 2» og «SV 225°».
   function windNow(item) {
     var w = item.wind || {};
     var box = make("div", "station-now__wind");
@@ -438,18 +439,18 @@
     return box;
   }
 
-  // One measurement in words, for the tooltip and for screen readers: «kl. 14.05: SV 225°, 4,4 m/s, kast 7,2, min 2».
+  // Én måling i ord, for verktøytipset og for skjermlesere: «kl. 14.05: SV 225°, 4,4 m/s, kast 7,2, min 2».
   function rowText(r) {
     var wind = windText({ wind: { dir: r[1], speed: r[2], gust: r[3] } });
     return text("stations.at", { time: W().formatClock(r[0]) }) + ": " + wind + (isNum(r[4]) ? text("stations.min", { min: value(r[4]) }) : "") +
       (isNum(r[5]) ? ", " + value(r[5]) + " °C" : "");
   }
 
-  // The last hours as a chart: the span from the lowest wind to the gusts as a light band, the mean wind as a line on it,
-  // where the wind came from as arrows along the top, and the hours along the bottom. Pointer and arrow keys show each
-  // measurement with its numbers. Gaps of more than 20 minutes without measurements are left open.
-  // fc (optional, the weather page's «Målt mot varslet»): the forecast, [{ time, speed, gust }], drawn dashed, with a line at
-  // the latest measurement; hours before it are what the forecast said then. The forecast is hourly and holds from its time.
+  // De siste timene som en graf: spennet fra den laveste vinden til kastene som et lyst bånd, middelvinden som en
+  // linje på det, hvor vinden kom fra som piler langs toppen, og timene langs bunnen. Peker og piltaster viser hver
+  // måling med tallene. Hull på mer enn 20 minutter uten målinger står åpne.
+  // fc (valgfri, «Målt mot varslet» på værsiden): prognosen, [{ time, speed, gust }], tegnet stiplet, med en linje
+  // ved den siste målingen; timene før den er det prognosen sa da. Prognosen er per time og gjelder fra sin tid.
   function chart(item, periodMinutes, fc) {
     var rows = chartRows(item);
     if (rows.length < 2) return null;
@@ -465,29 +466,29 @@
     var y = function (v) { return H - bottom - v / sc.top * (H - top - bottom); };
     var f = function (n) { return n.toFixed(1); };
 
-    // The temperature, when the station sends it, in its own strip below on the same time line (its own scale in °C, so
-    // the chart never has two scales side by side).
+    // Temperaturen, når stasjonen sender den, i en egen stripe under på den samme tidslinjen (egen skala i °C, så
+    // grafen aldri har to skalaer ved siden av hverandre).
     var temps = rows.filter(function (r) { return isNum(r[5]); });
     var tTop = H + 14, tH = 44, Ht = temps.length >= 2 ? tTop + tH + 6 : H;
     var svg = svgEl("svg", { class: "station-graph__svg", viewBox: "0 0 " + Wd + " " + Ht, tabindex: "0", role: "img" });
-    // The period the change is counted over (the weather page), as a light area at the right.
+    // Perioden endringen regnes over (værsiden), som et lyst område til høyre.
     if (periodMinutes) {
       var p0 = Math.max(t0, tLast - periodMinutes * 60000);
       svgEl("rect", { class: "station-graph__period", x: f(x(p0)), y: top, width: f(x(tLast) - x(p0)), height: H - top - bottom }, svg);
     }
-    // The lines of the scale, with m/s at the left.
+    // Linjene i skalaen, med m/s til venstre.
     for (var v = 0; v <= sc.top; v += sc.step) {
       svgEl("line", { class: v ? "station-graph__grid" : "station-graph__base", x1: left, x2: Wd - right, y1: f(y(v)), y2: f(y(v)) }, svg);
       svgEl("text", { class: "station-graph__ylabel", x: left - 5, y: f(y(v) + 4) }, svg).textContent = String(v);
     }
-    // Whole hours along the bottom (the hour in Oslo; whole hours are the same in UTC).
+    // Hele timer langs bunnen (timen i Oslo; hele timer er de samme i UTC).
     for (var h = Math.ceil(t0 / 3600000) * 3600000; h <= t1; h += 3600000) {
       if (x(h) - left < 8) continue;
       svgEl("line", { class: "station-graph__tick", x1: f(x(h)), x2: f(x(h)), y1: H - bottom, y2: H - bottom + 4 }, svg);
       var hour = W().osloParts(h).hour;
       svgEl("text", { class: "station-graph__xlabel", x: f(x(h)), y: H - 4 }, svg).textContent = (hour < 10 ? "0" : "") + hour;
     }
-    // Runs of measurements without long gaps.
+    // Serier av målinger uten lange hull.
     var runs = [[rows[0]]];
     for (var i = 1; i < rows.length; i++) {
       if (rows[i][0] - rows[i - 1][0] > 20 * 60000) runs.push([]);
@@ -520,8 +521,8 @@
         if (run.length > 1) svgEl("polyline", { class: "station-graph__temp", points: run.map(function (r) { return f(x(r[0])) + "," + f(ty(r[5])); }).join(" ") }, svg);
       });
     }
-    // The forecast as steps (each hour holds for the hour), dashed: the mean wind and, lighter, the gusts. Hours before the
-    // latest measurement (what the forecast said then) lie over the measurements, for comparison.
+    // Prognosen som trapper (hver time gjelder for timen), stiplet: middelvinden og, lysere, kastene. Timene før
+    // den siste målingen (det prognosen sa da) ligger over målingene, til sammenligning.
     if (fc.length) {
       var steps = function (key) {
         return fc.filter(function (p) { return isNum(p[key]); }).map(function (p) {
@@ -533,14 +534,14 @@
       svgEl("polyline", { class: "station-graph__fc", points: steps("speed") }, svg);
       svgEl("line", { class: "station-graph__now", x1: f(x(tLast)), x2: f(x(tLast)), y1: top - 4, y2: H - bottom }, svg);
     }
-    // Where the wind came from, one arrow per half hour (the measurement nearest the middle of it).
+    // Hvor vinden kom fra, én pil per halvtime (målingen nærmest midten av den).
     for (var a = t0; a < t1; a += 1800000) {
       var mid = Math.min(a + 900000, t1), best = null;
       rows.forEach(function (r) { if (isNum(r[1]) && r[0] >= a && r[0] < a + 1800000 && (!best || Math.abs(r[0] - mid) < Math.abs(best[0] - mid))) best = r; });
       if (best) svgEl("path", { class: "station-graph__arrow", d: "M0 -6l4 9-4-2.5-4 2.5z",
         transform: "translate(" + f(x(best[0])) + " 10) rotate(" + Math.round(best[1] + 180) + ")" }, svg);
     }
-    // The measurement shown by pointer or keys.
+    // Målingen som vises med peker eller taster.
     var cross = svgEl("line", { class: "station-graph__cross", y1: top - 4, y2: Ht > H ? Ht - 6 : H - bottom, visibility: "hidden" }, svg);
     var dot = svgEl("circle", { class: "station-graph__focus", r: 4, visibility: "hidden" }, svg);
 
@@ -598,8 +599,8 @@
     return wrap;
   }
 
-  // Where the measurement comes from: «Kilde: Holfuy, stasjon 490» or «Kilde: MET Norge, stasjon SN84970», with the source
-  // as a link to the station there when it has a page.
+  // Hvor målingen kommer fra: «Kilde: Holfuy, stasjon 490» eller «Kilde: MET Norge, stasjon SN84970», med kilden
+  // som lenke til stasjonen der når den har en side.
   function sourceLine(item) {
     var p = make("p", "station__source", text("stations.source", { source: "" }).trim() + " ");
     var a = stationLink(item);
@@ -608,11 +609,11 @@
     return p;
   }
 
-  // A station as a card: the name (to Holfuy) and how old the measurement is, the wind now with the compass, the rest,
-  // and the chart of the last hours. An old measurement shows only its age and the chart. On the site page (with «Målt nå
-  // på» before the name), and in the map's popup (without the chart on small maps).
-  // sitePage: true on the site page («Målt nå på …»), or the distance in km for a station nearby («Målt nå 1,3 km unna,
-  // på …»).
+  // En stasjon som et kort: navnet (til Holfuy) og hvor gammel målingen er, vinden nå med kompasset, resten,
+  // og grafen for de siste timene. En gammel måling viser bare alderen og grafen. På stedssiden (med «Målt nå
+  // på» foran navnet), og i popupen i kartet (uten grafen på små kart).
+  // sitePage: true på stedssiden («Målt nå på …»), eller avstanden i km for en stasjon i nærheten («Målt nå 1,3 km
+  // unna, på …»).
   function card(item, nowMs, tag, sitePage, noChart) {
     var old = isOld(item, nowMs);
     var el = make(tag, "station" + (old ? " station--old" : ""));
@@ -627,7 +628,7 @@
     el.appendChild(head);
     if (!old && item.wind && isNum(item.wind.speed)) {
       el.appendChild(windNow(item));
-      // The trend over the last half hour: «Siste 30 min: ▲ +0,8 · Jevn vind, øker».
+      // Trenden den siste halvtimen: «Siste 30 min: ▲ +0,8 · Jevn vind, øker».
       var ch = change(item, TREND_MINUTES), c = character(ch);
       if (ch && c && isNum(ch.speed)) {
         el.appendChild(make("p", "station__trend", text("stations.trendLine", {
@@ -645,19 +646,19 @@
     return el;
   }
 
-  // The stations as a map layer «Værstasjoner» (on by default): a compass dial with an arrow for where the wind blows, and
-  // the mean wind and the gust as measured («4,4 (7,2)»), dimmed when the measurement is old. A tap shows the station's
-  // card, with the chart when the map is tall enough for it. Used on the home map and the site page's map. onData(data, now)
-  // is called with each new answer, for the page's own use (the list in the Vær tab).
-  // The stations on a map: the club's and MET's in their own layers, as small round markers with the mean wind (or the
-  // temperature, chosen with «Vind | Temp» on the map) and a notch on the edge pointing where the wind blows. Zoomed out,
-  // markers that would overlap are thinned: the club's always stay, then MET's with the strongest wind (thin()). Zoomed
-  // in (LABEL_ZOOM), a label beside each shows the wind and gust as measured, or the temperature.
+  // Stasjonene som kartlaget «Værstasjoner» (på som standard): en kompasskive med en pil for hvor vinden blåser, og
+  // middelvinden og kastet slik de ble målt («4,4 (7,2)»), dempet når målingen er gammel. Et trykk viser kortet til
+  // stasjonen, med grafen når kartet er høyt nok. Brukes på forsidekartet og kartet på stedssiden. onData(data, now)
+  // kalles med hvert nye svar, til sidens eget bruk (listen i Vær-fanen).
+  // Stasjonene på et kart: klubbens og METs i hvert sitt lag, som små runde markører med middelvinden (eller
+  // temperaturen, valgt med «Vind | Temp» på kartet) og et hakk i kanten som peker dit vinden blåser. Zoomet ut
+  // tynnes markører som ville overlappet: klubbens blir alltid stående, så METs med sterkest vind (thin()). Zoomet
+  // inn (LABEL_ZOOM) viser en etikett ved hver vind og kast slik de ble målt, eller temperaturen.
   var THIN_ZOOM = 12, LABEL_ZOOM = 11, THIN_PX = 34, MODE_KEY = "fs-station-mode";
   function readMode() { try { return localStorage.getItem(MODE_KEY) === "temp" ? "temp" : "wind"; } catch (e) { return "wind"; } }
   function saveMode(m) { try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* private window: not remembered */ } }
 
-  // The marker's content as a fragment, from numbers only. mode: "wind" or "temp".
+  // Innholdet i markøren som et fragment, bare fra tall. mode: "wind" eller "temp".
   function markerContent(item, now, mode) {
     var old = isOld(item, now), w = item.wind || {};
     var hasW = !old && isNum(w.speed), hasT = !old && isNum(item.temperature);
@@ -668,7 +669,7 @@
       out.append(make("span", "station-marker__dial", hasT ? Math.round(item.temperature) + "°" : "–"), label);
       return out;
     }
-    // The notch: the whole marker turned by the direction, with the notch at the bottom (where a wind from north blows).
+    // Hakket: hele markøren dreid etter retningen, med hakket nederst (der en vind fra nord blåser).
     if (hasW && isNum(w.dir)) {
       var notch = out.appendChild(make("span", "station-marker__notch"));
       notch.setAttribute("data-dir", String(Math.round(w.dir)));
@@ -684,8 +685,8 @@
     return "station-marker" + (isHolfuy(item) ? "" : " station-marker--met") + (isOld(item, now) ? " station-marker--old" : "") +
       (mode === "temp" ? " station-marker--temp" : "") + (cold ? " station-marker--cold" : "");
   }
-  // Which markers to show at this zoom: all from THIN_ZOOM; below, greedily from the most important, leaving out those
-  // within THIN_PX of one already shown. entries: [{ item, latlng }]; project: latlng → point. Returns a Set of entries.
+  // Hvilke markører som skal vises på denne zoomen: alle fra THIN_ZOOM; under det grådig fra den viktigste, uten dem
+  // innenfor THIN_PX fra en som alt vises. entries: [{ item, latlng }]; project: latlng → punkt. Gir et Set med entries.
   function thinned(entries, zoom, project) {
     var keep = new Set();
     if (zoom >= THIN_ZOOM) { entries.forEach(function (e) { keep.add(e); }); return keep; }
@@ -707,8 +708,8 @@
   function addMapLayer(map, url, onData) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !url || !map.layersControl) return null;
-    // Two layers, so MET's stations (in the area, mostly hourly) can be turned off and are not mistaken for the club's.
-    // MET's layer is added when the first MET station comes.
+    // To lag, så METs stasjoner (i området, mest én gang i timen) kan slås av og ikke forveksles med klubbens.
+    // Laget for MET legges til når den første MET-stasjonen kommer.
     var layer = L.layerGroup().addTo(map), metLayer = null;
     map.layersControl.addOverlay(layer, FS.layerLabel(map, "stations", text("stations.layer")));
     function metGroup() {
@@ -719,14 +720,14 @@
       return metLayer;
     }
     var mode = readMode(), entries = [], lastNow = Date.now();
-    // The notch's turn set on the element once the marker is on the map, not in the HTML: the page allows no inline
-    // styles (CSP style-src 'self').
+    // Dreiningen av hakket settes på elementet når markøren er på kartet, ikke i HTML-en: siden tillater ingen
+    // innebygde stiler (CSP style-src 'self').
     function turnNotch(marker) {
       var el = marker.getElement(), notch = el && el.querySelector(".station-marker__notch");
       if (notch) notch.style.transform = "rotate(" + notch.getAttribute("data-dir") + "deg)";
     }
-    // A station placed at its site's launch (no position of its own) is drawn up and to the right of the point, so it does
-    // not cover the launch's own marker.
+    // En stasjon som er plassert ved startstedet til stedet sitt (ingen egen posisjon), tegnes opp og til høyre for
+    // punktet, så den ikke dekker markøren til selve startstedet.
     function icon(item, now, atLaunch) {
       var met = !isHolfuy(item), size = met ? 26 : 30;
       var shown = mode;
@@ -745,7 +746,7 @@
     map.on("zoomend", function () { thin(); labels(); });
     labels();
 
-    // «Vind | Temp»: what the markers show. Added with the first data, remembered in this browser.
+    // «Vind | Temp»: hva markørene viser. Legges til med de første dataene, huskes i denne nettleseren.
     var modeControl = null;
     function addModeControl() {
       var Ctl = L.Control.extend({ options: { position: "topright" }, onAdd: function () {
@@ -782,7 +783,7 @@
         var box = card(item, now, "div", false, map.getSize().y < 600);
         box.classList.add("station-popup");
         var atLaunch = !(isNum(item.lat) && isNum(item.lon));
-        // MET's stations under everything else (the launches, the club's stations), so they never cover them.
+        // METs stasjoner under alt annet (startstedene, klubbens stasjoner), så de aldri dekker dem.
         var marker = L.marker(at, { icon: icon(item, now, atLaunch), keyboard: true, title: item.name, zIndexOffset: isHolfuy(item) ? 500 : -1000 })
           .bindPopup(box, { autoPanPaddingTopLeft: [60, 90], autoPanPaddingBottomRight: [20, 110] });
         marker.on("add", function () { turnNotch(marker); });
@@ -796,9 +797,9 @@
   }
 
 
-  // Fetches the stations now and every minute while the page is in view, and calls done(data) with each new answer in
-  // the right shape. On errors nothing happens, and the page keeps what it has.
-  // One fetch loop per address, shared by everything on the page that watches it (the site page's card and its map).
+  // Henter stasjonene nå og hvert minutt mens siden er synlig, og kaller done(data) med hvert nye svar i
+  // riktig form. Ved feil skjer ingenting, og siden beholder det den har.
+  // Én henteløkke per adresse, delt av alt på siden som følger med på den (kortet på stedssiden og kartet der).
   var watchers = {};
   function watch(url, done) {
     if (!url || typeof fetch !== "function") return;
@@ -814,7 +815,7 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
           if (!isStationsData(d) || (w.data && d.fetched === w.data.fetched)) return;
-          // Each station carries the source of the data set, for the card's source line.
+          // Hver stasjon har med seg kilden til datasettet, for kildelinjen på kortet.
           d.items.forEach(function (i) { if (typeof i.source !== "string") i.source = typeof d.source === "string" ? d.source : ""; });
           w.data = d;
           w.callbacks.forEach(function (fn) { fn(d); });
@@ -826,34 +827,34 @@
     document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
   }
 
-  // --- How well the forecast hit (the data service's verification) ---
-  // Below this many hours the numbers say little, so only how far the collecting has come is shown.
+  // --- Hvor godt prognosen traff (verifiseringen i datatjenesten) ---
+  // Under så mange timer sier tallene lite, så bare hvor langt innsamlingen har kommet, vises.
   var VERIFY_MIN_HOURS = 24;
   function verifyStrength(v) {
     if (Math.abs(v) < 0.3) return text("stations.vAbout");
     return text(v > 0 ? "stations.vStronger" : "stations.vWeaker", { v: value(Math.abs(v)) });
   }
-  // «1,2 °C varmere enn varslet», «0,8 hPa lavere enn varslet», or about as forecast within half a unit.
+  // «1,2 °C varmere enn varslet», «0,8 hPa lavere enn varslet», eller omtrent som varslet innenfor en halv enhet.
   function verifyDiff(v, more, less) {
     if (Math.abs(v) < 0.5) return text("stations.vAbout");
     return text(v > 0 ? more : less, { v: value(Math.abs(v)) });
   }
-  // The lines for one site's summary (workers/data/src/sources/verify.js), as plain text: [] without one.
+  // Linjene for oppsummeringen av ett sted (workers/data/src/sources/verify.js), som ren tekst: [] uten en.
   function verifyLines(s, days) {
     if (!s || !isNum(s.hours)) return [];
     if (s.hours < VERIFY_MIN_HOURS) return [text("stations.vCollecting", { n: s.hours, min: VERIFY_MIN_HOURS })];
     var lines = [text("stations.vMean", { days: days, hours: s.hours, strength: verifyStrength(s.bias), mae: value(s.mae) })];
     if (isNum(s.gustBias)) lines.push(text("stations.vGust", { strength: verifyStrength(s.gustBias) }));
     if (isNum(s.dirHit)) lines.push(text("stations.vDir", { pct: Math.round(s.dirHit * 100) }));
-    // The temperature and the pressure, where the station measures them (Heia both, most stations neither).
+    // Temperaturen og trykket, der stasjonen måler dem (Heia begge, de fleste stasjoner ingen av dem).
     if (isNum(s.tempBias) && isNum(s.tempMae) && s.tempHours >= VERIFY_MIN_HOURS) lines.push(text("stations.vTemp", { strength: verifyDiff(s.tempBias, "stations.vWarmer", "stations.vColder"), mae: value(s.tempMae) }));
     if (isNum(s.pressureBias) && isNum(s.pressureMae) && s.pressureHours >= VERIFY_MIN_HOURS) lines.push(text("stations.vPressure", { strength: verifyDiff(s.pressureBias, "stations.vHigher", "stations.vLower"), mae: value(s.pressureMae) }));
     var worst = Object.keys(s.sectors || {}).sort(function (a, b) { return Math.abs(s.sectors[b].bias) - Math.abs(s.sectors[a].bias); })[0];
     if (worst && Math.abs(s.sectors[worst].bias) >= 1) lines.push(text("stations.vSector", { dir: globalThis.FlyingSites.DIRECTION_LABELS[worst], v: signed(s.sectors[worst].bias) }));
     return lines;
   }
-  // A block with the heading and the lines for `siteId`, or null when the data service has nothing for it. nearName: the
-  // station's name when it stands nearby and not on the site, said under the heading.
+  // En blokk med overskriften og linjene for `siteId`, eller null når datatjenesten ikke har noe for det. nearName:
+  // navnet på stasjonen når den står i nærheten og ikke på stedet, sagt under overskriften.
   function verifyBlock(data, siteId, nearName) {
     var s = data && data.sites && data.sites[siteId];
     var lines = verifyLines(s, data && data.days);
@@ -862,14 +863,14 @@
     var box = make("div", "station-verify");
     box.appendChild(make("strong", "station-verify__title", text("stations.vTitle")));
     lines.forEach(function (l) { box.appendChild(make("span", null, l)); });
-    // What the numbers mean, folded.
+    // Hva tallene betyr, sammenbrettet.
     var help = make("details", "help-fold");
     help.appendChild(make("summary", null, text("help.howToRead")));
     help.appendChild(make("p", null, text("stations.vExplain")));
     box.appendChild(help);
     return box;
   }
-  // Fetches the verification once (it changes twice an hour), and calls done(data) when it is in the right shape.
+  // Henter verifiseringen én gang (den endres to ganger i timen), og kaller done(data) når den har riktig form.
   var verifyCache = {};
   function loadVerification(url, done) {
     if (!url || typeof fetch !== "function") return;
@@ -881,16 +882,16 @@
     verifyCache[url].then(function (d) { if (d) done(d); });
   }
 
-  // The station's entry for a flying site nearby ({ site, km }), or null.
+  // Oppføringen til stasjonen for et flysted i nærheten ({ site, km }), eller null.
   function nearOf(item, siteId) {
     var list = Array.isArray(item.near) ? item.near : [];
     for (var k = 0; k < list.length; k++) if (list[k] && list[k].site === siteId && isNum(list[k].km)) return list[k];
     return null;
   }
 
-  // The site page: the station on this flying site (item.site), or else one nearby (item.near), as a card with the
-  // station's name as a link to Holfuy, and the Holfuy button among the weather links. Nothing when the site has neither.
-  // A station nearby is shown with the site's own wind rose and how far away it is.
+  // Stedssiden: stasjonen på dette flystedet (item.site), ellers en i nærheten (item.near), som et kort med
+  // navnet på stasjonen som lenke til Holfuy, og Holfuy-knappen blant værlenkene. Ingenting når stedet har ingen av dem.
+  // En stasjon i nærheten vises med stedets egen vindrose og hvor langt unna den er.
   var siteEl = typeof document !== "undefined" && document.getElementById("station-now");
   if (siteEl) {
     var linkEl = document.getElementById("station-link");
@@ -903,12 +904,12 @@
         near = item ? nearOf(item, site) : null;
       }
       siteEl.hidden = !item;
-      // The «Holfuy» button among the weather links, only for a Holfuy station.
+      // «Holfuy»-knappen blant værlenkene, bare for en Holfuy-stasjon.
       if (linkEl) linkEl.hidden = !item || !isHolfuy(item);
       if (!item) return;
       if (linkEl && isHolfuy(item)) linkEl.href = stationUrl(item);
       siteEl.replaceChildren(near ? card(Object.assign({}, item, { site: site }), now, "div", near.km) : card(item, now, "div", true));
-      // How well the forecast has hit here, under the card.
+      // Hvor godt prognosen har truffet her, under kortet.
       loadVerification(siteEl.getAttribute("data-verify-url"), function (v) {
         var block = verifyBlock(v, site, near ? item.name : null);
         var old = siteEl.querySelector(".station-verify");

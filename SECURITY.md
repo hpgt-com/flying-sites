@@ -1,188 +1,193 @@
-# Security
+# Sikkerhet
 
-## Reporting a security issue
+## Rapportere et sikkerhetsproblem
 
-If you have found a vulnerability in the site or the repository, do not open a public issue. Use
-**[Report a vulnerability](https://github.com/hpgt-com/flying-sites/security/advisories/new)** under the Security
-tab, so only the maintainers see the report. Describe what you found, how to reproduce it and which page it affects.
-We reply as soon as we can, but this is a volunteer club project.
+Har du funnet en sårbarhet i siden eller repoet, skal du ikke åpne en offentlig sak. Bruk
+**[Report a vulnerability](https://github.com/hpgt-com/flying-sites/security/advisories/new)** under fanen Security,
+så bare de som vedlikeholder siden, ser rapporten. Beskriv hva du fant, hvordan det kan gjenskapes, og hvilken side
+det gjelder. Vi svarer så fort vi kan, men dette er et frivillig klubbprosjekt.
 
-Errors in site information (hazards, directions, airspace) are not security issues in this sense. Report them with
-«Foreslå endring» ("Suggest a change") on the site page.
+Rapporten kan skrives på norsk eller engelsk.
 
-## What is in place
+Feil i opplysningene om et flysted (farer, retninger, luftrom) er ikke sikkerhetsproblemer i denne forstand. Meld fra
+om dem med «Foreslå endring» på stedssiden.
 
-The site is static (Eleventy, served by Cloudflare from the same build GitHub Pages gets), with no login or accounts. Beside it runs the data service, a Cloudflare
-Worker with a Durable Object (SQLite) and an R2 archive, which serves the fresh data and takes the one public form,
-«Meld fra om endring».
+## Dette er på plass
 
-**The site**
-- Content-Security-Policy as a meta tag in `src/_includes/base.njk`, with `default-src 'none'` so every kind of source
-  must be allowed explicitly: scripts only from the site itself (no inline
-  scripts, and no inline styles either: `style-src 'self'`) and Cloudflare Turnstile (`challenges.cloudflare.com`, also the only `frame-src`; loaded only when someone
-  opens «Meld fra om endring»), images only from the map tiles (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) and Yr.
-  The header-only rules come from `src/headers.njk` on Cloudflare: `frame-ancestors 'none'` and `X-Frame-Options: DENY`,
-  `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-site`,
-  HSTS, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that turns off
-  camera, microphone, location and payment.
-  `manifest-src 'self'` and `worker-src 'self'`: the web app manifest and the service worker come only from the site.
-  `connect-src` allows the site, GoatCounter, RainViewer and the data service (`data.hpgt.com`). The station
-  data is likewise used only in the expected shape (`isStationsData` in `stations.js`) and drawn with DOM methods.
-- Violations of the CSP are reported by the browsers to `POST https://data.hpgt.com/v1/csp-report`
-  (`workers/data/src/csp-report.js`): the header adds `report-uri` and `report-to csp` with
-  `Reporting-Endpoints: csp="https://data.hpgt.com/v1/csp-report"` (the meta tag cannot carry them, so `site.csp`
-  stays without). The browser sends the reports itself, not the pages' scripts, so `connect-src` does not need the
-  endpoint. Trusted Types are tried in report-only mode: `Content-Security-Policy-Report-Only:
-  require-trusted-types-for 'script'` with the same report directives. The site's own scripts assign no HTML strings,
-  but Leaflet still does (attribution, prefix, the layer control's names) and Turnstile is third-party, so the reports
-  show what must change before it can be enforced. `/sw.js` gets neither policy nor `Reporting-Endpoints`.
-- Neither Worker (`data`, `site`) has Cloudflare's per-request log (`invocation_logs = false`), which would record
-  every visitor's IP address and user agent. Only the Workers' own lines are logged, and they hold no personal data.
-- The CSP report endpoint stores nothing: each report becomes one line in the Worker's log with only the directive,
-  enforce or report, what was blocked reduced to scheme and host or a keyword (`inline`, `eval`, `data`, `blob`,
-  `trusted-types-sink` …), the page's path on `flysteder.hpgt.com` without query string, and for Trusted Types the
-  sink's name (`Element innerHTML`). Never the address, user agent, referrer, full addresses or the sample (the
-  blocked code or text). Reports from other pages are dropped. Only `POST` (others 405), only
-  `application/csp-report` and `application/reports+json` (others 415), the body is read up to 16 KB from the stream
-  whatever `Content-Length` says (413 over it), at most 20 reports per request, and 30 requests a minute from one
-  address (Cloudflare's rate limit binding `CSP_LIMIT`, counted under a hash of the address).
-- «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) takes requests only from
-  `https://flysteder.hpgt.com`, checks every one with Turnstile, accepts only known sites and kinds and 10–1000
-  characters, and makes at most 50 issues a day and 3 from one address. Turnstile's answer must be for
-  `flysteder.hpgt.com`, the body is read only as JSON up to 8 KB, and the day's count and the per-address count are
-  reserved in one step in the Durable Object (so two reports at the same time cannot pass the limit), and given back
-  when GitHub fails. The address is kept only as a hash with a salt for the day, deleted with the count the next day.
-  The text goes into the issue inside a code block, so it cannot add
-  links, images or @mentions. The issues are made by the club's GitHub App, installed only on this repository with
-  only Issues: read and write; its private key is a Cloudflare secret, and each report gets a token that lasts an hour
-  (`workers/data/src/github-app.js`).
-- The forecast from the data service is only used when it has the expected shape (times as strings, rows of numbers
-  or null; `isNewerForecast` in `wind.js`), and it is never parsed as HTML.
-- The service worker (`lib/service-worker.js`) stores only the site's own pages and files, and Kartverket's map tiles
-  (fetched with CORS and without cookies, at most 300). Responses from GoatCounter, Yr and other third parties are
-  never stored, and only complete same-origin or CORS responses are kept (no opaque responses).
+Siden er statisk (Eleventy, servert av Cloudflare fra det samme bygget som GitHub Pages får), uten innlogging eller
+kontoer. Ved siden av kjører datatjenesten, en Cloudflare Worker med et Durable Object (SQLite) og et arkiv i R2, som
+serverer de ferske dataene og tar imot det ene offentlige skjemaet, «Meld fra om endring».
+
+**Siden**
+- Content-Security-Policy som meta-tagg i `src/_includes/base.njk`, med `default-src 'none'`, så hver type kilde må
+  tillates uttrykkelig: skript bare fra siden selv (ingen innebygde skript, og heller ingen innebygde stiler:
+  `style-src 'self'`) og Cloudflare Turnstile (`challenges.cloudflare.com`, også den eneste `frame-src`; lastes bare
+  når noen åpner «Meld fra om endring»), bilder bare fra kartflisene (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch) og
+  Yr. Reglene som bare kan stå i en header, kommer fra `src/headers.njk` på Cloudflare: `frame-ancestors 'none'` og
+  `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-site`,
+  HSTS, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` og en `Permissions-Policy` som slår av
+  kamera, mikrofon, posisjon og betaling.
+  `manifest-src 'self'` og `worker-src 'self'`: manifestet for webappen og service workeren kommer bare fra siden.
+  `connect-src` tillater siden, GoatCounter, RainViewer og datatjenesten (`data.hpgt.com`). Stasjonsdataene brukes
+  også bare i den formen som er ventet (`isStationsData` i `stations.js`), og tegnes med DOM-metoder.
+- Brudd på CSP-en rapporteres av nettleserne til `POST https://data.hpgt.com/v1/csp-report`
+  (`workers/data/src/csp-report.js`): headeren legger til `report-uri` og `report-to csp` med
+  `Reporting-Endpoints: csp="https://data.hpgt.com/v1/csp-report"` (meta-taggen kan ikke ha dem, så `site.csp`
+  er uten). Nettleseren sender rapportene selv, ikke skriptene på sidene, så `connect-src` trenger ikke
+  adressen. Trusted Types prøves i rapporteringsmodus: `Content-Security-Policy-Report-Only:
+  require-trusted-types-for 'script'` med de samme rapporteringsdirektivene. Sidens egne skript tilordner ingen
+  HTML-strenger, men Leaflet gjør det fortsatt (kreditering, prefiks, navnene i lagvelgeren), og Turnstile er fra en
+  tredjepart, så rapportene viser hva som må endres før det kan håndheves. `/sw.js` får verken policyene eller
+  `Reporting-Endpoints`.
+- Ingen av Workerne (`data`, `site`) har Cloudflares logg per forespørsel (`invocation_logs = false`), som ville
+  registrert IP-adressen og nettleserinfoen til hver besøkende. Bare Workernes egne linjer logges, og de har ingen
+  personopplysninger.
+- Adressen for CSP-rapporter lagrer ingenting: hver rapport blir én linje i loggen til Workeren med bare direktivet,
+  om den ble håndhevet eller bare rapportert, det som ble blokkert, redusert til skjema og vert eller et nøkkelord
+  (`inline`, `eval`, `data`, `blob`, `trusted-types-sink` …), stien til siden på `flysteder.hpgt.com` uten
+  spørrestreng, og for Trusted Types navnet på sinken (`Element innerHTML`). Aldri adressen, nettleserinfoen,
+  referrer, fullstendige adresser eller utdraget (koden eller teksten som ble blokkert). Rapporter fra andre sider
+  forkastes. Bare `POST` (andre får 405), bare `application/csp-report` og `application/reports+json` (andre får 415),
+  innholdet leses fra strømmen opp til 16 KB uansett hva `Content-Length` sier (413 over det), høyst 20 rapporter per
+  forespørsel og 30 forespørsler i minuttet fra én adresse (Cloudflares rate limit-binding `CSP_LIMIT`, telt under en
+  hash av adressen).
+- «Meld fra om endring» (`POST /v1/report`, `workers/data/src/report.js`) tar bare imot forespørsler fra
+  `https://flysteder.hpgt.com`, sjekker hver av dem med Turnstile, godtar bare kjente steder og typer og 10–1000
+  tegn, og lager høyst 50 saker om dagen og 3 fra én adresse. Svaret fra Turnstile må gjelde `flysteder.hpgt.com`,
+  innholdet leses bare som JSON opp til 8 KB, og dagens antall og antallet per adresse reserveres i ett steg i
+  Durable Objectet (så to rapporter samtidig ikke kan komme forbi grensen), og gis tilbake når GitHub feiler. Adressen
+  lagres bare som en hash med et salt for dagen, og slettes med tellingen dagen etter. Teksten legges inn i saken i
+  en kodeblokk, så den ikke kan legge til lenker, bilder eller @-omtaler. Sakene lages av klubbens GitHub-app, som
+  bare er installert på dette repoet og bare har Issues: read and write; den private nøkkelen er en hemmelighet i
+  Cloudflare, og hver rapport får et token som varer i en time (`workers/data/src/github-app.js`).
+- Varselet fra datatjenesten brukes bare når det har den ventede formen (tider som strenger, rader med tall eller
+  null; `isNewerForecast` i `wind.js`), og det tolkes aldri som HTML.
+- Service workeren (`lib/service-worker.js`) lagrer bare sidens egne sider og filer, og kartflisene fra Kartverket
+  (hentet med CORS og uten informasjonskapsler, høyst 300). Svar fra GoatCounter, Yr og andre tredjeparter lagres
+  aldri, og bare komplette svar fra samme opphav eller med CORS beholdes (ingen ugjennomsiktige svar).
 - `Referrer-Policy: strict-origin-when-cross-origin`.
-- Leaflet, markercluster and the fonts are served from the site itself. No scripts or fonts from a CDN.
-- Images are published without EXIF metadata (`lib/images.js`).
-- `/.well-known/security.txt` (RFC 9116) points to «Report a vulnerability» and this file. It is generated on every
-  build (`lib/security-txt.js`), so `Expires` is always about a year ahead.
+- Leaflet, markercluster og skriftene serveres fra siden selv. Ingen skript eller skrifter fra et CDN.
+- Bildene publiseres uten EXIF-metadata (`lib/images.js`).
+- `/.well-known/security.txt` (RFC 9116) peker til «Report a vulnerability» og denne filen. Den lages ved hvert
+  bygg (`lib/security-txt.js`), så `Expires` er alltid omtrent et år fram i tid.
 
-**The repository and publishing**
-- All changes go through a PR. «PR check» runs tests, the build, link check, HTML validation and the check for template slips (`build`), axe
-  (`accessibility`), dependency review
-  (`dependency-review`, stops packages with known vulnerabilities) and zizmor (`workflow-security`, security issues
-  in the workflows).
-- CodeQL analyses the JavaScript and the workflows on PRs, on `main` and weekly.
-- Actions are pinned to commit SHAs and updated by Dependabot, with a cooldown of 7 days (30 for major versions).
-  Patch and minor updates of npm packages and Actions, except Wrangler, are merged automatically when all required
-  checks pass (`dependabot-automerge.yml`, with a token from the GitHub App). Workflows have read-only access by default. Only the
-  deploy job has the publishing permissions (`pages`, `id-token`).
-- All workflows install with `npm ci --ignore-scripts`, so no package's install script runs in CI (none of the
-  dependencies need one). A new dependency that needs one will fail the build and must be assessed first.
-- The pull request check runs `npm audit signatures` for `workers/data`, so a package that is not signed by the
-  registry stops the merge. The site itself cannot run the check: Eleventy installs `@11ty/nunjucks` under the alias
-  `nunjucks`, and `npm audit signatures` looks up the alias name, which does not exist in that version. The integrity
-  hashes in `package-lock.json` are still checked by `npm ci`.
-- The airspace workflow is split in two jobs: `fetch` installs the npm packages (`npm ci --ignore-scripts`) and
-  runs the script with read-only access and the openAIP key; `pr` has write access to push the branch and open the
-  PR, but runs no npm code. The fetched files go from one to the other as an artifact. When the club's GitHub App
-  is set up, `pr` uses a short-lived app token limited to this repository (contents and pull requests), so the PR
-  check runs on the airspace PRs too. The power line workflow (`obstacles.yml`) is built the same way, without any
-  key.
-- Every successful publish is signed. The `attest` job in «Build and deploy» makes a build provenance attestation (which
-  workflow, commit and run built the site) and an SBOM attestation (SPDX from `package-lock.json`, made with
-  `npm sbom`), both for the SHA-256 of the archive that is published to Pages. The job has `id-token` and
-  `attestations` but checks out no code; the build job never gets `id-token`. The SBOM is also kept as the
-  artifact `sbom` on the run for 90 days. `deploy` does not wait for `attest`, so a failed attestation does not stop a
-  publish; it fails the run and opens an issue (below). See [Verifying a publish](#verifying-a-publish).
-- A failed run of «Build and deploy», the data service deploy, «Update airspace» or «Update power lines and obstacles»
-  opens an issue labelled `bug` (or comments on the open one), from the job `alert`, which only has `issues: write`
-  and runs no project code. Scheduled runs on GitHub can be hours late, and GitHub turns off the schedule of a public
-  repository after 60 days without activity, so a missing monthly PR is a sign to check Actions.
-- «Data service health» (`health.yml`) checks `/v1/status.json` every hour and opens an issue when a dataset is too
-  old or the service does not answer. The status has no secrets and nothing about visitors: run times, ages, error
-  messages from the sources, the launch ids missing and the last archived day. Since GitHub turns the schedule off
-  after 60 days without a commit, the watch that counts is outside GitHub: UptimeRobot (free plan, set up 22.10.2026)
-  checks `https://flysteder.hpgt.com/`, `https://hpgt.com/` and `/v1/status.json` for `"ok":true` every five minutes
-  and e-mails the maintainer when one fails, with nothing from the site stored there but the addresses.
-- OpenSSF Scorecard (`scorecard.yml`) checks the repository against supply-chain good practice weekly (and
-  when the branch rules change). The results are in Code scanning and behind the badge in README.
-- Secrets (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) are stored in the GitHub environment `automation`, which only `main`
-  may use, so a workflow changed on another branch cannot read them; the jobs that use them (`airspace.yml`,
-  `obstacles.yml`) name the environment. `.gitignore` blocks `.env` and
-  key files.
-- The data service (`workers/data`) runs in the club's Cloudflare account «HPGT». It is published by
-  `data-worker.yml` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which are secrets in the GitHub
-  environment `cloudflare`, which only `main` may use, so a PR branch cannot publish. The token is an account token
-  made from the Worker (Workers & Pages → data → Settings → Builds → «API token for external CI/CD») and can only
-  publish the Worker `data`: no other Worker, no R2, KV, domains or DNS. The site is published the same way by
-  `deploy.yml` (job `cloudflare`) with `CLOUDFLARE_SITE_TOKEN` in the same environment, made from the Worker
-  `flysteder` so it can only publish that one; it expires 19.11.2027. The broader token that «Recover» needs to
-  write the archive back to R2 (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read) is not kept:
-  it is made when needed, put in its own environment `recovery` (only `main`, review required from the team `maintainers`) and deleted
-  afterwards. The account has
-  two-factor sign-in with a security key and an authenticator app. The service's secrets are set in Cloudflare and
-  never in GitHub or the code, and never logged: `HOLFUY_KEY` (sent only to api.holfuy.com), `FROST_CLIENT_ID` (MET's
-  Frost), `TURNSTILE_SECRET`, and `REPORTS_APP_ID` with `REPORTS_APP_PRIVATE_KEY` (the GitHub App for «Meld fra»).
-  The service serves only public data: forecast, measured wind, winds aloft, how well the forecast hit, flying activity
-  as sums per site and day, and pilots in the air from the Open Glider Network (their tracks over the last 10 minutes
-  only in memory). To count the day's flights it keeps, until the next day, a random salt, a hash per device and each
-  pilot's last position in the air, and asks Kartverket for the terrain height at it; nothing that names a device or
-  pilot is kept longer. The weather archive is a private R2 bucket
-  (`hpgt-data-archive`), written only by the service; read access for reports is a separate read-only R2 token.
-- The monthly restore drill and the fetch in «Recover» use the environment `backup-read`, with a B2 key that can only
-  read the backup bucket.
-- The off-site copy (`backup.yml`) runs in the environment `backup`, which only `main` may use: a read-only R2 token for
-  the archive bucket and a Backblaze key for the backup bucket only, so a PR branch cannot read the archive or write to
-  the copy, and the keys can at most read measurements that are open data.
+**Repoet og publiseringen**
+- Alle endringer går gjennom en PR. «PR-sjekk» kjører testene, bygget, lenkesjekken, HTML-valideringen og sjekken
+  for glipp i malene (`build`), axe (`accessibility`), gjennomgang av avhengigheter (`dependency-review`, stopper
+  pakker med kjente sårbarheter) og zizmor (`workflow-security`, sikkerhetsproblemer i arbeidsflytene).
+- CodeQL analyserer JavaScript-koden og arbeidsflytene på PR-er, på `main` og hver uke.
+- Actions er låst til commit-SHA-er og oppdateres av Dependabot, med en ventetid på 7 dager (30 for
+  major-versjoner). Patch- og minor-oppdateringer av npm-pakker og Actions, unntatt Wrangler, merges automatisk når
+  alle påkrevde sjekker er grønne (`dependabot-automerge.yml`, med et token fra GitHub-appen). Arbeidsflytene har bare
+  lesetilgang som standard. Bare publiseringsjobben har rettighetene til å publisere (`pages`, `id-token`).
+- Alle arbeidsflytene installerer med `npm ci --ignore-scripts`, så ingen pakkers installasjonsskript kjører i CI
+  (ingen av avhengighetene trenger det). En ny avhengighet som trenger det, får bygget til å feile og må vurderes
+  først.
+- PR-sjekken kjører `npm audit signatures` for `workers/data`, så en pakke som ikke er signert av registeret, stopper
+  merge. Selve siden kan ikke kjøre sjekken: Eleventy installerer `@11ty/nunjucks` under aliaset `nunjucks`, og
+  `npm audit signatures` slår opp navnet på aliaset, som ikke finnes i den versjonen. Integritetshashene i
+  `package-lock.json` sjekkes likevel av `npm ci`.
+- Arbeidsflyten for luftrom er delt i to jobber: `fetch` installerer npm-pakkene (`npm ci --ignore-scripts`) og
+  kjører skriptet med bare lesetilgang og openAIP-nøkkelen; `pr` har skrivetilgang for å pushe grenen og åpne PR-en,
+  men kjører ingen npm-kode. De hentede filene går fra den ene til den andre som en artefakt. Når klubbens GitHub-app
+  er satt opp, bruker `pr` et kortlivet app-token begrenset til dette repoet (contents og pull requests), så
+  PR-sjekken kjører på luftroms-PR-ene også. Arbeidsflyten for kraftlinjer (`obstacles.yml`) er bygget på samme måte,
+  uten nøkkel.
+- Hver vellykket publisering signeres. Jobben `attest` i «Bygg og publiser» lager en attestasjon av byggeproveniensen
+  (hvilken arbeidsflyt, commit og kjøring som bygget siden) og en SBOM-attestasjon (SPDX fra `package-lock.json`,
+  laget med `npm sbom`), begge for SHA-256 av arkivet som publiseres til Pages. Jobben har `id-token` og
+  `attestations`, men sjekker ikke ut kode; byggejobben får aldri `id-token`. SBOM-en lagres også som artefakten
+  `sbom` på kjøringen i 90 dager. `deploy` venter ikke på `attest`, så en attestasjon som feiler, stopper ikke en
+  publisering; den får kjøringen til å feile og åpner en sak (se nedenfor). Se
+  [Verifisere en publisering](#verifisere-en-publisering).
+- En kjøring som feiler i «Bygg og publiser», publiseringen av datatjenesten, «Oppdater luftrom» eller «Oppdater
+  kraftlinjer og hindringer», åpner en sak merket `bug` (eller kommenterer på den åpne), fra jobben `alert`, som bare
+  har `issues: write` og ikke kjører kode fra prosjektet. Planlagte kjøringer på GitHub kan komme timer for sent, og
+  GitHub slår av tidsplanen for et offentlig repo etter 60 dager uten aktivitet, så en månedlig PR som mangler, er et
+  tegn på at Actions bør sjekkes.
+- «Helsesjekk for datatjenesten» (`health.yml`) sjekker `/v1/status.json` hver time og åpner en sak når et datasett
+  er for gammelt eller tjenesten ikke svarer. Statusen har ingen hemmeligheter og ingenting om besøkende:
+  kjøretider, alder, feilmeldinger fra kildene, id-ene til startene som mangler, og den siste arkiverte dagen. Siden
+  GitHub slår av tidsplanen etter 60 dager uten commit, er det vakten utenfor GitHub som teller: UptimeRobot
+  (gratisplanen, satt opp 22.10.2026) sjekker `https://flysteder.hpgt.com/`, `https://hpgt.com/` og
+  `/v1/status.json` for `"ok":true` hvert femte minutt og sender e-post til den som vedlikeholder siden, når en av
+  dem feiler. Der lagres ingenting fra siden utenom adressene.
+- OpenSSF Scorecard (`scorecard.yml`) sjekker repoet mot god praksis for forsyningskjeden hver uke (og når
+  grenreglene endres). Resultatene ligger i Code scanning og bak merket i README.
+- Hemmelighetene (`OPENAIP_API_KEY`, `APP_PRIVATE_KEY`) ligger i GitHub-miljøet `automation`, som bare `main` kan
+  bruke, så en arbeidsflyt som er endret på en annen gren, ikke kan lese dem; jobbene som bruker dem (`airspace.yml`,
+  `obstacles.yml`), oppgir miljøet. `.gitignore` stopper `.env` og nøkkelfiler.
+- Datatjenesten (`workers/data`) kjører i klubbens Cloudflare-konto «HPGT». Den publiseres av `data-worker.yml` med
+  `CLOUDFLARE_API_TOKEN` og `CLOUDFLARE_ACCOUNT_ID`, som er hemmeligheter i GitHub-miljøet `cloudflare`, som bare
+  `main` kan bruke, så en PR-gren ikke kan publisere. Tokenet er et kontotoken laget fra Workeren (Workers & Pages →
+  data → Settings → Builds → «API token for external CI/CD») og kan bare publisere Workeren `data`: ingen andre
+  Workers, ikke R2, KV, domener eller DNS. Siden publiseres på samme måte av `deploy.yml` (jobben `cloudflare`) med
+  `CLOUDFLARE_SITE_TOKEN` i det samme miljøet, laget fra Workeren `flysteder`, så det bare kan publisere den; det
+  utløper 19.11.2027. Det bredere tokenet som «Gjenoppretting» trenger for å skrive arkivet tilbake til R2 (Workers
+  Scripts: Edit, Workers R2 Storage: Edit, Account Settings: Read), blir ikke tatt vare på: det lages når det trengs,
+  legges i et eget miljø, `recovery` (bare `main`, krever godkjenning fra teamet `maintainers`), og slettes
+  etterpå. Kontoen har tofaktorinnlogging med en sikkerhetsnøkkel og en autentiseringsapp. Tjenestens hemmeligheter
+  settes i Cloudflare, aldri i GitHub eller koden, og logges aldri: `HOLFUY_KEY` (sendes bare til api.holfuy.com),
+  `FROST_CLIENT_ID` (METs Frost), `TURNSTILE_SECRET`, og `REPORTS_APP_ID` med `REPORTS_APP_PRIVATE_KEY` (GitHub-appen
+  for «Meld fra»). Tjenesten serverer bare offentlige data: varsel, målt vind, høydevind, hvor godt varselet traff,
+  flyaktivitet som summer per sted og dag, og piloter i lufta fra Open Glider Network (sporene deres de siste 10
+  minuttene bare i minnet). For å telle dagens flyturer tar den vare på, til neste dag, et tilfeldig salt, en hash
+  per enhet og hver pilots siste posisjon i lufta, og spør Kartverket om terrenghøyden der; ingenting som navngir en
+  enhet eller pilot, lagres lenger. Værarkivet er en privat bøtte i R2 (`hpgt-data-archive`), som bare tjenesten
+  skriver til; lesetilgang for rapporter er et eget R2-token med bare lesetilgang.
+- Den månedlige gjenopprettingsøvelsen og hentingen i «Gjenoppretting» bruker miljøet `backup-read`, med en B2-nøkkel
+  som bare kan lese backup-bøtta.
+- Kopien hos en annen leverandør (`backup.yml`) kjører i miljøet `backup`, som bare `main` kan bruke: et R2-token med
+  bare lesetilgang til arkivbøtta og en Backblaze-nøkkel bare for backup-bøtta, så en PR-gren ikke kan lese arkivet
+  eller skrive til kopien, og nøklene kan høyst lese målinger som er åpne data.
 
-## Verifying a publish
+## Verifisere en publisering
 
-Download the archive `github-pages` from a run of «Build and deploy» (Actions → the run → Artifacts), unzip it so
-you have `artifact.tar`, and run:
+Last ned arkivet `github-pages` fra en kjøring av «Bygg og publiser» (Actions → kjøringen → Artifacts), pakk det ut
+så du har `artifact.tar`, og kjør:
 
 ```bash
 gh attestation verify artifact.tar --repo hpgt-com/flying-sites
 gh attestation verify artifact.tar --repo hpgt-com/flying-sites --predicate-type https://spdx.dev/Document/v2.3
 ```
 
-The first checks the provenance, the second the SBOM. Both fail if the archive was not built by this repository's
-workflow. All attestations are listed under the repository's Actions → Attestations.
+Den første sjekker proveniensen, den andre SBOM-en. Begge feiler hvis arkivet ikke ble bygget av arbeidsflyten i
+dette repoet. Alle attestasjonene står under Actions → Attestations i repoet.
 
-`step-security/harden-runner` (blocks unexpected outbound traffic from the runner) is not used: it sends data about
-every run to StepSecurity. It is a choice for the owners if they want it.
+`step-security/harden-runner` (stopper uventet utgående trafikk fra runneren) brukes ikke: den sender data om hver
+kjøring til StepSecurity. Det er et valg for eierne om de vil ha den.
 
-## GitHub settings (done by someone with admin access)
+## Innstillinger i GitHub (gjøres av noen med admin-tilgang)
 
-These cannot live in the repository. Go through them whenever someone gains or loses access. Menu names are as in
-GitHub in autumn 2026.
+Disse kan ikke ligge i repoet. Gå gjennom dem hver gang noen får eller mister tilgang. Menynavnene er slik de var i
+GitHub høsten 2026.
 
-**The organisation** (hpgt-com → Settings)
+**Organisasjonen** (hpgt-com → Settings)
 - [ ] **Authentication security**: «Require two-factor authentication for everyone in the organization».
 - [ ] **Member privileges**: Base permissions = Read.
-- [ ] At least two owners, or a shared email the board has access to, so the club is never left without an admin.
+- [ ] Minst to eiere, eller en felles e-postadresse styret har tilgang til, så klubben aldri står uten admin.
 
-**The repository** (flying-sites → Settings)
-- [ ] **Rulesets → New branch ruleset**, name «main protection», Enforcement status = Active,
+**Repoet** (flying-sites → Settings)
+- [ ] **Rulesets → New branch ruleset**, navn «main protection», Enforcement status = Active,
   Target = Include default branch:
-  - Restrict deletions and Block force pushes.
-  - Require a pull request before merging, Required approvals = 0 as long as one person merges alone.
-  - Require status checks to pass: `build`, `dependency-review`, `workflow-security`, `accessibility` and `worker`
-    (the data service's dry run), with source GitHub Actions.
-    «Require branches to be up to date before merging» on (from 16.11.2026; OpenSSF Scorecard asks for it): a PR is
-    tested against the latest `main` before it is merged, so two PRs that are green on their own cannot break `main`
-    together. The price: when another PR has been merged in the meantime, press «Update branch» and wait for the checks
-    again. A check can only be selected once it has run recently.
+  - Restrict deletions og Block force pushes.
+  - Require a pull request before merging, Required approvals = 0 så lenge én person merger alene.
+  - Require status checks to pass: `build`, `dependency-review`, `workflow-security`, `accessibility` og `worker`
+    (prøvekjøringen av datatjenesten), med kilden GitHub Actions.
+    «Require branches to be up to date before merging» på (fra 16.11.2026; OpenSSF Scorecard ber om det): en PR
+    testes mot siste `main` før den merges, så to PR-er som er grønne hver for seg, ikke kan ødelegge `main` sammen.
+    Prisen: når en annen PR er merget i mellomtiden, trykk «Update branch» og vent på sjekkene på nytt. En sjekk kan
+    bare velges når den har kjørt nylig.
   - Require code scanning results: CodeQL, Security alerts = High or higher, Alerts = Errors
-    (once CodeQL has run on `main`).
-  - Bypass list: Repository admin, «For pull requests only». PRs from the airspace and obstacles workflows are
-    created with the GitHub App (see docs/operations.md) and get the checks like any other PR. Direct pushes to
-    `main` are blocked.
+    (når CodeQL har kjørt på `main`).
+  - Bypass list: Repository admin, «For pull requests only». PR-er fra arbeidsflytene for luftrom og hindringer
+    lages med GitHub-appen (se docs/operations.md) og får sjekkene som alle andre PR-er. Direkte push til `main` er
+    blokkert.
 - [ ] **Advanced Security**: Private vulnerability reporting, Dependency graph, Dependabot alerts,
-  Dependabot security updates, Secret scanning and Push protection on. Code scanning must be set to
-  Advanced (our `code-scanning.yml`), not Default setup.
+  Dependabot security updates, Secret scanning og Push protection på. Code scanning må stå på
+  Advanced (vår `code-scanning.yml`), ikke Default setup.
 - [ ] **Actions → General**, Workflow permissions: «Read repository contents and packages permissions»,
-  and «Allow GitHub Actions to create and approve pull requests» off (set for the whole organisation). The
-  workflows that open PRs use the GitHub App.
-- [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» on.
-- [ ] **Collaborators and teams** and **GitHub Apps**: as few people as possible with write and admin access.
+  og «Allow GitHub Actions to create and approve pull requests» av (satt for hele organisasjonen).
+  Arbeidsflytene som åpner PR-er, bruker GitHub-appen.
+- [ ] **Pages**: Source = GitHub Actions, «Enforce HTTPS» på.
+- [ ] **Collaborators and teams** og **GitHub Apps**: så få personer som mulig med skrive- og admin-tilgang.

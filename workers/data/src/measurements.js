@@ -1,8 +1,9 @@
-// The fields of a station measurement, the same for every source of measured weather (Holfuy now, more later), with the
-// unit as the archive's column name. Every measurement also has its source ("holfuy") and the station's number there, so
-// measurements from several providers fit one table without mixing up stations with the same number. A station without a sensor leaves the field null. Values a source sends that have no
-// field here are kept in `extra` (an object of numbers), so a new kind of sensor is not lost before it gets its own
-// field; a field added here gets its own column in the store (store.js adds missing columns) and the archive.
+// Feltene i en stasjonsmåling, de samme for alle kilder til målt vær (Holfuy nå, flere senere), med enheten i
+// kolonnenavnet i arkivet. Hver måling har også kilden ("holfuy") og stasjonens nummer der. Slik passer målinger fra
+// flere leverandører i én tabell uten at stasjoner med samme nummer blandes. En stasjon uten en sensor lar feltet være
+// null. Verdier en kilde sender som ikke har et felt her, beholdes i `extra` (et objekt med tall), så en ny type sensor
+// ikke går tapt før den får sitt eget felt. Et felt som legges til her, får sin egen kolonne i lageret (store.js legger
+// til kolonner som mangler) og i arkivet.
 export const FIELDS = [
   { key: "dir", csv: "direction_deg" },
   { key: "speed", csv: "speed_ms" },
@@ -14,7 +15,7 @@ export const FIELDS = [
   { key: "rain", csv: "rain_mm" },
 ];
 
-// At most this many extra values per measurement, with plain names, so an odd answer cannot fill the store.
+// Høyst så mange ekstra verdier per måling, med enkle navn, så et rart svar ikke kan fylle lageret.
 const MAX_EXTRA = 20;
 const EXTRA_KEY = /^[A-Za-z0-9_.]{1,40}$/;
 
@@ -23,8 +24,8 @@ export const num = (v) =>
     : typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)) ? Number(v)
       : null;
 
-// The numbers in an object that are not in `known`, one level deep ("battery", "wind.max"), as { name: number }.
-// null when there are none.
+// Tallene i et objekt som ikke er i `known`, ett nivå ned ("battery", "wind.max"), som { name: number }.
+// null når det ikke er noen.
 export function extraValues(object, known, prefix = "") {
   const out = {};
   let count = 0;

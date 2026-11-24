@@ -1,25 +1,25 @@
-// Home page: filters, map with wind roses, wind assessment from the forecast at the time chosen in the timeline, the
-// selected site and list. On mobile the map stays at the top of the screen and shrinks while the list scrolls.
+// Forsiden: filtre, kart med vindroser, vindvurdering fra prognosen for tidspunktet valgt på tidslinjen, det
+// valgte stedet og listen. På mobil blir kartet stående øverst på skjermen og krymper mens listen ruller.
 (function () {
   "use strict";
 
   var FS = window.FlyingSites;
-  // The logic without the DOM (home-logic.js): search, filters, summary, texts and the hash.
+  // Logikken uten DOM (home-logic.js): søk, filtre, oppsummering, tekster og hashen.
   var H = window.FlyingSitesHome;
   var sites = FS.readJson("sites-data") || [];
-  // directions: the wind directions chosen in the filter rose. A site matches when it suits one of them.
+  // directions: vindretningene valgt i filterrosen. Et sted treffer når det passer for én av dem.
   var filter = { directions: [], level: "", category: "", q: "" };
   var MOBILE = window.matchMedia("(max-width: 1099px)");
 
-  // --- Search by name and place (home-logic.js searchKey) ---
+  // --- Søk på navn og sted (home-logic.js searchKey) ---
   sites.forEach(function (site) {
     site.searchKeys = H.searchKeys(site);
     site.all = { primary: site.primary, possible: site.possible };
   });
 
-  // With a category selected, the launches for that category apply: SPG at Elgen only launches NE–SW, even though
-  // PG launches in all directions. site.primary/possible are swapped, so the direction filter, wind rose and
-  // wind assessment use the same directions. Without a category, or without its own launches, the whole site applies.
+  // Med en kategori valgt gjelder startstedene for den kategorien: SPG på Elgen starter bare NØ–SV, selv om
+  // PG starter i alle retninger. site.primary/possible byttes ut, så retningsfilteret, vindrosen og
+  // vindvurderingen bruker de samme retningene. Uten kategori, eller uten egne startsteder, gjelder hele stedet.
   function applyCategory() {
     sites.forEach(function (site) {
       var own = filter.category && site.byCategory && site.byCategory[filter.category];
@@ -30,15 +30,15 @@
   var selectedId = null;
   var markers = {};
 
-  // "match", "unknown", "nowind" or "no" for a site against the filters and the suggestion switch (home-logic.js matchSite).
+  // "match", "unknown", "nowind" eller "no" for et sted mot filtrene og forslagsbryteren (home-logic.js matchSite).
   var suggest = false;
   function matches(site, assessment, windAssessed, ignoreSuggest) {
     return H.matchSite(site, filter, { suggest: suggest, assessment: assessment, windAssessed: windAssessed, ignoreSuggest: ignoreSuggest });
   }
-  // Groups shown separately at the bottom of the list and slightly dimmed on the map.
+  // Grupper som vises for seg nederst i listen og litt dempet i kartet.
   var WEAK = { unknown: true, nowind: true };
 
-  // The site's launch directions as badges (a list of elements).
+  // Startretningene til stedet som merker (en liste med elementer).
   function directionBadges(site) {
     return FS.DIRECTIONS.filter(function (code) { return FS.directionType(site, code) !== "none"; })
       .map(function (code) {
@@ -47,7 +47,7 @@
       });
   }
 
-  // Level, categories and review state as tags (a list of elements).
+  // Nivå, kategorier og status for gjennomgang som merkelapper (en liste med elementer).
   function tags(site) {
     var tag = function (cls, text) { return FS.h("span", { class: cls }, text); };
     var list = [site.level ? tag("tag", site.level) : tag("tag tag--missing", FS.t("home.levelNotSet"))];
@@ -57,32 +57,32 @@
     return list;
   }
 
-  // --- Wind assessment from the MET forecast ---
-  // The logic is in wind.js. Here the time is chosen, and the result is shown in the map, list and card.
+  // --- Vindvurdering fra METs prognose ---
+  // Logikken ligger i wind.js. Her velges tidspunktet, og resultatet vises i kartet, listen og kortet.
   var W = window.FlyingSitesWind;
   var RATINGS = W.RATINGS;
   var fc = FS.readJson("forecast-data") || {};
   var rules = fc.rules;
   var forecast = fc.forecast || null;
   var forecastStatusEl = document.getElementById("forecast-status");
-  // If the forecast is too old (the scheduled build has stopped, or the page is saved in the browser),
-  // the wind assessment is turned off with an explanation. The age is rechecked before each assessment, when
-  // returning to the tab and every minute, so a tab left open for hours does not show stale assessments.
+  // Er prognosen for gammel (det planlagte bygget har stoppet, eller siden er lagret i nettleseren),
+  // slås vindvurderingen av med en forklaring. Alderen sjekkes på nytt før hver vurdering, når du
+  // kommer tilbake til fanen og hvert minutt, så en fane som står åpen i timevis, ikke viser gamle vurderinger.
   var stale = false;
-  // The chosen time as hours from now ("0", "1" … as far as the forecast goes), from the timeline. "off" without a
-  // forecast, or when it is too old.
+  // Det valgte tidspunktet som timer fra nå ("0", "1" … så langt prognosen rekker), fra tidslinjen. "off" uten
+  // prognose, eller når den er for gammel.
   var windSlot = forecast ? "0" : "off";
-  var windIndex = -1; // forecast index for the chosen time, set by assessAll()
+  var windIndex = -1; // prognoseindeks for det valgte tidspunktet, settes av assessAll()
   var dayShort = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "short", timeZone: "Europe/Oslo" });
-  // «nå», «kl. 17.00», «i morgen kl. 09.00» or «søn. kl. 13.00», for the forecast hour at index.
+  // «nå», «kl. 17.00», «i morgen kl. 09.00» eller «søn. kl. 13.00», for prognosetimen ved index.
   function whenLabel(index) {
     return windSlot === "0" ? FS.t("home.whenNow") : H.whenLabel(forecast, index, Date.now());
   }
-  // «i dag kl. 08:47», or «16.10 kl. 23:47» for another day.
+  // «i dag kl. 08:47», eller «16.10 kl. 23:47» for en annen dag.
   function whenText(iso) { return H.whenText(iso, Date.now()); }
   function fetchedText() { return whenText(forecast.fetched); }
 
-  // Returns true when the forecast has just become too old, so the caller can redraw the page.
+  // Gir true når prognosen akkurat har blitt for gammel, så den som kaller, kan tegne siden på nytt.
   function checkStale() {
     if (!forecast || stale || !W.isStale(forecast, rules, Date.now())) return false;
     stale = true;
@@ -94,10 +94,10 @@
     return true;
   }
 
-  // Text below the wind selector: when the forecast was fetched, and which time the assessment applies to.
+  // Tekst under vindvelgeren: når prognosen ble hentet, og hvilket tidspunkt vurderingen gjelder.
   function updateForecastStatus(index) {
     if (!forecast || stale) return;
-    // MET's own update time (the model run) when the forecast has it, as well as when it was fetched.
+    // METs egen oppdateringstid (modellkjøringen) når prognosen har den, i tillegg til når den ble hentet.
     var text = (Number.isFinite(Date.parse(forecast.updated))
       ? FS.t("wind.fetchedUpdated", { updated: whenText(forecast.updated), when: fetchedText() })
       : FS.t("wind.fetched", { when: fetchedText() })) + sunLine(index);
@@ -105,8 +105,8 @@
     else if (index < 0) forecastStatusEl.replaceChildren(FS.h("strong", null, FS.t("wind.notCovered")), " " + text);
     else forecastStatusEl.replaceChildren(FS.t("wind.showingWhen", { when: whenLabel(index) }) + (W.stepAt(forecast.times, index) > 3600000 ? " " + FS.t("home.coarse") : "") + " " + text);
   }
-  // Sunrise and sunset in the middle of the home region, for the day shown (today when wind is off). The difference
-  // between launches in the region is a few minutes.
+  // Soloppgang og solnedgang midt i hjemregionen, for dagen som vises (i dag når vind er av). Forskjellen
+  // mellom startstedene i regionen er noen få minutter.
   function sunLine(index) {
     if (!bounds.length) return "";
     var lat = 0, lon = 0;
@@ -115,12 +115,12 @@
     return " " + W.sunText(date, lat, lon);
   }
 
-  // --- Summary ---
-  // Wind in the area (most common direction, median mean wind, highest gust) and how many sites get
-  // each rating, with the most common reason. Explains why no sites suit on a windy day.
+  // --- Oppsummering ---
+  // Vinden i området (vanligste retning, median middelvind, høyeste kast) og hvor mange steder som får
+  // hver vurdering, med den vanligste grunnen. Forklarer hvorfor ingen steder passer en dag med mye vind.
   var summaryEl = document.getElementById("wind-summary");
-  // ids: the sites the summary covers (those matching the filters).
-  // The assessments of the sites in ids summed up (home-logic.js summarize), or null without any.
+  // ids: stedene oppsummeringen dekker (de som treffer filtrene).
+  // Vurderingene av stedene i ids summert (home-logic.js summarize), eller null uten noen.
   function summarize(assessments, ids) { return H.summarize(assessments, ids, sites.length); }
   function places(n) { return FS.tn("summary.places", n); }
   function maybeLabel(n) { return FS.tn("summary.maybe", n); }
@@ -144,11 +144,11 @@
       speed: Math.round(sum.minSpeed) === Math.round(sum.maxSpeed) ? Math.round(sum.speed) : Math.round(sum.minSpeed) + "–" + Math.round(sum.maxSpeed),
       gust: sum.gust != null ? FS.t("summary.gustUpTo", { g: Math.round(sum.gust) }) : "",
     });
-    // As in the prototype: wind line, colour bar with the distribution and count per rating with coloured dots.
-    // Details (gusts, the site's own limit, missing forecast) are in the line's tooltip.
+    // Som i prototypen: vindlinje, fargestolpe med fordelingen og antall per vurdering med fargede prikker.
+    // Detaljene (kast, stedets egen grense, manglende prognose) står i verktøytipset til linjen.
     var detail = places(sum.total) + (sum.filtered ? FS.t("summary.matchingFilters") : "") + ": " + parts.join(", ") + "." +
       (sum.missing ? " " + FS.t("summary.missingNotAssessed", { places: places(sum.missing) }) : "");
-    // [rating, count, text]. «Passer ikke» is split into wrong direction and rain, so the reason shows.
+    // [rating, count, text]. «Passer ikke» deles i feil retning og regn, så grunnen vises.
     var order = [["ok", c.ok, FS.t("summary.ok")], ["maybe", c.maybe, maybeLabel(c.maybe)], ["high", c.high, FS.t("summary.high")],
       ["no", c.no - sum.noByRain, FS.t("summary.wrongDirection")], ["no", sum.noByRain, FS.t("summary.rain")]];
     var bar = order.map(function (o) {
@@ -165,11 +165,11 @@
       FS.h("p", { class: "wind-summary__counts" }, chips),
       sum.missing ? p("wind-summary__missing", FS.t("summary.missing", { places: places(sum.missing) })) : null,
       c.ok + c.maybe === 0 ? p("wind-summary__none", FS.t("summary.noneCanWork") + " " + noneReason(sum) + (sum.next ? " " + sum.next : "")) : null));
-    // The parts' widths set on the elements, not as inline styles: the page allows none (CSP style-src 'self').
+    // Bredden på delene settes på elementene, ikke som innebygde stiler: siden tillater ingen (CSP style-src 'self').
     summaryEl.querySelectorAll(".wind-bar__part").forEach(function (el) { el.style.flexGrow = el.getAttribute("data-grow"); });
   }
-  // The pill on the map: how many sites may work at the chosen time, with the best rating found, and the most common
-  // direction («✓ 3 kan passe · mest NV»). The details open below it. Without wind, how many sites are shown.
+  // Pillen på kartet: hvor mange steder som kan passe på det valgte tidspunktet, med den beste vurderingen, og den
+  // vanligste retningen («✓ 3 kan passe · mest NV»). Detaljene åpnes under. Uten vind: hvor mange steder som vises.
   var statusEl = document.getElementById("map-status");
   var statusTextEl = document.getElementById("map-count");
   var statusSubEl = document.getElementById("map-status-sub");
@@ -189,7 +189,7 @@
     statusIconEl.textContent = rating ? ICONS[rating] : "";
     statusIconEl.hidden = !rating;
     statusTextEl.textContent = text;
-    // Short on mobile («mest NV»), the wind as well on desktop («Mest V 2–8 m/s, kast 14»).
+    // Kort på mobil («mest NV»), med vinden også på PC («Mest V 2–8 m/s, kast 14»).
     statusSubEl.textContent = !sum ? "" : MOBILE.matches ? " · " + FS.t("home.statusMostly", { dir: FS.DIRECTION_LABELS[sum.dir] })
       : FS.t("home.statusWind", {
         dir: FS.DIRECTION_LABELS[sum.dir],
@@ -213,12 +213,12 @@
     document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !infoEl.hidden) { setInfoOpen(false); statusEl.focus(); } });
   }
 
-  // The main reason no sites suit, in one sentence.
+  // Hovedgrunnen til at ingen steder passer, i én setning.
   function noneReason(sum) { return H.noneReason(sum, rules); }
   function windText(wind) { return H.windText(wind, rules, FS.DIRECTION_LABELS); }
 
-  // The fresh measurement from a site's weather station (stations.js), or null. stationData is the latest answer from the
-  // data service, set by addStations below.
+  // Den ferske målingen fra værstasjonen på et sted (stations.js), eller null. stationData er siste svar fra
+  // datatjenesten, satt av addStations nedenfor.
   var stationData = null;
   function stationMeasurement(siteId, now) {
     var ST = window.FlyingSitesStations;
@@ -227,8 +227,8 @@
     return item ? ST.measurement(item, now) : null;
   }
 
-  // Assessment for all sites at the chosen time: { id: { wind, rating, reasons } }, or null when wind is off
-  // or the forecast does not cover the time. Sites without a forecast (fetch failed) are missing from the result.
+  // Vurdering for alle steder på det valgte tidspunktet: { id: { wind, rating, reasons } }, eller null når vind er av
+  // eller prognosen ikke dekker tidspunktet. Steder uten prognose (hentingen feilet) mangler i resultatet.
   function assessAll() {
     checkStale();
     if (!forecast || stale) return null;
@@ -241,8 +241,8 @@
     sites.forEach(function (site) {
       var wind = W.windAt(forecast, site.id, index);
       if (!wind) return;
-      // «Nå» for a site with a weather station: the fresh measurement counts as on the site page (wind.js rateNow), and the
-      // wind shown is then the measured one, marked «målt».
+      // «Nå» for et sted med værstasjon: den ferske målingen teller som på stedssiden (wind.js rateNow), og vinden
+      // som vises, er da den målte, merket «målt».
       var m = windSlot === "0" ? stationMeasurement(site.id, now) : null;
       var assessed = W.rateNow(site, wind, m && m.wind, rules, m && m.steady);
       var rating = assessed.result;
@@ -252,34 +252,34 @@
     return result;
   }
 
-  // --- Map ---
+  // --- Kart ---
   var mapEl = document.getElementById("home-map");
   var map = FS.createMap(mapEl, { warmZoomOut: true });
   FS.addAirspaceLayers(map, mapEl.getAttribute("data-airspace-url"));
   FS.addObstacleLayer(map, mapEl.getAttribute("data-obstacles-url"));
   FS.addRadarLayer(map);
   addStations();
-  // On desktop the map fills its column and nothing scrolls, so the wheel zooms. Elsewhere the wheel scrolls the page,
-  // and Ctrl/Cmd + wheel zooms (common.js).
+  // På PC fyller kartet kolonnen sin og ingenting ruller, så hjulet zoomer. Ellers ruller hjulet siden,
+  // og Ctrl/Cmd + hjul zoomer (common.js).
   FS.wheelNeedsCtrl(map, function () { return MOBILE.matches; });
-  // The attribution goes below the map, on one line, so it does not cover the small map on mobile or the timeline.
+  // Krediteringen ligger under kartet, på én linje, så den ikke dekker det lille kartet på mobil eller tidslinjen.
   var attributionEl = map.attributionControl.getContainer();
   attributionEl.classList.add("map-attribution");
   document.getElementById("home-map-wrap").appendChild(attributionEl);
-  // The map opens over the launches in the home region (site.homeRegion), not over all sites, so a distant
-  // site does not zoom the map out. Sites outside are in the list and search.
+  // Kartet åpner over startstedene i hjemregionen (site.homeRegion), ikke over alle steder, så et sted langt
+  // unna ikke zoomer kartet ut. Steder utenfor er i listen og søket.
   var homeRegion = mapEl.getAttribute("data-home-region");
   var bounds = [];
 
-  // The arrow is on the side the wind comes from and points in towards the launch, like wind blowing into the rose.
-  // Dimming and selection are in className, so they survive when the marker is taken out of and back into a cluster.
-  // match: "match", "unknown" (level not set), "nowind" (missing forecast) or "no", see matches().
-  // The rose in the marker (46 px with ring, so it is easy to see): the same rose as on the card and site page. With wind
-  // on, the sector the wind comes from is filled with the rating colour out to the ring (roseSvg in common.js).
+  // Pilen står på siden vinden kommer fra og peker inn mot startstedet, som vind som blåser inn i rosen.
+  // Demping og valg ligger i className, så de overlever når markøren tas ut av og inn i en klynge igjen.
+  // match: "match", "unknown" (nivå ikke satt), "nowind" (mangler prognose) eller "no", se matches().
+  // Rosen i markøren (46 px med ring, så den er lett å se): den samme rosen som på kortet og stedssiden. Med vind
+  // på fylles sektoren vinden kommer fra, med vurderingsfargen ut til ringen (roseSvg i common.js).
   function markerRose(site, assessment) {
     return FS.roseSvg(site, 40, false, assessment ? { code: W.directionCode(assessment.wind.dir), rating: assessment.rating, edge: true } : null);
   }
-  // Mean wind and gust below the name, «5 (8) m/s», when zoomed in far enough for names to show. The direction is in the rose.
+  // Middelvind og kast under navnet, «5 (8) m/s», når det er zoomet nok inn til at navnene vises. Retningen er i rosen.
   function markerWind(assessment) {
     if (!assessment) return null;
     var w = assessment.wind;
@@ -299,10 +299,10 @@
     });
   }
 
-  // Launches that overlap on the map are merged into a cluster with a count.
-  // The count is of sites matching the filter, or sites without a level when none match fully.
-  // With wind on, the ring gets the colour of the best rating among those counted.
-  var markerState = {}; // id: { match, rating, selected }, updated in update()
+  // Startsteder som overlapper i kartet, slås sammen til en klynge med et antall.
+  // Antallet er steder som treffer filteret, eller steder uten nivå når ingen treffer helt.
+  // Med vind på får ringen fargen til den beste vurderingen blant dem som telles.
+  var markerState = {}; // id: { match, rating, selected }, oppdateres i update()
   function clusterIcon(cluster) {
     var children = cluster.getAllChildMarkers();
     var counts = { match: 0, unknown: 0, no: 0 }, best = { match: null, unknown: null }, selected = false;
@@ -326,15 +326,15 @@
     });
   }
   var cluster = L.markerClusterGroup({
-    // At least the size of a site marker (46 px), so a marker and a cluster never overlap without being merged (which
-    // left a cluster with only a sliver to tap).
+    // Minst like stor som en stedsmarkør (46 px), så en markør og en klynge aldri overlapper uten å slås sammen (det
+    // ga en klynge med bare en stripe å trykke på).
     maxClusterRadius: 48,
     showCoverageOnHover: false,
     spiderfyDistanceMultiplier: 1.6,
     iconCreateFunction: clusterIcon,
   }).addTo(map);
-  // «Flysteder» as a layer, so the map can show only the weather. What belongs to the sites (the status, the line about
-  // the selected site, the timeline, the card) is hidden with it.
+  // «Flysteder» som et lag, så kartet kan vise bare været. Det som hører til stedene (statusen, linjen om
+  // det valgte stedet, tidslinjen, kortet), skjules sammen med det.
   map.layersControl.addOverlay(cluster, FS.layerLabel(map, "sites", FS.t("map.layerSites")));
   var homeMapEl = mapEl.closest(".home__map");
   map.on("overlayadd overlayremove", function (ev) {
@@ -349,9 +349,9 @@
     markers[site.id] = marker;
     if (site.region === homeRegion) bounds.push([site.lat, site.lon]);
   });
-  // Without sites in the home region the map covers all sites.
+  // Uten steder i hjemregionen dekker kartet alle steder.
   if (!bounds.length) sites.forEach(function (site) { bounds.push([site.lat, site.lon]); });
-  // Site names below the roses when zoomed in close.
+  // Stedsnavn under rosene når det er zoomet tett inn.
   var NAMES_ZOOM = 11;
   function toggleNames() { mapEl.classList.toggle("map--names", map.getZoom() >= NAMES_ZOOM); }
   map.on("zoomend", toggleNames);
@@ -360,11 +360,11 @@
     if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], animate: false });
   }
 
-  // --- Back from a site page: the same view as before ---
-  // The map's position and zoom, and the state in the URL (filters, time, search, selected site), are kept for the
-  // session (sessionStorage) and used again when the visitor comes back from a site page («‹ Alle flysteder», or the
-  // back button when the browser did not keep the page): the map and the list are then as they were left, not the
-  // home region. A fresh visit, or one from anywhere else, starts as before.
+  // --- Tilbake fra en stedsside: samme visning som før ---
+  // Posisjonen og zoomen i kartet, og tilstanden i adressen (filtre, tid, søk, valgt sted), tas vare på for
+  // økten (sessionStorage) og brukes igjen når besøkeren kommer tilbake fra en stedsside («‹ Alle flysteder», eller
+  // tilbakeknappen når nettleseren ikke beholdt siden): kartet og listen er da som de ble forlatt, ikke
+  // hjemregionen. Et nytt besøk, eller et fra et annet sted, starter som før.
   var VIEW_KEY = "fs-home-view";
   function saveView() {
     try {
@@ -391,15 +391,15 @@
     if (restoredView) map.setView([restoredView.lat, restoredView.lng], restoredView.zoom, { animate: false });
     else fitAllSites();
   });
-  // «Vis flysteder i Harstad og Kvæfjord» and full screen below the zoom buttons, as on the site page.
+  // «Vis flysteder i Harstad og Kvæfjord» og fullskjerm under zoomknappene, som på stedssiden.
   FS.addViewControls(map, mapEl, fitAllSites, FS.t("home.showSitesIn", { region: homeRegion }));
-  // «Piloter i lufta» (live.js) and «Prognose» (forecast-layer.js): off until turned on in the layer list, and their
-  // scripts are fetched only then (FS.lazyOverlays). The forecast layers follow the time in the timeline (update()).
+  // «Piloter i lufta» (live.js) og «Prognose» (forecast-layer.js): av til de slås på i lagvelgeren, og skriptene
+  // deres hentes først da (FS.lazyOverlays). Prognoselagene følger tidspunktet på tidslinjen (update()).
   FS.lazyOverlays(map, mapEl.getAttribute("data-live-script"), [{ key: "live", label: FS.t("live.layer"), attribution: FS.t("live.credit") }], function (layers) {
     window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"), layers.live);
   });
   var forecastLayers = null;
-  // The five layers, as LAYERS in forecast-layer.js, with their names in the layer list.
+  // De fem lagene, som LAYERS i forecast-layer.js, med navnene sine i lagvelgeren.
   var FORECAST_LAYERS = {
     thermal: FS.t("forecast.layer_thermal"), top: FS.t("forecast.layer_top"), wind: FS.t("forecast.layer_wind"),
     temp: FS.t("forecast.layer_temp"), cloud: FS.t("forecast.layer_cloud"),
@@ -413,9 +413,9 @@
     if (forecastLayers) forecastLayers.setTime(forecastTime());
   });
 
-  // --- Card for the selected site ---
+  // --- Kort for det valgte stedet ---
   var cardEl = document.getElementById("selected");
-  // The empty state is built with DOM methods (not innerHTML from the page itself), so no text is parsed as HTML.
+  // Den tomme tilstanden bygges med DOM-metoder (ikke innerHTML fra siden selv), så ingen tekst tolkes som HTML.
   var EMPTY_CARD_TEXT = FS.t("home.emptyCard");
   function resetCard() {
     var p = document.createElement("p");
@@ -456,7 +456,7 @@
     cardEl.classList.add("selected--active");
     showNote(site, assessment);
   }
-  // Mobile: one line on the map about the selected site, with a link to the site page. The card is for desktop (CSS).
+  // Mobil: én linje på kartet om det valgte stedet, med en lenke til stedssiden. Kortet er for PC (CSS).
   var noteEl = document.getElementById("map-note");
   function showNote(site, assessment) {
     if (!noteEl) return;
@@ -466,37 +466,37 @@
     noteEl.hidden = false;
   }
 
-  // origin: "map" (a rose in the map), "list" (the list) or "pick" (search hits, the day plan).
+  // origin: "map" (en rose i kartet), "list" (listen) eller "pick" (søketreff, dagsplanen).
   function select(id, origin) {
     var site = sites.find(function (s) { return s.id === id; });
     if (!site) return;
     var mobile = MOBILE.matches;
-    // In full screen the list is behind the map: the site is shown in the line on the map (with the link to its page), and
-    // the page behind is left as it is.
+    // I fullskjerm ligger listen bak kartet: stedet vises i linjen på kartet (med lenken til siden), og
+    // siden bak blir som den er.
     var fullscreen = mapEl.classList.contains("map--fullscreen");
-    // A second tap on the selected site opens the site page: in the map (also in full screen), and in the list on mobile.
-    // The first tap shows it in the map and the list.
+    // Et nytt trykk på det valgte stedet åpner stedssiden: i kartet (også i fullskjerm), og i listen på mobil.
+    // Det første trykket viser det i kartet og listen.
     if (id === selectedId && (origin === "map" || (origin === "list" && mobile))) {
       FS.track(origin + "/open/" + id);
-      // The link is in the page from the build (index.njk), so the address never comes from the script.
+      // Lenken ligger i siden fra bygget (index.njk), så adressen kommer aldri fra skriptet.
       var link = listEl.querySelector('[data-id="' + id + '"] .results__open');
       if (link) link.click();
       return;
     }
     selectedId = id;
-    // A rose tapped in the map shows the site in the list, also when it is further down than the first few.
+    // En rose trykket i kartet viser stedet i listen, også når det ligger lenger ned enn de første.
     if (origin === "map" && mobile && !fullscreen) listExpanded = true;
     update();
     writeHash();
     if (origin !== "map") {
-      // If the site is in a cluster, zoom in until the marker shows.
+      // Er stedet i en klynge, zoomes det inn til markøren vises.
       cluster.zoomToShowLayer(markers[id], function () { map.panTo([site.lat, site.lon]); });
     }
     if (origin === "map" && mobile && !fullscreen) scrollToItem(id);
   }
-  // Mobile: scrolls the list so the site sits right below the map and the search bar, which stay at the top. The position
-  // is measured before the map is made small: the small map keeps its old height as margin below, so the list does not
-  // move, but the height is animated and would be measured halfway. --map-h follows the class at once.
+  // Mobil: ruller listen så stedet står rett under kartet og søkefeltet, som blir stående øverst. Posisjonen
+  // måles før kartet gjøres lite: det lille kartet beholder den gamle høyden som marg under, så listen ikke
+  // flytter seg, men høyden animeres og ville blitt målt halvveis. --map-h følger klassen med en gang.
   function scrollToItem(id) {
     var li = listEl.querySelector('[data-id="' + id + '"]');
     if (!li || li.hidden || !homeEl) return;
@@ -509,7 +509,7 @@
   }
   var REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  // --- Filters and list ---
+  // --- Filtre og liste ---
   var listEl = document.getElementById("results-list");
   var titleEl = document.getElementById("results-title");
   var noResultsEl = document.getElementById("no-results");
@@ -522,13 +522,13 @@
     listExpanded = true;
     FS.track("list/show-all");
     update();
-    // Focus on the first site that was hidden, so keyboard and screen reader users continue there.
+    // Fokus på det første stedet som var skjult, så tastatur- og skjermleserbrukere fortsetter der.
     var next = listEl.querySelectorAll("li[data-id]:not([hidden]) button")[LIST_LIMIT];
     if (next) next.focus();
   });
   var originalOrder = Array.prototype.slice.call(listEl.children);
 
-  // List headings for sites without a forecast (suggestions on) and without a level (level filter on).
+  // Overskrifter i listen for steder uten prognose (forslag på) og uten nivå (nivåfilter på).
   var GROUP_ORDER = { match: 0, nowind: 1, unknown: 2 };
   var headingEls = {};
   ["nowind", "unknown"].forEach(function (g) {
@@ -544,9 +544,9 @@
       FS.h("p", { class: "muted" }, nowind ? FS.t("home.groupNoWindText") : FS.t("home.groupNoLevelText", { level: filter.level })));
   }
 
-  // --- Fly windows per site ---
-  // dayWindows (wind.js) per site, for the strip in the list and «neste vindu». Cached per forecast object, since
-  // update() runs on every move of the timeline and the windows change only with the forecast.
+  // --- Flyvinduer per sted ---
+  // dayWindows (wind.js) per sted, for stripen i listen og «neste vindu». Lagres per prognoseobjekt, siden
+  // update() kjører ved hver flytting på tidslinjen og vinduene bare endres med prognosen.
   var windowsCache = { forecast: null, bySite: {} };
   function siteWindows(site) {
     if (windowsCache.forecast !== forecast) windowsCache = { forecast: forecast, bySite: {} };
@@ -555,10 +555,10 @@
     return w;
   }
   var stripDate = H.stripDate, windowText = H.windowText;
-  // A strip under the rating in a site's row: the day's 24 hours, coloured where the site can work (green) or is
-  // unsure (yellow) in daylight, with a mark at the hour chosen in the timeline when it is that day. So the list shows
-  // when a site works, not only whether it does at the chosen time. Built with DOM methods; the colours are set on
-  // the element (no inline styles in the HTML).
+  // En stripe under vurderingen i raden til et sted: dagens 24 timer, farget der stedet kan passe (grønt) eller er
+  // usikkert (gult) i dagslys, med et merke ved timen valgt på tidslinjen når det er den dagen. Slik viser listen
+  // når et sted passer, ikke bare om det passer på det valgte tidspunktet. Bygget med DOM-metoder; fargene settes på
+  // elementet (ingen innebygde stiler i HTML-en).
   function renderWindowStrip(li, site, windOn) {
     var el = li.querySelector(".results__windows");
     if (!windOn || !forecast.sites[site.id]) { if (el) el.remove(); return; }
@@ -569,7 +569,7 @@
       el.appendChild(domEl("span", "results__windows-text"));
       var bar = el.appendChild(domEl("span", "results__windows-bar"));
       bar.setAttribute("aria-hidden", "true");
-      // Marks at 06, 12 and 18, so the hours can be read off the bar.
+      // Merker ved 06, 12 og 18, så timene kan leses av stolpen.
       [6, 12, 18].forEach(function (h) { var tick = bar.appendChild(domEl("span", "results__windows-tick")); tick.style.left = (h / 24 * 100) + "%"; });
       bar.appendChild(domEl("span", "results__windows-at"));
       li.querySelector(".results__body").appendChild(el);
@@ -583,25 +583,25 @@
     stops.push("transparent 100%");
     var barEl2 = el.querySelector(".results__windows-bar");
     barEl2.style.backgroundImage = "linear-gradient(90deg, " + stops.join(", ") + ")";
-    // The chosen hour, when the timeline stands on this day.
+    // Den valgte timen, når tidslinjen står på denne dagen.
     var at = el.querySelector(".results__windows-at");
     var chosen = windIndex >= 0 ? W.osloParts(Date.parse(forecast.times[windIndex])) : null;
     at.hidden = !(chosen && chosen.date === date);
     if (!at.hidden) at.style.left = (chosen.hour / 24 * 100).toFixed(1) + "%";
-    // «I morgen: 08–13 kan passe, 16–17 usikkert», the same for the screen reader and the mouse.
+    // «I morgen: 08–13 kan passe, 16–17 usikkert», det samme for skjermleseren og musen.
     var dayWord = date === today ? FS.t("home.windowsToday") : FS.t("home.windowsTomorrow");
     var text = windows.length ? FS.t("home.windows", { day: dayWord, list: windows.map(windowText).join(", ") }) : FS.t("home.noWindows", { day: dayWord });
     el.querySelector(".results__windows-text").textContent = text;
     el.title = text;
   }
-  // The next window among the sites after the chosen time, as one sentence («Neste vindu: Dale lørdag kl. 08, kan passe»),
-  // or that the forecast has none (home-logic.js nextWindow).
+  // Det neste vinduet blant stedene etter det valgte tidspunktet, i én setning («Neste vindu: Dale lørdag kl. 08, kan passe»),
+  // eller at prognosen ikke har noe (home-logic.js nextWindow).
   function nextWindowText(ids, at) {
     var list = sites.filter(function (s) { return ids.indexOf(s.id) !== -1 && forecast.sites[s.id]; });
     return H.nextWindowText(H.nextWindow(list, at, siteWindows), Date.now());
   }
 
-  // The time the forecast layers show: the hour chosen in the timeline, or now when the wind assessment is off.
+  // Tidspunktet prognoselagene viser: timen valgt på tidslinjen, eller nå når vindvurderingen er av.
   function forecastTime() {
     return windIndex >= 0 && windSlot !== "off" && forecast && !stale ? Date.parse(forecast.times[windIndex]) : Date.now();
   }
@@ -631,8 +631,8 @@
         var button = li.querySelector("button");
         button.classList.toggle("results__item--selected", site.id === selectedId);
         li.querySelector(".directions").replaceChildren(FS.frag(directionBadges(site)));
-        // The same rose as in the map: the wind sector in the rating colour, and the ring. The rating is looked up in a
-        // fixed list, so only known class names reach the class attribute.
+        // Den samme rosen som i kartet: vindsektoren i vurderingsfargen, og ringen. Vurderingen slås opp i en
+        // fast liste, så bare kjente klassenavn havner i class-attributtet.
         var ringRating = assessment ? RATING_KEYS[assessment.rating] : null;
         var windCode = assessment ? DIRECTION_KEYS[W.directionCode(assessment.wind.dir)] : null;
         li.querySelector(".results__rose").replaceChildren(FS.h("span", { class: "results__ring" + (ringRating ? " results__ring--" + ringRating : "") },
@@ -644,7 +644,7 @@
           button.querySelector(".results__body").insertBefore(windEl, button.querySelector(".results__open"));
         }
         windEl.hidden = !assessment && !(assessments && windOn);
-        // The rating as a chip with a symbol, so it does not rest on colour alone, then the wind.
+        // Vurderingen som en brikke med et symbol, så den ikke hviler på farge alene, og så vinden.
         if (assessment) {
           windEl.replaceChildren(FS.h("span", { class: "rating-chip rating-chip--" + assessment.rating },
             FS.h("span", { "aria-hidden": "true" }, ICONS[assessment.rating]), RATINGS[assessment.rating].label), windText(assessment.wind));
@@ -656,8 +656,8 @@
 
     cluster.refreshClusters();
 
-    // Sites without a forecast and without a level come last. With wind on, each group is sorted by rating,
-    // otherwise alphabetically as from the build.
+    // Steder uten prognose og uten nivå kommer sist. Med vind på sorteres hver gruppe etter vurdering,
+    // ellers alfabetisk som fra bygget.
     var items = originalOrder.slice();
     var group = function (li) { return GROUP_ORDER[matchById[li.getAttribute("data-id")]] || 0; };
     items.sort(function (a, b) {
@@ -678,8 +678,8 @@
       if (headingEls[g] && !placed[g]) { listEl.appendChild(headingEls[g]); placed[g] = true; }
       listEl.appendChild(li);
     });
-    // Without filters or search, the first LIST_LIMIT sites are shown (the best rated first) and «Vis alle 32» shows the
-    // rest, so the list does not push everything else far down. The rest are always in the map.
+    // Uten filtre eller søk vises de første LIST_LIMIT stedene (de best vurderte først), og «Vis alle 32» viser
+    // resten, så listen ikke skyver alt annet langt ned. Resten er alltid i kartet.
     var filtered = filter.directions.length || filter.level || filter.category || filter.q || (suggest && assessments);
     var limited = !filtered && !listExpanded;
     var visible = items.filter(function (li) { return !li.hidden; });
@@ -701,17 +701,17 @@
       ? FS.t("home.showingAll", { n: sites.length })
       : FS.t("home.showingSome", { shown: shown, n: sites.length });
     noResultsEl.hidden = counts.match + counts.unknown + counts.nowind !== 0;
-    // The summary follows direction, level, category and search, but not «Bare steder som kan passe», which would
-    // otherwise hide what the summary explains.
+    // Oppsummeringen følger retning, nivå, kategori og søk, men ikke «Bare steder som kan passe», som ellers
+    // ville skjult det oppsummeringen forklarer.
     var scope = assessments ? sites.filter(function (s) { return matches(s, assessments[s.id], true, true) !== "no"; })
       .map(function (s) { return s.id; }) : [];
     var sum = assessments ? summarize(assessments, scope) : null;
-    // When none suit at the chosen time: when the next window is, so the answer is «when», not only «not now».
+    // Når ingen passer på det valgte tidspunktet: når det neste vinduet er, så svaret er «når», ikke bare «ikke nå».
     if (sum && sum.counts.ok + sum.counts.maybe === 0) sum.next = nextWindowText(scope, Date.parse(forecast.times[windIndex]));
     renderSummary(sum);
     renderStatus(sum, shownText);
     renderTimeline(scope.length ? scope : sites.filter(function (s) { return matches(s, null, false, true) !== "no"; }).map(function (s) { return s.id; }));
-    // Empty result with suggestions on: say why, not just that none suit.
+    // Tomt resultat med forslag på: si hvorfor, ikke bare at ingen passer.
     noResultsEl.textContent = suggest && sum && sum.counts.ok + sum.counts.maybe === 0
       ? FS.t("home.noneSuggest", { reason: noneReason(sum) + (sum.next ? " " + sum.next : "") })
       : filter.q && !sites.some(function (s) { return H.nameMatches(s, filter.q); })
@@ -722,9 +722,9 @@
     updateFiltersToggle(shown);
   }
 
-  // The «Filter» button: how many filters are chosen, as a count. It opens direction, level, category and «Bare steder
-  // som kan passe» as a panel from the bottom of the screen (mobile) or folded out below (desktop). «Vis 12 flysteder»,
-  // the backdrop and Esc close it again.
+  // «Filter»-knappen: hvor mange filtre som er valgt, som et antall. Den åpner retning, nivå, kategori og «Bare steder
+  // som kan passe» som et panel fra bunnen av skjermen (mobil) eller brettet ut under (PC). «Vis 12 flysteder»,
+  // bakgrunnen og Esc lukker det igjen.
   var filtersToggle = document.getElementById("filters-toggle");
   var filtersMore = document.getElementById("filters-more");
   var filtersDone = document.getElementById("filters-done");
@@ -749,8 +749,8 @@
         : FS.t("home.allDirections");
     }
   }
-  // The chosen filters as chips under the search: one per direction, level, category and «Kan passe», each removed with ✕.
-  // Built with DOM calls, so no text is read as markup.
+  // De valgte filtrene som brikker under søket: én per retning, nivå, kategori og «Kan passe», hver fjernes med ✕.
+  // Bygget med DOM-kall, så ingen tekst leses som markup.
   var SVG_NS = "http://www.w3.org/2000/svg";
   function chip(label, remove) {
     var button = document.createElement("button");
@@ -770,7 +770,7 @@
       remove();
       update();
       writeHash();
-      // The chips are drawn again: focus goes to the one in the same place, or back to the search when none are left.
+      // Brikkene tegnes på nytt: fokus går til den på samme plass, eller tilbake til søket når ingen er igjen.
       var left = chipsEl.children;
       (left.length ? left[Math.min(index, left.length - 1)] : searchEl).focus();
     });
@@ -797,8 +797,8 @@
     writeHash();
   }
 
-  // On mobile the panel is a modal dialog: role and aria-modal while it is open, and Tab moves only between its buttons.
-  // On desktop it folds out under the search bar and the page stays usable.
+  // På mobil er panelet en modal dialog: role og aria-modal mens det er åpent, og Tab flytter bare mellom knappene.
+  // På PC brettes det ut under søkefeltet, og siden kan fortsatt brukes.
   function isSheet() { return !DESKTOP.matches; }
   function setFiltersOpen(open) {
     filtersToggle.setAttribute("aria-expanded", String(open));
@@ -832,14 +832,14 @@
     });
   }
 
-  // The search field filters while typing, together with the other filters. The map zooms to the hits
-  // (slightly delayed, so it does not jump on every letter). Enter with one hit selects the site, Esc clears.
+  // Søkefeltet filtrerer mens du skriver, sammen med de andre filtrene. Kartet zoomer til treffene
+  // (litt forsinket, så det ikke hopper for hver bokstav). Enter med ett treff velger stedet, Esc tømmer.
   var searchEl = document.getElementById("site-search");
   var searchHitsEl = document.getElementById("search-hits");
   var searchTimer = null;
   var missTimer = null;
   var MAX_HITS = 6;
-  // Up to MAX_HITS hits as buttons below the field. More hits: just the count, they are in the list.
+  // Opptil MAX_HITS treff som knapper under feltet. Flere treff: bare antallet, de er i listen.
   function renderSearchHits() {
     if (!searchHitsEl) return;
     var hits = filter.q.trim() ? visibleMatches() : [];
@@ -869,9 +869,9 @@
       writeHash();
       clearTimeout(searchTimer);
       searchTimer = setTimeout(fitToMatches, 350);
-      // Searches without hits are counted once typing stops, but only as a number: the search text is never sent.
-      // People type all sorts of things into a search box (names, addresses), and a cookie-free counter is still
-      // a third party.
+      // Søk uten treff telles når du slutter å skrive, men bare som et tall: søketeksten sendes aldri.
+      // Folk skriver alt mulig i et søkefelt (navn, adresser), og en teller uten informasjonskapsler er fortsatt
+      // en tredjepart.
       clearTimeout(missTimer);
       missTimer = setTimeout(function () {
         if (filter.q.trim().length >= 3 && !visibleMatches().length) FS.track("search/no-hits");
@@ -897,10 +897,10 @@
     });
   }
 
-  // --- Day plan («Når kan det passe?») ---
-  // For today and the next days in the forecast: the sites matching the filters (direction, level, category, search), with
-  // the daylight periods where the assessment is «Kan passe» or «Usikkert» (dayWindows in wind.js). Sites with
-  // the most suitable hours come first. Built with DOM methods, so nothing from the data is parsed as HTML.
+  // --- Dagsplan («Når kan det passe?») ---
+  // For i dag og de neste dagene i prognosen: stedene som treffer filtrene (retning, nivå, kategori, søk), med
+  // periodene i dagslys der vurderingen er «Kan passe» eller «Usikkert» (dayWindows i wind.js). Steder med
+  // flest timer som passer, kommer først. Bygget med DOM-metoder, så ingenting fra dataene tolkes som HTML.
   var dayPlanEl = document.getElementById("day-plan");
   var dayPlanDaysEl = document.getElementById("day-plan-days");
   var DAY_PLAN_DAYS = 3, DAY_PLAN_SHOWN = 6;
@@ -914,7 +914,7 @@
   var hourLabel = H.hourLabel;
   function windowChip(w) {
     var end = W.osloParts(w.end).hour === 0 ? "24" : hourLabel(w.end);
-    // «10–18 SV 3–5 (7)»: the period, most common direction, mean wind from–to and highest gust.
+    // «10–18 SV 3–5 (7)»: perioden, vanligste retning, middelvind fra–til og høyeste kast.
     var chip = domEl("span", "day-plan__time day-plan__time--" + w.rating);
     chip.appendChild(domEl("strong", "", hourLabel(w.start) + "–" + end));
     var speed = w.min === w.max ? String(w.min) : w.min + "–" + w.max;
@@ -955,7 +955,7 @@
       var day = dayPlanDaysEl.appendChild(domEl("div", "day-plan__day"));
       var label = date === today ? FS.t("dayPlan.today") : date === tomorrow ? FS.t("dayPlan.tomorrow") : dayFormat.format(Date.parse(date + "T12:00:00Z"));
       day.appendChild(domEl("h3", "day-plan__date", label.charAt(0).toUpperCase() + label.slice(1)));
-      // The forecast ends mid-day: say so, so «07–10» does not look like it only suits until 10.
+      // Prognosen slutter midt på dagen: si det, så «07–10» ikke ser ut som om det bare passer til 10.
       var lastTime = Date.parse(forecast.times[forecast.times.length - 1]) + W.stepAt(forecast.times, forecast.times.length - 1);
       if (W.osloParts(lastTime - 1).date === date && W.osloParts(lastTime).hour < 20) {
         day.appendChild(domEl("p", "muted day-plan__partial", FS.t("dayPlan.partial", { time: hourLabel(lastTime) })));
@@ -987,8 +987,8 @@
     });
   }
 
-  // Sets a filter and highlights the right button. Unknown values (e.g. from an old link) give «Alle». Direction toggles:
-  // a sector turns that direction on or off, and «Alle» clears them. Several directions can be on at once.
+  // Setter et filter og markerer riktig knapp. Ukjente verdier (f.eks. fra en gammel lenke) gir «Alle». Retning veksler:
+  // en sektor slår den retningen av eller på, og «Alle» tømmer dem. Flere retninger kan være på samtidig.
   function setFilter(type, value) {
     var buttons = document.querySelectorAll('button[data-filter="' + type + '"]');
     var known = function (v) { return Array.prototype.some.call(buttons, function (b) { return b.getAttribute("data-value") === v; }); };
@@ -1010,9 +1010,9 @@
     });
   }
 
-  // The time as hours from now. Old links can have «tomorrow» (12:00 tomorrow) or «off», which give the nearest valid time.
-  // Further ahead the forecast has a time every 6 hours, so the hours are taken to the nearest time it has (from: the
-  // hours chosen now, so stepping an hour at a time moves on to the next one).
+  // Tidspunktet som timer fra nå. Gamle lenker kan ha «tomorrow» (12:00 i morgen) eller «off», som gir nærmeste gyldige.
+  // Lenger fram har prognosen et tidspunkt hver 6. time, så timene rundes til nærmeste tidspunkt den har (from:
+  // timene valgt nå, så å gå én time om gangen flytter videre til det neste).
   function setWind(value, from) {
     if (!forecast || stale) return;
     var now = Date.now(), ahead = W.hoursAhead(forecast.times, now);
@@ -1021,7 +1021,7 @@
     windSlot = String(Number.isFinite(hours) && hours > 0 ? W.nearestHours(ahead, hours, from) : 0);
   }
 
-  // The suggestion switch only works with a forecast. The text follows the chosen time («nå», «kl. 17.00» …).
+  // Forslagsbryteren virker bare med en prognose. Teksten følger det valgte tidspunktet («nå», «kl. 17.00» …).
   var suggestButton = document.querySelector("button[data-suggest]");
   function setSuggest(on) {
     suggest = !!(on && suggestButton && forecast && !stale);
@@ -1037,7 +1037,7 @@
   filtersMore.addEventListener("click", function (ev) {
     var button = ev.target.closest("button[data-filter], button[data-suggest]");
     if (!button) return;
-    // Event names are the same in all languages, so the GoatCounter numbers can be summed.
+    // Hendelsesnavnene er like på alle språk, så tallene i GoatCounter kan summeres.
     if (button.hasAttribute("data-suggest")) FS.track("filter/suggest/" + (suggest ? "off" : "on"));
     else FS.track("filter/" + FILTER_NAMES[button.getAttribute("data-filter")] + "/" + (button.getAttribute("data-value") || "all"));
     if (button.hasAttribute("data-suggest")) setSuggest(!suggest);
@@ -1046,9 +1046,9 @@
     writeHash();
   });
 
-  // --- Timeline: the time for the wind assessment ---
-  // «Nå» and a slider over the hours in the forecast. The track is coloured hour by hour with the best rating among the
-  // sites matching the filters, so you can see when it may work, with the weekday at each midnight.
+  // --- Tidslinje: tidspunktet for vindvurderingen ---
+  // «Nå» og en glidebryter over timene i prognosen. Sporet er farget time for time med den beste vurderingen blant
+  // stedene som treffer filtrene, så du ser når det kan passe, med ukedagen ved hver midnatt.
   var timelineEl = document.getElementById("timeline");
   var rangeEl = document.getElementById("timeline-range");
   var timeEl = document.getElementById("timeline-time");
@@ -1061,13 +1061,13 @@
     var now = Date.now(), ahead = forecast && !stale ? W.hoursAhead(forecast.times, now) : [];
     timelineEl.hidden = !ahead.length;
     if (!ahead.length) return;
-    // The slider and the track in hours, so the 6-hour steps further ahead take the room their time does.
+    // Glidebryteren og sporet i timer, så 6-timerssteget lenger fram tar den plassen tiden deres gjør.
     var max = ahead[ahead.length - 1].hours;
     var total = max + W.stepAt(forecast.times, ahead[ahead.length - 1].index) / 3600000;
     rangeEl.max = String(max);
     rangeEl.value = windSlot;
     var index = W.slotIndex(forecast.times, windSlot, now);
-    // «kl. 13.00» also for now (the button says «Nå»), with the day when it is not today.
+    // «kl. 13.00» også for nå (knappen sier «Nå»), med dagen når det ikke er i dag.
     var label = windSlot === "0" ? FS.t("home.whenToday", { time: W.formatClock(Date.parse(forecast.times[index])) }) : whenLabel(index);
     timeEl.textContent = label;
     rangeEl.setAttribute("aria-valuetext", label);
@@ -1089,7 +1089,7 @@
       var color = best ? BAR_COLORS[best] : "var(--line)";
       stops.push(color + " " + pct(a.hours), color + " " + pct(a.hours + step));
     });
-    // The weekday at each midnight in Norway, wherever it falls between the forecast's times.
+    // Ukedagen ved hver midnatt i Norge, uansett hvor den faller mellom tidspunktene i prognosen.
     var start = Date.parse(forecast.times[ahead[0].index]);
     for (var h = 1; h <= max; h++) {
       var ms = start + h * 3600000;
@@ -1100,7 +1100,7 @@
       days.push(day);
     }
     barEl.style.background = "linear-gradient(90deg, " + stops.join(", ") + ")";
-    // From where the forecast has a time only every 6 hours (no gusts): striped, with its words for the mouse.
+    // Fra der prognosen bare har et tidspunkt hver 6. time (ingen kast): stripet, med sin egen tekst for musen.
     var coarseEl = null;
     if (coarse !== null) {
       coarseEl = document.createElement("span");
@@ -1124,7 +1124,7 @@
     nowButton.addEventListener("click", function () { setTime(0, true); });
   }
 
-  // Close the card for the selected site (on desktop it sits on top of the map).
+  // Lukk kortet for det valgte stedet (på PC ligger det oppå kartet).
   cardEl.addEventListener("click", function (ev) {
     if (!ev.target.closest("[data-close-card]")) return;
     selectedId = null;
@@ -1133,8 +1133,8 @@
     writeHash();
   });
 
-  // --- Tabs: Flysteder and Vær ---
-  // Switches the content of the left column (below the map on mobile). The map always stays. Arrow keys move between tabs.
+  // --- Faner: Flysteder og Vær ---
+  // Bytter innholdet i venstre kolonne (under kartet på mobil). Kartet blir alltid stående. Piltastene bytter fane.
   var TAB_NAMES = { "tab-sites": "sites", "tab-weather": "weather" };
   var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.home-tabs [role="tab"]'));
   function showTab(button, focus) {
@@ -1154,9 +1154,9 @@
     });
   });
 
-  // --- State in the URL ---
-  // Filters, search, wind time and selected site are stored in the URL (#direction=W,NW&level=PP3&wind=3&q=solli&site=sollifjellet),
-  // so the back button and shared links give the same view. replaceState, so each click does not become a history step.
+  // --- Tilstand i adressen ---
+  // Filtre, søk, vindtid og valgt sted lagres i adressen (#direction=W,NW&level=PP3&wind=3&q=solli&site=sollifjellet),
+  // så tilbakeknappen og delte lenker gir samme visning. replaceState, så hvert klikk ikke blir et steg i historikken.
   function writeHash() {
     var hash = H.hashFor({ filter: filter, windSlot: windSlot, windOn: !!(forecast && !stale), suggest: suggest, site: selectedId });
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
@@ -1176,15 +1176,15 @@
       resetCard();
     }
     update();
-    writeHash(); // removes unknown values from the URL
+    writeHash(); // fjerner ukjente verdier fra adressen
   }
 
   window.addEventListener("hashchange", readHash);
 
-  // --- Mobile: the map at the top ---
-  // The map stays at the top of the screen (CSS, position: sticky). It shrinks once the list has been scrolled a bit, and
-  // grows again near the top. Two thresholds, so it does not flicker in between. While searching it is smaller still, so
-  // the hits have room above the keyboard.
+  // --- Mobil: kartet øverst ---
+  // Kartet blir stående øverst på skjermen (CSS, position: sticky). Det krymper når listen er rullet litt, og
+  // vokser igjen nær toppen. To terskler, så det ikke flimrer imellom. Under søk er det enda mindre, så
+  // treffene har plass over tastaturet.
   function onScroll() {
     if (!MOBILE.matches) return;
     var y = window.scrollY;
@@ -1194,7 +1194,7 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   if (searchEl) {
     searchEl.addEventListener("focus", function () { if (MOBILE.matches) homeEl.classList.add("home--search"); });
-    // Delayed, so a tap on a search hit is not lost when the layout changes.
+    // Forsinket, så et trykk på et søketreff ikke går tapt når oppsettet endres.
     searchEl.addEventListener("blur", function () { setTimeout(function () { homeEl.classList.remove("home--search"); }, 150); });
   }
 
@@ -1203,9 +1203,9 @@
     if (button) select(button.getAttribute("data-select"), "list");
   });
 
-  // When returning to a tab that has been left open, and every minute: redraw when the forecast has
-  // become too old, or when the chosen time points to a different hour in the forecast (hour change for
-  // «nå», «om 3 t» and «om 6 t», midnight for «i morgen»).
+  // Når du kommer tilbake til en fane som har stått åpen, og hvert minutt: tegn på nytt når prognosen har
+  // blitt for gammel, eller når det valgte tidspunktet peker på en annen time i prognosen (timeskifte for
+  // «nå», «om 3 t» og «om 6 t», midnatt for «i morgen»).
   function recheck() {
     if (checkStale()) { update(); writeHash(); return; }
     if (forecast && !stale && windSlot !== "off" && W.slotIndex(forecast.times, windSlot, Date.now()) !== windIndex) update();
@@ -1213,30 +1213,30 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) recheck(); });
   setInterval(recheck, 60 * 1000);
 
-  // --- Weather stations (stations.js) ---
-  // The measured wind as the map layers «Klubbens værstasjoner» and «METs værstasjoner», and the same stations as short rows in the Vær tab (the change over
-  // the last half hour); the charts and the rest are on the weather page, which each row links to.
+  // --- Værstasjoner (stations.js) ---
+  // Den målte vinden som kartlagene «Klubbens værstasjoner» og «METs værstasjoner», og de samme stasjonene som korte
+  // rader i Vær-fanen (endringen den siste halvtimen); grafene og resten er på værsiden, som hver rad lenker til.
   function addStations() {
     var ST = window.FlyingSitesStations;
     var stationsEl = document.getElementById("stations");
     var listEl2 = document.getElementById("station-list");
     if (!ST || !stationsEl) return;
     ST.useRules(rules);
-    // Each row links to the station's card on the weather page (the link below the list gives its address).
+    // Hver rad lenker til kortet for stasjonen på værsiden (lenken under listen gir adressen).
     var more = stationsEl.querySelector(".stations__more");
     var weatherUrl = more ? more.getAttribute("href") : "";
     var lastMeasured = null;
     ST.addMapLayer(map, stationsEl.getAttribute("data-url"), function (data, now) {
       stationData = data;
-      // The stations answer every minute, and update() draws all the markers, rows and clusters again, which is a lot on
-      // a phone. The measurements enter the assessment only at «Nå» (assessAll), so the page is drawn again only then,
-      // and only when a measurement that counts has changed (or gone old).
+      // Stasjonene svarer hvert minutt, og update() tegner alle markørene, radene og klyngene på nytt, som er mye på
+      // en telefon. Målingene går inn i vurderingen bare ved «Nå» (assessAll), så siden tegnes på nytt bare da,
+      // og bare når en måling som teller, har endret seg (eller blitt gammel).
       var measured = windSlot === "0" ? JSON.stringify(data.items.filter(function (i) { return i.site; }).map(function (i) {
         var m = ST.measurement(i, now);
         return [i.site, m ? m.wind : null, m ? m.steady : null];
       })) : null;
       if (measured !== lastMeasured) { lastMeasured = measured; update(); }
-      // The club's stations as rows, in their own order (Heia first); MET's as a small folded table under them.
+      // Klubbens stasjoner som rader, i sin egen rekkefølge (Heia først); METs som en liten sammenbrettet tabell under.
       listEl2.replaceChildren.apply(listEl2, ST.groups(data.items).club.map(function (item) { return ST.row(item, now, 30, weatherUrl + "#" + ST.anchor(item), true); }));
       var oldMet = stationsEl.querySelector(".met-stations"), met = ST.metTable(data.items, now, oldMet && oldMet.open);
       if (oldMet) oldMet.remove();
@@ -1247,10 +1247,10 @@
 
   readHash();
 
-  // A newer forecast from the data service (workers/data), at once, every ten minutes while the page is in view, and when
-  // it comes back into view or online (wind.js watchForecast). It brings the assessment back when the page's forecast
-  // had become too old, and gives one to a page built without a forecast (the parts that show it are in the page as long
-  // as there is a data service, index.njk).
+  // En nyere prognose fra datatjenesten (workers/data), med en gang, hvert tiende minutt mens siden er synlig, og når
+  // den blir synlig igjen eller kommer på nett (wind.js watchForecast). Den gir vurderingen tilbake når prognosen i
+  // siden har blitt for gammel, og gir en til en side bygget uten prognose (delene som viser den, er i siden så lenge
+  // det finnes en datatjeneste, index.njk).
   W.watchForecast(fc.live, function () { return forecast; }, function (newer) {
     var first = !forecast || stale;
     forecast = newer;

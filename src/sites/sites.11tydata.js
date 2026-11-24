@@ -10,12 +10,12 @@ import { listSiteImages, featuredImages, imageCaption, imageAlt } from "../../li
 import { readCachedAirspace, ceilingOverLaunch, applyManualAirspace, readAirspaceChecked, airspaceAgeDays, AIRSPACE_STALE_DAYS } from "../../lib/airspace.js";
 import { readDrawing } from "../../lib/drawing.js";
 
-// The intro (text before the first ##) as plain text, for the card on the home page.
+// Innledningen (teksten før første ##) som ren tekst, til kortet på forsiden.
 function readIntro(inputPath) {
   return introText(fs.readFileSync(inputPath, "utf8").replace(/^---[\s\S]*?\n---\s*/, ""));
 }
 
-// One line with the site's sources, for the bottom of the site page, separated by «|».
+// Én linje med stedets kilder, nederst på stedssiden, skilt med «|».
 function describeSources(data, routes, airspace, lang) {
   const t = dict(lang).sources;
   const lines = [];
@@ -35,8 +35,8 @@ function describeSources(data, routes, airspace, lang) {
   return lines.join(" | ");
 }
 
-// The same sources as a short list of names, for one line at the bottom of the site page: «Flightlog, Kartverket,
-// openAIP, GPS-spor og lokalkunnskap». The details per field are in describeSources, folded below it.
+// De samme kildene som en kort liste med navn, til én linje nederst på stedssiden: «Flightlog, Kartverket,
+// openAIP, GPS-spor og lokalkunnskap». Detaljene per felt står i describeSources, brettet under.
 function shortSources(data, routes, airspace, lang) {
   const t = dict(lang).sources;
   const keys = [data.launch?.source, data.elevation?.source, data.wind_directions?.source,
@@ -45,7 +45,7 @@ function shortSources(data, routes, airspace, lang) {
     .filter(Boolean).flatMap((k) => String(k).split("/"));
   if (airspace) keys.push("openaip");
   if (routes.length) keys.push("gpx", ...routes.map((r) => r.elevationSource).filter(Boolean).map((x) => String(x).toLowerCase()));
-  // Fixed order, so the line reads the same on every page. Values without a short name (manual) are left out.
+  // Fast rekkefølge, så linja er lik på hver side. Verdier uten kortnavn (manual) utelates.
   const names = [...new Set(keys)].filter((k) => t.short[k]).sort((a, b) => Object.keys(t.short).indexOf(a) - Object.keys(t.short).indexOf(b)).map((k) => t.short[k]);
   if (names.length < 2) return names.join("");
   return names.slice(0, -1).join(", ") + " " + t.and + " " + names.at(-1);
@@ -56,21 +56,21 @@ export default {
   pagination: { data: "languages", size: 1, alias: "language" },
   eleventyComputed: {
     permalink: (data) => localeUrl(`/flysteder/${data.id}/`, data.language.code),
-    // Values computed at build time. Never written back to the site file.
+    // Verdier som regnes ut ved bygging. Skrives aldri tilbake til stedsfilen.
     derived: async (data) => {
       const inputPath = data.page.inputPath;
       const dir = path.dirname(inputPath);
       const lang = data.language?.code ?? "nb";
-      // The translations (index.<lang>.md), and the one for this page's language. null in Norwegian, or when missing.
+      // Oversettelsene (index.<lang>.md), og den for sidens språk. null på norsk, eller når den mangler.
       const translations = readTranslations(inputPath);
       const tr = lang === "nb" ? null : translations[lang] ?? null;
       const trData = tr?.data ?? {};
-      // The site file's text fields with the translation laid over them. The template uses these instead of hazards etc.
+      // Tekstfeltene i stedsfilen med oversettelsen lagt over. Malen bruker disse i stedet for hazards osv.
       const local = {
         hazards: overlay(data.hazards, trData.hazards, TRANSLATABLE.hazards),
         launches: overlay(data.launches, trData.launches, TRANSLATABLE.launches),
         landings: overlay(data.landings, trData.landings, TRANSLATABLE.landings),
-        // A bare «Parkering» is the default name, and is shown in the page's language.
+        // En «Parkering» uten noe mer er standardnavnet, og vises på sidens språk.
         parking: overlay(data.parking, trData.parking, TRANSLATABLE.parking)
           .map((p) => (p && p.name === "Parkering" && lang !== "nb" ? { ...p, name: dict(lang).site.parking } : p)),
         links: overlay(data.links, trData.links, TRANSLATABLE.links),
@@ -86,14 +86,14 @@ export default {
         routes.push({
           ...gpx,
           name: routeNames[i] ?? r.name,
-          // Time from the GPX when the file has timestamps, otherwise the walking time given in the site file.
+          // Tid fra GPX-en når filen har tidsstempler, ellers gangtiden som er oppgitt i stedsfilen.
           walkTimeMin: gpx.movingTimeMin ?? r.walk_time_min ?? null,
           walkTimeFromGpx: gpx.movingTimeMin !== null,
           url: `/flysteder/${data.id}/${r.file}`,
         });
       }
-      // All images in the folder, identified by file name (lib/site-images.js), in display order.
-      // The page shows the first overview, launch and landing image. The rest are shown in the lightbox.
+      // Alle bildene i mappa, gjenkjent på filnavnet (lib/site-images.js), i visningsrekkefølge.
+      // Siden viser det første oversikts-, start- og landingsbildet. Resten vises i lysboksen.
       const found = listSiteImages(dir, data.id).images;
       const featured = featuredImages(found);
       const images = [];
@@ -103,16 +103,16 @@ export default {
         const processed = await processImage(dir, img.file, {
           alt,
           outputDir: data.eleventy.directories.output,
-          // The Bilder block in the right column (site.njk): the first image large across the whole column, the next two
-          // at half width below. On mobile the page is at most 640 px wide.
+          // Bilder-blokken i høyre kolonne (site.njk): det første bildet stort over hele kolonnen, de to neste
+          // i halv bredde under. På mobil er siden høyst 640 px bred.
           sizes: slot === 0 ? "(min-width: 1024px) 400px, (min-width: 640px) 608px, 100vw" : "(min-width: 1024px) 200px, (min-width: 640px) 304px, 50vw",
         });
         images.push({ ...processed, ...img, index, alt, caption: imageCaption(img, lang), featured: slot !== -1 });
       }
 
-      // Airspace fetched from openAIP with `npm run airspace`. null if the site has not been fetched yet.
+      // Luftrom hentet fra openAIP med `npm run airspace`. null hvis stedet ikke er hentet ennå.
       const cached = readCachedAirspace(data.id);
-      // checked: when it was last checked against openAIP (also without changes); fetched: when it last changed.
+      // checked: når det sist ble sjekket mot openAIP (også uten endringer); fetched: når det sist ble endret.
       const checked = readAirspaceChecked();
       const airspace = cached ? {
         ...cached,
@@ -133,11 +133,11 @@ export default {
         intro: tr?.intro || readIntro(inputPath),
         launchGroups: groupLaunches(local.launches),
         local,
-        // Translated text for this page (html with ## Launch etc.), or null: the Norwegian text is shown then.
+        // Oversatt tekst for denne siden (html med ## Launch osv.), eller null: da vises den norske teksten.
         translation: tr ? { html: tr.html, outdated: tr.outdated } : null,
-        // All translations, for the home page (the intro) and the status page.
+        // Alle oversettelsene, til forsiden (innledningen) og statussiden.
         translations: Object.fromEntries(Object.entries(translations).map(([code, x]) => [code, { intro: x.intro, outdated: x.outdated }])),
-        // The drawing for the 3D view, or null. Validated in lib/validation.js.
+        // Tegningen til 3D-visningen, eller null. Validert i lib/validation.js.
         drawing: (() => { try { return readDrawing(dir, data.id); } catch { return null; } })(),
       };
     },

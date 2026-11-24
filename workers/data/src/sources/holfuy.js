@@ -1,28 +1,26 @@
-// Measured wind from Holfuy's weather stations (dataset «stations»). Every run (every minute) fetches the latest
-// measurement for all stations in stations.js in one request, stores it, and builds the dataset with the last
-// HISTORY_HOURS of measurements per station. The API key is the secret HOLFUY_KEY in Cloudflare. Tested in
-// test/data-worker.test.js.
+// Målt vind fra Holfuys værstasjoner (datasettet «stations»). Hver kjøring (hvert minutt) henter den siste målingen for
+// alle stasjonene i stations.js i én forespørsel, lagrer den, og bygger datasettet med målingene de siste HISTORY_HOURS
+// timene per stasjon. API-nøkkelen er hemmeligheten HOLFUY_KEY i Cloudflare. Testet i test/data-worker.test.js.
 //
-// The store keeps KEEP_DAYS of measurements. Older days are written to the archive (archive.js, R2) once a day is over,
-// one CSV per station per day (holfuy/station=<id>/year=<year>/<date>.csv) and the stations in holfuy/stations.csv, and
-// deleted from the store only after that.
+// Lageret beholder målinger i KEEP_DAYS dager. Eldre dager skrives til arkivet (archive.js, R2) når en dag er over, én
+// CSV per stasjon per dag (holfuy/station=<id>/year=<year>/<date>.csv) og stasjonene i holfuy/stations.csv. Først
+// etter det slettes de fra lageret.
 
 import { archiveSource } from "../archive.js";
 import { extraValues, num } from "../measurements.js";
 
 export const DATASET = "stations";
 export const SOURCE = "Holfuy";
-// The source's key in the store and the archive (measurements.js).
+// Nøkkelen til kilden i lageret og arkivet (measurements.js).
 export const KEY = "holfuy";
 export const HISTORY_HOURS = 6;
-// Measurements older than this are deleted from the store once they are in the archive, so the store stays small.
+// Målinger eldre enn dette slettes fra lageret når de er i arkivet, så lageret holdes lite.
 export const KEEP_DAYS = 7;
 const API_URL = "https://api.holfuy.com/live/";
 const USER_AGENT = "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)";
 
-// The request for the latest measurement of several stations: JSON, °C, m/s, times in UTC and the station's position
-// (loc), so the stations can be shown on the maps. The key is in the address,
-// so the address is never logged.
+// Forespørselen etter den siste målingen for flere stasjoner: JSON, °C, m/s, tider i UTC og stasjonens posisjon (loc),
+// så stasjonene kan vises på kartene. Nøkkelen står i adressen, så adressen logges aldri.
 export function holfuyUrl(ids, key, base = API_URL) {
   const url = new URL(base);
   url.searchParams.set("s", ids.join(","));
@@ -35,14 +33,13 @@ export function holfuyUrl(ids, key, base = API_URL) {
   return url;
 }
 
-// Holfuy's names for what has its own field, or is not a measurement (units, the station's position and name).
+// Holfuys navn for det som har sitt eget felt, eller ikke er en måling (enheter, stasjonens posisjon og navn).
 const KNOWN = new Set(["stationId", "stationName", "dateTime", "location.latitude", "location.longitude", "location.altitude",
   "wind.direction", "wind.speed", "wind.gust", "wind.min", "wind.unit", "temperature", "humidity", "pressure", "rain"]);
 
-// Holfuy answers with an object for one station and { measurements: [...] } for several. Each measurement becomes
-// { source, station, name, lat, lon, altitude, time } and the fields in measurements.js (wind, temperature, humidity, pressure,
-// rain), with null for what the station does not measure, and other numbers in extra. Measurements without a station
-// number or a valid time are skipped.
+// Holfuy svarer med et objekt for én stasjon og { measurements: [...] } for flere. Hver måling blir { source, station,
+// name, lat, lon, altitude, time } og feltene i measurements.js (vind, temperatur, fuktighet, trykk, nedbør), med null
+// for det stasjonen ikke måler, og andre tall i extra. Målinger uten stasjonsnummer eller gyldig tid hoppes over.
 export function parseHolfuy(data) {
   const list = Array.isArray(data?.measurements) ? data.measurements : data && typeof data === "object" ? [data] : [];
   return list.flatMap((m) => {
@@ -64,9 +61,9 @@ export function parseHolfuy(data) {
   });
 }
 
-// The dataset: one item per station in stations.js, in that order, with the latest measurement and the history as rows
-// [time, dir, speed, gust, min, temperature]. meta: name and position per station from Holfuy's answers. A station without measurements
-// has time null.
+// Datasettet: ett element per stasjon i stations.js, i den rekkefølgen, med den siste målingen og historikken som rader
+// [time, dir, speed, gust, min, temperature]. meta: navn og posisjon per stasjon fra svarene fra Holfuy. En stasjon
+// uten målinger har time null.
 export function buildStations(stations, rows, meta, now = Date.now()) {
   const items = stations.map((s) => {
     const own = rows.filter((r) => String(r.station) === String(s.id)).sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
@@ -94,7 +91,8 @@ export function buildStations(stations, rows, meta, now = Date.now()) {
   return { dataset: DATASET, source: SOURCE, fetched: new Date(now).toISOString(), items };
 }
 
-// One run. Does nothing without stations or without the key. A failed request leaves the previous dataset as it is.
+// Én kjøring. Gjør ingenting uten stasjoner eller uten nøkkelen. En mislykket forespørsel lar det forrige datasettet
+// være som det er.
 export async function run(store, env, stations, now = Date.now()) {
   if (!stations.length || !env.HOLFUY_KEY) return;
   const response = await fetch(holfuyUrl(stations.map((s) => s.id), env.HOLFUY_KEY, env.HOLFUY_URL || API_URL), {
@@ -108,9 +106,11 @@ export async function run(store, env, stations, now = Date.now()) {
   const meta = (await store.getState("holfuy-meta")) ?? {};
   const before = JSON.stringify(meta);
   for (const m of own) meta[m.station] = { name: m.name, lat: m.lat, lon: m.lon, altitude: m.altitude };
-  // Written only when a name or position changed, which is seldom: a write every minute counts against the day's rows.
+  // Skrives bare når et navn eller en posisjon er endret, som er sjelden: en skriving hvert minutt teller mot dagens
+  // rader.
   if (JSON.stringify(meta) !== before) await store.putState("holfuy-meta", meta);
-  // The fresh measurements are published first; the archive comes after, and a failing archive (R2 down) only logs.
+  // De ferske målingene publiseres først. Arkivet kommer etterpå, og et arkiv som feiler (R2 nede), gir bare en
+  // logglinje.
   const rows = await store.measurementsSince(KEY, new Date(now - HISTORY_HOURS * 3600000).toISOString());
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(stations, rows, meta, now)));
   try {
@@ -120,7 +120,7 @@ export async function run(store, env, stations, now = Date.now()) {
   }
 }
 
-// The archive (archive.js): the finished days per station, and the station list from Holfuy's names and positions.
+// Arkivet (archive.js): de ferdige dagene per stasjon, og stasjonslisten med navn og posisjoner fra Holfuy.
 async function archive(store, env, stations, now) {
   const meta = (await store.getState("holfuy-meta")) ?? {};
   const list = stations.map((s) => ({ source: KEY, id: s.id, name: s.name ?? meta[s.id]?.name ?? null, model: s.model ?? null, site: s.site ?? null, lat: meta[s.id]?.lat ?? null, lon: meta[s.id]?.lon ?? null, altitude: meta[s.id]?.altitude ?? null }));

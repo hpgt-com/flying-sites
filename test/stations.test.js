@@ -1,4 +1,4 @@
-// Tests for the weather stations on the pages (src/assets/js/stations.js). Run with `npm test`.
+// Tester for værstasjonene på sidene (src/assets/js/stations.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { installDom, html } from "./helpers/dom.mjs";
@@ -21,7 +21,7 @@ const NOW = Date.parse("2026-10-18T15:20:00Z");
 const item = (over = {}) => ({ id: 490, name: "HPGT Heia", site: "heia", lat: 68.8, lon: 16.5, time: "2026-10-18T15:17:00.000Z",
   wind: { dir: 225, speed: 4.4, gust: 7.2, min: 2 }, temperature: 6.25, humidity: 81, pressure: 1012.4, rain: 0, history: [], ...over });
 
-test("only data in the expected shape is used", () => {
+test("bare data med forventet form brukes", () => {
   assert.equal(ST.isStationsData({ dataset: "stations", items: [item()] }), true);
   assert.equal(ST.isStationsData({ dataset: "stations", items: [item({ time: null, wind: null })] }), true);
   assert.equal(ST.isStationsData({ dataset: "forecast", items: [] }), false);
@@ -34,7 +34,7 @@ test("only data in the expected shape is used", () => {
   assert.equal(ST.isStationsData(null), false);
 });
 
-test("the wind as measured: direction with degrees, mean and gust, not rounded", () => {
+test("vinden slik den er målt: retning med grader, middel og kast, ikke avrundet", () => {
   assert.equal(ST.windText(item()), "SV 225°, 4,4 m/s, kast 7,2");
   assert.equal(ST.windText(item({ wind: { dir: null, speed: 3.6, gust: null, min: null } })), "3,6 m/s");
   assert.equal(ST.windText(item({ wind: { dir: 10, speed: 0.3, gust: 1, min: 0 } })), "N 10°, 0,3 m/s, kast 1");
@@ -44,14 +44,14 @@ test("the wind as measured: direction with degrees, mean and gust, not rounded",
   assert.equal(ST.value(null), "");
 });
 
-test("the chart scale: 0 up to a round number above the highest gust", () => {
+test("skalaen i grafen: 0 opp til et rundt tall over det høyeste kastet", () => {
   assert.deepEqual(ST.scale(3.1), { top: 4, step: 2 });
   assert.deepEqual(ST.scale(7.2), { top: 8, step: 2 });
   assert.deepEqual(ST.scale(12.4), { top: 15, step: 5 });
   assert.deepEqual(ST.scale(23), { top: 30, step: 10 });
 });
 
-test("how old the measurement is, and old after 30 minutes", () => {
+test("hvor gammel målingen er, og gammel etter 30 minutter", () => {
   assert.equal(ST.ageText(item(), NOW), "for 3 min siden");
   assert.equal(ST.ageText(item({ time: "2026-10-18T15:19:50.000Z" }), NOW), "Nå nettopp");
   assert.equal(ST.isOld(item(), NOW), false);
@@ -60,102 +60,102 @@ test("how old the measurement is, and old after 30 minutes", () => {
   assert.equal(ST.ageText(item({ time: null }), NOW), "Ingen måling ennå");
 });
 
-test("temperature, humidity, pressure and rain, only those the station has", () => {
+test("temperatur, fuktighet, trykk og nedbør, bare de stasjonen har", () => {
   assert.equal(ST.otherText(item()), "6,25 °C · 81 % · 1012,4 hPa");
   assert.equal(ST.otherText(item({ humidity: null, pressure: null, rain: 1.2 })), "6,25 °C · 1,2 mm");
   assert.equal(ST.otherText(item({ temperature: null, humidity: null, pressure: null })), "");
 });
 
-test("the link to the station at Holfuy", () => {
+test("lenken til stasjonen hos Holfuy", () => {
   assert.equal(ST.holfuyUrl(item()), "https://holfuy.com/en/weather/490");
 });
 
-// History rows every 5 minutes up to NOW: [time, dir, speed, gust, min].
+// Historikkrader hvert 5. minutt fram til NOW: [tid, retning, fart, kast, min].
 const hist = (n, f) => Array.from({ length: n }, (_, i) => { const t = NOW - (n - 1 - i) * 300000; return [new Date(t).toISOString(), ...f(i)]; });
 
-test("the change over a period: mean wind, gust, turning, gust spread and highest gust", () => {
+test("endringen over en periode: middelvind, kast, dreining, kastspenn og høyeste kast", () => {
   const it = item({ history: hist(13, (i) => [350 + i * 2, 3 + i * 0.1, 5 + i * 0.2, 2]) });
   const ch = ST.change(it, 30);
-  assert.equal(ch.speed, 0.6, "3,6 now against 3,0 30 minutes before");
+  assert.equal(ch.speed, 0.6, "3,6 nå mot 3,0 for 30 minutter siden");
   assert.equal(ch.gust, 1.2);
-  assert.equal(ch.dir, 12, "the shortest way across north: 362 − 350");
+  assert.equal(ch.dir, 12, "korteste vei over nord: 362 − 350");
   assert.equal(ch.maxGust, 7.4);
-  assert.equal(ch.spread, 2.9, "gusts 2,6–3,2 above the mean wind over the last 30 minutes, 2,9 on average");
+  assert.equal(ch.spread, 2.9, "kast 2,6–3,2 over middelvinden de siste 30 minuttene, 2,9 i snitt");
   assert.equal(ST.change(item({ history: [] }), 30), null);
 });
 
-test("a change with an arrow and a sign, not by colour alone", () => {
+test("en endring med pil og fortegn, ikke bare med farge", () => {
   assert.equal(ST.signed(0.8), "▲ +0,8");
   assert.equal(ST.signed(-0.4), "▼ −0,4");
   assert.equal(ST.signed(0), "● 0");
   assert.equal(ST.signed(null), "");
 });
 
-test("how even the wind is, and whether it rises or falls", () => {
+test("hvor jevn vinden er, og om den øker eller avtar", () => {
   assert.deepEqual(ST.character({ spread: 1.8, speed: 0.2 }), { kind: "steady", trend: "stable" });
   assert.deepEqual(ST.character({ spread: 3.1, speed: 1.2 }), { kind: "gusty", trend: "rising" });
   assert.deepEqual(ST.character({ spread: 5, speed: -0.9 }), { kind: "turbulent", trend: "falling" });
   assert.equal(ST.character({ spread: null, speed: 1 }), null);
 });
 
-test("the forecast for the station's site from this hour", () => {
+test("varselet for stasjonens sted fra denne timen", () => {
   const times = [0, 1, 2, 3].map((h) => new Date(Date.parse("2026-10-18T15:00:00Z") + h * 3600000).toISOString());
   const forecast = { times, sites: { heia: [[40, 4, 7, 0], [45, 5, 8, 0], null, [50, 6, 9, 0]] } };
   const fc = ST.forecastFrom(forecast, "heia", NOW, 6);
   assert.deepEqual(fc.now, { time: Date.parse(times[0]), dir: 40, speed: 4, gust: 7 });
-  assert.deepEqual(fc.next.map((p) => p.speed), [5, 6], "hours without wind are left out");
+  assert.deepEqual(fc.next.map((p) => p.speed), [5, 6], "timer uten vind utelates");
   assert.equal(ST.forecastFrom(forecast, "dale", NOW, 6), null);
   assert.equal(ST.forecastFrom(null, "heia", NOW, 6), null);
 });
 
-test("the lowest and highest temperature over the last hours", () => {
+test("laveste og høyeste temperatur de siste timene", () => {
   const it = item({ history: hist(13, (i) => [200, 4, 6, 2, 3 + i * 0.25]) });
   assert.deepEqual(ST.temperatureRange(it), { min: 3, max: 6, hours: 1 });
-  assert.equal(ST.temperatureRange(item({ history: hist(13, () => [200, 4, 6, 2]) })), null, "older rows without temperature");
+  assert.equal(ST.temperatureRange(item({ history: hist(13, () => [200, 4, 6, 2]) })), null, "eldre rader uten temperatur");
 });
 
-test("the forecast's past hours for «Målt mot varslet», only those before this hour and in the right shape", () => {
+test("varselets tidligere timer til «Målt mot varslet», bare de før denne timen og med riktig form", () => {
   const times = [0, 1].map((h) => new Date(Date.parse("2026-10-18T15:00:00Z") + h * 3600000).toISOString());
   const past = { heia: [["2026-10-18T13:00:00Z", 30, 3, 6], ["2026-10-18T14:00:00Z", 35, "x", 6], ["2026-10-18T15:00:00Z", 40, 4, 7]] };
   const fc = ST.forecastFrom({ times, sites: { heia: [[40, 4, 7, 0], [45, 5, 8, 0]] }, past }, "heia", NOW, 6);
   assert.deepEqual(fc.past, [{ time: Date.parse("2026-10-18T13:00:00Z"), dir: 30, speed: 3, gust: 6 }]);
 });
 
-test("the station's page at its source: the data service's address, Holfuy's for older Holfuy items, none for MET", () => {
+test("stasjonens side hos kilden: datatjenestens adresse, Holfuys for eldre Holfuy-elementer, ingen for MET", () => {
   assert.equal(ST.stationUrl(item({ url: "https://holfuy.com/en/weather/490" })), "https://holfuy.com/en/weather/490");
   assert.equal(ST.stationUrl(item({ source: "Holfuy" })), "https://holfuy.com/en/weather/490");
   assert.equal(ST.stationUrl(item({ id: "SN84970", source: "MET Norge", url: null })), null);
-  assert.equal(ST.stationUrl(item({ url: "javascript:alert(1)", source: "MET Norge" })), null, "only https addresses");
+  assert.equal(ST.stationUrl(item({ url: "javascript:alert(1)", source: "MET Norge" })), null, "bare https-adresser");
 });
 
-test("MET's stations, which mostly measure once an hour, are old only after 90 minutes; the club's after 30", () => {
+test("METs stasjoner, som stort sett måler én gang i timen, er gamle etter 90 minutter; klubbens etter 30", () => {
   const at = (min) => new Date(NOW - min * 60000).toISOString();
-  assert.equal(ST.isOld(item({ time: at(45) }), NOW), true, "Holfuy (no source given) after 45 min");
+  assert.equal(ST.isOld(item({ time: at(45) }), NOW), true, "Holfuy (ingen kilde oppgitt) etter 45 min");
   assert.equal(ST.isOld(item({ time: at(45), source: "Holfuy" }), NOW), true);
   assert.equal(ST.isOld(item({ time: at(45), source: "MET Norge", id: "SN84970" }), NOW), false);
   assert.equal(ST.isOld(item({ time: at(95), source: "MET Norge", id: "SN84970" }), NOW), true);
   assert.equal(ST.ageText(item({ time: at(45), source: "MET Norge" }), NOW), "for 45 min siden");
 });
 
-test("the club's stations first, then MET's, each in the order given", () => {
+test("klubbens stasjoner først, så METs, hver i oppgitt rekkefølge", () => {
   const items = [item({ id: "SN2", source: "MET Norge" }), item({ id: 490, source: "Holfuy" }), item({ id: "SN1", source: "MET Norge" }), item({ id: 820 })];
   const g = ST.groups(items);
   assert.deepEqual(g.club.map((i) => i.id), [490, 820]);
   assert.deepEqual(g.met.map((i) => i.id), ["SN2", "SN1"]);
 });
 
-test("the map thins stations zoomed out: the club's always, then MET's with the strongest wind, none overlapping", () => {
+test("kartet tynner ut stasjoner når det er zoomet ut: klubbens alltid, så METs med sterkest vind, ingen overlappende", () => {
   const e = (id, source, x, speed) => ({ item: item({ id, source, wind: { dir: 200, speed, gust: null } }), latlng: { x, y: 0 } });
   const entries = [e("SN1", "MET Norge", 0, 3), e("SN2", "MET Norge", 10, 9), e(490, "Holfuy", 5, 1), e("SN3", "MET Norge", 100, 2)];
   const keep = ST.thinned(entries, 9, (ll) => ll);
-  assert.deepEqual(entries.filter((x) => keep.has(x)).map((x) => x.item.id), [490, "SN3"], "SN1 and SN2 overlap the club's station");
-  assert.equal(ST.thinned(entries, 12, (ll) => ll).size, 4, "all from zoom 12");
+  assert.deepEqual(entries.filter((x) => keep.has(x)).map((x) => x.item.id), [490, "SN3"], "SN1 og SN2 overlapper klubbens stasjon");
+  assert.equal(ST.thinned(entries, 12, (ll) => ll).size, 4, "alle fra zoom 12");
 });
 
-test("the marker shows the wind in whole m/s with a notch for the direction, or the temperature", () => {
+test("markøren viser vinden i hele m/s med et hakk for retningen, eller temperaturen", () => {
   globalThis.FlyingSites.formatNumber = (n, d) => Number(n).toFixed(d || 0).replace(".", ",");
   const wind = html(ST.markerContent(item({ source: "Holfuy" }), NOW, "wind"));
-  assert.match(wind, /station-marker__notch" data-dir="225"/, "the direction as data, the turn is set on the element (no inline style)");
+  assert.match(wind, /station-marker__notch" data-dir="225"/, "retningen som data, dreiningen settes på elementet (ingen innebygd stil)");
   assert.doesNotMatch(wind, /style=/);
   assert.match(wind, /station-marker__dial">4</);
   assert.match(wind, /station-marker__label">4,4 <small>\(7,2\)<\/small>/);
@@ -165,7 +165,7 @@ test("the marker shows the wind in whole m/s with a notch for the direction, or 
   assert.doesNotMatch(temp, /notch/);
 });
 
-test("how well the forecast hit: collecting at first, then the mean wind, gusts, direction and worst sector", () => {
+test("hvor godt varselet traff: samler først, deretter middelvind, kast, retning og verste sektor", () => {
   Object.assign(texts, { "stations.vCollecting": "Samler {n}/{min}", "stations.vMean": "{days} d, {hours} t: {strength} ({mae})", "stations.vGust": "Kast {strength}",
     "stations.vDir": "Retning {pct} %", "stations.vSector": "Verst {dir} {v}", "stations.vStronger": "{v} sterkere", "stations.vWeaker": "{v} svakere", "stations.vAbout": "som varslet" });
   assert.deepEqual(ST.verifyLines({ hours: 5 }, 30), ["Samler 5/24"]);
@@ -174,7 +174,7 @@ test("how well the forecast hit: collecting at first, then the mean wind, gusts,
   assert.deepEqual(ST.verifyLines(null, 30), []);
 });
 
-test("a station nearby: found by the site and its distance, only in the expected shape", () => {
+test("en stasjon i nærheten: funnet etter stedet og avstanden, bare med forventet form", () => {
   const heia = { id: 490, site: "heia", near: [{ site: "hinnstein", km: 1.3 }] };
   assert.deepEqual(ST.nearOf(heia, "hinnstein"), { site: "hinnstein", km: 1.3 });
   assert.equal(ST.nearOf(heia, "elgen"), null);

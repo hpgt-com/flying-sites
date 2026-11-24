@@ -5,23 +5,23 @@ import { creditFor, exifFor, hasCredit, readCredit, xmpFor, DEFAULT_CREDIT } fro
 
 const blank = () => sharp({ create: { width: 20, height: 20, channels: 3, background: "#888" } });
 
-test("without a photographer in the image the default is used, with licence", () => {
+test("uten fotograf i bildet brukes standarden, med lisens", () => {
   const c = creditFor({});
   assert.equal(c.creator, DEFAULT_CREDIT.creator);
   assert.equal(c.url, DEFAULT_CREDIT.url);
   assert.equal(c.license, "CC BY-NC 4.0");
 });
 
-test("photographer and licence survive EXIF and XMP, with © and æøå in XMP", async () => {
+test("fotograf og lisens overlever EXIF og XMP, med © og æøå i XMP", async () => {
   const c = { ...creditFor({}), creator: "Bjørn Ås", copyright: "© Bjørn Ås", url: null };
   const buf = await blank().jpeg().withExif(exifFor(c)).withXmp(xmpFor(c)).toBuffer();
   const meta = await sharp(buf).metadata();
   assert.deepEqual(readCredit(meta), { creator: "Bjørn Ås", copyright: "© Bjørn Ås · CC BY-NC 4.0" });
   assert.equal(hasCredit(meta), true);
-  assert.equal(exifFor(c).IFD0.Artist, "Bjorn As"); // EXIF only handles ASCII
+  assert.equal(exifFor(c).IFD0.Artist, "Bjorn As"); // EXIF tåler bare ASCII
 });
 
-test("another photographer (from Lightroom) is kept, without the default website", async () => {
+test("en annen fotograf (fra Lightroom) beholdes, uten standardnettstedet", async () => {
   const buf = await blank().jpeg().withExif({ IFD0: { Artist: "Ola Nordmann", Copyright: "(C) Ola Nordmann" } }).toBuffer();
   const c = creditFor(await sharp(buf).metadata());
   assert.equal(c.creator, "Ola Nordmann");
@@ -29,11 +29,11 @@ test("another photographer (from Lightroom) is kept, without the default website
   assert.equal(c.license, "CC BY-NC 4.0");
 });
 
-test("an image without metadata has no photographer", async () => {
+test("et bilde uten metadata har ingen fotograf", async () => {
   assert.equal(hasCredit(await sharp(await blank().jpeg().toBuffer()).metadata()), false);
 });
 
-test("text from metadata becomes plain text, and the website must be http(s)", async () => {
+test("tekst fra metadata blir ren tekst, og nettstedet må være http(s)", async () => {
   const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
 <dc:creator><rdf:Seq><rdf:li>Ola &lt;script&gt;alert(1)&lt;/script&gt; "Nordmann"</rdf:li></rdf:Seq></dc:creator>
 <Iptc4xmpCore:CiUrlWork>javascript:alert(1)</Iptc4xmpCore:CiUrlWork></rdf:Description></rdf:RDF></x:xmpmeta>`;

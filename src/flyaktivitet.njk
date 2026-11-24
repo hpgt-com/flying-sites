@@ -14,9 +14,9 @@ eleventyComputed:
   name: "{{ t.activity.title }}"
   description: "{{ t.activity.description }}"
 ---
-{#- The flights from all the flying sites, counted from the Open Glider Network by the data service (/v1/flights.json):
-    today, the last 30 days, per month and since the counting began. Filled by activity.js; the site names and links
-    from #sites-data. -#}
+{#- Turene fra alle flystedene, telt fra Open Glider Network av datatjenesten (/v1/flights.json): i dag, de siste
+    30 dagene, per måned og siden tellingen begynte. Fylles av activity.js. Stedsnavnene og lenkene kommer fra
+    #sites-data. -#}
 {%- import "macros.njk" as m with context -%}
 <main class="simple-page activity-page">
   <header class="topbar">
@@ -33,8 +33,8 @@ eleventyComputed:
   <section class="activity" id="activity" data-url="{{ site.flightsUrl }}" aria-live="polite">
     <p class="muted activity-loading">{{ t.activity.loading }}</p>
   </section>
-  {#- «Siste turer»: each flight of the last 30 days from the data service (/v1/flight-log.json), with OGN's positions,
-      drawn on a map when chosen (activity.js). Hidden until the data has come. -#}
+  {#- «Siste turer»: hver tur de siste 30 dagene fra datatjenesten (/v1/flight-log.json), med posisjonene fra OGN,
+      tegnet på et kart når den velges (activity.js). Skjult til dataene har kommet. -#}
   <section class="activity activity-log" id="activity-log" data-url="{{ site.flightLogUrl }}" aria-labelledby="h-log" hidden>
     <h2 id="h-log">{{ t.activity.logTitle }}</h2>
     <p class="muted">{{ t.activity.logIntro }}</p>
