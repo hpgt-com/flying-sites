@@ -1,6 +1,6 @@
-// Lets the tests import the data service (workers/data/src) in Node: «cloudflare:workers» becomes a small stand-in for
-// DurableObject, and sites.json (written before each deploy, not in Git) is made from the site files. Registered with
-// module.register by test/data-quota.test.js.
+// Lar testene importere datatjenesten (workers/data/src) i Node: «cloudflare:workers» blir en liten stand-in for
+// DurableObject, og sites.json (skrevet før hver utrulling, ikke i Git) lages fra stedsfilene. Registreres med
+// module.register av test/data-quota.test.js.
 
 const STUB = "export class DurableObject { constructor(ctx, env) { this.ctx = ctx; this.env = env; } }";
 

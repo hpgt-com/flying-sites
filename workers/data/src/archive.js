@@ -1,10 +1,10 @@
-// The archive: data older than the store keeps (the last 7 days) is written as files to R2 (env.ARCHIVE), one file per
-// station per day (UTC), so it lasts for years at little cost and reports can run on the files (DuckDB, Excel).
-// The files are laid out to be loaded into a database later: every row carries the source and the station, so files from all stations
-// fit one table, and the folders use the key=value form (holfuy/station=490/year=2026/2026-10-16.csv) that DuckDB,
-// BigQuery, Athena and Spark read as columns, so a query can pick stations and years without opening every file.
-// Nothing is deleted from the store before its day is in the archive, so without R2 the store keeps everything.
-// The helpers are pure; archiveSource writes a source's files and is shared by the sources. Tested in
+// Arkivet: data eldre enn det lageret beholder (de siste 7 dagene) skrives som filer til R2 (env.ARCHIVE), én fil per
+// stasjon per dag (UTC). Slik varer de i årevis for lite penger, og rapporter kan kjøres på filene (DuckDB, Excel).
+// Filene er lagt opp for å kunne lastes inn i en database senere. Hver rad har kilden og stasjonen, så filer fra alle
+// stasjoner passer i én tabell. Mappene bruker formen nøkkel=verdi (holfuy/station=490/year=2026/2026-10-16.csv), som
+// DuckDB, BigQuery, Athena og Spark leser som kolonner. Da kan en spørring velge stasjoner og år uten å åpne hver fil.
+// Ingenting slettes fra lageret før dagen er i arkivet, så uten R2 beholder lageret alt.
+// Hjelpefunksjonene er rene. archiveSource skriver filene for en kilde og deles av kildene. Testet i
 // test/data-worker.test.js.
 
 import { FIELDS } from "./measurements.js";
@@ -13,9 +13,10 @@ const DAY = 86400000;
 
 export const dateOf = (ms) => new Date(ms).toISOString().slice(0, 10);
 
-// The whole days (UTC) to archive: from the day of the oldest measurement, or the day after the last archived one,
-// up to the last day that ended LATE_HOURS ago (measurements can come in late: MET's stations report up to two hours
-// after, and an archived day is not written again). At most `limit`, so one run stays short; the rest follow later.
+// De hele dagene (UTC) som skal arkiveres: fra dagen for den eldste målingen, eller dagen etter den sist arkiverte, til
+// den siste dagen som sluttet for LATE_HOURS timer siden. Målinger kan komme sent: METs stasjoner rapporterer opptil to
+// timer etter, og en arkivert dag skrives ikke på nytt. Høyst `limit` dager, så én kjøring blir kort. Resten kommer
+// senere.
 export const LATE_HOURS = 3;
 export function daysToArchive(oldest, archivedThrough, now, limit = 2) {
   if (!oldest) return [];
@@ -26,8 +27,8 @@ export function daysToArchive(oldest, archivedThrough, now, limit = 2) {
   return days;
 }
 
-// What may be deleted from the store: older than keepDays, and only days that are in the archive. Without an archived
-// day, nothing (null).
+// Det som kan slettes fra lageret: eldre enn keepDays, og bare dager som er i arkivet. Uten en arkivert dag ingenting
+// (null).
 export function pruneBefore(now, keepDays, archivedThrough) {
   if (!archivedThrough) return null;
   const keep = now - keepDays * DAY;
@@ -38,18 +39,18 @@ export function pruneBefore(now, keepDays, archivedThrough) {
 const cell = (v) => (v === null || v === undefined ? "" : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v));
 const csv = (header, rows) => header.join(",") + "\n" + rows.map((r) => r.map(cell).join(",")).join("\n") + (rows.length ? "\n" : "");
 
-// Where a station's day goes in the archive.
+// Hvor en dag for en stasjon havner i arkivet.
 export const dayPath = (source, station, day) => `${source}/station=${station}/year=${day.slice(0, 4)}/${day}.csv`;
 
-// Measurements as CSV, one row each with the source and the station, times in UTC, a column per field in measurements.js with the unit
-// in its name, and the other values as JSON in extra_json.
+// Målinger som CSV: én rad per måling med kilden og stasjonen, tider i UTC, én kolonne per felt i measurements.js med
+// enheten i navnet, og de andre verdiene som JSON i extra_json.
 export function measurementsCsv(rows) {
   return csv(["source", "station", "time_utc", ...FIELDS.map((f) => f.csv), "extra_json"],
     rows.map((r) => [r.source, r.station, r.time, ...FIELDS.map((f) => r[f.key]), r.extra ? JSON.stringify(r.extra) : null]));
 }
 
-// The stations as CSV (source, number, name, the station's model when known, the flying site, position), so reports and
-// maps can show names and places, and tell measurements from different kinds of stations apart.
+// Stasjonene som CSV (kilde, nummer, navn, stasjonens modell når den er kjent, flystedet, posisjon). Da kan rapporter
+// og kart vise navn og steder, og skille målinger fra ulike typer stasjoner.
 export function stationsCsv(stations) {
   return csv(["source", "station", "name", "model", "site", "lat", "lon", "altitude_m"],
     stations.map((s) => [s.source, s.id, s.name, s.model, s.site, s.lat, s.lon, s.altitude]));
@@ -57,9 +58,9 @@ export function stationsCsv(stations) {
 
 const CSV = { httpMetadata: { contentType: "text/csv; charset=utf-8" } };
 
-// Writes a source's finished days not yet in the archive (at most two per run) and its station list, then deletes from
-// the store what is both in the archive and older than keepDays. stations: [{ source, id, name, model, site, lat, lon,
-// altitude }]. Without R2 (env.ARCHIVE) nothing is written or deleted.
+// Skriver de ferdige dagene for en kilde som ennå ikke er i arkivet (høyst to per kjøring), og stasjonslisten. Så
+// slettes det som både er i arkivet og eldre enn keepDays, fra lageret. stations: [{ source, id, name, model, site,
+// lat, lon, altitude }]. Uten R2 (env.ARCHIVE) skrives og slettes ingenting.
 export async function archiveSource(store, env, key, stations, keepDays, now) {
   if (!env.ARCHIVE) return;
   const state = (await store.getState(`${key}-archive`)) ?? { through: null };

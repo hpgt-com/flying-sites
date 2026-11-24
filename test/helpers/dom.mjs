@@ -1,5 +1,5 @@
-// A small stand-in for the browser's document, for tests of browser scripts that build elements with DOM methods
-// (createElement, createElementNS, setAttribute, append …). html() writes what was built as markup to assert on.
+// En liten stand-in for nettleserens document, for tester av nettleserskript som bygger elementer med DOM-metoder
+// (createElement, createElementNS, setAttribute, append …). html() skriver det som ble bygget, som markup å sjekke mot.
 class Node {
   constructor() { this.childNodes = []; }
   appendChild(child) {
@@ -33,7 +33,7 @@ export function installDom() {
     createElementNS: (ns, tag) => new Element(tag, ns),
     createTextNode: (data) => new Text(String(data)),
     createDocumentFragment: () => new Fragment(),
-    // An empty page: the scripts look for their elements when loaded and find none.
+    // En tom side: skriptene ser etter elementene sine når de lastes, og finner ingen.
     getElementById: () => null,
     querySelector: () => null,
     querySelectorAll: () => [],
@@ -42,7 +42,7 @@ export function installDom() {
 }
 
 const escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-// The node (or the nodes of a fragment) as markup, attributes in the order they were set; "" for null.
+// Noden (eller nodene i et fragment) som markup, med attributtene i den rekkefølgen de ble satt; "" for null.
 export function html(node) {
   if (node == null) return "";
   if (node instanceof Text) return escapeText(node.data);

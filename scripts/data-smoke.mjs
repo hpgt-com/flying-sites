@@ -1,20 +1,21 @@
-// After the data service is published (.github/workflows/data-worker.yml): waits until the new version has run one of
-// the sources that run every few minutes (the stations, the forecast or the flights) successfully after the publish,
-// and checks that a dataset is served. Exits 1 if that does not happen within MAX_WAIT_MS, and the workflow then rolls
-// back to the version that ran before. One source is enough: the check is that the new code runs, not that Holfuy or
-// MET is up right now (a good version was once rolled back because the source was down at the time).
+// Etter at datatjenesten er publisert (.github/workflows/data-worker.yml): venter til den nye versjonen har kjørt en
+// av kildene som går med noen minutters mellomrom (stasjonene, varselet eller flyturene), vellykket etter
+// publiseringen, og sjekker at et datasett blir servert. Avslutter med 1 hvis det ikke skjer innen MAX_WAIT_MS, og
+// arbeidsflyten ruller da tilbake til versjonen som kjørte før. Én kilde er nok: sjekken er at den nye koden kjører,
+// ikke at Holfuy eller MET er oppe akkurat nå (en god versjon ble en gang rullet tilbake fordi kilden var nede da).
 //
-//   node scripts/data-smoke.mjs <published at, ISO time> [base address]
+//   node scripts/data-smoke.mjs <publisert, ISO-tid> [grunnadresse]
 
 export const MAX_WAIT_MS = 6 * 60000;
 const POLL_MS = 15000;
 
-// The sources whose success after the publish shows the new version runs (each on the schedule within a few minutes).
+// Kildene der en vellykket kjøring etter publiseringen viser at den nye versjonen kjører (hver går etter
+// tidsplanen innen noen minutter).
 export const SMOKE_SOURCES = ["stations", "forecast", "flights"];
 
-// What the status (/v1/status.json) says about the runs after since: done with ok when one of SMOKE_SOURCES has
-// succeeded after it. Errors after since are reported but not final, since a run cut off by the publish itself can
-// fail once.
+// Hva statusen (/v1/status.json) sier om kjøringene etter since: ferdig med ok når en av SMOKE_SOURCES har lyktes
+// etter det. Feil etter since meldes, men er ikke endelige, siden en kjøring som avbrytes av selve publiseringen,
+// kan feile én gang.
 export function smokeVerdict(status, since) {
   const sources = status?.sources;
   if (!sources) return { done: false, reason: "ingen status ennå" };

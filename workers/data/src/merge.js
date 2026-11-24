@@ -1,9 +1,9 @@
-// Serving several sources as one dataset. Pure, tested in test/data-worker.test.js.
+// Flere kilder sendt som ett datasett. Ren funksjon, testet i test/data-worker.test.js.
 
 const DATASET = "stations";
 
-// The stations dataset from Holfuy's and MET's: Holfuy's stations first, then MET's, with the newest fetch time, MET's
-// licence and both sources named. Either alone when the other has nothing yet; null when neither has.
+// Stasjonsdatasettet fra Holfuys og METs: Holfuys stasjoner først, så METs, med den nyeste hentetiden, METs lisens og
+// begge kildene nevnt. Bare den ene når den andre ikke har noe ennå. null når ingen av dem har noe.
 export function mergeStations(holfuyBody, metBody) {
   const parts = [holfuyBody, metBody].filter(Boolean).map((b) => JSON.parse(b));
   if (!parts.length) return null;

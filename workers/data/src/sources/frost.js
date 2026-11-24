@@ -1,32 +1,32 @@
-// Measured weather from MET's own weather stations (Frost, frost.met.no), in the same stations dataset as Holfuy: the
-// stations within the area of the flying sites are found by MET itself once a day, and their latest observations are
-// fetched every ten minutes, stored and archived as Holfuy's are. The client ID is the secret FROST_CLIENT_ID in
-// Cloudflare (free, frost.met.no/auth/requestCredentials.html); without it MET is skipped. Tested in
-// test/data-worker.test.js.
+// Målt vær fra METs egne værstasjoner (Frost, frost.met.no), i samme stasjonsdatasett som Holfuy. Stasjonene innenfor
+// området til flystedene finner MET selv én gang i døgnet, og de siste observasjonene hentes hvert tiende minutt,
+// lagres og arkiveres som Holfuys. Klient-ID-en er hemmeligheten FROST_CLIENT_ID i Cloudflare (gratis,
+// frost.met.no/auth/requestCredentials.html). Uten den hoppes MET over. Testet i test/data-worker.test.js.
 
 import { archiveSource } from "../archive.js";
 import { num } from "../measurements.js";
 
 export const DATASET = "stations-met";
 export const SOURCE = "MET Norge";
-// MET's terms ask for credit; Frost's data is CC BY (frost.met.no/termsofuse.html).
+// Vilkårene til MET krever kreditering. Dataene fra Frost er CC BY (frost.met.no/termsofuse.html).
 export const LICENSE = "CC BY 4.0, MET Norge";
-// The source's key in the store and the archive (measurements.js).
+// Nøkkelen til kilden i lageret og arkivet (measurements.js).
 export const KEY = "met";
 export const HISTORY_HOURS = 6;
 export const KEEP_DAYS = 7;
-// The stations in the area are looked up again after this long, so new and closed stations follow.
+// Stasjonene i området slås opp på nytt etter så lang tid, så nye og nedlagte stasjoner kommer med.
 export const DISCOVER_HOURS = 24;
-// The flying sites' area, widened by this much (degrees; more east–west, where a degree is shorter) for the lookup. Of the
-// stations found, those within NEAR_KM of a launch are kept: the weather over the whole region, from Lofoten to Bardu,
-// without the far corners of the box. The map thins them when zoomed out (src/assets/js/stations.js), so all can be kept.
+// Området til flystedene, utvidet med så mye (grader, mer øst–vest, der en grad er kortere) for oppslaget. Av
+// stasjonene som finnes, beholdes de innenfor NEAR_KM km fra et startsted: været over hele regionen, fra Lofoten til
+// Bardu, uten de fjerne hjørnene av boksen. Kartet tynner dem ut når det er zoomet ut (src/assets/js/stations.js), så
+// alle kan beholdes.
 export const MARGIN = 0.5;
 export const NEAR_KM = 50;
 const API = "https://frost.met.no";
 const USER_AGENT = "hpgt-flysteder/1.0 (https://flysteder.hpgt.com)";
 
-// What is asked for, and where it goes. Frost names the element; the gust is the highest in the last 10 minutes, the
-// rain the sum over the last hour.
+// Det som spørres etter, og hvor det havner. Frost gir navnet på elementet. Kastet er det høyeste de siste 10
+// minuttene, nedbøren summen den siste timen.
 export const ELEMENTS = {
   wind_from_direction: "dir",
   wind_speed: "speed",
@@ -37,7 +37,7 @@ export const ELEMENTS = {
   "sum(precipitation_amount PT1H)": "rain",
 };
 
-// The area of the flying sites as a closed polygon in Frost's form, "POLYGON((lon lat, …))".
+// Området til flystedene som en lukket polygon i formatet til Frost, "POLYGON((lon lat, …))".
 export function areaPolygon(sites, margin = MARGIN) {
   const lats = sites.map((s) => s.lat), lons = sites.map((s) => s.lon);
   const s = Math.min(...lats) - margin, n = Math.max(...lats) + margin, w = Math.min(...lons) - 2 * margin, e = Math.max(...lons) + 2 * margin;
@@ -45,19 +45,19 @@ export function areaPolygon(sites, margin = MARGIN) {
   return `POLYGON((${p(w, s)}, ${p(e, s)}, ${p(e, n)}, ${p(w, n)}, ${p(w, s)}))`;
 }
 
-// The stations within `km` of any launch.
+// Stasjonene innenfor `km` km fra et startsted.
 export function nearSites(stations, sites, km = NEAR_KM) {
   const dist = (a, b) => Math.hypot((a.lat - b.lat) * 111.32, (a.lon - b.lon) * 111.32 * Math.cos(a.lat * Math.PI / 180));
   return stations.filter((s) => sites.some((site) => dist(s, site) <= km));
 }
 
-// «EVENES LUFTHAVN» → «Evenes lufthavn»: MET's names are in capitals.
+// «EVENES LUFTHAVN» → «Evenes lufthavn»: navnene fra MET er med store bokstaver.
 export function stationName(name) {
   const s = String(name ?? "").trim().toLowerCase();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : null;
 }
 
-// Frost's sources as stations: { id, name, lat, lon, altitude }, only land stations with a position.
+// Kildene fra Frost som stasjoner: { id, name, lat, lon, altitude }, bare landstasjoner med posisjon.
 export function parseSources(data) {
   return (Array.isArray(data?.data) ? data.data : []).flatMap((s) => {
     const c = s?.geometry?.coordinates;
@@ -66,9 +66,9 @@ export function parseSources(data) {
   });
 }
 
-// Frost's observations as measurements, one per station and time, with the fields of measurements.js. Frost gives each
-// element with its own time ("latest" can differ per element); the latest time with a wind speed is used, and the
-// other elements from that same time. Stations without a wind speed are left out.
+// Observasjonene fra Frost som målinger, én per stasjon og tid, med feltene i measurements.js. Frost gir hvert element
+// med sin egen tid ("latest" kan være ulik per element). Den siste tiden med vindfart brukes, og de andre elementene
+// fra den samme tiden. Stasjoner uten vindfart utelates.
 export function parseObservations(data) {
   const byStation = new Map();
   for (const d of Array.isArray(data?.data) ? data.data : []) {
@@ -99,8 +99,8 @@ export function parseObservations(data) {
   return out;
 }
 
-// The dataset: one item per station that has measured wind in the last hours, sorted by name, in the same form as
-// Holfuy's (sources/holfuy.js). sites: { SN…: site id } for a station that belongs to a flying site (stations.js).
+// Datasettet: ett element per stasjon som har målt vind de siste timene, sortert etter navn, i samme form som Holfuys
+// (sources/holfuy.js). sites: { SN…: site id } for en stasjon som hører til et flysted (stations.js).
 export function buildStations(stations, rows, sites = {}, now = Date.now()) {
   const items = stations.map((s) => {
     const own = rows.filter((r) => r.station === s.id).sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
@@ -125,22 +125,22 @@ async function frost(env, path, params) {
     headers: { authorization: "Basic " + btoa(env.FROST_CLIENT_ID + ":"), "user-agent": USER_AGENT },
     signal: AbortSignal.timeout(20000),
   });
-  // 404 and 412: Frost has no data for the request (no station has these elements now), not an error.
+  // 404 og 412: Frost har ingen data for forespørselen (ingen stasjon har disse elementene nå). Det er ikke en feil.
   if (response.status === 404 || response.status === 412) return { data: [] };
   if (!response.ok) throw new Error(`Frost svarte ${response.status}`);
   return response.json();
 }
 
-// One run: looks up the stations in the area when DISCOVER_HOURS have passed, fetches their latest observations (in
-// groups, so the address stays short), stores and archives them, and stores the dataset. Without the client ID nothing.
-// exclude: MET numbers never to show (stations.js MET_EXCLUDE). When the area or the list changes, the stations are
-// looked up again at once instead of after DISCOVER_HOURS.
+// Én kjøring: slår opp stasjonene i området når DISCOVER_HOURS timer har gått, henter de siste observasjonene (i
+// grupper, så adressen holdes kort), lagrer og arkiverer dem, og lagrer datasettet. Uten klient-ID-en skjer ingenting.
+// exclude: MET-numre som aldri skal vises (stations.js MET_EXCLUDE). Når området eller listen endres, slås stasjonene
+// opp på nytt med én gang i stedet for etter DISCOVER_HOURS timer.
 export async function run(store, env, sites, siteOf = {}, now = Date.now(), exclude = []) {
   if (!env.FROST_CLIENT_ID || !sites.length) return;
   const area = `${areaPolygon(sites)} ${NEAR_KM} ${exclude.join(",")}`;
   let state = (await store.getState("met-stations")) ?? { found: null, stations: [] };
   if (!state.found || state.area !== area || now - Date.parse(state.found) > DISCOVER_HOURS * 3600000) {
-    // Only the fields parseSources reads, so the answer for the whole region stays small to read.
+    // Bare feltene parseSources leser, så svaret for hele regionen er lite å lese.
     const data = await frost(env, "/sources/v0.jsonld", { types: "SensorSystem", geometry: areaPolygon(sites), validtime: "now", fields: "id,name,geometry,masl" });
     state = { found: new Date(now).toISOString(), area, stations: nearSites(parseSources(data), sites).filter((s) => !exclude.includes(s.id)) };
   }
@@ -150,12 +150,13 @@ export async function run(store, env, sites, siteOf = {}, now = Date.now(), excl
     const data = await frost(env, "/observations/v0.jsonld", { sources: ids, referencetime: "latest", maxage: "PT2H", elements: Object.keys(ELEMENTS).join(",") });
     measurements.push(...parseObservations(data));
   }
-  // Only the stations that measure wind are kept, so the next runs ask for fewer.
+  // Bare stasjonene som måler vind, beholdes, så de neste kjøringene spør etter færre.
   const active = new Set(measurements.map((m) => m.station));
   if (measurements.length) state.stations = state.stations.filter((s) => active.has(s.id));
   await store.putState("met-stations", state);
   await store.addMeasurements(measurements);
-  // The fresh measurements are published first; the archive comes after, and a failing archive (R2 down) only logs.
+  // De ferske målingene publiseres først. Arkivet kommer etterpå, og et arkiv som feiler (R2 nede), gir bare en
+  // logglinje.
   const rows = await store.measurementsSince(KEY, new Date(now - HISTORY_HOURS * 3600000).toISOString());
   await store.putSnapshot(DATASET, JSON.stringify(buildStations(state.stations, rows, siteOf, now)));
   try {

@@ -2,26 +2,27 @@
 <html lang="{{ t.meta.htmlLang }}">
 <head>
 <meta charset="utf-8">
-{#- Security. GitHub Pages does not let us set HTTP headers, so the policy is a meta tag (frame-ancestors
-    does not work then). Scripts only from the site itself. Images from the map tiles (Kartverket, OpenTopoMap,
-    EOX, thermal.kk7.ch) and the Yr meteogram. No inline styles: our own code sets none (Leaflet and the markers set
-    style through the DOM, which the policy allows), and Turnstile's widget («Meld fra») was checked to work without
-    them on 22.10.2026. A new external source (map layer, image, script) must be added here, or it is blocked.
-    The web app manifest and the service worker (src/sw.11ty.js) come only from the site itself. -#}
+{#- Sikkerhet. GitHub Pages lar oss ikke sette HTTP-headere, så policyen er en meta-tagg (frame-ancestors virker
+    ikke da). Skript bare fra siden selv. Bilder fra kartflisene (Kartverket, OpenTopoMap, EOX, thermal.kk7.ch)
+    og meteogrammet fra Yr. Ingen innebygde stiler: vår egen kode setter ingen (Leaflet og markørene setter
+    style via DOM, som policyen tillater), og Turnstile-widgeten («Meld fra») ble sjekket 22.10.2026 og virker
+    uten dem. En ny ekstern kilde (kartlag, bilde, skript) må legges til her, ellers blir den blokkert.
+    Web app-manifestet og service workeren (src/sw.11ty.js) kommer bare fra siden selv. -#}
 <meta http-equiv="Content-Security-Policy" content="{{ site.csp | safe }}">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{#- Site pages: mobile browsers otherwise turn «Sollifjellet 567 moh» into a map link (taking it for an address).
-    The page has its own directions button, so address detection is turned off there. The rest of the page is unchanged. -#}
+{#- Stedssider: mobilnettlesere gjør ellers «Sollifjellet 567 moh» om til en kartlenke (de tror det er en
+    adresse). Siden har sin egen knapp for veibeskrivelse, så gjenkjenning av adresser er slått av der. Resten av
+    siden er uendret. -#}
 {% if noAddressDetection %}<meta name="format-detection" content="address=no">{% endif %}
 {%- set pageTitle = (name + " – " if name else "") + t.common.siteTitle -%}
 {%- set pageDescription = description or (derived.intro if derived else "") -%}
-{#- First image in the order: overview image no. 1, otherwise launch or landing. -#}
+{#- Første bilde i rekkefølgen: oversiktsbilde nr. 1, ellers start eller landing. -#}
 {%- set ownImage = derived.images[0] if (derived and derived.images and derived.images.length) else null -%}
 {%- set shareImage = ownImage.shareUrl if ownImage else ("/assets/img/share.jpg" | asset) -%}
 <title>{{ pageTitle }}</title>
 {% if pageDescription %}<meta name="description" content="{{ pageDescription }}">{% endif %}
-{#- Preview when the link is shared on Facebook, Messenger etc. The URLs must be absolute. -#}
+{#- Forhåndsvisning når lenken deles på Facebook, Messenger osv. URL-ene må være absolutte. -#}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{{ t.common.siteTitle }}">
 {%- set ogLocale = "nb_NO" -%}{%- for l in languages %}{% if l.code == lang %}{% set ogLocale = l.locale %}{% endif %}{% endfor -%}
@@ -29,54 +30,55 @@
 <meta property="og:title" content="{{ pageTitle }}">
 {% if pageDescription %}<meta property="og:description" content="{{ pageDescription }}">{% endif %}
 <meta property="og:url" content="{{ page.url | htmlBaseUrl(site.url) }}">
-{#- The page's own address as the canonical one (the same page can be reached with a query or a fragment). -#}
+{#- Sidens egen adresse som den kanoniske (samme side kan nås med spørrestreng eller fragment). -#}
 {% if not noindex %}<link rel="canonical" href="{{ page.url | htmlBaseUrl(site.url) }}">{% endif %}
 {% if feedUrl %}<link rel="alternate" type="application/atom+xml" title="{{ t.news.title }}" href="{{ feedUrl | htmlBaseUrl(site.url) }}">{% endif %}
 <meta property="og:image" content="{{ shareImage | htmlBaseUrl(site.url) }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F3F5F4">
-{#- Installable as an app, with the front page in the page's language as start page (src/manifest.webmanifest.11ty.js). -#}
+{#- Kan installeres som app, med forsiden på sidens språk som startside (src/manifest.webmanifest.11ty.js). -#}
 <link rel="manifest" href="{{ '/manifest.webmanifest' | localeUrl }}">
 <link rel="icon" href="/assets/img/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-{#- Pages in several languages (paginated over languages, see src/_data/languages.js) link to each other,
-    so search engines show the right language. Norwegian is the default (x-default). -#}
+{#- Sider på flere språk (paginert over språkene, se src/_data/languages.js) lenker til hverandre,
+    så søkemotorer viser riktig språk. Norsk er standard (x-default). -#}
 {% if language %}{% for l in languages %}<link rel="alternate" hreflang="{{ l.code }}" href="{{ page.url | localeUrl(l.code) | htmlBaseUrl(site.url) }}">
 {% endfor %}<link rel="alternate" hreflang="x-default" href="{{ page.url | localeUrl('nb') | htmlBaseUrl(site.url) }}">
 {% endif %}
-{#- The colour mode is set before the page renders, so it does not flash light first. The choice (auto, light, dark)
-    is stored in the browser by the menu (common.js). Auto follows the device setting. The same applies to
-    colour-blind-friendly colours (data-cvd). -#}
+{#- Fargemodusen settes før siden tegnes, så den ikke blinker lyst først. Valget (auto, lys, mørk) lagres i
+    nettleseren av menyen (common.js). Auto følger innstillingen på enheten. Det samme gjelder
+    fargeblindvennlige farger (data-cvd). -#}
 <script src="{{ "/assets/js/theme-init.js" | asset }}"></script>
-{#- Visitor statistics (GoatCounter), without cookies. The address must also be in connect-src and img-src above. -#}
+{#- Besøksstatistikk (GoatCounter), uten informasjonskapsler. Adressen må også stå i connect-src og img-src over. -#}
 <script data-goatcounter="{{ site.goatcounter }}" async src="{{ "/assets/js/goatcounter.js" | asset }}"></script>
 {% if noindex %}<meta name="robots" content="noindex">{% endif %}
-{#- The fonts are self-hosted (Fontsource, see eleventy.config.js), so visitors do not send their IP address to Google. Only three
-    files: Barlow 400 and 600 (body text, 700 uses 600) and Barlow Condensed 700 (headings), all preloaded. -#}
+{#- Skriftene ligger på siden selv (Fontsource, se eleventy.config.js), så besøkende ikke sender IP-adressen sin
+    til Google. Bare tre filer: Barlow 400 og 600 (brødtekst, 700 bruker 600) og Barlow Condensed 700
+    (overskrifter), alle forhåndslastet. -#}
 <link rel="preload" href="/assets/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/barlow-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ "/assets/css/fonts.css" | asset }}">
-{#- Early connections to servers the page will use at once (the map tiles on the home page: preconnect in the front matter).
-    The site pages start their map only when it is scrolled into view, so they do not need it. -#}
+{#- Tidlige tilkoblinger til servere siden bruker med en gang (kartflisene på forsiden: preconnect i front matter).
+    Stedssidene starter kartet først når det rulles fram, så de trenger det ikke. -#}
 {% for origin in preconnect %}<link rel="preconnect" href="{{ origin }}">
-{% endfor %}{#- Leaflet only on pages with a map (map: true in the front matter: the home page and the site pages). -#}
+{% endfor %}{#- Leaflet bare på sider med kart (map: true i front matter: forsiden og stedssidene). -#}
 {% if map %}<link rel="stylesheet" href="{{ "/assets/leaflet/leaflet.css" | asset }}">{% endif %}
 <link rel="stylesheet" href="{{ "/assets/css/styles.css" | asset }}">
 {% for style in styles %}<link rel="stylesheet" href="{{ style | asset }}">
 {% endfor %}
 </head>
 <body class="{{ bodyClass }}">
-{#- For keyboard and screen reader users: the first Tab shows this link, which skips the top bar and the menu. Every
-    page has an element with id="content" (the title or the start of the main content). -#}
+{#- For tastatur- og skjermleserbrukere: første Tab viser denne lenken, som hopper over topplinjen og menyen. Hver
+    side har et element med id="content" (tittelen eller starten på hovedinnholdet). -#}
 <a class="skip-link" href="#content">{{ t.common.skipToContent }}</a>
 {{ content | safe }}
-{#- The strings the scripts need, in the page's language (read by common.js). -#}
+{#- Tekstene skriptene trenger, på sidens språk (leses av common.js). -#}
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
-{#- defer: the scripts run in this order once the page is parsed, without holding up the first paint. -#}
+{#- defer: skriptene kjører i denne rekkefølgen når siden er lest inn, uten å holde igjen første opptegning. -#}
 {% if map %}<script defer src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>{% endif %}
 <script defer src="{{ "/assets/js/common.js" | asset }}"></script>
-{#- The service worker, for offline use (src/assets/js/pwa.js). The URLs are given here, so they follow the path prefix. -#}
+{#- Service workeren, for bruk uten nett (src/assets/js/pwa.js). URL-ene står her, så de følger stiprefikset. -#}
 <script defer src="{{ "/assets/js/pwa.js" | asset }}" data-sw="{{ '/sw.js' | url }}" data-scope="{{ '/' | url }}"></script>
 {% for script in scripts %}<script defer src="{{ script | asset }}"></script>
 {% endfor %}

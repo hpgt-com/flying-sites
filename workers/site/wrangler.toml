@@ -1,23 +1,23 @@
-# The site on Cloudflare (Workers static assets): the same build as GitHub Pages (_site), published by the job
-# «cloudflare» in .github/workflows/deploy.yml. No code runs here, only files. flysteder.hpgt.com is a custom domain
-# on this Worker, added by hand in Cloudflare (Workers & Pages → flysteder → Settings → Domains & Routes) on
-# 19.11.2026; deploys keep it (docs/operations.md «Siden på Cloudflare»). Wrangler comes from workers/data (the same
-# pinned version).
+# Nettstedet på Cloudflare (Workers static assets): samme bygg som på GitHub Pages (_site), publisert av jobben
+# «cloudflare» i .github/workflows/deploy.yml. Ingen kode kjører her, bare filer. flysteder.hpgt.com er et eget domene
+# på denne Workeren, lagt til for hånd i Cloudflare (Workers & Pages → flysteder → Settings → Domains & Routes)
+# 19.11.2026; publiseringer beholder det (docs/operations.md «Siden på Cloudflare»). Wrangler kommer fra workers/data
+# (samme låste versjon).
 name = "flysteder"
 compatibility_date = "2026-09-30"
-# Only flysteder.hpgt.com: no copy of the site at flysteder.hpgt.workers.dev or at preview addresses.
+# Bare flysteder.hpgt.com: ingen kopi av nettstedet på flysteder.hpgt.workers.dev eller på adresser for forhåndsvisning.
 workers_dev = false
 preview_urls = false
 
 [assets]
 directory = "../../_site"
-# 404.html for an address that does not exist, as on GitHub Pages; /om serves /om/ like GitHub Pages does.
+# 404.html for en adresse som ikke finnes, som på GitHub Pages; /om gir /om/ slik GitHub Pages gjør.
 not_found_handling = "404-page"
 html_handling = "auto-trailing-slash"
 
-# Turned on in the dashboard on 19.11.2026; kept here so a deploy keeps it. The site's files are served without
-# running any code, so there is little to log: mostly the metrics (requests, errors, bandwidth). Free plan: logging
-# pauses for the day at the daily limit and is never charged.
+# Slått på i dashbordet 19.11.2026; står her så en publisering beholder det. Filene serveres uten at noen kode
+# kjører, så det er lite å logge: mest målingene (forespørsler, feil, båndbredde). Gratisplan: loggingen tar pause
+# resten av dagen ved dagsgrensen og koster aldri noe.
 # Cloudflares logg per kall er av: den ville logget hvert sidebesøk med IP-adressen og nettleseren. Workeren har ingen
 # egen kode, så det er ingenting annet å logge.
 [observability]

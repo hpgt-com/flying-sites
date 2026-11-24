@@ -1,18 +1,18 @@
-name: Restore drill
+name: Gjenopprettingsøvelse
 
-# The monthly proof that the off-site copy can be restored (docs/operations.md «Katastrofegjenoppretting»): the data service's
-# own code is run here on the runner (wrangler dev, local workerd: its own empty store and its own local R2, nothing
-# in Cloudflare is touched), the latest backup of each table is fetched from the copy in B2 and put in that local R2,
-# the schedule is fired once, and the store must read every row back in (workers/data/src/store.js restore), as
-# /v1/status.json reports. So what is proven each month is the copy, the files, and the restore code, together. The
-# schedule's other sources run too and fetch from MET, Holfuy and OGN once, as a deploy would. Fails and opens an
-# issue when the restore does not happen or the rows differ; the issue closes when a drill succeeds again. Needs the
-# B2 key from the environment «backup-read»: a key that can only read the backup bucket, so the drill cannot change
-# the copy.
+# Det månedlige beviset på at kopien hos en annen leverandør kan gjenopprettes (docs/operations.md
+# «Katastrofegjenoppretting»): datatjenestens egen kode kjøres her på runneren (wrangler dev, lokal workerd: sitt eget
+# tomme lager og sin egen lokale R2, ingenting i Cloudflare blir rørt), siste sikkerhetskopi av hver tabell hentes fra
+# kopien i B2 og legges i den lokale R2-en, tidsplanen utløses én gang, og lageret må lese hver rad inn igjen
+# (workers/data/src/store.js restore), slik /v1/status.json rapporterer. Det som bevises hver måned, er altså kopien,
+# filene og gjenopprettingskoden, sammen. De andre kildene i tidsplanen kjører også og henter fra MET, Holfuy og OGN
+# én gang, slik en publisering ville gjort. Feiler og åpner en sak når gjenopprettingen ikke skjer eller radene er
+# forskjellige; saken lukkes når en øvelse lykkes igjen. Trenger B2-nøkkelen fra miljøet «backup-read»: en nøkkel som
+# bare kan lese backup-bøtta, så øvelsen ikke kan endre kopien.
 
 on:
   schedule:
-    - cron: "30 4 1 * *" # the 1st of the month at 04:30 UTC, after the night's copy
+    - cron: "30 4 1 * *" # den 1. i måneden kl. 04:30 UTC, etter nattens kopi
   workflow_dispatch:
 
 permissions: {}

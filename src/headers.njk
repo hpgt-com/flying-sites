@@ -2,13 +2,13 @@
 permalink: /_headers
 eleventyExcludeFromCollections: true
 ---
-# Response headers for the site on Cloudflare (workers/site; GitHub Pages ignores this file). Made from this template
-# (src/headers.njk → _site/_headers). The CSP is site.csp (src/_data/site.js), the same as the <meta> in every page,
-# plus frame-ancestors, which a meta tag cannot set, and where violations are reported (report-uri for older browsers,
-# report-to with Reporting-Endpoints for newer; workers/data/src/csp-report.js). As a header it also covers files that
-# are not HTML. Content-Security-Policy-Report-Only tries Trusted Types without enforcing them: Leaflet still assigns
-# HTML strings and Turnstile is third-party, so the reports show what must change before require-trusted-types-for can
-# be enforced.
+# Svarheadere for siden på Cloudflare (workers/site; GitHub Pages overser denne filen). Lages fra denne malen
+# (src/headers.njk → _site/_headers). CSP-en er site.csp (src/_data/site.js), den samme som <meta> på hver side,
+# pluss frame-ancestors, som en meta-tagg ikke kan sette, og hvor brudd rapporteres (report-uri for eldre nettlesere,
+# report-to med Reporting-Endpoints for nyere; workers/data/src/csp-report.js). Som header dekker den også filer som
+# ikke er HTML. Content-Security-Policy-Report-Only prøver Trusted Types uten å håndheve dem: Leaflet tilordner
+# fortsatt HTML-strenger, og Turnstile er fra en tredjepart, så rapportene viser hva som må endres før
+# require-trusted-types-for kan håndheves.
 /*
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
@@ -21,19 +21,19 @@ eleventyExcludeFromCollections: true
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-site
 
-# The service worker fetches map tiles and data from other hosts (sw.js), and a CSP header on the worker script would
-# govern those fetches (connect-src). The pages' CSP is for the pages, so the worker gets none; it can only be loaded
-# by the pages, from this origin. The same for the report-only policy and its reporting endpoint.
+# Service workeren henter kartfliser og data fra andre verter (sw.js), og en CSP-header på skriptet til workeren ville
+# styrt de hentingene (connect-src). CSP-en til sidene er for sidene, så workeren får ingen. Den kan bare lastes av
+# sidene, fra denne opprinnelsen. Det samme gjelder report-only-policyen og rapporteringsendepunktet.
 /sw.js
   ! Content-Security-Policy
   ! Content-Security-Policy-Report-Only
   ! Reporting-Endpoints
 
-# The images have a hash of their content in the name (lib/images.js): a changed image gets a new name.
+# Bildene har en hash av innholdet i navnet (lib/images.js): et endret bilde får nytt navn.
 /img/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The scripts, styles and fonts are asked for with ?v=<hash> by the pages, but not all (fonts from fonts.css, Leaflet's
-# images), so one day, not a year. GitHub Pages gives everything ten minutes.
+# Sidene ber om skriptene, stilarkene og skriftene med ?v=<hash>, men ikke alle (skrifter fra fonts.css, bildene til
+# Leaflet), så én dag, ikke et år. GitHub Pages gir alt ti minutter.
 /assets/*
   Cache-Control: public, max-age=86400

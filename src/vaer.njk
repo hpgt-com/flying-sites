@@ -14,9 +14,9 @@ eleventyComputed:
   name: "{{ t.weather.title }}"
   description: "{{ t.weather.description }}"
 ---
-{#- Measured wind from all the weather stations (stations.js, data service): a table of all stations, then a card per
-    station with the change over the chosen period, the wind rose of its flying site, the chart of the last hours, and the
-    forecast for the site against what is measured. Filled by weather.js. -#}
+{#- Målt vind fra alle værstasjonene (stations.js, datatjenesten): en tabell over alle stasjonene, så et kort per
+    stasjon med endringen over valgt periode, vindrosen til flystedet, grafen for de siste timene, og prognosen
+    for stedet mot det som er målt. Fylles av weather.js. -#}
 {%- import "macros.njk" as m with context -%}
 <main class="simple-page weather-page">
   <header class="topbar">

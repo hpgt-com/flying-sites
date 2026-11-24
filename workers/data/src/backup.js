@@ -1,16 +1,16 @@
-// The backup of the history that exists only in the store (store.js): the flying activity per day (flight_days) and how
-// well the forecast hit (verify_hours). The measurements have their own archive (archive.js). Once a night each table is
-// written to R2 as backup/<table>/<day>.json and backup/<table>/latest.json, and the file from KEEP_DAYS before is
-// deleted. A new, empty store (a lost Durable Object) reads latest.json back in on its first backup run, before it
-// writes its own (Store.backup). Tested in test/data-quota.test.js.
+// Sikkerhetskopien av historikken som bare finnes i lageret (store.js): flyaktiviteten per dag (flight_days) og hvor
+// godt varselet traff (verify_hours). Målingene har sitt eget arkiv (archive.js). Hver natt skrives hver tabell til R2
+// som backup/<table>/<day>.json og backup/<table>/latest.json, og filen fra KEEP_DAYS dager før slettes. Et nytt, tomt
+// lager (et tapt Durable Object) leser latest.json inn igjen ved sin første kopiering, før det skriver sin egen
+// (Store.backup). Testet i test/data-quota.test.js.
 
 export const TABLES = {
   flight_days: ["day", "site", "flights", "pilots", "minutes", "max_dist", "max_alt"],
   verify_hours: ["site", "station", "time", "f_dir", "f_speed", "f_gust", "m_dir", "m_speed", "m_gust", "n", "f_temp", "m_temp", "f_pressure", "m_pressure"],
   flights: ["id", "day", "site", "start", "end", "minutes", "max_alt", "max_dist", "max_speed", "counted", "points"],
 };
-// A file made before columns were added (at the end) is still read in: its columns must be the first of the table's,
-// at least this many, and the rest become null.
+// En fil laget før kolonner ble lagt til (på slutten), leses fortsatt inn. Kolonnene må være de første i tabellen,
+// minst så mange som dette, og resten blir null.
 export const MIN_COLUMNS = { flight_days: 7, verify_hours: 10, flights: 11 };
 export const KEEP_DAYS = 90;
 export const JSON_META = { httpMetadata: { contentType: "application/json; charset=utf-8" } };
@@ -18,20 +18,20 @@ export const JSON_META = { httpMetadata: { contentType: "application/json; chars
 export const backupPath = (table, day) => `backup/${table}/${day}.json`;
 export const latestPath = (table) => `backup/${table}/latest.json`;
 
-// The day KEEP_DAYS before day (YYYY-MM-DD), whose file is deleted.
+// Dagen KEEP_DAYS dager før day (YYYY-MM-DD). Filen for den dagen slettes.
 export function expiredDay(day, keepDays = KEEP_DAYS) {
   return new Date(Date.parse(`${day}T00:00:00Z`) - keepDays * 86400000).toISOString().slice(0, 10);
 }
 
-// A table's rows as the file: the columns once, each row as an array in that order.
+// Radene i en tabell som fil: kolonnene én gang, og hver rad som en liste i den rekkefølgen.
 export function backupBody(table, rows, day) {
   const columns = TABLES[table];
   return JSON.stringify({ table, day, columns, rows: rows.map((r) => columns.map((c) => r[c] ?? null)) });
 }
 
-// The rows of a backup file, checked: the table is one of TABLES, the columns are its columns (or the first of them,
-// MIN_COLUMNS or more, from before the later ones were added: those become null), and each row has one value per
-// column. Throws otherwise, so a wrong file is never read in.
+// Radene i en sikkerhetskopi, sjekket: tabellen er en av TABLES, kolonnene er tabellens kolonner (eller de første av
+// dem, MIN_COLUMNS eller flere, fra før de senere ble lagt til; de blir null), og hver rad har én verdi per kolonne.
+// Ellers kastes en feil, så en feil fil leses aldri inn.
 export function backupRows(text, table) {
   const body = JSON.parse(text);
   const columns = TABLES[table];
@@ -43,7 +43,8 @@ export function backupRows(text, table) {
   return missing ? body.rows.map((r) => r.concat(Array(missing).fill(null))) : body.rows;
 }
 
-// The statement that reads a row back in. A row already there (written since the store was lost) is kept: it is newer.
+// Setningen som leser en rad inn igjen. En rad som alt finnes (skrevet etter at lageret ble tapt), beholdes: den er
+// nyere.
 export function restoreSql(table) {
   const columns = TABLES[table];
   return `INSERT OR IGNORE INTO ${table} (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`;

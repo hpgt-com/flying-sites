@@ -1,8 +1,8 @@
-// The restore drill's two steps (lib/restore-drill.js), run by .github/workflows/restore-drill.yml:
+// De to stegene i gjenopprettingsøvelsen (lib/restore-drill.js), kjøres av .github/workflows/restore-drill.yml:
 //
-//   node scripts/restore-drill.mjs expected <dir>            rows per table in <dir>/<table>.json, as JSON on stdout
-//   node scripts/restore-drill.mjs verdict <status url> <expected json> [max seconds]
-//                                                            polls the status until the restore is recorded; exit 1 if wrong
+//   node scripts/restore-drill.mjs expected <dir>            rader per tabell i <dir>/<table>.json, som JSON på stdout
+//   node scripts/restore-drill.mjs verdict <status-adresse> <forventet json> [maks sekunder]
+//                                                            spør statusen til gjenopprettingen er registrert; exit 1 ved feil
 import fs from "node:fs";
 import path from "node:path";
 import { TABLES } from "../workers/data/src/backup.js";

@@ -1,13 +1,13 @@
-// What the pages do in a browser, checked on the built site in Chromium (Playwright). Run after the build:
+// Hva sidene gjør i en nettleser, sjekket på det bygde nettstedet i Chromium (Playwright). Kjøres etter bygging:
 //
 //   npm run build && npm run check:behaviour
 //
-// Each scenario is something that has broken before or matters most when it does: the weather stations and pilots on the
-// map stay where Leaflet puts them when the map is zoomed (they slid away on mobile, 19.10.2026), the layer «Piloter i
-// lufta» draws the pilots, the pages work when the data service is down, «Meld fra» checks and sends the form, and a
-// site page opened before works offline. The data service and Turnstile are answered here (test/fixtures/), and every
-// other request to another host is blocked, so the check needs no network and gives the same result every time.
-// CHROMIUM_PATH: a Chromium already installed (otherwise the one from `npx playwright install chromium`).
+// Hvert scenario er noe som har gått i stykker før, eller som betyr mest når det gjør det: værstasjonene og pilotene
+// på kartet blir der Leaflet setter dem når kartet zoomes (de gled bort på mobil, 19.10.2026), laget «Piloter i lufta»
+// tegner pilotene, sidene virker når datatjenesten er nede, «Meld fra» sjekker og sender skjemaet, og en flystedsside
+// som er åpnet før, virker uten nett. Datatjenesten og Turnstile besvares her (test/fixtures/), og alle andre
+// forespørsler til andre verter blokkeres, så sjekken trenger ikke nett og gir samme resultat hver gang.
+// CHROMIUM_PATH: en Chromium som alt er installert (ellers den fra `npx playwright install chromium`).
 
 import fs from "node:fs";
 import { chromium, devices } from "playwright";
@@ -16,7 +16,7 @@ import { serveSite } from "./site-server.mjs";
 const DATA = "https://data.hpgt.com";
 const MOBILE = { ...devices["Pixel 7"], colorScheme: "light" };
 
-// The stations as the data service gave them, moved to now so none is too old to show.
+// Stasjonene slik datatjenesten ga dem, flyttet til nå så ingen er for gamle til å vises.
 function stationsNow() {
   const d = JSON.parse(fs.readFileSync("test/fixtures/stations.json", "utf8"));
   const newest = Math.max(...d.items.map((i) => Date.parse(i.time ?? 0)));
@@ -28,7 +28,7 @@ function stationsNow() {
   return { ...d, fetched: new Date().toISOString() };
 }
 
-// Three paragliders over Heia, the newest positions now.
+// Tre paraglidere over Heia, med de nyeste posisjonene nå.
 function liveNow() {
   const at = (s) => new Date(Date.now() - s * 1000).toISOString();
   const items = [1, 2, 3].map((n) => ({
@@ -39,16 +39,16 @@ function liveNow() {
   return { dataset: "live", source: "Open Glider Network", license: "ODbL, Open Glider Network", fetched: at(0), items };
 }
 
-// A forecast grid (/v1/grid.json, /v1/grid-wide.json) over the home region from the hour going on, for 30 hours: land
-// with thermals inland, sea in the west, wind from the south-west getting stronger to the north, rain in one corner.
-// The flight log: a counted Heia flight with five positions, and a car from before 27.10.2026 kept as not counted,
-// which the page leaves out.
+// Et prognosenett (/v1/grid.json, /v1/grid-wide.json) over hjemmeregionen fra inneværende time, i 30 timer: land
+// med termikk inne i landet, sjø i vest, vind fra sørvest som øker mot nord, regn i ett hjørne.
+// Flyloggen: en talt tur fra Heia med fem posisjoner, og en bil fra før 27.10.2026 beholdt som ikke talt,
+// som siden utelater.
 function flightLogNow() {
   const start = Date.now() - 3 * 3600000;
   const t = (m) => new Date(start + m * 60000).toISOString();
   const heia = [[t(0), 68.7589, 16.5103, 480, 8, 1.2], [t(2), 68.7620, 16.5050, 700, 9, 1.5], [t(4), 68.7680, 16.4980, 950, 10, 0.8], [t(6), 68.7720, 16.4900, 900, 11, -0.5], [t(8), 68.7760, 16.4830, 640, 9, -1.2]];
   const car = [[t(60), 68.5600, 17.5000, 60, 14, 0], [t(62), 68.5750, 17.4700, 55, 20, 0]];
-  // Two more from Heia at the same time, so the day view has three flights to show together.
+  // To til fra Heia samtidig, så dagsvisningen har tre turer å vise sammen.
   const shift = (pts, dm, dlon, dalt) => pts.map((p) => [new Date(Date.parse(p[0]) + dm * 60000).toISOString(), p[1], p[2] + dlon, p[3] + dalt, p[4], p[5]]);
   return { dataset: "flight-log", source: "OGN", license: "ODbL", fetched: new Date().toISOString(), days: 31, flights: [
     { id: "a1b2c3d4e5f6", day: t(5).slice(0, 10), site: "heia", start: t(5), end: t(13), minutes: 9, maxAlt: 1010, maxDist: 2.5, maxSpeed: 12, counted: true, points: shift(heia, 5, 0.004, 60) },
@@ -57,7 +57,7 @@ function flightLogNow() {
     { id: "0a1b2c3d4e5f", day: t(60).slice(0, 10), site: "haugfjellet", start: t(60), end: t(62), minutes: 4, maxAlt: 60, maxDist: 2.1, maxSpeed: 20, counted: false, points: car },
   ] };
 }
-// The flight sums: three flights from Heia, one of them today, so the site page shows its flights box.
+// Summene for turene: tre turer fra Heia, én av dem i dag, så flystedssiden viser boksen med turer.
 function flightsNow() {
   const today = new Date().toISOString().slice(0, 10), month = today.slice(0, 7);
   return { dataset: "flights", source: "OGN", license: "ODbL", fetched: new Date().toISOString(), since: "2026-08-01", sites: {
@@ -88,11 +88,11 @@ function gridNow(name) {
   return { dataset: name, source: "Open-Meteo", license: "CC BY 4.0, Open-Meteo", fetched: new Date().toISOString(), lat0, lon0, dLat, dLon, rows, cols, times, elev, values };
 }
 
-// The MET forecast as the data service gives it, from the hour going on, so the home page has a timeline also when it
-// is built without one (the PR check skips it): a light south-westerly at Heia, without gusts in the 6-hour steps.
+// Varselet fra MET slik datatjenesten gir det, fra inneværende time, så forsiden har en tidslinje også når den er
+// bygd uten (sjekken av PR-er hopper over den): svak sørvest på Heia, uten vindkast i stegene på 6 timer.
 function forecastNow() {
   const hour0 = Math.floor(Date.now() / 3600000) * 3600000;
-  // Every hour for 57 hours, then every 6 hours to five days, as MET gives it (lib/weather/met.js).
+  // Hver time i 57 timer, så hver 6. time opp til fem døgn, slik MET gir det (lib/weather/met.js).
   const ms = Array.from({ length: 57 }, (_, k) => hour0 + k * 3600000);
   const six = Math.ceil((ms.at(-1) + 3600000) / 21600000) * 21600000;
   for (let t = six; t < hour0 + 120 * 3600000; t += 21600000) ms.push(t);
@@ -102,12 +102,12 @@ function forecastNow() {
     times, sites: { heia: times.map((t, k) => [225, 3, k < 57 ? 5 : null, 0]) }, past: {} };
 }
 
-// The answers from outside: the data service (stations and pilots from the fixtures, the rest as «no data yet», so the
-// pages use what is built in, or everything 503 when down), Turnstile as a stand-in that passes at once, and nothing else.
+// Svarene utenfra: datatjenesten (stasjoner og piloter fra fixtures, resten som «ingen data ennå», så sidene bruker
+// det som er bygd inn, eller alt 503 når den er nede), Turnstile som en erstatning som godkjenner med en gang, og ikke noe mer.
 async function answer(context, origin, { down = false, reports = [], forecast = false } = {}) {
   await context.route("**/*", async (route) => {
     const req = route.request();
-    // Compared by origin, not as text: «https://data.hpgt.com.example» is another host.
+    // Sammenlignes etter opphav, ikke som tekst: «https://data.hpgt.com.example» er en annen vert.
     const url = new URL(req.url());
     if (url.origin === origin) return route.continue();
     if (url.origin === DATA && url.pathname === "/v1/report") {
@@ -129,13 +129,13 @@ async function answer(context, origin, { down = false, reports = [], forecast = 
   });
 }
 
-// Errors thrown in the page. Failed loads of blocked hosts and the 503s are expected and not counted.
+// Feil som kastes på siden. Mislykket lasting fra blokkerte verter og 503-svarene er ventet og telles ikke.
 function watchErrors(page, errors) {
   page.on("pageerror", (e) => errors.push(`${page.url()}: ${e.message}`));
 }
 
-// Each marker on the map where Leaflet has put it: its box on the screen at the position in its transform (plus the icon
-// anchor's margin), within a pixel. Returns the markers that are not.
+// Hver markør på kartet der Leaflet har satt den: boksen på skjermen i posisjonen i transform (pluss margen til
+// ikonets ankerpunkt), innenfor én piksel. Gir markørene som ikke er det.
 function misplaced(page) {
   return page.evaluate(() => [...document.querySelectorAll(".leaflet-marker-pane > .leaflet-marker-icon")].flatMap((el) => {
     const cs = getComputedStyle(el);
@@ -148,11 +148,12 @@ function misplaced(page) {
   }));
 }
 
-// A layer's box in the map's layer list, by its whole label («Prognose: termikk» is not «Prognose: termikktopp …»).
+// Avkrysningsboksen for et lag i lagvelgeren på kartet, etter hele teksten («Prognose: termikk» er ikke
+// «Prognose: termikktopp …»).
 function layerBox(page, label) {
   return page.locator(".leaflet-control-layers-overlays label").filter({ has: page.getByText(label, { exact: true }) }).locator("input");
 }
-// Turns a layer on, if it is off.
+// Slår på et lag, hvis det er av.
 async function layerOn(page, label) {
   const box = layerBox(page, label);
   if (!(await box.isChecked())) await box.evaluate((el) => el.click());
@@ -217,7 +218,7 @@ const scenarios = {
     const errors = [];
     watchErrors(page, errors);
     const problems = [];
-    // The zoom the map has, as home.js keeps it for the session after every move (the tiles themselves are not fetched here).
+    // Zoomen kartet har, slik home.js tar vare på den i økten etter hver flytting (selve flisene hentes ikke her).
     const savedZoom = () => page.evaluate(() => { try { return JSON.parse(sessionStorage.getItem("fs-home-view") || "null")?.zoom ?? null; } catch { return null; } });
     await page.goto(`${origin}/#direction=S`, { waitUntil: "load" });
     await page.locator(".station-marker").first().waitFor({ state: "attached", timeout: 15000 });
@@ -228,7 +229,7 @@ const scenarios = {
     await page.waitForTimeout(800);
     const before = await savedZoom();
     if (!(before > start)) problems.push(`zoomet ikke inn (${start} → ${before})`);
-    // To a site page by the row's link, and back with «‹ Alle flysteder».
+    // Til en flystedsside med lenken i raden, og tilbake med «‹ Alle flysteder».
     const row = page.locator("#results-list li:not([hidden])").first();
     await row.locator("button.results__item").click();
     await row.locator("a.results__open").evaluate((a) => a.click());
@@ -277,17 +278,17 @@ const scenarios = {
     if (!(await page.locator(".fc-top").count())) problems.push("ingen termikktopp på kartet");
     if (!(await page.locator(".fc-legend .fc-legend__bar").count())) problems.push("ingen skala for termikken");
     const before = await page.locator(".fc-legend__status").textContent();
-    // A few hours on in the timeline: the legend's time follows.
+    // Noen timer fram i tidslinjen: tiden i tegnforklaringen følger med.
     await page.locator("#timeline-range").evaluate((el) => { el.value = "3"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await page.waitForTimeout(200);
     const after = await page.locator(".fc-legend__status").textContent();
     if (before === after) problems.push(`prognosen fulgte ikke tidslinjen (${after})`);
-    // The barbs at the ground are weaker than at 750 m: the numbers change.
+    // Vindpilene ved bakken er svakere enn i 750 m: tallene endres.
     const at750 = await page.locator(".fc-speed").allTextContents();
     await page.locator(".fc-legend [data-level=ground]").click();
     const atGround = await page.locator(".fc-speed").allTextContents();
     if (at750.join() === atGround.join()) problems.push("vind ved bakken viser det samme som 750 m");
-    // With the temperature on too, the numbers stay clear of the barbs and of each other (they overlapped, 21.10.2026).
+    // Med temperaturen også på holder tallene seg unna vindpilene og hverandre (de overlappet, 21.10.2026).
     await layerOn(page, "Prognose: temperatur");
     await page.waitForTimeout(200);
     const overlaps = await page.evaluate(() => {
@@ -303,8 +304,8 @@ const scenarios = {
     await zoom(page, 1);
     const off = await misplaced(page);
     if (off.length) problems.push(`etter zoom: ${off.slice(0, 5).join("; ")}`);
-    // A tap in the map gives the numbers for the nearest point.
-    // Where nothing else is on top: not a site, a control or the timeline.
+    // Et trykk i kartet gir tallene for nærmeste punkt.
+    // Der ingenting annet ligger over: ikke et flysted, en kontroll eller tidslinjen.
     const spot = await page.evaluate(() => {
       const box = document.querySelector("#home-map").getBoundingClientRect();
       for (let fy = 0.3; fy < 0.8; fy += 0.05) for (let fx = 0.2; fx < 0.8; fx += 0.05) {
@@ -337,7 +338,7 @@ const scenarios = {
     const max = Number(await range.getAttribute("max"));
     if (!(max >= 110)) problems.push(`tidslinjen går bare ${max} timer fram`);
     if (!(await page.locator(".timeline__coarse").count())) problems.push("de grove 6-timersverdiene er ikke markert");
-    // To the last hour, then one step on with the arrow key: on to the first 6-hour step, and back.
+    // Til siste time, så ett steg videre med piltasten: videre til første steg på 6 timer, og tilbake.
     await range.evaluate((el) => { el.value = "56"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await range.focus();
     await page.keyboard.press("ArrowRight");
@@ -364,14 +365,14 @@ const scenarios = {
     await page.locator("#activity-log:not([hidden])").waitFor({ timeout: 5000 }).catch(() => problems.push("«Siste turer» kom ikke"));
     const rows = page.locator("#activity-log tbody tr");
     if ((await rows.count()) !== 3) problems.push(`${await rows.count()} rader i «Siste turer», ventet 3 (bilturen skal ikke vises)`);
-    // Previous and next: from the newest, «Forrige» goes back in time; the newest has no «Neste».
+    // Forrige og neste: fra den nyeste går «Forrige» bakover i tid; den nyeste har ingen «Neste».
     await rows.first().click();
     await page.locator("#tur-a1b2c3d4e5f6").waitFor({ timeout: 5000 }).catch(() => problems.push("den nyeste turen åpnet seg ikke"));
     if (!(await page.locator(".activity-log-nav button", { hasText: "Neste" }).isDisabled())) problems.push("«Neste» er ikke slått av på den nyeste turen");
     await page.locator(".activity-log-nav button", { hasText: "Forrige" }).click();
     await page.locator("#tur-b2c3d4e5f6a7").waitFor({ timeout: 5000 }).catch(() => problems.push("«Forrige» gikk ikke til turen før"));
     if (!page.url().endsWith("#tur-b2c3d4e5f6a7")) problems.push(`adressen følger ikke turen: ${page.url()}`);
-    // All three that day on one map, with three curves; the pointer marks where they were.
+    // Alle tre den dagen på ett kart, med tre kurver; pekeren markerer hvor de var.
     await page.locator(".activity-log-nav button", { hasText: "Alle 3 turer" }).click();
     const dayCard = page.locator("[id^='dag-']");
     await dayCard.locator(".activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("dagsvisningen fikk ikke kart"));
@@ -384,7 +385,7 @@ const scenarios = {
     await page.mouse.move(db.x + db.width * 0.6, db.y + db.height * 0.5);
     const dl = await dc.locator(".activity-curve__label").textContent();
     if (!/i lufta/.test(dl || "")) problems.push(`dagskurven viser ikke hvor mange som var i lufta: ${dl}`);
-    // Back to one flight from the list in the day view.
+    // Tilbake til én tur fra listen i dagsvisningen.
     await dayCard.locator(".activity-day-open").last().click();
     await rows.nth(2).click();
     await page.locator("#tur-f1e2d3c4b5a6 .activity-log-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("turen fikk ikke kart"));
@@ -400,7 +401,7 @@ const scenarios = {
       const label = await curve.locator(".activity-curve__label").last().textContent();
       if (!/moh/.test(label || "")) problems.push(`høydekurven viser ikke høyden: ${label}`);
     }
-    // Opened by its link from the site page (the newest flight from Heia is first).
+    // Åpnet med lenken fra flystedssiden (den nyeste turen fra Heia står først).
     await page.goto(`${origin}/flysteder/heia/`, { waitUntil: "load" });
     const link = page.locator(".flights-recent a").first();
     await link.waitFor({ timeout: 5000 }).catch(() => problems.push("stedssiden har ingen «Siste turer herfra»"));
@@ -427,11 +428,11 @@ const scenarios = {
       await page.waitForTimeout(1500);
       if (!(await page.locator("h1").first().isVisible())) problems.push(`${url}: ingen overskrift`);
     }
-    // The site page's map is set up when it comes near the screen.
+    // Kartet på flystedssiden settes opp når det kommer nær skjermen.
     await page.goto(`${origin}/flysteder/heia/`, { waitUntil: "load" });
     await page.locator("#site-map").scrollIntoViewIfNeeded();
     await page.locator("#site-map.leaflet-container").waitFor({ timeout: 5000 }).catch(() => problems.push("stedssiden har ikke kart"));
-    // «Piloter i lufta» says so when the pilots cannot be fetched, instead of an empty map.
+    // «Piloter i lufta» sier fra når pilotene ikke kan hentes, i stedet for å vise et tomt kart.
     await layerOn(page, "Piloter i lufta");
     await page.locator(".live-status:not([hidden])").waitFor({ timeout: 5000 }).catch(() => problems.push("«Piloter i lufta» sier ikke fra når datatjenesten er nede"));
     if (!(await page.locator(".live-status [data-retry]").count())) problems.push("ingen «Prøv igjen» for piloter i lufta");
@@ -471,7 +472,8 @@ const scenarios = {
   },
 };
 
-// Last, since it stops the server: a site page opened once is shown from the service worker when the network is gone.
+// Til sist, siden den stopper serveren: en flystedsside som er åpnet én gang, vises fra service workeren når
+// nettet er borte.
 async function offline(browser, server) {
   const context = await browser.newContext(MOBILE);
   await answer(context, server.origin);
@@ -481,7 +483,7 @@ async function offline(browser, server) {
   const problems = [];
   await page.goto(`${server.origin}/flysteder/heia/`, { waitUntil: "load" });
   await page.evaluate(() => navigator.serviceWorker.ready);
-  // The service worker takes over the page, and the page is stored on the next visit to it.
+  // Service workeren tar over siden, og siden lagres ved neste besøk.
   await page.reload({ waitUntil: "load" });
   await page.waitForFunction(async () => (await caches.keys()).length > 0 && (await Promise.all((await caches.keys()).map(async (k) => (await caches.open(k)).match(location.href)))).some(Boolean), null, { timeout: 15000 })
     .catch(() => problems.push("stedssiden ble ikke lagret"));

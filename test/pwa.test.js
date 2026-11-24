@@ -1,4 +1,4 @@
-// Tests for the installable app and offline use (lib/pwa.js). Run with `npm test`.
+// Tester for appen som kan installeres, og bruk uten nett (lib/pwa.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -7,7 +7,7 @@ import { routeFor, offlineUrl, manifest, referencedAssets, staticToKeep, CACHE_S
 
 const scope = "https://flysteder.hpgt.com/";
 
-test("pages, own files and data get their own strategy", () => {
+test("sider, egne filer og data får hver sin strategi", () => {
   assert.equal(routeFor("https://flysteder.hpgt.com/flysteder/elgen/", scope, true), "page");
   assert.equal(routeFor("https://flysteder.hpgt.com/assets/css/styles.css?v=1a2b3c4d", scope, false), "static");
   assert.equal(routeFor("https://flysteder.hpgt.com/img/elgen-overview-1-800.webp", scope, false), "static");
@@ -17,7 +17,7 @@ test("pages, own files and data get their own strategy", () => {
   assert.equal(routeFor("https://flysteder.hpgt.com/sw.js", scope, false), null);
 });
 
-test("only Kartverket's map tiles are stored, never third parties", () => {
+test("bare Kartverkets kartfliser lagres, aldri tredjeparter", () => {
   assert.equal(routeFor("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/10/236/551.png", scope, false), "tile");
   assert.equal(routeFor("https://a.tile.opentopomap.org/10/551/236.png", scope, false), null);
   assert.equal(routeFor("https://hpgt-flysteder.goatcounter.com/count?p=/", scope, false), null);
@@ -25,19 +25,19 @@ test("only Kartverket's map tiles are stored, never third parties", () => {
   assert.equal(routeFor("https://example.com/flysteder/", scope, true), null);
 });
 
-test("with a path prefix, only addresses under it are handled", () => {
+test("med stiprefiks håndteres bare adresser under det", () => {
   const prefixed = "https://hpgt-com.github.io/flying-sites/";
   assert.equal(routeFor("https://hpgt-com.github.io/flying-sites/assets/js/common.js", prefixed, false), "static");
   assert.equal(routeFor("https://hpgt-com.github.io/other/", prefixed, true), null);
 });
 
-test("English pages get the English offline page", () => {
+test("engelske sider får den engelske frakoblet-siden", () => {
   assert.equal(offlineUrl("/en/sites/elgen/", "/"), "/en/offline/");
   assert.equal(offlineUrl("/flysteder/elgen/", "/"), "/offline/");
   assert.equal(offlineUrl("/flying-sites/en/", "/flying-sites/"), "/flying-sites/en/offline/");
 });
 
-test("the manifest follows the language and the path prefix", () => {
+test("manifestet følger språket og stiprefikset", () => {
   const nb = manifest("nb", "/", "/");
   assert.equal(nb.start_url, "/");
   assert.equal(nb.scope, "/");
@@ -49,7 +49,7 @@ test("the manifest follows the language and the path prefix", () => {
   assert.equal(en.icons[0].src, "/flying-sites/assets/img/icon-192.png");
 });
 
-test("the files a stored page uses: own assets and images, with srcset, not other sites", () => {
+test("filene en lagret side bruker: egne ressurser og bilder, med srcset, ikke andre nettsteder", () => {
   const html = `<link rel="stylesheet" href="/assets/css/styles.css?v=old1"><script src="/assets/js/site.js?v=old2"></script>
     <img src="/img/a-400.webp" srcset="/img/a-400.webp 400w, /img/a-800.webp 800w"><img src="https://www.yr.no/x.svg">
     <a href="/flysteder/elgen/">x</a><script src="../../assets/js/wind.js?v=old3&amp;x=1"></script>
@@ -63,10 +63,10 @@ test("the files a stored page uses: own assets and images, with srcset, not othe
   assert.equal(staticToKeep("https://flysteder.hpgt.com/assets/css/styles.css?v=old1", keep, scope), true);
   assert.equal(staticToKeep("https://flysteder.hpgt.com/assets/css/styles.css?v=gone", keep, scope), false);
   assert.equal(staticToKeep("https://flysteder.hpgt.com/img/b-400.webp", keep, scope), false);
-  assert.equal(staticToKeep("https://flysteder.hpgt.com/assets/fonts/barlow.woff2", keep, scope), true, "fonts and Leaflet's images stay");
+  assert.equal(staticToKeep("https://flysteder.hpgt.com/assets/fonts/barlow.woff2", keep, scope), true, "fonter og Leaflets bilder blir værende");
 });
 
-// A small Cache API in memory, enough for the service worker's install and activate.
+// Et lite Cache API i minnet, nok til service workerens install og activate.
 function cacheStorage() {
   const all = new Map();
   const open = async (name) => {
@@ -85,16 +85,16 @@ function cacheStorage() {
   return { all, api: { open, keys: async () => [...all.keys()], delete: async (n) => all.delete(n), match } };
 }
 
-test("after a deploy, a page stored before it still has its CSS and JS offline; files nobody uses go", async () => {
+test("en side lagret før en utrulling har fortsatt CSS og JS uten nett; ubrukte filer forsvinner", async () => {
   const { all, api } = cacheStorage();
-  // Before the deploy: the page and the old files it uses, in the static cache of the old service worker.
+  // Før utrullingen: siden og de gamle filene den bruker, i den statiske cachen til den gamle service workeren.
   const page = `<link href="/assets/css/styles.css?v=old"><script src="/assets/js/site.js?v=old"></script>`;
   (await api.open("fs-pages-" + CACHE_SCHEMA)).put("https://flysteder.hpgt.com/flysteder/elgen/", new Response(page));
   const oldStatic = await api.open("fs-static-1a2b3c4d5e6f");
   for (const u of ["assets/css/styles.css?v=old", "assets/js/site.js?v=old", "assets/js/home.js?v=unused", "img/x-400.webp"]) {
     await oldStatic.put(scope + u, new Response(u));
   }
-  // The new service worker, as src/sw.11ty.js builds it.
+  // Den nye service workeren, slik src/sw.11ty.js bygger den.
   const precache = ["/assets/css/styles.css?v=new", "/assets/js/site.js?v=new"];
   const src = [`var VERSION = "new"; var SCHEMA = ${JSON.stringify(CACHE_SCHEMA)}; var BASE = "/"; var PRECACHE = ${JSON.stringify(precache)};`,
     "var MAX_TILES = 500; var MAX_PAGES = 120;", String(routeFor), String(offlineUrl), String(referencedAssets), String(staticToKeep),
@@ -107,12 +107,12 @@ test("after a deploy, a page stored before it still has its CSS and JS offline; 
   await run("activate");
   const kept = [...all.get("fs-static-" + CACHE_SCHEMA).keys()].map((u) => u.slice(scope.length)).sort();
   assert.deepEqual(kept, ["assets/css/styles.css?v=new", "assets/css/styles.css?v=old", "assets/js/site.js?v=new", "assets/js/site.js?v=old",
-    "en/offline/", "offline/"], "the old page's files, the new ones and the offline pages; not the unused file or the image");
-  assert.ok(!all.has("fs-static-1a2b3c4d5e6f"), "the old per-version cache is gone");
-  assert.ok(all.has("fs-pages-" + CACHE_SCHEMA), "the stored pages stay");
+    "en/offline/", "offline/"], "den gamle sidens filer, de nye og frakoblet-sidene; ikke den ubrukte filen eller bildet");
+  assert.ok(!all.has("fs-static-1a2b3c4d5e6f"), "den gamle cachen per versjon er borte");
+  assert.ok(all.has("fs-pages-" + CACHE_SCHEMA), "de lagrede sidene blir værende");
 });
 
-test("a map tile goes to the map as soon as it arrives; it is stored afterwards, and the store is trimmed now and then", async () => {
+test("en kartflis går til kartet så snart den kommer; den lagres etterpå, og lageret trimmes av og til", async () => {
   const { all, api } = cacheStorage();
   const src = [`var VERSION = "v"; var SCHEMA = ${JSON.stringify(CACHE_SCHEMA)}; var BASE = "/"; var PRECACHE = [];`,
     "var MAX_TILES = 25; var MAX_PAGES = 120;", String(routeFor), String(offlineUrl), String(referencedAssets), String(staticToKeep),
@@ -123,7 +123,7 @@ test("a map tile goes to the map as soon as it arrives; it is stored afterwards,
   const tile = (n) => `https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/8/58/${n}.png`;
   vm.runInNewContext(src, { self, caches: api, URL, Response, Promise, setTimeout, fetch: async (url, init) => {
     fetched.push([String(url), init]);
-    // Node's Response has type "default"; the service worker stores only "basic" or "cors" ones, as a real fetch gives.
+    // Nodes Response har typen "default"; service workeren lagrer bare "basic" eller "cors", slik en ekte fetch gir.
     const res = new Response("png " + url, { status: 200 });
     Object.defineProperty(res, "type", { value: "cors" });
     const clone = res.clone.bind(res);
@@ -133,22 +133,24 @@ test("a map tile goes to the map as soon as it arrives; it is stored afterwards,
   const waits = [];
   const ask = (url) => new Promise((resolve) => { listeners.fetch({ request: { method: "GET", url, mode: "no-cors" }, respondWith: (p) => resolve(p), waitUntil: (p) => waits.push(p) }); });
   const first = await ask(tile(1));
-  assert.equal(await first.text(), "png " + tile(1), "the tile itself, from the network");
-  assert.equal(fetched[0][1].mode, "cors", "fetched as CORS");
-  assert.equal(fetched[0][1].credentials, "omit", "without cookies");
-  assert.equal(waits.length, 1, "storing it is registered with waitUntil, not awaited");
+  assert.equal(await first.text(), "png " + tile(1), "selve flisen, fra nettet");
+  assert.equal(fetched[0][1].mode, "cors", "hentet som CORS");
+  assert.equal(fetched[0][1].credentials, "omit", "uten informasjonskapsler");
+  assert.equal(waits.length, 1, "lagringen registreres med waitUntil, uten å ventes på");
   await Promise.all(waits);
   const store = all.get("fs-tiles-" + CACHE_SCHEMA);
-  assert.ok(store && store.has(tile(1)), "stored once the response has been handed over");
-  assert.equal(await (await ask(tile(1))).text(), "png " + tile(1), "the second time it comes from the store");
-  assert.equal(fetched.length, 1, "without another fetch");
-  // 30 more tiles: the store passes MAX_TILES (25) between trims and is cut back to it at the 20th tile stored.
+  assert.ok(store && store.has(tile(1)), "lagret når svaret er levert");
+  assert.equal(await (await ask(tile(1))).text(), "png " + tile(1), "andre gang kommer den fra lageret");
+  assert.equal(fetched.length, 1, "uten en ny henting");
+  // 30 fliser til: lageret går over MAX_TILES (25) mellom trimmingene og kuttes tilbake til det ved den 20. lagrede
+  // flisen.
   for (let i = 2; i <= 31; i++) await ask(tile(i));
   await Promise.all(waits);
-  // 31 stored; the trim at the 20th left 20, then 11 more came: 31 in all is never cut, 25 is the limit at the next trim.
-  assert.equal(store.size, 31, "no trim since the 20th tile");
+  // 31 lagret; trimmingen ved den 20. lot 20 bli igjen, så kom 11 til: 31 i alt kuttes aldri, 25 er grensen ved neste
+  // trimming.
+  assert.equal(store.size, 31, "ingen trimming siden den 20. flisen");
   for (let i = 32; i <= 40; i++) await ask(tile(i));
   await Promise.all(waits);
-  assert.equal(store.size, 25, "trimmed to MAX_TILES at the 40th tile");
-  assert.ok(!store.has(tile(1)) && store.has(tile(40)), "the oldest go first");
+  assert.equal(store.size, 25, "trimmet til MAX_TILES ved den 40. flisen");
+  assert.ok(!store.has(tile(1)) && store.has(tile(40)), "de eldste forsvinner først");
 });

@@ -1,15 +1,15 @@
-// «Prognose» on the home map: the forecast for the hours of the day, as map layers that follow the timeline, from the
-// data service's grids (/v1/grid.json close around the sites and /v1/grid-wide.json over a wider area with Sweden,
-// workers/data/src/sources/grid.js). Off by default; the grids are fetched the first time a layer is turned on.
-//   termikk        the estimated thermal strength as coloured cells (as on RASP)
-//   topp og skybase the top of the thermals «↑ 1200», or the cloud base «☁ 1100» when the thermals reach it (Cu)
-//   vind           wind barbs as on RASP, at the ground or at about 750 m (925 hPa), with the speed in m/s
-//   temperatur     the temperature at 2 m
-//   lav sky og regn low cloud or fog as grey cells, rain as blue dots
-// The thermal strength is Deardorff's w* from the sun on the ground and the boundary layer, the cloud base 125 m per
-// degree between temperature and dew point: rough estimates, said so in the legend. A tap in the map gives all the
-// numbers for the nearest point. Labels are thinned by distance on screen, the close grid first. Built with DOM
-// methods. Exposed as window.FlyingSitesForecast; tested in test/forecast-layer.test.js.
+// «Prognose» på forsidekartet: varselet for timene i døgnet, som kartlag som følger tidslinjen, fra
+// datatjenestens rutenett (/v1/grid.json tett rundt stedene og /v1/grid-wide.json over et større område med Sverige,
+// workers/data/src/sources/grid.js). Av som standard. Rutenettene hentes første gang et lag slås på.
+//   termikk        anslått termikkstyrke som fargede celler (som på RASP)
+//   topp og skybase toppen av termikken «↑ 1200», eller skybasen «☁ 1100» når termikken når den (Cu)
+//   vind           vindfjær som på RASP, ved bakken eller i ca. 750 m (925 hPa), med farten i m/s
+//   temperatur     temperaturen i 2 m
+//   lav sky og regn lave skyer eller tåke som grå celler, regn som blå prikker
+// Termikkstyrken er Deardorffs w* ut fra sola på bakken og grenselaget, skybasen 125 m per
+// grad mellom temperatur og duggpunkt: grove anslag, og det står i tegnforklaringen. Et trykk i kartet gir alle
+// tallene for nærmeste punkt. Etiketter tynnes ut etter avstand på skjermen, det tette rutenettet først. Bygd med
+// DOM-metoder. Eksponert som window.FlyingSitesForecast. Testet i test/forecast-layer.test.js.
 (function () {
   "use strict";
 
@@ -17,15 +17,15 @@
   function useText(fn) { text = fn; }
   var isNum = function (v) { return typeof v === "number" && Number.isFinite(v); };
   var KEYS = ["T", "Td", "ws", "wd", "ws9", "wd9", "blh", "cl", "pr", "sw"];
-  // The thermal strength's colours in m/s (CSS .fc-legend__step--…, the same as the cells): below 1 m/s there is no cell.
+  // Fargene for termikkstyrken i m/s (CSS .fc-legend__step--…, de samme som cellene): under 1 m/s er det ingen celle.
   var SCALE = [{ key: "t1", below: 1.5 }, { key: "t2", below: 2 }, { key: "t3", below: 2.5 }, { key: "t4", below: 3 }, { key: "t5", below: Infinity }];
   var COLORS = { t1: "#4CC46A", t2: "#B9D94A", t3: "#EBD94A", t4: "#F2A23F", t5: "#E5535A" };
   var LAYERS = ["thermal", "top", "wind", "temp", "cloud"];
-  // The space each label needs on screen (px): fewer labels when zoomed out, never on top of each other.
+  // Plassen hver etikett trenger på skjermen (px): færre etiketter når man zoomer ut, aldri oppå hverandre.
   var SPACING = { top: 52, wind: 60, windStack: 84, temp: 44, cloud: 30 };
 
-  // Only data in the expected shape: a grid of rows × cols points, the hours as Unix times, and for each variable one
-  // list per point with a number or null per hour.
+  // Bare data i forventet form: et rutenett med rows × cols punkter, timene som Unix-tider, og for hver variabel én
+  // liste per punkt med et tall eller null per time.
   function isGridData(d) {
     if (!d || (d.dataset !== "grid" && d.dataset !== "grid-wide")) return false;
     if (![d.lat0, d.lon0, d.dLat, d.dLon].every(isNum) || !(d.dLat > 0) || !(d.dLon > 0)) return false;
@@ -42,22 +42,22 @@
     });
   }
 
-  // The hour in the grid that holds the time (ms): each value counts for one hour from its time. -1 outside the hours.
+  // Timen i rutenettet som inneholder tiden (ms): hver verdi gjelder én time fra sin tid. -1 utenfor timene.
   function hourIndex(grid, ms) {
     for (var i = 0; i < grid.times.length; i++) if (ms >= grid.times[i] * 1000 && ms < grid.times[i] * 1000 + 3600000) return i;
     return -1;
   }
 
-  // The point's position: points are row by row from the south.
+  // Posisjonen til punktet: punktene går rad for rad fra sør.
   function pointAt(grid, i) {
     var row = Math.floor(i / grid.cols), col = i % grid.cols;
     return { lat: grid.lat0 + row * grid.dLat, lon: grid.lon0 + col * grid.dLon };
   }
 
-  // The hour at a point: the values, and what is worked out from them. w* = (g/T · H/(ρ·cp) · zi)^(1/3), with the heat
-  // into the air H about 0.4 × the sun on the ground, over land only (the sea is 0 m in the model). The thermals reach the
-  // boundary layer's top; the cloud base is 125 m per degree between temperature and dew point, and when it is below the
-  // top there are Cu, and the base is how high you get. Low cloud: most of the sky with a base under 300 m over the ground.
+  // Timen i et punkt: verdiene, og det som regnes ut fra dem. w* = (g/T · H/(ρ·cp) · zi)^(1/3), der varmen
+  // til lufta H er ca. 0,4 × sola på bakken, bare over land (havet er 0 m i modellen). Termikken når toppen av
+  // grenselaget. Skybasen er 125 m per grad mellom temperatur og duggpunkt, og når den er under toppen,
+  // er det Cu, og basen er hvor høyt man kommer. Lave skyer: det meste av himmelen med base under 300 m over bakken.
   function hourAt(grid, i, ti) {
     var v = function (k) { var x = grid.values[k][i][ti]; return isNum(x) ? x : null; };
     var elev = grid.elev[i], land = elev > 0;
@@ -80,9 +80,9 @@
     return "t5";
   }
 
-  // A wind barb as on weather maps and RASP, in m/s: the staff points to where the wind comes from, with a half barb
-  // for 2.5 m/s, a full one for 5 and a pennant for 25, on the clockwise side. Calm (under 1.25 m/s) is a ring.
-  // Returns the <svg> element, or null without wind.
+  // En vindfjær som på værkart og RASP, i m/s: staven peker dit vinden kommer fra, med en halv fjær
+  // for 2,5 m/s, en hel for 5 og en vimpel for 25, på siden med klokka. Stille (under 1,25 m/s) er en ring.
+  // Returnerer <svg>-elementet, eller null uten vind.
   function barbSvg(dir, speed) {
     if (!isNum(speed) || !isNum(dir)) return null;
     var svg = svgEl("svg", { width: "56", height: "56", viewBox: "-28 -28 56 56", "aria-hidden": "true" });
@@ -93,7 +93,7 @@
     for (var p = 0; p < pennants; p++) { flags += "M0 " + y + "L9 " + (y - 2) + "L0 " + (y + 5) + "Z"; y += 6; }
     if (pennants && (fulls || half)) y += 1;
     for (var f = 0; f < fulls; f++) { parts.push("M0 " + y + "L10 " + (y - 4)); y += 4; }
-    // A half barb alone sits a step in from the end, so it is not read as a full one.
+    // En halv fjær alene sitter et steg inn fra enden, så den ikke leses som en hel.
     if (half) { if (!pennants && !fulls) y += 4; parts.push("M0 " + y + "L5 " + (y - 2)); }
     var d = parts.join("");
     var path = function (cls, pd) { return pd ? svgEl("path", { class: cls, d: pd }) : null; };
@@ -103,16 +103,16 @@
       svgEl("circle", { r: "2", class: "fc-barb__dot" }));
   }
 
-  // Where a stack of labels goes ({ x, y: [per row] } in px from the point): on the point without wind, otherwise out
-  // on the side the wind blows to (the staff points to where it comes from), far enough that the whole stack clears
-  // the station whichever way that is. rows: [{ size: [w, h] }].
+  // Hvor en stabel med etiketter havner ({ x, y: [per rad] } i px fra punktet): på punktet uten vind, ellers ut
+  // på siden vinden blåser mot (staven peker dit den kommer fra), langt nok ut til at hele stabelen går klar av
+  // stasjonen uansett retning. rows: [{ size: [w, h] }].
   function stackAt(dir, rows) {
     var w = 0, h = 0;
     rows.forEach(function (r) { w = Math.max(w, r.size[0]); h += r.size[1]; });
     var cx = 0, cy = 0;
     if (isNum(dir)) {
       var a = dir * Math.PI / 180, ux = -Math.sin(a), uy = Math.cos(a), d = 8 + Math.abs(ux) * w / 2 + Math.abs(uy) * h / 2;
-      cx = Math.round(ux * d) + 0; // + 0: no −0
+      cx = Math.round(ux * d) + 0; // + 0: ikke −0
       cy = Math.round(uy * d) + 0;
     }
     var y = cy - h / 2, ys = rows.map(function (r) { var mid = y + r.size[1] / 2; y += r.size[1]; return Math.round(mid); });
@@ -130,7 +130,7 @@
   }
   function number(v, d) { var FS = globalThis.FlyingSites; return FS && FS.formatNumber ? FS.formatNumber(v, d) : v.toFixed(d); }
 
-  // The lines in the popup for an hour at a point: [label, value], only what is known.
+  // Linjene i popupen for en time i et punkt: [label, value], bare det som er kjent.
   function popupRows(h) {
     var rows = [];
     rows.push([text("forecast.thermal"), h.land && h.w >= 1 ? text("forecast.ms", { v: number(h.w, 1) }) : text("forecast.noThermal")]);
@@ -150,7 +150,7 @@
     if (content != null) n.textContent = content;
     return n;
   }
-  // An SVG element (tag, or an element to add to) with attributes and child nodes (null is left out).
+  // Et SVG-element (tag, eller et element å legge til i) med attributter og barnenoder (null utelates).
   var SVG_NS = "http://www.w3.org/2000/svg";
   function svgEl(tag, attrs) {
     var n = typeof tag === "string" ? document.createElementNS(SVG_NS, tag) : tag;
@@ -159,9 +159,9 @@
     return n;
   }
 
-  // The layers on a map. urls: { close, wide }. Returns { setTime(ms) } for the page's timeline, or null.
-  // existing: the layers already in the layer list, keyed thermal … cloud, when this script was fetched on first use
-  // (common.js lazyOverlays); they are taken over, and the ones on the map already are drawn at once.
+  // Lagene på et kart. urls: { close, wide }. Returnerer { setTime(ms) } til tidslinjen på siden, eller null.
+  // existing: lagene som allerede er i laglista, med nøklene thermal … cloud, da skriptet ble hentet ved første bruk
+  // (common.js lazyOverlays). De tas over, og de som allerede er på kartet, tegnes med en gang.
   function addMapLayers(map, urls, existing) {
     var L = globalThis.L, FS = globalThis.FlyingSites;
     if (!L || !map.layersControl || !urls || !urls.close) return null;
@@ -175,8 +175,8 @@
     var grids = null, loading = null, failed = false, time = Date.now(), level = "750", moreOpen = null;
     var legend = legendControl();
 
-    // The grids drawn, the close one on top of the wide one: the wide grid's points inside the close one are left out.
-    // [{ grid, i, ti }] for the chosen time.
+    // Rutenettene som tegnes, det tette over det vide: punktene i det vide som ligger inni det tette, utelates.
+    // [{ grid, i, ti }] for valgt tid.
     function points() {
       var list = [];
       if (!grids) return list;
@@ -201,13 +201,13 @@
       return L.rectangle([[p.lat - g.dLat / 2, p.lon - g.dLon / 2], [p.lat + g.dLat / 2, p.lon + g.dLon / 2]],
         Object.assign({ renderer: renderer, stroke: false, interactive: false }, options));
     }
-    // A label centred dx px to the right of the point and dy px below it.
-    // content: a function that builds the label's element.
+    // En etikett sentrert dx px til høyre for punktet og dy px under det.
+    // content: en funksjon som bygger elementet til etiketten.
     function label(p, cls, content, size, dx, dy) {
       return L.marker([p.lat, p.lon], { icon: FS.divIcon({ className: "fc-label " + cls, content: content, iconSize: size, iconAnchor: [size[0] / 2 - dx, size[1] / 2 - dy] }), interactive: false, keyboard: false });
     }
     function windOf(p) { return level === "750" ? { dir: p.h.wd9, speed: p.h.ws9 } : { dir: p.h.wd, speed: p.h.ws }; }
-    // Labels far enough apart on screen, inside the view: the first point in each square of the given size.
+    // Etiketter langt nok fra hverandre på skjermen, innenfor utsnittet: første punkt i hver rute av gitt størrelse.
     function thin(list, size, want) {
       var bounds = map.getBounds().pad(0.1), taken = {}, out = [];
       list.forEach(function (p) {
@@ -238,9 +238,9 @@
           }, [20, 20]));
         });
       }
-      // The labels at the same points, thinned once. With the wind on, the barb is on the point and the speed, the top
-      // and the temperature are stacked on the side the wind blows to, where the staff and its barbs never are; without
-      // it, the top above the temperature on the point.
+      // Etikettene i de samme punktene, tynnet ut én gang. Med vinden på står fjæra på punktet, og farten, toppen
+      // og temperaturen stables på siden vinden blåser mot, der staven og fjærene aldri er. Uten
+      // vind står toppen over temperaturen på punktet.
       var picked = thin(list, on.wind ? (on.top || on.temp ? SPACING.windStack : SPACING.wind) : on.top ? SPACING.top : SPACING.temp, function (p) {
         return (on.top && p.h.w >= 1 && p.h.top !== null) || (on.temp && p.h.T !== null) || (on.wind && windOf(p).speed !== null);
       });
@@ -267,7 +267,7 @@
       });
     }
 
-    // The legend under the layer list while a layer is on: the time and source, then the keys for the layers on.
+    // Tegnforklaringen under laglista mens et lag er på: tiden og kilden, så forklaringene for lagene som er på.
     function legendControl() {
       var control = L.control({ position: "topright" });
       control.onAdd = function () {
@@ -325,7 +325,7 @@
         });
         box.appendChild(levels);
       }
-      // The keys in words, folded away on a phone (open on a wide screen, and as the reader left them).
+      // Forklaringene i ord, foldet bort på mobil (åpne på bred skjerm, og slik leseren forlot dem).
       var more = make("details", "fc-legend__more");
       if (moreOpen === null) moreOpen = !(typeof matchMedia === "function" && matchMedia("(max-width: 600px)").matches);
       more.open = moreOpen;
@@ -345,7 +345,7 @@
       more.appendChild(keys);
       box.appendChild(more);
     }
-    // «tir. 14.00»: the weekday too, as the timeline goes days ahead.
+    // «tir. 14.00»: også ukedagen, siden tidslinjen går dager fram.
     var dayFormat = new Intl.DateTimeFormat(FS.lang === "nb" ? "nb-NO" : "en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Oslo" });
     function clock(ms) {
       var parts = {};
@@ -385,7 +385,7 @@
     LAYERS.forEach(function (key) { if (map.hasLayer(layers[key])) switched(key, true); });
     map.on("zoomend moveend", function () { if (anyOn()) render(); });
 
-    // A tap in the map while a layer is on: all the numbers for the nearest point at the chosen time.
+    // Et trykk i kartet mens et lag er på: alle tallene for nærmeste punkt ved valgt tid.
     var popup = L.popup({ maxWidth: 260 });
     map.on("click", function (ev) {
       if (!anyOn() || !grids) return;

@@ -1,13 +1,19 @@
-# Licence for the open data files
+# Lisens for de åpne datafilene
 
-The open data files `https://flysteder.hpgt.com/flysteder.geojson` and `https://flysteder.hpgt.com/flysteder.kml` are generated on every build from the site files in `src/sites/`. They are licensed under **Creative Commons Attribution 4.0 International (CC BY 4.0)**: <https://creativecommons.org/licenses/by/4.0/deed.no>
+De åpne datafilene `https://flysteder.hpgt.com/flysteder.geojson` og `https://flysteder.hpgt.com/flysteder.kml` lages
+ved hvert bygg fra stedsfilene i `src/sites/`. De er lisensiert under **Creative Commons Attribution 4.0
+International (CC BY 4.0)**: <https://creativecommons.org/licenses/by/4.0/deed.no>
 
-You may use, share and adapt the data, also commercially, as long as you credit it like this:
+Du kan bruke, dele og bearbeide dataene, også kommersielt, så lenge du krediterer dem slik:
 
 > Flysteder: HPGT flysteder (https://flysteder.hpgt.com), CC BY 4.0
 
-The files contain only structured data: positions of launches, landings and parking, wind directions, level, categories, heights, walking routes and the club's own map annotations. The site texts, hazards (including hazard points, lines and areas on the map) and landowner information are not included. They are on the site pages and are not covered by this licence (see [README.md](README.md#licence)).
+Filene har bare strukturerte data: posisjoner for starter, landinger og parkering, vindretninger, nivå, kategorier,
+høyder, gangruter og klubbens egne markeringer i kartet. Tekstene om stedene, farene (også farepunkter, -linjer og
+-områder i kartet) og opplysningene om grunneiere er ikke med. De står på stedssidene og omfattes ikke av denne
+lisensen (se [README.md](README.md#lisens)).
 
-The format and fields are described in [docs/open-data.md](docs/open-data.md).
+Formatet og feltene er beskrevet i [docs/open-data.md](docs/open-data.md).
 
-The data is for guidance only and not for navigation. The club takes no responsibility for information about safety, airspace or landowners. Always check the site page, IPPC and the conditions yourself.
+Dataene er bare en veiledning og ikke til navigasjon. Klubben tar ikke ansvar for opplysninger om sikkerhet, luftrom
+eller grunneiere. Sjekk alltid stedssiden, IPPC og forholdene selv.

@@ -1,31 +1,30 @@
-// The Holfuy stations the data service fetches (sources/holfuy.js). id: the station's number at Holfuy (in the address
-// holfuy.com/en/weather/<id>). name: the name on the site (Holfuy's own name when left out). model: the kind of station
-// (for example "Holfuy 2.0"), when known, so measurements from different station types can be told apart. site: the
-// flying site the station belongs to (its folder name under src/sites/), when it has one. near: flying sites close
-// enough, and at about the same height, for the station to say something about them too ({ site, km }): their page
-// shows it as a station nearby, and how well the forecast hit there is worked out against it. The API key is the
-// secret HOLFUY_KEY in Cloudflare, never here.
+// Holfuy-stasjonene datatjenesten henter (sources/holfuy.js). id: stasjonens nummer hos Holfuy (i adressen
+// holfuy.com/en/weather/<id>). name: navnet på nettstedet (Holfuys eget navn når det utelates). model: stasjonstypen
+// (for eksempel "Holfuy 2.0"), når den er kjent, så målinger fra ulike stasjonstyper kan skilles. site: flystedet
+// stasjonen hører til (mappenavnet under src/sites/), når den har et. near: flysteder nær nok, og på omtrent samme
+// høyde, til at stasjonen sier noe om dem også ({ site, km }). Sidene deres viser den som en stasjon i nærheten, og
+// hvor godt varselet traff der, regnes ut mot den. API-nøkkelen er hemmeligheten HOLFUY_KEY i Cloudflare, aldri her.
 //
-// The club's key gives access to HPGT Heia (490, on the flying site Heia) and Modellflystripa (820).
+// Klubbens nøkkel gir tilgang til HPGT Heia (490, på flystedet Heia) og Modellflystripa (820).
 export const HOLFUY_STATIONS = [
-  // Hinnstein's launch (558 moh) is 1,3 km from the station (472 moh).
+  // Starten på Hinnstein (558 moh) er 1,3 km fra stasjonen (472 moh).
   { id: 490, site: "heia", near: [{ site: "hinnstein", km: 1.3 }] },
   { id: 820 },
 ];
 
-// MET's stations (sources/frost.js) are found by MET itself within the area of the flying sites, so they are not listed
-// here. A MET station that belongs to a flying site is linked to it here, by MET's number (SN…) and the site's folder,
-// as `site` above: that site page then shows it and uses it for the assessment of the hour now.
+// METs stasjoner (sources/frost.js) finner MET selv innenfor området til flystedene, så de står ikke her. En
+// MET-stasjon som hører til et flysted, kobles til det her, med METs nummer (SN…) og mappen til stedet, som `site`
+// over. Da viser stedssiden den og bruker den i vurderingen av timen nå.
 export const MET_STATION_SITES = {
-  // «Sætertinden ved tjeldsundet», 1095 moh, about 100 m from the launch (1089 moh). Measures once an hour.
+  // «Sætertinden ved tjeldsundet», 1095 moh, omtrent 100 m fra starten (1089 moh). Måler én gang i timen.
   SN87772: "saetertinden",
 };
-// MET's stations that are found in the area but should not be shown (MET's number, "SN…"), e.g. one that says nothing
-// useful for flying.
+// METs stasjoner som finnes i området, men som ikke skal vises (METs nummer, "SN…"), for eksempel en som ikke sier noe
+// nyttig for flyging.
 export const MET_EXCLUDE = [];
 
-// The flying sites with their own station, or one nearby (near), for how well the forecast hit there
-// (sources/verify.js): { site, source, station }, with the source's key as in the store (measurements.js).
+// Flystedene med egen stasjon, eller en i nærheten (near), for hvor godt varselet traff der (sources/verify.js):
+// { site, source, station }, med nøkkelen til kilden som i lageret (measurements.js).
 export function siteLinks() {
   return [
     ...HOLFUY_STATIONS.filter((s) => s.site).map((s) => ({ site: s.site, source: "holfuy", station: String(s.id) })),

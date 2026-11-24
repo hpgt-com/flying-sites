@@ -1,15 +1,15 @@
-// Site page: map with launch, landing, parking and walking routes, and elevation profile.
+// Stedssiden: kart med start, landing, parkering og gangruter, og høydeprofil.
 (function () {
   "use strict";
 
   var FS = window.FlyingSites;
 
-  // On mobile, the points in the map, the launches by direction, the images and the links start folded, so the page is
-  // shorter. They are open in the HTML, so desktop and pages without JavaScript show everything.
+  // På mobil starter punktene i kartet, startene etter retning, bildene og lenkene foldet, så siden blir
+  // kortere. De er åpne i HTML-en, så desktop og sider uten JavaScript viser alt.
   if (window.matchMedia("(max-width: 1023px)").matches) {
     document.querySelectorAll("details[data-fold-mobile]").forEach(function (d) { d.open = false; });
   }
-  // A link to a part that is folded (from the row of links or an address with #) opens it, so the content is shown.
+  // En lenke til en del som er foldet (fra lenkeraden eller en adresse med #), åpner den, så innholdet vises.
   function openTarget(id) {
     var el = id && document.getElementById(id);
     var fold = el && el.closest("details");
@@ -21,8 +21,8 @@
   });
   openTarget(decodeURIComponent(location.hash.slice(1)));
 
-  // The row of links to the parts of the page: the part in view is marked, and the row scrolls so its link is visible.
-  // The part counts as in view once its heading has passed under the row.
+  // Lenkeraden til delene av siden: delen som er synlig, markeres, og raden ruller så lenken synes.
+  // Delen regnes som synlig når overskriften har passert under raden.
   var nav = document.querySelector(".section-nav");
   if (nav) {
     var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
@@ -30,14 +30,14 @@
     var current = null, queued = false;
     var mark = function () {
       queued = false;
-      // The part whose heading is closest above the line. Not simply the last one in the list: on desktop the right
-      // column («Før du starter», Bilder, Lenker) runs beside the left one, so the order on screen is not the list order.
+      // Delen med overskriften nærmest over linjen. Ikke bare den siste i lista: på desktop går høyre
+      // kolonne («Før du starter», Bilder, Lenker) ved siden av den venstre, så rekkefølgen på skjermen er ikke listas.
       var line = nav.getBoundingClientRect().bottom + 24, on = -1, best = -Infinity;
       targets.forEach(function (el, i) {
         var top = el ? el.getBoundingClientRect().top : Infinity;
         if (top <= line && top > best) { best = top; on = i; }
       });
-      // At the bottom of the page the last parts may be too short to reach the line: then the lowest heading on screen.
+      // Nederst på siden kan de siste delene være for korte til å nå linjen. Da gjelder den laveste overskriften.
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
         best = -Infinity;
         targets.forEach(function (el, i) {
@@ -59,9 +59,9 @@
 
   var data = FS.readJson("site-data");
 
-  // Sun on each launch today (wind.js sunOnLaunchText), from the directions the launch takes wind from, as a line under
-  // the launch text. Computed here, so the page does not go out of date between builds. The note under the list says
-  // the times do not account for terrain shade.
+  // Sol på hver start i dag (wind.js sunOnLaunchText), ut fra retningene starten tar vind fra, som en linje under
+  // teksten om starten. Regnes ut her, så siden ikke blir utdatert mellom byggene. Merknaden under lista sier
+  // at tidene ikke tar hensyn til skygge fra terrenget.
   var W = window.FlyingSitesWind;
   var launchList = document.querySelector(".launch-list");
   if (W && data && data.launch && launchList) {
@@ -78,9 +78,9 @@
     var note = launchList.parentElement.querySelector(".launch-list__note");
     if (note && launchList.querySelector(".launch-list__sun")) note.hidden = false;
   }
-  // «Målt nå» (the weather station, stations.js) follows «Vinden nå – kan det passe?» in the HTML, which is the mobile order. On
-  // desktop it goes to the top of the right column, under «Før du starter», where its chart has a sensible size and the
-  // left column does not have to wait for it.
+  // «Målt nå» (værstasjonen, stations.js) kommer etter «Vinden nå – kan det passe?» i HTML-en, som er mobilrekkefølgen.
+  // På desktop flyttes den øverst i høyre kolonne, under «Før du starter», der grafen får fornuftig størrelse og
+  // venstre kolonne ikke må vente på den.
   var stationBlock = document.getElementById("station-now");
   var asideEl = document.querySelector(".site-page__aside");
   if (stationBlock && asideEl) {
@@ -97,9 +97,9 @@
   var mapEl = document.getElementById("site-map");
   if (!data || !mapEl) return;
 
-  // The map and the elevation profile are set up when they come near the screen, not when the page loads. On a phone
-  // they are further down, and setting up the map (and fetching its tiles) costs time and data that may not be needed.
-  // The airspace warning: the page may have been built before the check went stale, so the browser checks again.
+  // Kartet og høydeprofilen settes opp når de nærmer seg skjermen, ikke når siden lastes. På mobil
+  // ligger de lenger ned, og å sette opp kartet (og hente flisene) koster tid og data som kanskje ikke trengs.
+  // Luftromsvarselet: siden kan være bygd før sjekken ble gammel, så nettleseren sjekker igjen.
   document.querySelectorAll("[data-airspace-checked]").forEach(function (el) {
     var checked = Date.parse(el.getAttribute("data-airspace-checked") + "T00:00:00Z");
     var limit = Number(el.getAttribute("data-stale-days")) || 45;
@@ -126,10 +126,10 @@
 
   function setup() {
     var ACCENT = "#C24A12";
-    // The walking route must be visible on both light and dark maps (dark mode, see styles.css).
+    // Gangruten må synes på både lyse og mørke kart (mørk modus, se styles.css).
     function inkColor() { return FS.isDark() ? "#F3F5F4" : "#1C2B33"; }
     var INK = inkColor();
-    // The mouse wheel only zooms with Ctrl/Cmd (FS.wheelNeedsCtrl below).
+    // Musehjulet zoomer bare med Ctrl/Cmd (FS.wheelNeedsCtrl under).
     var map = FS.createMap(mapEl, { scrollWheelZoom: true });
     var bounds = [];
     var routeLines = [];
@@ -137,7 +137,7 @@
     function squareIcon(className, text) {
       return FS.divIcon({ className: "map-icon " + className, content: text ? function () { return document.createTextNode(text); } : null, iconSize: [22, 22], iconAnchor: [11, 11] });
     }
-    // A popup's content: the title in bold, and the text on the next line.
+    // Innholdet i en popup: tittelen i fet skrift, og teksten på neste linje.
     function popupContent(title, text) {
       return function () { return FS.frag(FS.h("strong", null, title), text ? [FS.h("br"), text] : null); };
     }
@@ -154,12 +154,12 @@
       routeLines.forEach(function (line) { line.setStyle({ color: INK }); });
     });
 
-    // --- Points: launches, landing, parking and numbered points ---
-    // All are in one layer. Points that would overlap are merged into one box with the same symbols
-    // at small size (dot with launch count, target, P, number), so the map does not become a mess of
-    // overlapping symbols. Tapping the box zooms in until they separate. From CLUSTER_OFF_ZOOM everything
-    // is shown separately, including points at exactly the same position (such as a number on a launch:
-    // the number is then placed above the dot). The kind of symbol is in options.kind.
+    // --- Punkter: starter, landing, parkering og nummererte punkter ---
+    // Alle ligger i ett lag. Punkter som ville overlappet, slås sammen til én boks med de samme symbolene
+    // i liten størrelse (prikk med antall starter, blink, P, nummer), så kartet ikke blir et virvar av
+    // overlappende symboler. Et trykk på boksen zoomer inn til de skilles. Fra CLUSTER_OFF_ZOOM vises alt
+    // hver for seg, også punkter på nøyaktig samme sted (som et nummer på en start:
+    // nummeret plasseres da over prikken). Typen symbol står i options.kind.
     var CLUSTER_OFF_ZOOM = 16;
     var POINT_ORDER = { launch: 0, landing: 1, parking: 2, pin: 3 };
     function comboIcon(cluster) {
@@ -195,7 +195,7 @@
       });
     }
     var pointLayer = L.markerClusterGroup({
-      // The boxes are wider than the dots, so when zoomed far out more are merged.
+      // Boksene er bredere enn prikkene, så når man zoomer langt ut, slås flere sammen.
       maxClusterRadius: function (zoom) { return zoom <= 13 ? 80 : 32; },
       disableClusteringAtZoom: CLUSTER_OFF_ZOOM,
       showCoverageOnHover: false,
@@ -203,8 +203,8 @@
       spiderfyOnMaxZoom: false,
       iconCreateFunction: comboIcon,
     }).addTo(map);
-    // Tapping the box zooms one step in when the points then separate, otherwise straight to CLUSTER_OFF_ZOOM
-    // (points almost on the same spot), so few taps are needed and the map does not zoom in too close.
+    // Et trykk på boksen zoomer ett steg inn når punktene da skilles, ellers rett til CLUSTER_OFF_ZOOM
+    // (punkter nesten på samme sted), så det trengs få trykk og kartet ikke zoomer for tett inn.
     pointLayer.on("clusterclick", function (ev) {
       var b = ev.layer.getBounds(), next = map.getZoom() + 1;
       var spread = map.project(b.getNorthWest(), next).distanceTo(map.project(b.getSouthEast(), next));
@@ -219,7 +219,7 @@
       bounds.push([p.lat, p.lon]);
     });
 
-    // Landing as a target, alternative landing in grey. The look is in styles.css (.map-symbol).
+    // Landing som blink, alternativ landing i grått. Utseendet står i styles.css (.map-symbol).
     (data.landings || []).forEach(function (landing) {
       var isAlternative = landing.primary === false;
       var name = landing.name || (isAlternative ? FS.t("site.altLanding") : FS.t("site.landing"));
@@ -230,12 +230,12 @@
       bounds.push([landing.lat, landing.lon]);
     });
 
-    // --- Launches as blue dots ---
-    // Directions are shown by the yellow arcs, so launches are just dots, which are easier to see.
-    // Which launches are drawn is decided by launchPoints() in common.js. Launches so close that
-    // the dots would overlap are merged into one dot with the count (or a box with the other
-    // points, see above). Zooming in, or tapping it, splits them. The directions are in the
-    // label on hover or tap.
+    // --- Starter som blå prikker ---
+    // Retningene vises med de gule buene, så startene er bare prikker, som er lettere å se.
+    // Hvilke starter som tegnes, bestemmes av launchPoints() i common.js. Starter så nær hverandre at
+    // prikkene ville overlappet, slås sammen til én prikk med antallet (eller en boks med de andre
+    // punktene, se over). Zoomer man inn, eller trykker på den, deles de. Retningene står i
+    // etiketten ved hover eller trykk.
     function launchIcon(count) {
       return FS.divIcon({
         className: "map-symbol map-symbol--launch-dot",
@@ -251,18 +251,18 @@
       bounds.push([p.lat, p.lon]);
     });
 
-    // --- Direction arcs ---
-    // Which sides of the mountain the site suits, seen from above: yellow arcs with arrow and direction, like the yellow
-    // lines on the drawn overview images. Computed from the site file (directionArcs in common.js).
-    // Below the roses, so launches can be tapped.
+    // --- Retningsbuer ---
+    // Hvilke sider av fjellet stedet passer for, sett ovenfra: gule buer med pil og retning, som de gule
+    // strekene på de tegnede oversiktsbildene. Regnes ut fra stedsfilen (directionArcs i common.js).
+    // Under rosene, så startene kan trykkes på.
     var arcPane = map.createPane("arcs");
     arcPane.style.zIndex = 450;
     arcPane.style.pointerEvents = "none";
     var ll = function (p) { return [p[1], p[0]]; };
-    // The arc is kept at least ARC_MIN_PX on screen, and arrow and direction label are computed in pixels, so it
-    // stays readable when zoomed out a little. Zoomed out further than ARC_MIN_ZOOM (about 28 m per pixel, the
-    // whole mountain a few pixels), the arcs would cover kilometres around a dot, so they are not drawn at all.
-    // Redrawn when the zoom changes.
+    // Buen holdes minst ARC_MIN_PX på skjermen, og pil og retningsetikett regnes i piksler, så den
+    // er lesbar når man zoomer litt ut. Lenger ut enn ARC_MIN_ZOOM (ca. 28 m per piksel, hele
+    // fjellet noen få piksler) ville buene dekke kilometer rundt en prikk, så de tegnes ikke i det hele tatt.
+    // Tegnes på nytt når zoomen endres.
     var ARC_MIN_PX = 60;
     var ARC_MIN_ZOOM = 11;
     var arcLayer = L.layerGroup().addTo(map);
@@ -287,11 +287,11 @@
       });
     }
     map.on("zoomend", drawArcs);
-    // The map must also fit the arcs when it zooms to the content.
+    // Kartet må også få plass til buene når det zoomer til innholdet.
     FS.directionArcs(data).forEach(function (arc) { arc.pts.forEach(function (p) { bounds.push(ll(p)); }); });
 
-    // --- The drawing (<id>-drawing.geojson) ---
-    // Lines and areas (flight path, launch edge, hazard) below the points. Colours as in lib/drawing.js.
+    // --- Tegningen (<id>-drawing.geojson) ---
+    // Linjer og flater (flyrute, startkant, fare) under punktene. Farger som i lib/drawing.js.
     var STYLE_COLORS = { flight: ACCENT, hazard: "#B7791F", info: "#2E5E6E", launch: "#F2B705", landing: "#1C2B33" };
     var features = (data.drawing && data.drawing.features) || [];
     features.forEach(function (f) {
@@ -313,8 +313,8 @@
       if (layer && p.title) layer.bindPopup(popupContent(p.title, p.text));
     });
 
-    // Numbered points, with the same numbers as the list below the map. Tapping a point shows its text and
-    // highlights it in the list. Tapping in the list moves the map there and shows the text. A hazard is a light square with a red border.
+    // Nummererte punkter, med de samme numrene som lista under kartet. Et trykk på et punkt viser teksten og
+    // markerer det i lista. Et trykk i lista flytter kartet dit og viser teksten. En fare er en lys rute med rød kant.
     var labels = features.filter(function (f) { return f.properties && f.properties.kind === "label" && f.properties.title; });
     var pinMarkers = labels.map(function (f, i) {
       var p = f.properties, n = i + 1, hazard = p.style === "hazard";
@@ -334,28 +334,28 @@
         if (!m) return;
         selectPoint(n);
         mapEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        // If the point is in a box, zoom in until it is shown on its own.
+        // Ligger punktet i en boks, zoomes det inn til det vises alene.
         map.setView(m.getLatLng(), Math.max(map.getZoom(), 15), { animate: false });
         if (pointLayer.getVisibleParent(m) !== m) map.setView(m.getLatLng(), CLUSTER_OFF_ZOOM, { animate: false });
         m.openPopup();
       });
     });
 
-    // The mouse wheel scrolls the page, and zooms the map only with Ctrl/Cmd (common.js).
+    // Musehjulet ruller siden, og zoomer kartet bare med Ctrl/Cmd (common.js).
     FS.wheelNeedsCtrl(map);
 
-    // Zooms so the whole site is shown: launches, landing, parking, walking routes and direction arcs.
+    // Zoomer så hele stedet vises: starter, landing, parkering, gangruter og retningsbuer.
     function fitAll() {
       if (bounds.length > 1) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false });
       else map.setView([data.launch.lat, data.launch.lon], 14, { animate: false });
-      // Arcs are kept at least ARC_MIN_PX and can then be larger than the content. If they do not fit,
-      // zoom out until they do, with room for the direction labels (at most twice).
+      // Buene holdes minst ARC_MIN_PX og kan da bli større enn innholdet. Får de ikke plass,
+      // zoomes det ut til de får det, med plass til retningsetikettene (høyst to ganger).
       for (var i = 0; i < 3; i++) {
         drawArcs();
         if (!arcLayer.getLayers().length) break;
         var arcBounds = L.latLngBounds([]);
         arcLayer.eachLayer(function (layer) { arcBounds.extend(layer.getBounds ? layer.getBounds() : layer.getLatLng()); });
-        // Direction labels sit outside the arc, and the zoom buttons cover the left corner, so more room is needed.
+        // Retningsetikettene sitter utenfor buen, og zoomknappene dekker venstre hjørne, så det trengs mer plass.
         var inner = L.latLngBounds(map.containerPointToLatLng([90, 60]), map.containerPointToLatLng(map.getSize().subtract([60, 50])));
         if (inner.contains(arcBounds)) break;
         map.fitBounds(arcBounds.extend(L.latLngBounds(bounds)), { paddingTopLeft: [90, 60], paddingBottomRight: [60, 50], maxZoom: 15, animate: false });
@@ -363,19 +363,19 @@
     }
     FS.fitWhenVisible(map, mapEl, fitAll);
 
-    // «Vis hele stedet» and full screen below the zoom buttons (common.js).
+    // «Vis hele stedet» og fullskjerm under zoomknappene (common.js).
     FS.addViewControls(map, mapEl, fitAll, FS.t("site.showWholeSite"));
-    // The weather stations as a layer, as on the home map (stations.js), from the same data as «Målt nå» on the page.
+    // Værstasjonene som et lag, som på forsidekartet (stations.js), fra de samme dataene som «Målt nå» på siden.
     var stationNow = document.getElementById("station-now");
     if (window.FlyingSitesStations && stationNow) window.FlyingSitesStations.addMapLayer(map, stationNow.getAttribute("data-url"));
-    // «Piloter i lufta» (live.js), off until it is turned on in the layer list.
+    // «Piloter i lufta» (live.js), av til det slås på i laglista.
     FS.lazyOverlays(map, mapEl.getAttribute("data-live-script"), [{ key: "live", label: FS.t("live.layer"), attribution: FS.t("live.credit") }], function (layers) {
       window.FlyingSitesLive.addMapLayer(map, mapEl.getAttribute("data-live-url"), layers.live);
     });
-    // «Kraftlinjer og hindre» (common.js), off until it is turned on in the layer list.
+    // «Kraftlinjer og hindre» (common.js), av til det slås på i laglista.
     FS.addObstacleLayer(map, mapEl.getAttribute("data-obstacles-url"));
 
-    // --- Elevation profile ---
+    // --- Høydeprofil ---
     var profileEl = document.getElementById("elevation-profile");
     var routes = data.routes || [];
     if (!profileEl || !routes.some(function (r) { return r.profile; })) return;
@@ -388,10 +388,10 @@
       grade: profileEl.querySelector('[data-readout="grade"]'),
     };
     var summaryEl = profileEl.querySelector(".profile__summary");
-    // The marker for the position along the route is dark, not orange (reserved for hazard and wind).
+    // Markøren for posisjonen langs ruten er mørk, ikke oransje (det er satt av til fare og vind).
     var positionMarker = L.circleMarker([0, 0], { radius: 8, color: "#1C2B33", weight: 4, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false });
 
-    // Graph margins, in pixels.
+    // Marger i grafen, i piksler.
     var HEIGHT = 150, LEFT = 46, RIGHT = 12, TOP = 14, BOTTOM = 26;
     var activeRoute = 0, index = 0, scale = null;
 
@@ -424,7 +424,7 @@
         }
       }
       var mid = (lo + hi) / 2;
-      // Built with DOM calls, not innerHTML, so no text is ever read as markup.
+      // Bygd med DOM-kall, ikke innerHTML, så ingen tekst noen gang leses som markup.
       svg.replaceChildren();
       function add(tag, attrs, text) {
         var node = document.createElementNS("http://www.w3.org/2000/svg", tag);

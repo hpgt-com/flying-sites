@@ -1,7 +1,7 @@
-name: PR check
+name: PR-sjekk
 
-# Builds the site for every PR against main, so an invalid site file or a template error is caught before
-# it reaches main and breaks publishing. Publishes nothing.
+# Bygger siden for hver PR mot main, så en ugyldig stedsfil eller en feil i en mal blir fanget før
+# den når main og stopper publiseringen. Publiserer ingenting.
 
 on:
   pull_request:
@@ -10,13 +10,13 @@ on:
 permissions:
   contents: read
 
-# A new push to the same PR cancels the run for the previous one: only the newest commit matters.
+# En ny push til samme PR avbryter kjøringen for den forrige: bare den nyeste commiten teller.
 concurrency:
   group: pr-check-${{ github.ref }}
   cancel-in-progress: true
 
-# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
-# instead of blocking for up to 6 hours.
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,36 +32,38 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      # --ignore-scripts: ingen pakkers installasjonsskript kjører (ingen av avhengighetene trenger det).
       - run: npm ci --ignore-scripts
 
       - run: npm test
 
-      # ESLint, the recommended rules only (eslint.config.js): an undefined name or an unused variable the tests do not reach.
+      # ESLint, bare de anbefalte reglene (eslint.config.js): et navn som ikke er definert, eller en ubrukt variabel
+      # testene ikke når.
       - run: npm run lint
 
-      # Image variants from the deploy build on main (same key as in deploy.yml), so the PR build is quicker.
-      # Only restored, never saved, so a PR cannot change what main uses.
+      # Bildevarianter fra publiseringsbygget på main (samme nøkkel som i deploy.yml), så bygget for PR-en går raskere.
+      # Bare hentet, aldri lagret, så en PR ikke kan endre det main bruker.
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: _site/img
           key: site-img-${{ hashFiles('src/sites/**/*.jpg', 'lib/images.js', 'lib/photo-credit.js', 'lib/site-images.js', 'package-lock.json') }}
 
-      # Site file validation happens during the build. The wind forecast is skipped, so PRs do not query MET.
+      # Stedsfilene valideres under bygget. Vindvarselet hoppes over, så PR-er ikke spør MET.
       - run: npm run build
         env:
           FORECAST_OFFLINE: "1"
 
-      # Every internal link and image points to a file that exists (lib/link-check.js). No network.
+      # Hver intern lenke og hvert bilde peker på en fil som finnes (lib/link-check.js). Uten nett.
       - run: npm run check:links
 
-      # HTML validation of every page (.htmlvalidate.mjs lists the rules turned off, and why).
+      # HTML-validering av hver side (.htmlvalidate.mjs lister reglene som er slått av, og hvorfor).
       - run: npm run check:html
 
-      # No «[object Object]», «undefined», «NaN» or unfilled placeholders in the pages (lib/output-check.js).
+      # Ingen «[object Object]», «undefined», «NaN» eller plassholdere som ikke er fylt ut, i sidene
+      # (lib/output-check.js).
       - run: npm run check:output
 
-      # The built pages for the accessibility check, without the image variants (large, and not needed for the check).
+      # De bygde sidene til tilgjengelighetssjekken, uten bildevariantene (store, og ikke nødvendige for sjekken).
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: site
@@ -72,8 +74,9 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # axe-core in Chromium on a few pages that cover the templates, in light and dark mode (scripts/check-a11y.mjs).
-  # Fails on findings with impact serious or critical. Then the behaviour check in the same browser (below).
+  # axe-core i Chromium på noen sider som dekker malene, i lys og mørk modus (scripts/check-a11y.mjs).
+  # Feiler på funn med alvorlighet serious eller critical. Deretter sjekken av hva sidene gjør, i samme nettleser
+  # (nedenfor).
   accessibility:
     needs: build
     runs-on: ubuntu-latest
@@ -88,12 +91,12 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      # --ignore-scripts: ingen pakkers installasjonsskript kjører (ingen av avhengighetene trenger det).
       - run: npm ci --ignore-scripts
 
-      # The Chromium that matches the Playwright version in package-lock.json, from the cache that browser-cache.yml
-      # fills on main (a cache a PR makes is seen only by that PR). On a miss it is installed with the system libraries
-      # it needs, which has taken the runner up to ten minutes; on a hit the runner image already has them (it ships
+      # Chromium i versjonen som passer til Playwright i package-lock.json, fra bufferen som browser-cache.yml fyller
+      # på main (en buffer en PR lager, ses bare av den PR-en). Ved bom installeres den med systembibliotekene den
+      # trenger, noe som har tatt runneren opptil ti minutter; ved treff har runner-imaget dem allerede (det har
       # Chrome).
       - id: browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -110,17 +113,17 @@ jobs:
 
       - run: npm run check:a11y
 
-      # What the pages do in the browser (scripts/check-behaviour.mjs): map markers on zoom, «Piloter i lufta», the data
-      # service down, «Meld fra», offline. No network: the script answers the data service and Turnstile.
+      # Hva sidene gjør i nettleseren (scripts/check-behaviour.mjs): kartmarkører ved zoom, «Piloter i lufta»,
+      # datatjenesten nede, «Meld fra», offline. Uten nett: skriptet svarer for datatjenesten og Turnstile.
       - run: npm run check:behaviour
 
-      # The performance budget (scripts/check-budget.mjs): bytes by kind, requests, DOM nodes and layout shift per page,
-      # against limits set a little above today's, so a page that gets much heavier fails here.
+      # Ytelsesbudsjettet (scripts/check-budget.mjs): bytes per type, forespørsler, DOM-noder og layoutforskyvning per
+      # side, mot grenser satt litt over dagens, så en side som blir mye tyngre, feiler her.
       - run: npm run check:budget
 
-  # Blocks PRs that add npm packages or Actions with known vulnerabilities (moderate or higher).
-  # The data service (workers/data) bundled by wrangler without publishing: a wrong import, a mistake in wrangler.toml or
-  # a migration that does not parse is found here, not by the deploy on main (which would roll back). No secrets.
+  # Datatjenesten (workers/data) pakket av wrangler uten publisering: en feil import, en feil i wrangler.toml eller
+  # en migrering som ikke kan leses, blir funnet her, ikke av publiseringen på main (som ville rullet tilbake). Ingen
+  # hemmeligheter.
   worker:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -145,6 +148,7 @@ jobs:
         env:
           WRANGLER_SEND_METRICS: "false"
 
+  # Stopper PR-er som legger til npm-pakker eller Actions med kjente sårbarheter (moderate eller høyere).
   dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -156,7 +160,7 @@ jobs:
         with:
           fail-on-severity: moderate
 
-  # Checks the workflows for common GitHub Actions security issues (permissions, injection, tokens).
+  # Sjekker arbeidsflytene for vanlige sikkerhetsproblemer i GitHub Actions (tillatelser, injeksjon, tokener).
   workflow-security:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -166,5 +170,6 @@ jobs:
           persist-credentials: false
       - uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
         with:
-          # Findings are written to the log and fail the check. No upload to Code scanning (needs more permissions).
+          # Funnene skrives til loggen og får sjekken til å feile. Ingen opplasting til Code scanning (krever
+          # flere tillatelser).
           advanced-security: false

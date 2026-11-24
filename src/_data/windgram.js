@@ -1,6 +1,6 @@
-// Winds aloft from Open-Meteo for the launches in WINDGRAM_SITES (lib/weather/open-meteo.js). Read from
-// .cache/weather/windgram.json, see lib/weather/index.js. enabled lists the launches, so their page has winds aloft
-// even when the build has none (the page then fetches them from the data service, src/assets/js/windgram.js).
+// Høydevind fra Open-Meteo for startene i WINDGRAM_SITES (lib/weather/open-meteo.js). Leses fra
+// .cache/weather/windgram.json, se lib/weather/index.js. enabled lister startene, så siden deres har høydevind
+// også når bygget ikke har noen (siden henter den da fra datatjenesten, src/assets/js/windgram.js).
 
 import { loadWeather } from "../../lib/weather/index.js";
 import { WINDGRAM_SITES } from "../../lib/weather/open-meteo.js";

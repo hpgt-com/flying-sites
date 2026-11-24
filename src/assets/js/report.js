@@ -1,8 +1,8 @@
-// «Meld fra» on the site page (site.njk, #report, folded) and on /meld-fra/ (general, no site): the form is sent to the
-// data service (/v1/report, workers/data/src/report.js), which checks the Turnstile token and makes an issue for the
-// club; when it answers with the issue's address, the thanks link to it, so the sender can follow what happens with
-// it. On the site page Cloudflare's Turnstile script is loaded only when the form is opened, so a visit that does not
-// use it never contacts Cloudflare; on /meld-fra/ the form is the page, so it is loaded at once.
+// «Meld fra» på stedssiden (site.njk, #report, foldet) og på /meld-fra/ (generelt, uten sted): skjemaet sendes til
+// datatjenesten (/v1/report, workers/data/src/report.js), som sjekker Turnstile-tokenet og lager en sak til
+// klubben. Når den svarer med adressen til saken, lenker takken dit, så avsenderen kan følge med på hva som skjer.
+// På stedssiden lastes Cloudflares Turnstile-skript først når skjemaet åpnes, så et besøk som ikke bruker det,
+// aldri kontakter Cloudflare. På /meld-fra/ er skjemaet selve siden, så det lastes med en gang.
 (function () {
   "use strict";
 
@@ -14,15 +14,15 @@
   var checkEl = document.getElementById("report-check");
   var sendEl = form.querySelector(".report__send");
   var token = "", widget = null, loading = false;
-  // The button is disabled in the HTML until this script runs (macros.njk), so the form is never sent by the browser
+  // Knappen er av i HTML-en til skriptet kjører (macros.njk), så nettleseren aldri sender skjemaet på egen hånd.
   sendEl.disabled = false;
 
   function say(key, kind) {
     statusEl.textContent = key ? FS.t("report." + key) : "";
     statusEl.className = "report__status" + (kind ? " report__status--" + kind : "");
   }
-  // The thanks with a link to the issue: «Takk! Meldingen er sendt til klubben som sak #171.» Only an issue in the
-  // site's own repository is linked.
+  // Takken med lenke til saken: «Takk! Meldingen er sendt til klubben som sak #171.» Bare en sak i stedets eget
+  // repo får lenke.
   var ISSUE_URL = /^https:\/\/github\.com\/hpgt-com\/flying-sites\/issues\/\d+$/;
   function saySent(d) {
     if (!d || !Number.isInteger(d.issue) || typeof d.url !== "string" || !ISSUE_URL.test(d.url)) { say("sent", "ok"); return; }

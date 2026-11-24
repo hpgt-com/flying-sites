@@ -1,19 +1,21 @@
-name: Recover
+name: Gjenoppretting
 
-# Scenario 3 in docs/operations.md «Katastrofegjenoppretting», a lost Cloudflare account (or a lost archive bucket, or just a
-# lost store): everything that can be done from here, in one run, by hand from Actions → «Recover» → «Run workflow».
-# Before it: a recovery token and the account id in the environment «recovery» (see below), the bucket
-# hpgt-data-archive created, and the Worker's own secrets (HOLFUY_KEY, FROST_CLIENT_ID, TURNSTILE_SECRET,
-# REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY) set in Cloudflare from the password manager: they are deliberately not in
-# GitHub (SECURITY.md). Then this run: fetches the off-site copy from B2 (the environment «backup-read», a read-only key), writes the
-# archive back to R2 when asked (restore_archive), publishes the data service from main, waits until it runs, and
-# when the store is new (lost_store) checks that it read the history back in with exactly the rows in the copy.
-# Nothing here changes GitHub settings or the site; the site is republished by «Build and deploy».
+# Scenario 3 i docs/operations.md «Katastrofegjenoppretting», en tapt Cloudflare-konto (eller en tapt arkivbøtte,
+# eller bare et tapt lager): alt som kan gjøres herfra, i én kjøring, for hånd fra Actions → «Gjenoppretting» →
+# «Run workflow». Før den: et gjenopprettingstoken og konto-id-en i miljøet «recovery» (se nedenfor), bøtta
+# hpgt-data-archive opprettet, og Workerens egne hemmeligheter (HOLFUY_KEY, FROST_CLIENT_ID, TURNSTILE_SECRET,
+# REPORTS_APP_ID, REPORTS_APP_PRIVATE_KEY) satt i Cloudflare fra passordhåndtereren: de ligger med vilje ikke i
+# GitHub (SECURITY.md). Deretter gjør denne kjøringen dette: henter kopien fra B2 (miljøet «backup-read», en nøkkel
+# med bare lesetilgang), skriver arkivet tilbake til R2 når det er bedt om (restore_archive), publiserer
+# datatjenesten fra main, venter til den kjører, og når lageret er nytt (lost_store), sjekker den at det leste
+# historikken inn igjen med nøyaktig radene i kopien. Ingenting her endrer innstillinger i GitHub eller siden; siden
+# publiseres på nytt av «Bygg og publiser».
 #
-# The recovery token is not the everyday deploy token. «cloudflare» has a token that can only publish the Worker
-# `data`; writing the archive back to R2 also needs R2, so this job uses its own environment «recovery» (only
-# `main`, a required reviewer). The token there (Workers Scripts: Edit, Workers R2 Storage: Edit, Account Settings:
-# Read, account HPGT only) is made when it is needed and deleted afterwards: docs/operations.md «Katastrofegjenoppretting».
+# Gjenopprettingstokenet er ikke det vanlige tokenet for publisering. «cloudflare» har et token som bare kan
+# publisere Workeren `data`; å skrive arkivet tilbake til R2 krever også R2, så denne jobben bruker sitt eget miljø
+# «recovery» (bare `main`, en påkrevd godkjenner). Tokenet der (Workers Scripts: Edit, Workers R2 Storage: Edit,
+# Account Settings: Read, bare kontoen HPGT) lages når det trengs, og slettes etterpå: docs/operations.md
+# «Katastrofegjenoppretting».
 
 on:
   workflow_dispatch:
@@ -38,14 +40,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The copy from B2, as a run artifact for the next job (the two environments cannot share a job).
+  # Kopien fra B2, som en artefakt på kjøringen til neste jobb (de to miljøene kan ikke dele en jobb).
   fetch:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: backup-read
     defaults:
       run:
-        shell: bash # pipefail, so a failing rclone is not hidden by «| tail»
+        shell: bash # pipefail, så en rclone som feiler, ikke skjules av «| tail»
     permissions:
       contents: read
     outputs:
@@ -135,9 +137,9 @@ jobs:
         if: inputs.restore_archive
         working-directory: workers/data
         run: |
-          # One object at a time through Cloudflare's API with the recovery token (no S3 key with write access exists, by
-          # design); an afternoon's work for years of files, minutes for months. Skips nothing: a file already there is
-          # written again with the same content.
+          # Ett objekt om gangen gjennom Cloudflares API med gjenopprettingstokenet (det finnes med vilje ingen
+          # S3-nøkkel med skrivetilgang); en ettermiddag for flere års filer, minutter for noen måneder. Hopper ikke
+          # over noe: en fil som allerede finnes, skrives på nytt med samme innhold.
           n=0
           while IFS= read -r f; do
             key="${f#../copy/archive/}"

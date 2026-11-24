@@ -1,5 +1,6 @@
-// Checks the off-site copy of the nightly backup (lib/backup-check.js): run by .github/workflows/backup.yml with the
-// folder the copy's latest.json files were downloaded to (<dir>/<table>/latest.json). Fails with what is wrong.
+// Sjekker kopien av nattens sikkerhetskopi hos den andre leverandøren (lib/backup-check.js): kjøres av
+// .github/workflows/backup.yml med mappen latest.json-filene i kopien ble lastet ned til (<dir>/<table>/latest.json).
+// Feiler med det som er galt.
 //
 //   node scripts/check-backup.mjs <dir>
 

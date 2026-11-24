@@ -1,26 +1,27 @@
-// CSP violation reports from the site's pages: POST /v1/csp-report, named by report-uri and report-to (Reporting-Endpoints)
-// in the headers of flysteder.hpgt.com (src/headers.njk). Both the enforced Content-Security-Policy and the
-// Content-Security-Policy-Report-Only with Trusted Types send here.
+// CSP-brudd rapportert fra sidene: POST /v1/csp-report, oppgitt i report-uri og report-to (Reporting-Endpoints) i
+// hodene til flysteder.hpgt.com (src/headers.njk). Både Content-Security-Policy som håndheves, og
+// Content-Security-Policy-Report-Only med Trusted Types sender hit.
 //
-// Nothing is stored: each report becomes one short line in the Worker's log (Observability), with only the directive,
-// whether it was enforced or only reported, what was blocked reduced to scheme and host or a keyword, the page's path
-// on flysteder.hpgt.com without query string, and for Trusted Types the name of the sink. Never the address, user agent,
-// referrer, full addresses or the sample (the code or text that was blocked, which may hold what someone typed).
-// Reports from other pages than flysteder.hpgt.com are dropped.
+// Ingenting lagres. Hver rapport blir én kort linje i Workerens logg (Observability), med bare direktivet, om det ble
+// håndhevet eller bare rapportert, det som ble blokkert (redusert til skjema og vert eller et nøkkelord), sidens sti på
+// flysteder.hpgt.com uten spørrestreng, og for Trusted Types navnet på sinken. Aldri IP-adressen, nettleserinfo,
+// referrer, hele adresser eller utdraget (koden eller teksten som ble blokkert, som kan inneholde det noen skrev).
+// Rapporter fra andre sider enn flysteder.hpgt.com forkastes.
 //
-// The body is read up to MAX_BODY bytes whatever Content-Length says, and at most MAX_REPORTS reports from one request
-// are logged. Each address may send 30 requests a minute (the rate limit binding CSP_LIMIT in wrangler.toml),
-// counted by Cloudflare under a hash of the address that is never logged or stored. Tested in test/csp-report.test.js.
+// Innholdet leses opptil MAX_BODY byte uansett hva Content-Length sier, og høyst MAX_REPORTS rapporter fra én
+// forespørsel logges. Hver IP-adresse kan sende 30 forespørsler i minuttet (rate limit-bindingen CSP_LIMIT i
+// wrangler.toml). Cloudflare teller dem under en hash av adressen, som aldri logges eller lagres. Testet i
+// test/csp-report.test.js.
 
 export const MAX_BODY = 16384;
 export const MAX_REPORTS = 20;
 export const SITE_HOST = "flysteder.hpgt.com";
 const TYPES = { "application/csp-report": "legacy", "application/reports+json": "reporting" };
-// The keywords browsers give as the blocked resource, logged as they are.
+// Nøkkelordene nettlesere oppgir som den blokkerte ressursen. De logges som de er.
 const KEYWORDS = new Set(["inline", "eval", "wasm-eval", "trusted-types-sink", "trusted-types-policy", "self"]);
 
-// The body as text, or null when it is larger than max bytes. Read from the stream, so a missing or false
-// Content-Length makes no difference.
+// Innholdet som tekst, eller null når det er større enn max byte. Leses fra strømmen, så en manglende eller feil
+// Content-Length gjør ingen forskjell.
 export async function readLimited(request, max = MAX_BODY) {
   if (!request.body) return "";
   const reader = request.body.getReader();
@@ -44,13 +45,14 @@ export async function readLimited(request, max = MAX_BODY) {
 
 const str = (v) => (typeof v === "string" ? v : "");
 
-// The directive's name: effectiveDirective, or the first word of the legacy violated-directive.
+// Navnet på direktivet: effectiveDirective, eller det første ordet i den gamle violated-directive.
 export function directiveOf(r) {
   const d = (str(r.effectiveDirective) || str(r["effective-directive"]) || str(r["violated-directive"])).trim().split(/\s+/)[0].toLowerCase();
   return /^[a-z][a-z-]{0,39}$/.test(d) ? d : "other";
 }
 
-// What was blocked: a keyword, or scheme and host for a web address (no path, no query), or only the scheme.
+// Det som ble blokkert: et nøkkelord, skjema og vert for en nettadresse (uten sti og spørrestreng), eller bare
+// skjemaet.
 export function blockedOf(value) {
   const v = str(value).trim();
   if (!v) return "none";
@@ -61,11 +63,11 @@ export function blockedOf(value) {
   let url;
   try { url = new URL(v); } catch { return "other"; }
   if (["http:", "https:", "ws:", "wss:"].includes(url.protocol)) return `${url.protocol}//${url.host}`.slice(0, 120);
-  // Extensions and other schemes: the scheme alone (an extension's id says something about the browser).
+  // Utvidelser og andre skjemaer: bare skjemaet (ID-en til en utvidelse sier noe om nettleseren).
   return /^[a-z][a-z0-9+.-]{0,30}:$/.test(url.protocol) ? url.protocol.slice(0, -1) : "other";
 }
 
-// The page's path on flysteder.hpgt.com without query string or fragment, or null for any other page.
+// Sidens sti på flysteder.hpgt.com uten spørrestreng eller fragment, eller null for alle andre sider.
 export function pathOf(value) {
   let url;
   try { url = new URL(str(value)); } catch { return null; }
@@ -73,8 +75,8 @@ export function pathOf(value) {
   return /^\/[\w\-./~]{0,150}$/.test(url.pathname) ? url.pathname : "(annen)";
 }
 
-// For Trusted Types: the sink's name before «|» in the sample (as «Element innerHTML»). The rest of the sample is the
-// content that was assigned, and is never kept.
+// For Trusted Types: navnet på sinken foran «|» i utdraget (som «Element innerHTML»). Resten av utdraget er innholdet
+// som ble tilordnet, og det beholdes aldri.
 export function sinkOf(sample) {
   const s = str(sample);
   const at = s.indexOf("|");
@@ -83,8 +85,8 @@ export function sinkOf(sample) {
   return /^[A-Za-z][\w.]{0,40}( [\w.]{1,40})?$/.test(sink) ? sink : null;
 }
 
-// One report reduced to its log line, or null when it is not about a page on the site. r: the legacy «csp-report»
-// object or the Reporting API's body; url: the Reporting API's report.url, when the body has no documentURL.
+// Én rapport redusert til sin logglinje, eller null når den ikke gjelder en side på nettstedet. r: det gamle
+// «csp-report»-objektet eller body fra Reporting API. url: report.url fra Reporting API, når body ikke har documentURL.
 export function summarize(r, url) {
   if (!r || typeof r !== "object") return null;
   const path = pathOf(str(r.documentURL) || str(r["document-uri"]) || str(url));
@@ -100,21 +102,21 @@ export function summarize(r, url) {
   return line;
 }
 
-// The reports in a body: the legacy {"csp-report": {...}}, or the Reporting API's array of reports.
+// Rapportene i innholdet: den gamle formen {"csp-report": {...}}, eller listen med rapporter fra Reporting API.
 export function reportsIn(kind, body) {
   if (kind === "legacy") return body && typeof body === "object" && body["csp-report"] ? [{ r: body["csp-report"] }] : [];
   if (!Array.isArray(body)) return [];
   return body.filter((x) => x && x.type === "csp-violation").map((x) => ({ r: x.body, url: x.url }));
 }
 
-// The key the rate limit counts under: a hash of the address, never the address itself.
+// Nøkkelen som rate limit teller under: en hash av adressen, aldri selve adressen.
 async function limitKey(ip) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`csp-report|${ip}`));
   return [...new Uint8Array(digest)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// The answer to POST /v1/csp-report (the method is checked in index.js): 204 for reports read (logged or dropped),
-// 415 for another content type, 413 for a body over MAX_BODY, 400 for one that is not JSON, 429 over the rate limit.
+// Svaret på POST /v1/csp-report (metoden sjekkes i index.js): 204 for rapporter som er lest (logget eller forkastet),
+// 415 for en annen innholdstype, 413 for innhold over MAX_BODY, 400 for innhold som ikke er JSON, 429 over grensen.
 export async function handleCspReport(request, env, log = console.log) {
   const type = (request.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
   const kind = TYPES[type];

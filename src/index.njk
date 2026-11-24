@@ -1,12 +1,12 @@
 ---
 layout: base.njk
 map: true
-# The map is on screen at once, so the connections to the tile servers are opened while the page loads (base.njk).
+# Kartet vises med en gang, så tilkoblingene til kartflisserverne åpnes mens siden lastes (base.njk).
 preconnect:
   - https://cache.kartverket.no
   - https://a.tile.opentopomap.org
 bodyClass: page-home
-# One home page per language: / and /en/ (src/_data/languages.js).
+# Én forside per språk: / og /en/ (src/_data/languages.js).
 pagination:
   data: languages
   size: 1
@@ -28,7 +28,7 @@ scripts:
 <div class="home">
   <main class="home__left">
     <header class="topbar">
-      {#- Back to the home page as it opens, without filters, search or selected site (the address without #…). -#}
+      {#- Tilbake til forsiden slik den åpner, uten filtre, søk eller valgt sted (adressen uten #…). -#}
       <a class="logo" href="{{ '/' | localeUrl }}"><img src="{{ '/assets/img/icon.svg' | url }}" width="28" height="28" alt="">{{ t.common.siteTitle }}</a>
       <div class="topbar__end">{{ m.siteMenu() }}</div>
     </header>
@@ -38,39 +38,40 @@ scripts:
       <h1>{{ t.home.title }}</h1>
     </div>
 
-    {#- Tabs (home.js): Flysteder (search, filters, list) and Vær. The map is always shown: on mobile it stays at the top of the
-        screen while the list scrolls under it, on desktop it fills the right side. Info is in the menu. -#}
+    {#- Faner (home.js): Flysteder (søk, filtre, liste) og Vær. Kartet vises alltid: på mobil blir det stående øverst på
+        skjermen mens lista ruller under det, på desktop fyller det høyre side. Info ligger i menyen. -#}
     <div class="home-tabs" role="tablist" aria-label="{{ t.home.tabsLabel }}">
       <button type="button" role="tab" id="tab-sites" aria-controls="pane-sites" aria-selected="true">{{ ICON_SITES | safe }}{{ t.home.tabSites }}</button>
       <button type="button" role="tab" id="tab-weather" aria-controls="pane-weather" aria-selected="false" tabindex="-1">{{ ICON_WEATHER | safe }}{{ t.home.tabWeather }}</button>
     </div>
 
     <div class="home-pane home-pane--sites" id="pane-sites" role="tabpanel" aria-labelledby="tab-sites">
-      {#- Search and the «Filter» button in one row, which stays right below the map on mobile while the list scrolls.
-          The search filters the list and the map while typing (home.js). -#}
+      {#- Søket og «Filter»-knappen på én rad, som blir stående rett under kartet på mobil mens lista ruller.
+          Søket filtrerer lista og kartet mens man skriver (home.js). -#}
       <div class="searchbar" id="filters" role="search">
         <label class="visually-hidden" for="site-search">{{ t.home.searchLabel }}</label>
         <input type="search" id="site-search" class="search-input" placeholder="{{ t.home.searchPlaceholder }}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-describedby="search-hits">
         <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-more">{{ ICON_FILTER | safe }}{{ t.home.filters }}<span class="filters-toggle__count" hidden></span></button>
       </div>
-      {#- Matches right below the field, so they are visible while typing. -#}
+      {#- Treffene rett under feltet, så de synes mens man skriver. -#}
       <div class="search-hits" id="search-hits" aria-live="polite" hidden></div>
-      {#- The chosen filters as chips under the search, each with ✕ to remove it, so they are visible with the panel closed (home.js). -#}
+      {#- De valgte filtrene som brikker under søket, hver med ✕ for å fjerne den, så de synes når panelet er lukket
+          (home.js). -#}
       <div class="filter-chips" id="filter-chips" role="group" aria-label="{{ t.home.chosenFilters }}" hidden></div>
 
-      {#- Direction, level, category and «Bare steder som kan passe»: a panel from the bottom on mobile, folded out under the
-          button on desktop (home.js). The button shows how many are chosen. -#}
+      {#- Retning, nivå, kategori og «Bare steder som kan passe»: et panel fra bunnen på mobil, brettet ut under
+          knappen på desktop (home.js). Knappen viser hvor mange som er valgt. -#}
       <div class="filters-more" id="filters-more" role="group" aria-labelledby="filters-title">
-        {#- On mobile the panel is a dialog: the title and ✕ at the top, «Nullstill» and «Vis N flysteder» at the bottom, and Tab
-            stays inside it while it is open (home.js). -#}
+        {#- På mobil er panelet en dialog: tittelen og ✕ øverst, «Nullstill» og «Vis N flysteder» nederst, og Tab
+            blir inne i den mens den er åpen (home.js). -#}
         <div class="filters-head">
           <h2 class="filters-head__title" id="filters-title">{{ t.home.filters }}</h2>
           <button type="button" class="filters-close" id="filters-close" aria-label="{{ t.home.filtersClose }}">{{ m.icon("close", 20) }}</button>
         </div>
         <div class="filter">
           <span class="filter__title" id="f-direction">{{ t.home.direction }}</span>
-          {#- A small wind rose with eight sectors to tap, like the roses on the map. Several directions can be chosen, and
-              the text beside it says which. Each sector is a button clipped to its wedge (clip-path). -#}
+          {#- En liten vindrose med åtte sektorer å trykke på, som rosene i kartet. Flere retninger kan velges, og
+              teksten ved siden av sier hvilke. Hver sektor er en knapp klippet til sin kile (clip-path). -#}
           <div class="dirpick">
             <div class="dirrose" role="group" aria-labelledby="f-direction">
               {% for code in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] %}
@@ -101,7 +102,8 @@ scripts:
           </div>
         </div>
         {% if forecast or site.forecastUrl %}
-        {#- Dims sites where the forecast says «Passer ikke» or «For mye vind» at the time chosen in the timeline (home.js). -#}
+        {#- Demper steder der prognosen sier «Passer ikke» eller «For mye vind» på tidspunktet som er valgt i tidslinjen
+            (home.js). -#}
         <button type="button" class="suggest-switch" data-suggest aria-pressed="false">{{ t.home.suggest }}</button>
         {% endif %}
         <div class="filters-foot">
@@ -118,15 +120,16 @@ scripts:
           {% for s in collections.sites %}
           <li data-id="{{ s.data.id }}">
             <button type="button" class="results__item" data-select="{{ s.data.id }}">
-              {#- The rose is drawn by home.js, with the wind sector and rating ring. Without JavaScript the list is text only. -#}
+              {#- Rosen tegnes av home.js, med vindsektoren og vurderingsringen. Uten JavaScript er lista bare
+                  tekst. -#}
               <span class="results__rose" aria-hidden="true"></span>
               <span class="results__body">
-                {#- Launch altitude to the right of the name, when recorded. -#}
+                {#- Starthøyde til høyre for navnet, når den er registrert. -#}
                 <span class="results__head"><span class="results__name">{{ s.data.name }}</span>{% if s.data.elevation and s.data.elevation.launch_masl %}<span class="results__elev">{{ s.data.elevation.launch_masl }} {{ t.units.masl }}</span>{% endif %}</span>
                 <span class="directions">{% for code in (s.data.wind_directions.primary.concat(s.data.wind_directions.possible or [])) | sortDirections %}{{ m.directionBadge(code, s.data.wind_directions) }}{% endfor %}</span>
               </span>
             </button>
-            {#- Shown on the selected site on mobile. A second tap on the site opens it (home.js clicks this link). -#}
+            {#- Vises på valgt sted på mobil. Et nytt trykk på stedet åpner det (home.js klikker på denne lenken). -#}
             <a class="results__open" href="{{ s.url | localeUrl(lang) | url }}" tabindex="-1">{{ t.home.tapAgain }}</a>
           </li>
           {% endfor %}
@@ -137,14 +140,15 @@ scripts:
     </div>
 
     <div class="home-pane" id="pane-weather" role="tabpanel" aria-labelledby="tab-weather" hidden>
-      {#- Measured wind from the weather stations (stations.js, data service): a short row per station, linking to the weather page. -#}
+      {#- Målt vind fra værstasjonene (stations.js, datatjenesten): en kort rad per stasjon, med lenke til værsiden. -#}
       <section class="stations" id="stations" aria-labelledby="stations-title" data-url="{{ site.stationsUrl }}" hidden>
         <h2 id="stations-title">{{ t.home.stationsTitle }}</h2>
         <ul class="weather-rows" id="station-list"></ul>
         <p class="muted stations__note">{{ t.home.stationsNote }}</p>
         <a class="stations__more" href="{{ '/vaer/' | localeUrl }}">{{ t.weather.homeLink }} ›</a>
       </section>
-      {#- Day plan («Når kan det passe?»): time windows per site for the next few days, from the forecast (home.js, dayWindows in wind.js). -#}
+      {#- Dagsplan («Når kan det passe?»): tidsvinduer per sted de neste dagene, fra prognosen (home.js, dayWindows i
+          wind.js). -#}
       {% if forecast or site.forecastUrl %}
       <section class="day-plan" id="day-plan" aria-labelledby="day-plan-title" hidden>
         <h2 id="day-plan-title">{{ t.home.dayPlanTitle }}</h2>
@@ -155,15 +159,16 @@ scripts:
       <p class="muted">{{ t.home.weatherIntro }}</p>
       <nav class="link-list" aria-label="{{ t.home.weatherLabel }}">
         {{ m.linkRow("https://flybart.net/", "Flybart", t.home.flybart) }}
-        {#- http, not https: xcc.no's certificate is for its web host's own name (checked 22.10.2026), so https fails there. #}
+        {#- http, ikke https: sertifikatet til xcc.no gjelder webhotellets eget navn (sjekket 22.10.2026),
+            så https feiler der. #}
         {{ m.linkRow("http://xcc.no/xccflymet.html", "XCC flymet", t.home.xcc) }}
         {{ m.linkRow(t.home.yrUrl, "Yr", t.home.yrHarstad) }}
         {{ m.linkRow("https://www.windy.com/68.8/16.4?68.8,16.4,9", "Windy", t.home.windyHome) }}
       </nav>
     </div>
 
-    {#- Responsibility, sources, privacy and open data are on their own page. The short note that it is a rough guide is right
-        below the list. The links for planning a trip (NOTAM, towers) are in the menu. -#}
+    {#- Ansvar, kilder, personvern og åpne data har egen side. Den korte merknaden om at dette er en grov veiledning,
+        står rett under lista. Lenkene for å planlegge en tur (NOTAM, tårn) ligger i menyen. -#}
     <footer class="disclaimer">
       <p><a href="{{ '/om/' | localeUrl }}">{{ t.common.aboutLink }}</a></p>
     </footer>
@@ -171,9 +176,9 @@ scripts:
 
   <section class="home__map" id="home-map-wrap" aria-label="{{ t.home.mapLabel }}">
     <div id="home-map" class="map map--home" data-live-url="{{ site.liveUrl }}" data-live-script="{{ '/assets/js/live.js' | asset }}" data-grid-url="{{ site.gridUrl }}" data-grid-wide-url="{{ site.gridWideUrl }}" data-forecast-script="{{ '/assets/js/forecast-layer.js' | asset }}" data-home-region="{{ site.homeRegion }}" data-airspace-url="{{ '/assets/airspace.geojson' | url }}" data-obstacles-url="{{ '/assets/obstacles/index.json' | url }}"></div>
-    {#- Status on the map (home.js): a small pill with how many sites may work at the chosen time and the most common
-        direction. It opens the details: the wind in the area, the count per rating, when the forecast was fetched,
-        the legend and how the assessment works. -#}
+    {#- Status i kartet (home.js): en liten pille med hvor mange steder som kan passe på valgt tidspunkt, og den
+        vanligste retningen. Den åpner detaljene: vinden i området, antallet per vurdering, når prognosen ble hentet,
+        tegnforklaringen og hvordan vurderingen virker. -#}
     <div class="map-status">
       <button type="button" class="map-status__pill" id="map-status" aria-expanded="false" aria-controls="map-info">
         <span class="map-status__icon" aria-hidden="true"></span><span class="map-status__text" id="map-count" aria-live="polite">{{ t.home.showingAll | fmt({ n: collections.sites.length }) }}</span><span class="map-status__sub" id="map-status-sub"></span>
@@ -182,7 +187,7 @@ scripts:
         <div class="wind-summary" id="wind-summary" aria-live="polite" hidden></div>
         <p class="map-info__status" id="forecast-status" aria-live="polite"></p>
         {{ m.legend() }}
-        {#- What the marks on the map are: a site, a cluster of sites, the club's and MET's weather stations. -#}
+        {#- Hva merkene i kartet er: et sted, en klynge av steder, klubbens og METs værstasjoner. -#}
         <ul class="legend map-legend" aria-label="{{ t.home.mapLegendLabel }}">
           <li><span class="map-legend__site" aria-hidden="true"></span>{{ t.home.mapLegendSite }}</li>
           <li><span class="map-legend__cluster" aria-hidden="true">3</span>{{ t.home.mapLegendCluster }}</li>
@@ -206,8 +211,8 @@ scripts:
       </div>
     </div>
     {% if forecast or site.forecastUrl %}
-    {#- The time for the wind assessment: «Nå» and a slider over the hours in the forecast. The track is coloured by the best
-        rating among the sites matching the filters, hour by hour, so you can see when it may work (home.js). -#}
+    {#- Tidspunktet for vindvurderingen: «Nå» og en glidebryter over timene i prognosen. Sporet er farget etter den
+        beste vurderingen blant stedene som passer filtrene, time for time, så man ser når det kan passe (home.js). -#}
     <div class="timeline" id="timeline" hidden>
       <button type="button" class="timeline__now" id="timeline-now" aria-pressed="true">{{ t.home.now }}</button>
       <label class="timeline__time" for="timeline-range" id="timeline-time"></label>
@@ -218,7 +223,7 @@ scripts:
       </div>
     </div>
     {% endif %}
-    {#- Mobile: a short line on the map about the selected site, with a link to the site page. Desktop: the card. -#}
+    {#- Mobil: en kort linje i kartet om valgt sted, med lenke til stedssiden. Desktop: kortet. -#}
     <div class="map-note" id="map-note" hidden></div>
     <section class="selected" id="selected" aria-live="polite">
       <p class="muted selected__empty">{{ t.home.selectHint }}</p>

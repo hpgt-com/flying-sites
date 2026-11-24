@@ -1,7 +1,7 @@
-// Signing in as the club's GitHub App, so the issues from «Meld fra om endring» (report.js) come from the app (shown as
-// a bot) and no personal token has to be renewed. The app's ID (or Client ID) and private key are the secrets REPORTS_APP_ID and
-// REPORTS_APP_PRIVATE_KEY (the .pem file GitHub gives, as it is); the installation on the repository is looked up. Each
-// call asks GitHub for a token that lasts an hour (a report is rare, so nothing is kept). Tested in
+// Innlogging som klubbens GitHub App. Da kommer sakene fra «Meld fra om endring» (report.js) fra appen (vist som en
+// bot), og ingen personlig token må fornyes. Appens ID (eller Client ID) og private nøkkel er hemmelighetene
+// REPORTS_APP_ID og REPORTS_APP_PRIVATE_KEY (.pem-filen fra GitHub, som den er). Installasjonen på repoet slås opp.
+// Hvert kall ber GitHub om en token som varer en time (rapporter er sjeldne, så ingenting beholdes). Testet i
 // test/data-worker.test.js.
 
 const API = "https://api.github.com";
@@ -10,15 +10,15 @@ const HEADERS = { accept: "application/vnd.github+json", "user-agent": "hpgt-fly
 const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const utf8 = (s) => new TextEncoder().encode(s);
 
-// DER length, and a tag with its content.
+// DER-lengde, og en tagg med innholdet.
 function der(tag, content) {
   const n = content.length;
   const len = n < 128 ? [n] : n < 256 ? [0x81, n] : n < 65536 ? [0x82, n >> 8, n & 255] : [0x83, n >> 16, (n >> 8) & 255, n & 255];
   return Uint8Array.from([tag, ...len, ...content]);
 }
 
-// The key as WebCrypto takes it (PKCS#8). GitHub gives PKCS#1 («BEGIN RSA PRIVATE KEY»), which is wrapped here; a key
-// already in PKCS#8 («BEGIN PRIVATE KEY») is used as it is.
+// Nøkkelen slik WebCrypto vil ha den (PKCS#8). GitHub gir PKCS#1 («BEGIN RSA PRIVATE KEY»), som pakkes inn her. En
+// nøkkel som alt er PKCS#8 («BEGIN PRIVATE KEY»), brukes som den er.
 export function pkcs8(pem) {
   const body = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
   const raw = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
@@ -27,7 +27,7 @@ export function pkcs8(pem) {
   return der(0x30, [0x02, 0x01, 0x00, ...der(0x30, rsaOid), ...der(0x04, [...raw])]);
 }
 
-// A JWT for the app, valid for 9 minutes (GitHub allows 10), back-dated a minute for clock drift.
+// En JWT for appen, gyldig i 9 minutter (GitHub tillater 10), tilbakedatert ett minutt i tilfelle klokkene går ulikt.
 export async function appJwt(appId, pem, now = Date.now()) {
   const key = await crypto.subtle.importKey("pkcs8", pkcs8(pem), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
   const t = Math.floor(now / 1000);
@@ -37,9 +37,9 @@ export async function appJwt(appId, pem, now = Date.now()) {
   return `${head}.${claims}.${b64url(sig)}`;
 }
 
-// A token for the app's installation on `repo` ("owner/name"), for one call. The token is asked for with only that
-// repository and Issues: write, so it can do no more than that even if the app is one day installed on more or given
-// more.
+// En token for appens installasjon på `repo` ("eier/navn"), for ett kall. Tokenen bes om med bare det repoet og
+// Issues: write, så den kan ikke gjøre mer enn det, selv om appen en dag blir installert på flere repoer eller får
+// flere rettigheter.
 export async function installationToken(env, repo, now = Date.now()) {
   const api = env.GITHUB_API || API;
   const jwt = await appJwt(env.REPORTS_APP_ID, env.REPORTS_APP_PRIVATE_KEY, now);

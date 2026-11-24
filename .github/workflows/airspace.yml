@@ -1,47 +1,47 @@
-name: Update airspace
+name: Oppdater luftrom
 
-# Fetches airspace from openAIP for all sites once a month (the AIRAC cycle is 28 days).
-# Changes arrive as a PR, so someone reviews the diff before publishing. Every successful run also updates
-# checked.json (the date of the check), so there is a PR every month; merging it records that the check was done.
-# Requires the repository secret OPENAIP_API_KEY.
+# Henter luftrom fra openAIP for alle stedene én gang i måneden (AIRAC-syklusen er 28 dager).
+# Endringer kommer som en PR, så noen ser over diffen før publisering. Hver vellykket kjøring oppdaterer også
+# checked.json (datoen for sjekken), så det kommer en PR hver måned; når den merges, er det notert at sjekken er gjort.
+# Krever repo-hemmeligheten OPENAIP_API_KEY.
 #
-# The PR is created with a token from the club's GitHub App (repository variable APP_CLIENT_ID and secret
-# APP_PRIVATE_KEY, see docs/operations.md), so the PR check runs on it like on any other PR. GITHUB_TOKEN cannot
-# create pull requests in this organisation, so the job fails if the app is not set up.
+# PR-en lages med et token fra klubbens GitHub-app (repo-variabelen APP_CLIENT_ID og hemmeligheten
+# APP_PRIVATE_KEY, se docs/operations.md), så PR-sjekken kjører på den som på alle andre PR-er. GITHUB_TOKEN kan
+# ikke lage pull requests i denne organisasjonen, så jobben feiler hvis appen ikke er satt opp.
 #
-# Two jobs, so third-party code never runs with write access:
-#   fetch  installs the npm packages and runs the script, with read-only access and the openAIP key.
-#          The result is handed on as an artifact.
-#   pr     has write access to push the branch and open the PR, but installs and runs nothing from npm.
-#          It only copies the fetched files into place and commits them.
+# To jobber, så kode fra tredjeparter aldri kjører med skrivetilgang:
+#   fetch  installerer npm-pakkene og kjører skriptet, med bare lesetilgang og openAIP-nøkkelen.
+#          Resultatet sendes videre som en artefakt.
+#   pr     har skrivetilgang for å pushe grenen og åpne PR-en, men installerer og kjører ingenting fra npm.
+#          Den kopierer bare de hentede filene på plass og committer dem.
 #
-# «Run workflow» has the option «Test the GitHub App token only». It runs just the test-app-token job, which gets
-# a read-only token from the app and reads the repository, to check that the app is set up correctly. It fetches
-# no airspace, pushes nothing and opens no PR.
+# «Run workflow» har valget «Test bare tokenet fra GitHub-appen». Det kjører bare jobben test-app-token, som får
+# et token med bare lesetilgang fra appen og leser repoet, for å sjekke at appen er riktig satt opp. Den henter
+# ikke luftrom, pusher ingenting og åpner ingen PR.
 
 on:
   schedule:
-    - cron: "0 6 1 * *" # the 1st of every month at 06:00 UTC
+    - cron: "0 6 1 * *" # den 1. hver måned kl. 06:00 UTC
   workflow_dispatch:
     inputs:
       test_app_token:
-        description: "Test the GitHub App token only (no airspace fetch, no PR)"
+        description: "Test bare tokenet fra GitHub-appen (henter ikke luftrom, lager ingen PR)"
         type: boolean
         default: false
 
-# No access by default. Each job asks for what it needs.
+# Ingen tilgang som standard. Hver jobb ber om det den trenger.
 permissions: {}
 
-# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
-# instead of blocking for up to 6 hours.
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   fetch:
-    # Skipped when only testing the app token. On the monthly schedule there are no inputs, so it always runs.
+    # Hoppes over når bare app-tokenet testes. Den månedlige kjøringen har ingen inndata, så da kjører den alltid.
     if: ${{ !inputs.test_app_token }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # The secrets (OPENAIP_API_KEY here, APP_PRIVATE_KEY in pr and test-app-token) live in the environment
-    # «automation», which only main may use, so a workflow changed on another branch cannot read them.
+    # Hemmelighetene (OPENAIP_API_KEY her, APP_PRIVATE_KEY i pr og test-app-token) ligger i miljøet
+    # «automation», som bare main kan bruke, så en arbeidsflyt som er endret på en annen gren, ikke kan lese dem.
     environment: automation
     permissions:
       contents: read
@@ -57,11 +57,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # --ignore-scripts: no package's install script runs (none of the dependencies need one).
+      # --ignore-scripts: ingen pakkers installasjonsskript kjører (ingen av avhengighetene trenger det).
       - run: npm ci --ignore-scripts
 
       - name: Hent luftrom fra openAIP
-        # shell: bash enables pipefail, so a script error stops the job even though output goes through tee.
+        # shell: bash slår på pipefail, så en feil i skriptet stopper jobben selv om utdataene går gjennom tee.
         shell: bash
         run: npm run --silent airspace | tee luftrom.txt
         env:
@@ -77,7 +77,7 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # The whole cache folder (so files removed by the script stay removed) and the script's output for the PR text.
+      # Hele cache-mappen (så filer skriptet har fjernet, forblir fjernet) og utdataene fra skriptet til PR-teksten.
       - if: steps.diff.outputs.changed == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -97,8 +97,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      # Short-lived token from the club's GitHub App, limited to this repository and to the two permissions the
-      # job needs. It is revoked when the job ends. The job fails if the app is not set up.
+      # Kortlivet token fra klubbens GitHub-app, begrenset til dette repoet og de to tillatelsene jobben
+      # trenger. Det trekkes tilbake når jobben er ferdig. Jobben feiler hvis appen ikke er satt opp.
       - id: app
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -107,12 +107,12 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      # The token is kept because the job pushes a branch for the PR. It uploads no artifacts and runs no npm code.
+      # Tokenet beholdes fordi jobben pusher en gren for PR-en. Den laster ikke opp artefakter og kjører ingen npm-kode.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
         with:
           token: ${{ steps.app.outputs.token }}
 
-      # Replaces the cache folder with the fetched one, so removed files are removed here too.
+      # Erstatter cache-mappen med den hentede, så fjernede filer fjernes her også.
       - run: rm -rf src/_data/cache/airspace
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -140,8 +140,9 @@ jobs:
           } > pr.md
           gh pr create --title "Luftrom fra openAIP $(date +%d.%m.%Y)" --body-file pr.md
 
-  # An issue when the run fails (a comment on the open one if it fails again), so a failing run is not missed: GitHub
-  # sends no notice of its own for scheduled runs, and they may also be late by hours. Runs no project code.
+  # En sak når kjøringen feiler (en kommentar på den åpne hvis den feiler igjen), så en feilet kjøring ikke blir
+  # oversett: GitHub sier ikke fra selv om planlagte kjøringer, og de kan også komme timer for sent. Kjører ingen
+  # kode fra prosjektet.
   alert:
     needs: [fetch, pr]
     if: failure()
@@ -167,7 +168,7 @@ jobs:
           Se loggen, rett feilen og kjør jobben på nytt (Actions → «$WORKFLOW» → «Run workflow»). Lukk saken når den går grønt."
           fi
 
-  # Checks that the GitHub App is set up: APP_CLIENT_ID, APP_PRIVATE_KEY and the installation on this repository.
+  # Sjekker at GitHub-appen er satt opp: APP_CLIENT_ID, APP_PRIVATE_KEY og installasjonen på dette repoet.
   test-app-token:
     if: ${{ inputs.test_app_token }}
     runs-on: ubuntu-latest
@@ -181,7 +182,7 @@ jobs:
           echo "::error::Variabelen APP_CLIENT_ID mangler (Settings → Secrets and variables → Actions → Variables)."
           exit 1
 
-      # Read-only token: the test only reads, even though the app may write.
+      # Token med bare lesetilgang: testen leser bare, selv om appen kan skrive.
       - id: app
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:

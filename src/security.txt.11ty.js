@@ -1,4 +1,4 @@
-// security.txt (RFC 9116): how to report a vulnerability, at /.well-known/security.txt (lib/security-txt.js).
+// security.txt (RFC 9116): hvordan man melder fra om en sårbarhet, på /.well-known/security.txt (lib/security-txt.js).
 import { securityTxt } from "../lib/security-txt.js";
 
 export default class {

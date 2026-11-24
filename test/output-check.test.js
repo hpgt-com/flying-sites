@@ -1,4 +1,4 @@
-// Tests for the check of template and script slips in the built site (lib/output-check.js). Run with `npm test`.
+// Tester for sjekken av glipp fra maler og skript i den bygde siden (lib/output-check.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -8,27 +8,27 @@ import { findSlips, checkOutput } from "../lib/output-check.js";
 
 const problems = (html) => findSlips(html).map((s) => s.problem);
 
-test("finds [object Object], undefined and NaN in text and attributes", () => {
+test("finner [object Object], undefined og NaN i tekst og attributter", () => {
   assert.deepEqual(problems("<h3>[object Object]</h3>"), ["[object Object]"]);
   assert.deepEqual(problems('<p title="undefined">x</p>'), ["undefined"]);
   assert.deepEqual(problems("<p>Høyde NaN moh</p>"), ["NaN"]);
 });
 
-test("finds placeholders and Nunjucks code that were never filled in", () => {
+test("finner plassholdere og Nunjucks-kode som aldri ble fylt inn", () => {
   assert.deepEqual(problems("<p>{n} flysteder</p>"), ["plassholder som ikke er fylt ut"]);
   assert.deepEqual(problems("<p>{{ t.site.title }}</p>"), ["Nunjucks-kode som ikke er kjørt"]);
 });
 
-test("placeholders and words in script blocks are fine, but [object Object] is not", () => {
+test("plassholdere og ord i script-blokker er greit, men [object Object] er det ikke", () => {
   assert.deepEqual(problems('<script type="application/json">{"sites":"{n} flysteder","x":"typeof undefined"}</script><p>OK</p>'), []);
   assert.deepEqual(problems('<script type="application/json">{"title":"[object Object]"}</script>'), ["[object Object]"]);
 });
 
-test("ordinary text is not a slip", () => {
+test("vanlig tekst er ikke en glipp", () => {
   assert.deepEqual(problems("<p>Undefined er ikke et ord her, men nantes og Nansen er det.</p>"), []);
 });
 
-test("checkOutput lists the pages with slips", () => {
+test("checkOutput lister sidene med glipp", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "output-"));
   fs.mkdirSync(path.join(dir, "a"));
   fs.writeFileSync(path.join(dir, "index.html"), "<p>OK</p>");

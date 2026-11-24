@@ -1,13 +1,13 @@
-// Image viewer on the site page: tap an image to see it large, browse with arrows, keyboard or swipe.
-// Zoom: pinch with two fingers, double-tap or mouse wheel. Drag to pan when the image is zoomed.
-// The links (a[data-lightbox]) point to the large image, so without JavaScript the image opens as normal.
+// Bildeviser på stedssiden: trykk på et bilde for å se det stort, bla med piler, tastatur eller sveip.
+// Zoom: knip med to fingre, dobbelttrykk eller musehjul. Dra for å flytte bildet når det er zoomet.
+// Lenkene (a[data-lightbox]) peker til det store bildet, så uten JavaScript åpnes bildet som vanlig.
 (function () {
   "use strict";
 
   var FS = window.FlyingSites;
 
-  // Order in the viewer (data-lightbox-index): all overview images, then launch, then landing. Images not
-  // shown on the page are hidden links after the grid.
+  // Rekkefølgen i viseren (data-lightbox-index): alle oversiktsbildene, så start, så landing. Bilder som ikke
+  // vises på siden, er skjulte lenker etter rutenettet.
   var links = Array.prototype.slice.call(document.querySelectorAll("a[data-lightbox]"));
   links.sort(function (a, b) {
     return Number(a.getAttribute("data-lightbox-index")) - Number(b.getAttribute("data-lightbox-index"));
@@ -35,7 +35,7 @@
   var counter = dialog.querySelector(".lightbox__counter");
   var credit = dialog.querySelector(".lightbox__credit");
 
-  // «Foto: Navn · CC BY-NC 4.0», linking to the photographer's website and the licence. Built with DOM methods.
+  // «Foto: Navn · CC BY-NC 4.0», med lenke til fotografens nettside og lisensen. Bygd med DOM-metoder.
   function creditLink(textValue, href) {
     if (!href) return document.createTextNode(textValue);
     var a = document.createElement("a");
@@ -56,16 +56,16 @@
     dialog.querySelector(".lightbox__next").hidden = true;
   }
 
-  // The image is never shown larger than the largest available version (data-width), so small images
-  // such as the overview drawings are not blown up. On smaller screens it fills the width.
+  // Bildet vises aldri større enn den største versjonen som finnes (data-width), så små bilder
+  // som oversiktstegningene ikke blåses opp. På mindre skjermer fyller det bredden.
   function sizesFor(link) {
     var width = Number(link.getAttribute("data-width"));
     return width ? "(max-width: " + width + "px) 100vw, " + width + "px" : "100vw";
   }
 
-  // The browser picks the size from the screen and pixel density, so new phones with higher resolution
-  // get sharper images automatically. Exception: if the user has data saver on, or the network is slow
-  // (2G/3G), at most 1600 px is fetched. The browser reports this where it can (navigator.connection).
+  // Nettleseren velger størrelse ut fra skjermen og pikseltettheten, så nye mobiler med høyere oppløsning
+  // får skarpere bilder automatisk. Unntak: har brukeren datasparing på, eller er nettet tregt
+  // (2G/3G), hentes høyst 1600 px. Nettleseren oppgir dette der den kan (navigator.connection).
   var SAVE_DATA_MAX_WIDTH = 1600;
   var connection = navigator.connection || {};
   var limitData = !!connection.saveData || /(^|-)(2g|3g)$/.test(connection.effectiveType || "");
@@ -78,7 +78,7 @@
     return kept.length ? kept.join(", ") : set;
   }
 
-  // Preloads the next and previous image, at the size the viewer will pick.
+  // Laster neste og forrige bilde på forhånd, i størrelsen viseren vil velge.
   function preload(index) {
     var link = links[(index + links.length) % links.length];
     var img = new Image();
@@ -101,7 +101,7 @@
     resetZoom();
     if (!dialog.open) {
       dialog.showModal();
-      // Focus on the close button, not the photographer's link, which is replaced when browsing.
+      // Fokus på lukkeknappen, ikke fotografens lenke, som byttes ut når man blar.
       dialog.querySelector(".lightbox__close").focus();
     }
     fit();
@@ -111,9 +111,9 @@
     }
   }
 
-  // The image gets a fixed pixel size that fits the screen now: as large as possible, but never larger
-  // than the image's own width (small images are not stretched). Recomputed when the phone is rotated or the
-  // window resizes. Without this the image keeps the size it had when opened.
+  // Bildet får en fast pikselstørrelse som passer skjermen nå: så stort som mulig, men aldri større
+  // enn bildets egen bredde (små bilder strekkes ikke). Regnes ut på nytt når mobilen snus eller
+  // vinduet endrer størrelse. Uten dette beholder bildet størrelsen det hadde da det ble åpnet.
   function fit() {
     var link = links[current];
     var w = Number(link.getAttribute("data-width")) || image.naturalWidth;
@@ -127,14 +127,14 @@
   window.addEventListener("resize", function () {
     if (!dialog.open) return;
     resetZoom();
-    // The browser picks the image size again for the new screen width.
+    // Nettleseren velger bildestørrelsen på nytt for den nye skjermbredden.
     source.sizes = image.sizes = sizesFor(links[current]);
     fit();
   });
 
   links.forEach(function (link, index) {
     link.addEventListener("click", function (ev) {
-      if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return; // let "open in new tab" work as normal
+      if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return; // la «åpne i ny fane» virke som vanlig
       ev.preventDefault();
       opener = link;
       FS.track("images" + location.pathname);
@@ -142,7 +142,7 @@
     });
   });
 
-  // «Se alle N bilder» opens the viewer on the first image.
+  // «Se alle N bilder» åpner viseren på det første bildet.
   Array.prototype.forEach.call(document.querySelectorAll("[data-lightbox-all]"), function (button) {
     button.hidden = false;
     button.addEventListener("click", function () {
@@ -156,28 +156,28 @@
   dialog.querySelector(".lightbox__prev").addEventListener("click", function () { show(current - 1); });
   dialog.querySelector(".lightbox__next").addEventListener("click", function () { show(current + 1); });
 
-  // Back to the image that was opened, so keyboard users keep their place.
+  // Tilbake til bildet som ble åpnet, så tastaturbrukere beholder plassen sin.
   dialog.addEventListener("close", function () { if (opener) opener.focus(); });
 
-  // Clicking the dark area around the image closes the viewer.
+  // Et klikk i det mørke feltet rundt bildet lukker viseren.
   dialog.addEventListener("click", function (ev) {
     if (ev.target === dialog || ev.target.classList.contains("lightbox__figure")) dialog.close();
   });
 
-  // On the document, not the dialog: arrow keys should work even if focus has left the viewer.
+  // På dokumentet, ikke dialogen: piltastene skal virke selv om fokus har forlatt viseren.
   document.addEventListener("keydown", function (ev) {
     if (!dialog.open) return;
     if (ev.key === "ArrowLeft") show(current - 1);
     else if (ev.key === "ArrowRight") show(current + 1);
   });
 
-  // --- Zoom and panning ---
-  // The browser's own pinch zoom works poorly in a full-screen viewer, so the image is zoomed here.
-  // The image is never shown larger than the largest available version, so zoom helps most on small screens.
+  // --- Zoom og panorering ---
+  // Nettleserens egen knipezoom virker dårlig i en viser i fullskjerm, så bildet zoomes her.
+  // Bildet vises aldri større enn den største versjonen som finnes, så zoom hjelper mest på små skjermer.
   var MAX_SCALE = 5;
   var zoom = { scale: 1, x: 0, y: 0 };
   var pointers = {}; // pointerId: { x, y }
-  var gesture = null; // ongoing pinch or pan
+  var gesture = null; // pågående knip eller panorering
   var swipeStart = null;
 
   function applyZoom() {
@@ -190,13 +190,13 @@
     gesture = null;
     applyZoom();
   }
-  // Zooms to `scale` keeping the point (cx, cy) in screen coordinates fixed. `from` is the zoom to
-  // compute from (default: the current one). The image is scaled around its centre (transform-origin).
+  // Zoomer til `scale` og holder punktet (cx, cy) i skjermkoordinater fast. `from` er zoomen det
+  // regnes fra (standard: den nåværende). Bildet skaleres rundt midten sin (transform-origin).
   function zoomAt(scale, cx, cy, from) {
     from = from || zoom;
     scale = Math.min(MAX_SCALE, Math.max(1, scale));
     var rect = image.getBoundingClientRect();
-    // Centre of the image without panning, in screen coordinates. rect is the image as currently shown (zoomed).
+    // Midten av bildet uten panorering, i skjermkoordinater. rect er bildet slik det vises nå (zoomet).
     var ox = rect.left + rect.width / 2 - zoom.x, oy = rect.top + rect.height / 2 - zoom.y;
     var k = scale / from.scale;
     zoom = { scale: scale, x: (cx - ox) - (cx - ox - from.x) * k, y: (cy - oy) - (cy - oy - from.y) * k };
@@ -204,7 +204,7 @@
     clampPan();
     applyZoom();
   }
-  // Keeps the image within the screen, so it cannot be dragged away entirely.
+  // Holder bildet innenfor skjermen, så det ikke kan dras helt bort.
   function clampPan() {
     var w = image.offsetWidth * zoom.scale, h = image.offsetHeight * zoom.scale;
     var maxX = Math.max(0, (w - window.innerWidth) / 2 + 40), maxY = Math.max(0, (h - window.innerHeight) / 2 + 40);
@@ -230,7 +230,7 @@
     pointers[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
     var p = points();
     if (gesture && gesture.type === "pinch" && p.length === 2) {
-      // From the zoom when the pinch started, moved with the fingers' midpoint.
+      // Fra zoomen da knipet begynte, flyttet med midtpunktet mellom fingrene.
       var mid = { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
       var from = { scale: gesture.scale, x: gesture.x + (mid.x - gesture.mid.x), y: gesture.y + (mid.y - gesture.mid.y) };
       zoomAt(gesture.scale * Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) / gesture.distance, mid.x, mid.y, from);
@@ -244,16 +244,16 @@
   function endPointer(ev) {
     delete pointers[ev.pointerId];
     var p = points();
-    // From pinch to one finger: continue as a pan, so the image does not jump.
+    // Fra knip til én finger: fortsett som panorering, så bildet ikke hopper.
     if (p.length === 1 && zoom.scale > 1) gesture = { type: "pan", start: p[0], x: zoom.x, y: zoom.y };
     else if (!p.length) gesture = null;
   }
   image.addEventListener("pointerup", endPointer);
   image.addEventListener("pointercancel", endPointer);
 
-  // Double-tap and double-click zoom in where pressed, or back out. A tap is short and without
-  // movement, so the end of a pan or pinch is not counted. The browser also sends dblclick
-  // after a double-tap on mobile, so it is ignored right after a double-tap has been handled.
+  // Dobbelttrykk og dobbeltklikk zoomer inn der man trykket, eller ut igjen. Et trykk er kort og uten
+  // bevegelse, så slutten på en panorering eller et knip telles ikke. Nettleseren sender også dblclick
+  // etter et dobbelttrykk på mobil, så det ignoreres rett etter at et dobbelttrykk er håndtert.
   var tap = { start: null, last: 0, handled: 0 };
   image.addEventListener("pointerdown", function (ev) {
     tap.start = ev.pointerType === "touch" && points().length === 1 ? { x: ev.clientX, y: ev.clientY, t: Date.now() } : null;
@@ -280,7 +280,7 @@
   }, { passive: false });
   dialog.addEventListener("close", resetZoom);
 
-  // Swipe sideways on mobile, only when the image is not zoomed and with one finger.
+  // Sveip sidelengs på mobil, bare når bildet ikke er zoomet og med én finger.
   dialog.addEventListener("pointerdown", function (ev) { swipeStart = zoom.scale === 1 && points().length <= 1 ? ev.clientX : null; });
   dialog.addEventListener("pointerup", function (ev) {
     if (swipeStart === null || links.length < 2 || zoom.scale > 1) return;

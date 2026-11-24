@@ -12,10 +12,11 @@ eleventyComputed:
   feedUrl: "{{ '/nytt/feed.xml' | localeUrl(language.code) }}"
   lastmod: "{{ news.entries[0].date }}"
 ---
-{#- «Nytt på siden»: what is new, for the pilots, and what is planned. Each entry says what it is, where to find it and
-    how to read it (src/_data/news.json, in both languages; newest first, grouped by date). The plan links to the issues
-    on GitHub, and asks for wishes through «Meld fra». A new entry goes into news.json with the change. The same entries
-    as an Atom feed (feed.njk), linked from the head (base.njk) and under the intro; the sitemap gets the newest date. -#}
+{#- «Nytt på siden»: hva som er nytt, for pilotene, og hva som er planlagt. Hver oppføring sier hva det er, hvor
+    man finner det og hvordan det leses (src/_data/news.json, på begge språk; nyeste først, gruppert etter dato).
+    Planen lenker til issuene på GitHub, og ber om ønsker via «Meld fra». En ny oppføring legges i news.json
+    sammen med endringen. De samme oppføringene finnes som Atom-feed (feed.njk), lenket fra head (base.njk) og
+    under innledningen. Sitemapen får den nyeste datoen. -#}
 {%- import "macros.njk" as m with context -%}
 {%- set ext = m.external() -%}
 <main class="simple-page news-page">

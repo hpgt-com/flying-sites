@@ -1,42 +1,42 @@
-// «Meld fra om endring» on the site pages: POST /v1/report from flysteder.hpgt.com. The browser is checked with
-// Cloudflare Turnstile (the secret TURNSTILE_SECRET), and the report becomes an issue in the site's GitHub repository,
-// made by the club's GitHub App «HPGT Flying Sites Reports» (the secrets REPORTS_APP_ID and REPORTS_APP_PRIVATE_KEY,
-// github-app.js) with a one-hour token for Issues on this repository only. No personal token.
-// Without Turnstile and the app the endpoint answers 503 and the pages do not show the form (turnstileSiteKey in
-// src/_data/site.js). At most DAILY_LIMIT reports a day, and PER_IP_LIMIT from one address: both are counted and
-// reserved in one step in the store (store.js reserveReport), so two reports at the same time cannot both slip past the
-// limit, and a reservation is given back when GitHub fails. The address is kept only as a hash with a salt that is thrown
-// away with the day's count the next day. Turnstile's answer must be for the site's own hostname. The issue gets the
-// labels for its kind (LABELS), and the answer gives its number and address, so the form can link to it. Tested in
-// test/data-worker.test.js.
+// «Meld fra om endring» på stedssidene: POST /v1/report fra flysteder.hpgt.com. Nettleseren sjekkes med Cloudflare
+// Turnstile (hemmeligheten TURNSTILE_SECRET), og rapporten blir en sak i nettstedets repo på GitHub. Saken lages av
+// klubbens GitHub App «HPGT Flying Sites Reports» (hemmelighetene REPORTS_APP_ID og REPORTS_APP_PRIVATE_KEY,
+// github-app.js) med en token som varer en time og bare gjelder Issues i dette repoet. Ingen personlig token.
+// Uten Turnstile og appen svarer endepunktet 503, og sidene viser ikke skjemaet (turnstileSiteKey i src/_data/site.js).
+// Høyst DAILY_LIMIT rapporter i døgnet, og PER_IP_LIMIT fra én IP-adresse. Begge telles og reserveres i ett steg i
+// lageret (store.js reserveReport), så to rapporter samtidig ikke begge kan slippe forbi grensen. En reservasjon gis
+// tilbake når GitHub feiler. Adressen beholdes bare som en hash med et salt, som kastes sammen med dagens telling dagen
+// etter. Svaret fra Turnstile må gjelde nettstedets eget vertsnavn. Saken får etikettene for sin type (LABELS), og
+// svaret gir nummeret og adressen, så skjemaet kan lenke til den. Testet i test/data-worker.test.js.
 
 import { installationToken } from "./github-app.js";
 
-// What a report about a site can concern, and one from /meld-fra/ (no site). The pages have the same lists (macros.njk).
+// Hva en rapport om et sted kan gjelde, og en fra /meld-fra/ (uten sted). Sidene har de samme listene (macros.njk).
 export const KINDS = ["landing", "access", "hazard", "launch", "other"];
 export const GENERAL_KINDS = ["newsite", "bug", "idea", "other"];
 export const MAX_MESSAGE = 1000;
 export const MIN_MESSAGE = 10;
 export const MAX_NAME = 80;
-// 50 a day: enough for a busy evening after a club meeting, and few enough that a flood is bounded. 3 from one address.
+// 50 i døgnet: nok for en travel kveld etter et klubbmøte, og få nok til at en flom har en grense. 3 fra én adresse.
 export const DAILY_LIMIT = 50;
 export const PER_IP_LIMIT = 3;
-// The largest request body read (the form's fields and the Turnstile token are far below it).
+// Det største innholdet i en forespørsel som leses (feltene i skjemaet og Turnstile-tokenen er langt under).
 export const MAX_BODY = 8192;
 export const ORIGINS = ["https://flysteder.hpgt.com"];
 const REPO = "hpgt-com/flying-sites";
 const KIND_TITLES = { landing: "Landing", access: "Vei, parkering eller adkomst", hazard: "Fare eller hindring", launch: "Start", other: "Annet",
   newsite: "Nytt flysted", bug: "Feil på siden", idea: "Forslag" };
-// The labels each kind gets (all exist in the repository): what concerns a site's information is site-data, a hazard
-// is also safety; a fault on the page is a bug and an idea an enhancement. «endringsforslag» is the label of the issue
-// form for changes (.github/ISSUE_TEMPLATE/endring.yml), so reports and changes suggested on GitHub are found together.
+// Etikettene hver type får (alle finnes i repoet). Det som gjelder opplysningene om et sted, er site-data, og en fare
+// er også safety. En feil på siden er bug, og et forslag er enhancement. «endringsforslag» er etiketten til
+// saksskjemaet for endringer (.github/ISSUE_TEMPLATE/endring.yml), så rapporter og endringer foreslått på GitHub finnes
+// sammen.
 const SITE_LABELS = ["endringsforslag", "site-data"];
 export const LABELS = { landing: SITE_LABELS, access: SITE_LABELS, launch: SITE_LABELS, hazard: [...SITE_LABELS, "safety"], newsite: SITE_LABELS,
   bug: ["bug"], idea: ["enhancement"] };
-// The address of an issue in the repository, the only kind of link passed on to the page.
+// Adressen til en sak i repoet, den eneste typen lenke som sendes videre til siden.
 const ISSUE_URL = new RegExp(`^https://github\\.com/${REPO}/issues/\\d+$`);
 
-// The report checked and trimmed, or { error } with what is wrong. siteNames: { id: name } for the sites that exist.
+// Rapporten sjekket og trimmet, eller { error } med det som er feil. siteNames: { id: name } for stedene som finnes.
 export function checkReport(body, siteNames) {
   if (!body || typeof body !== "object") return { error: "bad-request" };
   const site = typeof body.site === "string" ? body.site : "";
@@ -44,15 +44,15 @@ export function checkReport(body, siteNames) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const token = typeof body.token === "string" ? body.token : "";
-  // No site: a general report from /meld-fra/.
+  // Uten sted: en generell rapport fra /meld-fra/.
   if (site === "" ? !GENERAL_KINDS.includes(kind) : !Object.hasOwn(siteNames, site) || !KINDS.includes(kind)) return { error: "bad-request" };
   if (message.length < MIN_MESSAGE || message.length > MAX_MESSAGE || name.length > MAX_NAME) return { error: "bad-length" };
   if (!token || token.length > 4096) return { error: "no-token" };
   return { site, siteName: site ? siteNames[site] : null, kind, message, name, token };
 }
 
-// The issue: the title names the site and the kind; the text from the form goes in a code block, so nothing in it is
-// read as Markdown (no links, images or @mentions).
+// Saken: tittelen nevner stedet og typen. Teksten fra skjemaet legges i en kodeblokk, så ingenting i den leses som
+// Markdown (ingen lenker, bilder eller @-omtaler).
 export function issueFor(report, now = Date.now()) {
   const fence = (s) => "~~~text\n" + s.replace(/~~~/g, "~ ~ ~") + "\n~~~";
   const lines = [
@@ -65,18 +65,19 @@ export function issueFor(report, now = Date.now()) {
   ];
   if (report.name) lines.push("", "Fra:", fence(report.name));
   lines.push("", "_Sendt inn av en besøkende. Sjekk opplysningene før stedet endres._");
-  // «Annet» on a site page concerns the site; «Annet» from /meld-fra/ may be anything, so it gets no label.
+  // «Annet» på en stedsside gjelder stedet. «Annet» fra /meld-fra/ kan være hva som helst, så den får ingen etikett.
   const labels = report.kind === "other" ? (report.site ? SITE_LABELS : []) : LABELS[report.kind];
   return { title: `[Meld fra] ${report.siteName ?? "Generelt"}: ${KIND_TITLES[report.kind]}`, body: lines.join("\n"), labels };
 }
 
-// The hostnames Turnstile's answer may be for: those of the allowed origins (ORIGINS, or REPORT_ORIGINS when testing).
+// Vertsnavnene svaret fra Turnstile kan gjelde: de til de tillatte opphavene (ORIGINS, eller REPORT_ORIGINS under
+// testing).
 export function reportHosts(env) {
   return (env.REPORT_ORIGINS ? env.REPORT_ORIGINS.split(",") : ORIGINS).map((o) => { try { return new URL(o.trim()).hostname; } catch { return null; } }).filter(Boolean);
 }
 
-// Whether Turnstile accepts the token, for one of our hostnames (a token solved on another site is refused). A timeout or
-// an error from Turnstile counts as not accepted.
+// Om Turnstile godtar tokenen, for et av våre vertsnavn (en token løst på et annet nettsted avvises). Tidsavbrudd eller
+// en feil fra Turnstile regnes som ikke godtatt.
 async function turnstileOk(env, token, ip) {
   const form = new FormData();
   form.append("secret", env.TURNSTILE_SECRET);
@@ -86,8 +87,8 @@ async function turnstileOk(env, token, ip) {
     const r = await fetch(env.TURNSTILE_URL || "https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form, signal: AbortSignal.timeout(10000) });
     const d = r.ok ? await r.json() : null;
     const ok = !!(d && d.success && reportHosts(env).includes(d.hostname));
-    // Why a token was refused (Turnstile's error codes, nothing about the sender), so a wrong secret or hostname is seen
-    // in the logs and not only as the form's «check failed».
+    // Hvorfor en token ble avvist (feilkodene fra Turnstile, ingenting om avsenderen). Da ses en feil hemmelighet eller
+    // et feil vertsnavn i loggene, og ikke bare som «sjekken feilet» i skjemaet.
     if (!ok) console.warn(`turnstile: ${!r.ok ? `svarte ${r.status}` : d?.success ? `hostname ${d.hostname}` : (d?.["error-codes"] ?? []).join(",") || "avvist"}`);
     return ok;
   } catch (err) {
@@ -96,7 +97,7 @@ async function turnstileOk(env, token, ip) {
   }
 }
 
-// The sender's address as a hash with the day's salt (never the address itself), or "" without an address.
+// Avsenderens adresse som en hash med dagens salt (aldri selve adressen), eller "" uten adresse.
 export async function ipKey(ip, salt) {
   if (!ip) return "";
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${ip}`));
@@ -114,12 +115,12 @@ async function createIssue(env, issue, now) {
     signal: AbortSignal.timeout(10000),
   });
   if (!r.ok) throw new Error(`GitHub svarte ${r.status}`);
-  // The issue's number and address, or null when GitHub's answer does not have them as expected.
+  // Nummeret og adressen til saken, eller null når svaret fra GitHub ikke har dem slik vi venter.
   const d = await r.json().catch(() => null);
   return d && Number.isInteger(d.number) && ISSUE_URL.test(d.html_url) ? { number: d.number, url: d.html_url } : null;
 }
 
-// The answer to POST /v1/report: { status, body }. store: for the day's count; siteNames as for checkReport.
+// Svaret på POST /v1/report: { status, body }. store: for dagens telling. siteNames som for checkReport.
 export async function handleReport(request, env, store, siteNames, now = Date.now()) {
   if (!env.TURNSTILE_SECRET || !hasApp(env)) return { status: 503, body: { error: "not-configured" } };
   if (!/^application\/json\b/i.test(request.headers.get("content-type") || "")) return { status: 415, body: { error: "bad-request" } };
@@ -127,7 +128,7 @@ export async function handleReport(request, env, store, siteNames, now = Date.no
   const text = await request.text().catch(() => "");
   if (text.length > MAX_BODY) return { status: 413, body: { error: "bad-length" } };
   let body = null;
-  try { body = JSON.parse(text); } catch { /* not JSON */ }
+  try { body = JSON.parse(text); } catch { /* ikke JSON */ }
   const report = checkReport(body, siteNames);
   if (report.error) return { status: 400, body: { error: report.error } };
   const ip = request.headers.get("cf-connecting-ip");

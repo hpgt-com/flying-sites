@@ -1,33 +1,33 @@
-// The answers to /v1/<dataset>.json and /v1/status.json kept in Cloudflare's cache for CACHE_SECONDS, as live.js does
-// for /v1/live.json, so a page view does not wake the store (store.js): without it every view was one or two calls to
-// the Durable Object, which the free plan counts per day. The key is the path alone, so a query string cannot get past
-// the cache to the store. A second copy of each answer is kept STALE_SECONDS as a reserve: when the store fails (down,
-// out of its daily quota), the reserve is served with x-stale: 1 and no caching, so the pages keep their data (each
-// dataset carries its own time, and the pages judge its age themselves) instead of losing it a minute after the store
-// went down. Tested in test/data-quota.test.js and test/data-store.test.js.
+// Svarene på /v1/<dataset>.json og /v1/status.json holdes i Cloudflares hurtigbuffer i CACHE_SECONDS sekunder, slik
+// live.js gjør for /v1/live.json. Da vekker ikke en sidevisning lageret (store.js). Uten bufferen ga hver visning ett
+// eller to kall til Durable Object-et, som gratisplanen teller per døgn. Nøkkelen er bare stien, så en spørrestreng kan
+// ikke komme forbi bufferen til lageret. En ekstra kopi av hvert svar holdes i STALE_SECONDS sekunder som reserve. Når
+// lageret svikter (nede, eller tom for dagskvoten), sendes reserven med x-stale: 1 og uten hurtigbuffer. Da beholder
+// sidene dataene sine i stedet for å miste dem et minutt etter at lageret gikk ned. Hvert datasett har sin egen tid, og
+// sidene vurderer alderen selv. Testet i test/data-quota.test.js og test/data-store.test.js.
 
 export const CACHE_SECONDS = 60;
 export const STALE_SECONDS = 12 * 3600;
 
-// The cache key for a request: the path on the service's own address, without the query string.
+// Buffernøkkelen for en forespørsel: stien på tjenestens egen adresse, uten spørrestrengen.
 export function cacheKey(request) {
   const url = new URL(request.url);
   return new Request(`${url.origin}${url.pathname}`);
 }
 
-// The reserve's key for a request's key.
+// Nøkkelen til reserven, ut fra nøkkelen til en forespørsel.
 const staleKey = (key) => new Request(`${key.url}?stale`);
 
-// A copy of a response with these headers set.
+// En kopi av et svar med disse hodene satt.
 function withHeaders(res, headers) {
   const h = new Headers(res.headers);
   for (const [k, v] of Object.entries(headers)) h.set(k, v);
   return new Response(res.body, { status: res.status, headers: h });
 }
 
-// The answer from the cache when it is there, otherwise from make(), which is stored when it is a success (and as the
-// reserve). When make() throws, the reserve is served if there is one; otherwise the error goes on. ctx: the Worker's
-// context, so storing happens after the answer is sent.
+// Svaret fra bufferen når det finnes der, ellers fra make(). Det lagres når det er vellykket (også som reserve). Når
+// make() kaster en feil, sendes reserven hvis den finnes. Ellers går feilen videre. ctx: Workerens kontekst, så
+// lagringen skjer etter at svaret er sendt.
 export async function cached(cache, request, ctx, make) {
   const key = cacheKey(request);
   const hit = cache && (await cache.match(key));

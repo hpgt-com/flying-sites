@@ -1,4 +1,4 @@
-// Tests for the check of the off-site backup copy (lib/backup-check.js). Run with `npm test`.
+// Tester for sjekken av sikkerhetskopien utenfor Cloudflare (lib/backup-check.js). Kjør med `npm test`.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { checkBackups } from "../lib/backup-check.js";
@@ -9,12 +9,12 @@ const flights = (day) => backupBody("flight_days", [{ day: "2026-10-18", site: "
 const verify = (day) => backupBody("verify_hours", [], day);
 const tracks = (day) => backupBody("flights", [], day);
 
-test("backup copy: both tables from today or yesterday, with the row counts", () => {
+test("sikkerhetskopi: begge tabellene fra i dag eller i går, med antall rader", () => {
   assert.deepEqual(checkBackups({ flight_days: flights("2026-10-23"), verify_hours: verify("2026-10-22"), flights: tracks("2026-10-23") }, NOW),
     ["flight_days: 1 rader fra 2026-10-23", "verify_hours: 0 rader fra 2026-10-22", "flights: 0 rader fra 2026-10-23"]);
 });
 
-test("backup copy: a missing, old, future or wrong file fails with what is wrong", () => {
+test("sikkerhetskopi: en manglende, gammel, framtidig eller feil fil feiler med hva som er galt", () => {
   assert.throws(() => checkBackups({ flight_days: flights("2026-10-23") }, NOW), /verify_hours: latest.json mangler/);
   assert.throws(() => checkBackups({ flight_days: flights("2026-10-23"), verify_hours: verify("2026-10-23") }, NOW), /flights: latest.json mangler/);
   assert.throws(() => checkBackups({ flight_days: flights("2026-10-20"), verify_hours: verify("2026-10-23") , flights: tracks("2026-10-23") }, NOW), /flight_days: kopien er fra 2026-10-20, 3 dager gammel/);

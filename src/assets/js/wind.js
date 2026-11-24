@@ -1,7 +1,7 @@
-// Wind and rain assessment from the MET forecast: which time in the forecast applies, whether the forecast is too old,
-// and a rough assessment per launch. Pure logic without DOM, so it can be tested (test/wind.test.js).
-// Loaded as a plain script on the home page and site pages and exposed as window.FlyingSitesWind.
-// The rules are in src/_data/windRules.json. The assessment never says «OK å fly».
+// Vind- og regnvurdering ut fra MET-varselet: hvilken tid i varselet som gjelder, om varselet er for gammelt,
+// og en grov vurdering per start. Ren logikk uten DOM, så den kan testes (test/wind.test.js).
+// Lastes som et vanlig skript på forsiden og stedssidene og eksponeres som window.FlyingSitesWind.
+// Reglene står i src/_data/windRules.json. Vurderingen sier aldri «OK å fly».
 (function () {
   "use strict";
 
@@ -10,8 +10,8 @@
   var DAY = 24 * HOUR;
   var TIME_ZONE = "Europe/Oslo";
 
-  // Texts come from the dictionary for the page language (FlyingSites.t in common.js, from src/_i18n/<lang>.json).
-  // Tests set them with useText. Without a dictionary, the key is returned.
+  // Tekstene kommer fra ordboka for sidens språk (FlyingSites.t i common.js, fra src/_i18n/<lang>.json).
+  // Testene setter dem med useText. Uten ordbok returneres nøkkelen.
   var text = function (key, vars) {
     var FS = globalThis.FlyingSites;
     return FS && FS.t ? FS.t(key, vars) : key;
@@ -27,35 +27,35 @@
   }
   var RATINGS = { ok: rating("ok", 0), maybe: rating("maybe", 1), high: rating("high", 2), no: rating("no", 3) };
 
-  // --- Time ---
-  // The sites are in Norway, so «tomorrow at 12» and times of day are always shown in Norwegian time,
-  // whatever the viewer's time zone.
+  // --- Tid ---
+  // Stedene ligger i Norge, så «i morgen kl. 12» og klokkeslett vises alltid i norsk tid,
+  // uansett tidssonen til den som ser på.
   var osloFormat = new Intl.DateTimeFormat("en-CA", {
     timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
   });
 
-  // { date: "2026-10-04", hour: 14, minute: 5 } in Norwegian time.
+  // { date: "2026-10-04", hour: 14, minute: 5 } i norsk tid.
   function osloParts(ms) {
     var p = {};
     osloFormat.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
     return { date: p.year + "-" + p.month + "-" + p.day, hour: Number(p.hour), minute: Number(p.minute) };
   }
 
-  // The following date (calendar day, so daylight saving time does not give the wrong day).
+  // Datoen etter (kalenderdag, så sommertid ikke gir feil dag).
   function nextDate(date) {
     var d = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)) + 1));
     return d.toISOString().slice(0, 10);
   }
 
-  // «14.05» in Norwegian time (separator from the dictionary: «14:05» in English).
+  // «14.05» i norsk tid (skilletegnet fra ordboka: «14:05» på engelsk).
   function formatClock(ms) {
     var p = osloParts(ms);
     return (p.hour < 10 ? "0" : "") + p.hour + meta().clockSep + (p.minute < 10 ? "0" : "") + p.minute;
   }
 
-  // The forecast is too old when it was fetched more than maxForecastAgeHours ago (the data service or the build has
-  // stopped), when MET's model run it comes from is more than maxModelAgeHours old (fetched lately, but from an old
-  // run), or when either time is in the future (a wrong clock or wrong data). No assessment is shown then.
+  // Varselet er for gammelt når det ble hentet for mer enn maxForecastAgeHours siden (datatjenesten eller bygget har
+  // stoppet), når MET-kjøringen det kommer fra, er eldre enn maxModelAgeHours (hentet nylig, men fra en gammel
+  // kjøring), eller når en av tidene er fram i tid (feil klokke eller feil data). Da vises ingen vurdering.
   var FUTURE_SLACK = 15 * 60000;
   function isStale(forecast, rules, now) {
     var fetched = Date.parse(forecast && forecast.fetched);
@@ -64,13 +64,13 @@
     return Number.isFinite(updated) && (updated > now + FUTURE_SLACK || now - updated > (rules.maxModelAgeHours || 12) * HOUR);
   }
 
-  // --- The forecast from the data service ---
-  // The pages carry the forecast from the build, which GitHub may build late. The data service (workers/data)
-  // fetches MET every few minutes, and the pages use its forecast when it is newer. Only a forecast in the right shape
-  // (hours as times, in order without repeats, a row per hour with numbers or null) and newer than the page's. A launch
-  // missing from it (the service leaves out a launch it has not fetched lately) only has no assessment; it does not
-  // keep the fresh forecast from the others. needSite: a launch the candidate must have (the site page), unless the page
-  // has no forecast of its own to keep.
+  // --- Varselet fra datatjenesten ---
+  // Sidene har med varselet fra bygget, som GitHub kan bygge sent. Datatjenesten (workers/data)
+  // henter MET med noen minutters mellomrom, og sidene bruker varselet derfra når det er nyere. Bare et varsel i riktig
+  // form (timer som tider, i rekkefølge uten gjentakelser, en rad per time med tall eller null) og nyere enn sidens. En
+  // start som mangler i det (tjenesten utelater en start den ikke har hentet nylig), får bare ingen vurdering. Den
+  // hindrer ikke det ferske varselet for de andre. needSite: en start kandidaten må ha (stedssiden), med mindre siden
+  // ikke har noe eget varsel å beholde.
   function isNewerForecast(candidate, current, needSite) {
     if (!candidate || !Array.isArray(candidate.times) || !candidate.sites || typeof candidate.sites !== "object") return false;
     if (!candidate.times.every(function (t, i, all) {
@@ -89,8 +89,8 @@
     return !needSite || ids.indexOf(needSite) !== -1;
   }
 
-  // Fetches the forecast from the data service, and calls done(forecast) only when isNewerForecast holds. On any
-  // error (offline, the service down, no answer in 15 s) it calls fail() if given, and the page keeps what it has.
+  // Henter varselet fra datatjenesten og kaller done(forecast) bare når isNewerForecast holder. Ved feil
+  // (offline, tjenesten nede, ikke svar på 15 s) kaller den fail() om den er gitt, og siden beholder det den har.
   function fetchNewerForecast(url, current, done, needSite, fail) {
     if (!url || typeof fetch !== "function") return;
     var ctrl = typeof AbortController === "function" ? new AbortController() : null;
@@ -101,8 +101,8 @@
       .catch(function () { clearTimeout(timer); if (fail) fail(); });
   }
 
-  // Keeps a page's forecast fresh: fetches at once, every REFRESH_MS while the page is in view, when the page comes
-  // back into view, and when the connection comes back. current(): the forecast the page has now (or null).
+  // Holder varselet på en side ferskt: henter med en gang, hvert REFRESH_MS mens siden er synlig, når siden blir
+  // synlig igjen, og når nettet kommer tilbake. current(): varselet siden har nå (eller null).
   var REFRESH_MS = 10 * 60000;
   function watchForecast(url, current, done, needSite, fail) {
     if (!url || typeof fetch !== "function") return;
@@ -111,7 +111,7 @@
       if (busy || (typeof document !== "undefined" && document.hidden)) return;
       busy = true;
       fetchNewerForecast(url, current(), function (f) { busy = false; done(f); }, needSite, function () { busy = false; if (fail) fail(); });
-      // Also free when the answer was not newer (neither done nor fail is called then).
+      // Ledig også når svaret ikke var nyere (da kalles verken done eller fail).
       setTimeout(function () { busy = false; }, 16000);
     }
     load();
@@ -120,8 +120,8 @@
     if (typeof window !== "undefined") window.addEventListener("online", load);
   }
 
-  // Index in the forecast for the chosen time, or -1 when the forecast does not cover it.
-  // slot: "0", "3", "6" (hours from now) or "tomorrow" (tomorrow at 12 Norwegian time).
+  // Indeksen i varselet for valgt tid, eller -1 når varselet ikke dekker den.
+  // slot: "0", "3", "6" (timer fra nå) eller "tomorrow" (i morgen kl. 12 norsk tid).
   function slotIndex(times, slot, now) {
     if (!times || !times.length || slot === "off") return -1;
     var ms = times.map(Date.parse);
@@ -133,24 +133,24 @@
       }
       return -1;
     }
-    // The current hour. The forecast has one value per hour, valid for one hour from its time.
+    // Inneværende time. Varselet har én verdi per time, som gjelder én time fra sin tid.
     var current = -1;
     ms.forEach(function (x, i) { if (x <= now) current = i; });
     if (current < 0 || now - ms[current] >= HOUR) return -1;
-    // The hour that many hours on, found by its time (not by counting rows, so a missing hour gives -1, not a later one).
+    // Timen så mange timer fram, funnet på tiden (ikke ved å telle rader, så en manglende time gir -1, ikke en senere).
     var target = ms[current] + Number(slot) * HOUR;
     for (var j = current; j < ms.length; j++) if (ms[j] === target) return j;
     return -1;
   }
 
-  // How long the forecast's value at index i counts (ms): until the next time, an hour or, further ahead, 6 hours
-  // (lib/weather/met.js); the last as long as the one before it.
+  // Hvor lenge verdien ved indeks i i varselet gjelder (ms): til neste tid, en time eller, lenger fram, 6 timer
+  // (lib/weather/met.js). Den siste like lenge som den før.
   function stepAt(times, i) {
     if (i + 1 < times.length) return Date.parse(times[i + 1]) - Date.parse(times[i]);
     return i > 0 ? Date.parse(times[i]) - Date.parse(times[i - 1]) : HOUR;
   }
 
-  // The forecast's times from the hour now, as hours from it: [{ index, hours }]. Empty when it does not cover now.
+  // Tidene i varselet fra timen nå, som timer fra den: [{ index, hours }]. Tom når det ikke dekker nå.
   function hoursAhead(times, now) {
     var current = slotIndex(times, "0", now);
     if (current < 0) return [];
@@ -158,9 +158,9 @@
     return times.slice(current).map(function (t, k) { return { index: current + k, hours: Math.round((Date.parse(t) - start) / HOUR) }; });
   }
 
-  // The hours of the time in ahead (hoursAhead) nearest to hours. A step of one hour from `from` (the hours chosen now,
-  // as the arrow keys on the slider give) that lands on the same time goes on to the next one that way, so the keys also
-  // move through the 6-hour steps.
+  // Timene i ahead (hoursAhead) nærmest hours. Et steg på én time fra `from` (timene som er valgt nå,
+  // slik piltastene på glideren gir) som havner på samme tid, går videre til den neste i den retningen, så tastene også
+  // flytter seg gjennom 6-timerssteget.
   function nearestHours(ahead, hours, from) {
     if (!ahead.length) return 0;
     var best = 0;
@@ -169,7 +169,7 @@
     return ahead[best].hours;
   }
 
-  // --- Assessment ---
+  // --- Vurdering ---
   function directionCode(degrees) {
     return DIRECTIONS[Math.round((((degrees % 360) + 360) % 360) / 45) % 8];
   }
@@ -180,11 +180,11 @@
     return "none";
   }
 
-  // Checks and cleans one hour of wind before it is assessed. Direction and mean wind must be real numbers
-  // (direction 0–360, wind not negative), or the hour has no valid wind and null is returned. Without this, a
-  // missing or broken value (undefined, NaN, a string) slips past every limit, since comparisons with it are
-  // always false, and the hour could come out as «Kan passe». Gusts and precipitation that are not valid numbers
-  // count as missing, which never makes the assessment better (missing gusts give at most «Usikkert»).
+  // Sjekker og renser én time med vind før den vurderes. Retning og middelvind må være ekte tall
+  // (retning 0–360, vind ikke negativ), ellers har timen ingen gyldig vind og null returneres. Uten dette smetter en
+  // manglende eller ødelagt verdi (undefined, NaN, en streng) forbi alle grenser, siden sammenligninger med den
+  // alltid er usanne, og timen kunne blitt «Kan passe». Kast og nedbør som ikke er gyldige tall,
+  // regnes som manglende, noe som aldri gjør vurderingen bedre (manglende kast gir høyst «Usikkert»).
   function isNumber(x) { return typeof x === "number" && Number.isFinite(x); }
   function cleanWind(wind) {
     if (!wind || !isNumber(wind.dir) || wind.dir < 0 || wind.dir > 360 || !isNumber(wind.speed) || wind.speed < 0) return null;
@@ -196,7 +196,7 @@
     };
   }
 
-  // reasons: [[code, values], ...]. Returns both texts and codes, so the page can count reasons without reading the text.
+  // reasons: [[code, values], ...]. Returnerer både tekster og koder, så siden kan telle årsaker uten å lese teksten.
   function result(rating, reasons) {
     return {
       rating: rating,
@@ -205,11 +205,11 @@
     };
   }
 
-  // Rough assessment for one site: { rating: ok|maybe|high|no, reasons: [text, ...], codes: [code, ...] }.
-  // If anything is missing (gusts) or uncertain, it is never better than «Usikkert».
-  // site: { primary, possible, maxWind, soarMinWind }. maxWind is the site's own limit (wind_limits.max_wind), otherwise
-  // null. soarMinWind (wind_limits.soar_min_wind): how much wind it takes to stay up (soar) there. It never changes the
-  // rating, since the site can be flown without it (a flight down); below it the result only carries a note saying so.
+  // Grov vurdering for ett sted: { rating: ok|maybe|high|no, reasons: [text, ...], codes: [code, ...] }.
+  // Mangler noe (kast), eller er noe usikkert, blir det aldri bedre enn «Usikkert».
+  // site: { primary, possible, maxWind, soarMinWind }. maxWind er stedets egen grense (wind_limits.max_wind), ellers
+  // null. soarMinWind (wind_limits.soar_min_wind): hvor mye vind som trengs for å holde seg oppe (soare) der. Den
+  // endrer aldri vurderingen, siden stedet kan flys uten (en tur ned). Under den får resultatet bare en merknad om det.
   // wind: { dir, speed, gust }.
   function rateWind(site, rawWind, rules) {
     var r = rateWindOnly(site, rawWind, rules);
@@ -220,8 +220,8 @@
     return r;
   }
   function rateWindOnly(site, rawWind, rules) {
-    // Callers get the wind from windAt, which already leaves out invalid hours. If an invalid hour reaches this
-    // point anyway, it is never better than «Passer ikke».
+    // De som kaller, får vinden fra windAt, som allerede utelater ugyldige timer. Kommer en ugyldig time likevel
+    // hit, blir den aldri bedre enn «Passer ikke».
     var wind = cleanWind(rawWind);
     if (!wind) return result("no", [["noData"]]);
     var hasOwnLimit = site.maxWind != null;
@@ -230,8 +230,8 @@
       return result("high", [[hasOwnLimit ? "overSiteLimit" : "overLimit", { limit: limit }]]);
     }
     if (wind.gust != null && wind.gust > rules.maxGust) return result("high", [["gust", { limit: rules.maxGust }]]);
-    // Rain: you do not fly with a wet wing. Heavy rain next hour gives «Passer ikke», light rain at best «Usikkert».
-    // Missing precipitation in the forecast does not affect the assessment.
+    // Regn: man flyr ikke med våt vinge. Mye regn neste time gir «Passer ikke», lett regn i beste fall «Usikkert».
+    // Manglende nedbør i varselet påvirker ikke vurderingen.
     if (wind.rain != null && wind.rain >= rules.rainNo) return result("no", [["rain", { rain: formatRain(wind.rain) }]]);
 
     var type = directionType(site, directionCode(wind.dir));
@@ -239,24 +239,24 @@
 
     var reasons = [];
     if (type === "possible") reasons.push(["possible"]);
-    // The direction is rounded to eight sectors. If the wind is near the edge towards a direction that is not
-    // a primary direction, it is uncertain which side it falls on.
+    // Retningen rundes til åtte sektorer. Er vinden nær kanten mot en retning som ikke er
+    // en hovedretning, er det usikkert hvilken side den havner på.
     else if (directionType(site, directionCode(wind.dir - rules.sectorMargin)) !== "primary" ||
       directionType(site, directionCode(wind.dir + rules.sectorMargin)) !== "primary") {
       reasons.push(["edge"]);
     }
     if (wind.rain != null && wind.rain >= rules.rainMaybe) reasons.push(["someRain", { rain: formatRain(wind.rain) }]);
-    // Light wind is not a reason on its own: with the right direction a flight down is still a flight.
+    // Svak vind er ikke en årsak i seg selv: med riktig retning er en tur ned fortsatt en tur.
     if (wind.gust == null) reasons.push(["noGust"]);
     else if (wind.gust - wind.speed > rules.maxGustSpread) reasons.push(["gustSpread", { spread: rules.maxGustSpread }]);
     return result(reasons.length ? "maybe" : "ok", reasons);
   }
 
-  // The assessment for the hour now when the site has a weather station with a fresh measurement (stations.js): the
-  // measured wind is assessed with the same rules (with the forecast's rain, which the station does not give). A measurement
-  // that is stricter than the forecast always counts. One that is better counts only when the wind is steady (not rising and
-  // not gusty, decided by the caller), since a lull in rising or gusty wind says little about the next minutes.
-  // { result (as rateWind), basis: "measured" | "forecast", unsteady (true when a better measurement was not used) }.
+  // Vurderingen for timen nå når stedet har en værstasjon med fersk måling (stations.js): den målte
+  // vinden vurderes med de samme reglene (med regnet fra varselet, som stasjonen ikke gir). En måling som er
+  // strengere enn varselet, gjelder alltid. En som er bedre, gjelder bare når vinden er jevn (ikke økende og ikke
+  // byig, avgjort av den som kaller), siden et stille øyeblikk i økende eller byig vind sier lite om neste minutter.
+  // { result (som rateWind), basis: "measured" | "forecast", unsteady (true når en bedre måling ikke ble brukt) }.
   function rateNow(site, fcWind, measured, rules, steady) {
     var fc = rateWind(site, fcWind, rules);
     if (!measured || measured.speed == null) return { result: fc, basis: "forecast", unsteady: false };
@@ -265,28 +265,28 @@
     return { result: fc, basis: "forecast", unsteady: true };
   }
 
-  // «0,3 mm» with the language's decimal separator.
+  // «0,3 mm» med språkets desimaltegn.
   function formatRain(mm) {
     return (Math.round(mm * 10) / 10).toFixed(1).replace(".", meta().decimal) + " mm";
   }
 
-  // Wind (and next-hour precipitation) for a site at a forecast index, or null when the site has no forecast
-  // (fetch failed) or the hour has no valid wind (see cleanWind): the page then shows «Ingen varsel» instead of
-  // a number. rain is null when the forecast has no precipitation (older forecast or far ahead).
+  // Vind (og nedbør neste time) for et sted ved en indeks i varselet, eller null når stedet ikke har varsel
+  // (hentingen feilet) eller timen ikke har gyldig vind (se cleanWind): siden viser da «Ingen varsel» i stedet for
+  // et tall. rain er null når varselet ikke har nedbør (eldre varsel eller langt fram).
   function windAt(forecast, id, index) {
     var series = forecast && forecast.sites && forecast.sites[id];
     var row = series && index >= 0 ? series[index] : null;
     return row ? cleanWind({ dir: row[0], speed: row[1], gust: row[2], rain: row[3] }) : null;
   }
 
-  // Sunrise and sunset for a calendar day ("2026-10-09") at a place, using the standard sunrise formula
-  // (sun 0.833° below the horizon, accounting for refraction and the solar disc). Accurate to a couple of minutes,
-  // enough to show the time. { rise, set } in milliseconds, or { polar: "day" } for midnight sun and { polar: "night" }
-  // for polar night, when the sun does not set or does not rise that day.
+  // Soloppgang og solnedgang for en kalenderdag ("2026-10-09") på et sted, med standardformelen for soloppgang
+  // (sola 0,833° under horisonten, med brytning og soldisken). Nøyaktig på et par minutter,
+  // nok til å vise klokkeslettet. { rise, set } i millisekunder, eller { polar: "day" } for midnattssol og
+  // { polar: "night" } for mørketid, når sola ikke går ned eller ikke kommer opp den dagen.
   function sunTimes(date, lat, lon) {
     var rad = Math.PI / 180;
     var noon = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)), 12);
-    var n = Math.round(noon / DAY + 2440587.5 - 2451545 + 0.0008); // days since 1 January 2000
+    var n = Math.round(noon / DAY + 2440587.5 - 2451545 + 0.0008); // dager siden 1. januar 2000
     var jStar = n - lon / 360;
     var m = (357.5291 + 0.98560028 * jStar) % 360;
     var c = 1.9148 * Math.sin(m * rad) + 0.02 * Math.sin(2 * m * rad) + 0.0003 * Math.sin(3 * m * rad);
@@ -302,18 +302,18 @@
     return { rise: toMs(transit - h), set: toMs(transit + h) };
   }
 
-  // «Sola opp 07.37, ned 17.46.» for the day, or midnight sun / polar night.
+  // «Sola opp 07.37, ned 17.46.» for dagen, eller midnattssol / mørketid.
   function sunText(date, lat, lon) {
     var sun = sunTimes(date, lat, lon);
     if (sun.polar) return text("wind.sunPolar" + (sun.polar === "day" ? "Day" : "Night"));
     return text("wind.sun", { rise: formatClock(sun.rise), set: formatClock(sun.set) });
   }
 
-  // The sun's position at a time: elevation above the horizon and azimuth (0 = north, 90 = east, 180 = south), in
-  // degrees. The same approximations as sunTimes (no refraction), accurate to about a degree.
+  // Solas posisjon på et tidspunkt: høyde over horisonten og asimut (0 = nord, 90 = øst, 180 = sør), i
+  // grader. De samme tilnærmingene som sunTimes (uten brytning), nøyaktig på omtrent en grad.
   function sunPosition(ms, lat, lon) {
     var rad = Math.PI / 180;
-    var d = ms / DAY - 10957.5; // days since 1 January 2000, 12:00 UTC
+    var d = ms / DAY - 10957.5; // dager siden 1. januar 2000, kl. 12.00 UTC
     var m = (357.5291 + 0.98560028 * d) % 360;
     var c = 1.9148 * Math.sin(m * rad) + 0.02 * Math.sin(2 * m * rad) + 0.0003 * Math.sin(3 * m * rad);
     var lambda = (m + c + 180 + 102.9372) % 360;
@@ -321,23 +321,23 @@
     var ra = Math.atan2(Math.sin(lambda * rad) * Math.cos(23.4397 * rad), Math.cos(lambda * rad));
     var hourAngle = ((280.16 + 360.9856235 * d + lon) % 360) * rad - ra;
     var elevation = Math.asin(Math.sin(lat * rad) * Math.sin(dec) + Math.cos(lat * rad) * Math.cos(dec) * Math.cos(hourAngle));
-    // Measured from south towards west, so 180 is added to count from north.
+    // Målt fra sør mot vest, så 180 legges til for å regne fra nord.
     var azimuth = Math.atan2(Math.sin(hourAngle), Math.cos(hourAngle) * Math.sin(lat * rad) - Math.tan(dec) * Math.cos(lat * rad));
     return { elevation: elevation / rad, azimuth: (azimuth / rad + 540) % 360 };
   }
 
-  // When the sun shines on a launch during a calendar day: the launch faces the directions it takes wind from, and the
-  // sun is on it when it is more than 3° above the horizon and less than 60° to the side of one of those directions.
-  // Shade from the terrain is not known, so it is a rough guide. [[from, to]] in Norwegian hours of the day (decimal,
-  // sampled every 10 minutes), empty when the sun does not reach it. With the midnight sun a period may run past
-  // midnight, as [22, 26] for 22–02.
+  // Når sola skinner på en start i løpet av en kalenderdag: starten vender mot retningene den tar vind fra, og
+  // sola er på den når den står mer enn 3° over horisonten og mindre enn 60° til siden for en av de retningene.
+  // Skygge fra terrenget er ikke kjent, så det er en grov pekepinn. [[from, to]] i norske timer på døgnet (desimal,
+  // målt hvert 10. minutt), tom når sola ikke når den. Med midnattssol kan en periode gå forbi
+  // midnatt, som [22, 26] for 22–02.
   var SUN_MIN_ELEVATION = 3;
   var SUN_MAX_ASIDE = 60;
   function sunOnLaunch(date, lat, lon, directions) {
     var facing = directions.map(function (code) { return DIRECTIONS.indexOf(code) * 45; }).filter(function (a) { return a >= 0; });
     if (!facing.length) return [];
     var midnight = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
-    var offset = osloParts(midnight + 12 * HOUR).hour - 12; // Norwegian time is UTC+1 or +2
+    var offset = osloParts(midnight + 12 * HOUR).hour - 12; // norsk tid er UTC+1 eller +2
     var periods = [];
     var on = false;
     for (var tenth = 0; tenth <= 24 * 6; tenth++) {
@@ -351,14 +351,14 @@
       if (lit) periods[periods.length - 1][1] = hour;
       on = lit;
     }
-    // A period that ends at midnight and one that starts at midnight are the same, across midnight.
+    // En periode som slutter ved midnatt, og en som starter ved midnatt, er den samme, over midnatt.
     if (periods.length > 1 && periods[0][0] === 0 && periods[periods.length - 1][1] === 24) {
       periods[periods.length - 1][1] = 24 + periods.shift()[1];
     }
     return periods;
   }
 
-  // «Sol på starten ca. kl. 09–15.», «... kl. 09–12 og 15–18.» or «Lite sol på starten i dag.» Whole hours.
+  // «Sol på starten ca. kl. 09–15.», «... kl. 09–12 og 15–18.» eller «Lite sol på starten i dag.» Hele timer.
   function sunOnLaunchText(date, lat, lon, directions) {
     var periods = sunOnLaunch(date, lat, lon, directions).map(function (p) {
       return [Math.round(p[0]), Math.round(p[1])];
@@ -369,12 +369,12 @@
     return text("wind.sunOn", { hours: hours });
   }
 
-  // Day overview for a site: for each day in the forecast, the daylight periods where the assessment is «Kan passe»
-  // or «Usikkert», as [{ start, end, rating }] (milliseconds, end is the end of the last hour, or of the last 6-hour step
-  // further ahead). Hours in darkness
-  // are excluded. With midnight sun the whole day counts; in polar night 10–14, when it is lightest. Each period
-  // also has the wind: dir (most common direction), min and max (mean wind, m/s) and gust (highest gust).
-  // { "2026-10-09": [...] }, only days with at least one period.
+  // Dagsoversikt for et sted: for hver dag i varselet, periodene i dagslys der vurderingen er «Kan passe»
+  // eller «Usikkert», som [{ start, end, rating }] (millisekunder, end er slutten på siste time, eller på siste
+  // 6-timerssteg lenger fram). Timer i mørket
+  // utelates. Med midnattssol gjelder hele døgnet, i mørketid 10–14, når det er lysest. Hver periode
+  // har også vinden: dir (vanligste retning), min og max (middelvind, m/s) og gust (høyeste kast).
+  // { "2026-10-09": [...] }, bare dager med minst én periode.
   function dayWindows(forecast, site, rules, lat, lon) {
     var series = forecast && forecast.sites && forecast.sites[site.id];
     if (!series) return {};
@@ -396,7 +396,7 @@
       last.end = ms + step;
       last.winds.push(wind);
     });
-    // Wind in each period: most common direction, lowest and highest mean wind and highest gust (null when unknown).
+    // Vinden i hver periode: vanligste retning, laveste og høyeste middelvind og høyeste kast (null når ukjent).
     Object.keys(days).forEach(function (date) {
       days[date].forEach(function (w) {
         var count = {};

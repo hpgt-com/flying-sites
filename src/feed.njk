@@ -6,10 +6,11 @@ pagination:
 permalink: "{{ '/nytt/feed.xml' | localeUrl(language.code) }}"
 eleventyExcludeFromCollections: true
 ---
-{#- Atom feed for «Nytt på siden» (src/_data/news.json), one per language (/nytt/feed.xml and /en/whats-new/feed.xml),
-    so pilots can follow what is new in a feed reader. One entry per news entry, newest first as in news.json; the id is
-    the date and the Norwegian title, so it stays the same as long as they do. The entries have a date, not a time, so
-    noon UTC is used. Nunjucks escapes the texts for XML, and the content is XHTML, so nothing is escaped twice. -#}
+{#- Atom-feed for «Nytt på siden» (src/_data/news.json), én per språk (/nytt/feed.xml og /en/whats-new/feed.xml),
+    så piloter kan følge med på det som er nytt, i en feedleser. Én oppføring per nyhet, nyeste først som i news.json.
+    id-en er datoen og den norske tittelen, så den er lik så lenge de er det. Oppføringene har dato, ikke klokkeslett,
+    så det brukes klokka 12 UTC. Nunjucks escaper tekstene for XML, og innholdet er XHTML, så ingenting escapes to
+    ganger. -#}
 {%- set newsUrl = '/nytt/' | localeUrl | htmlBaseUrl(site.url) -%}
 {%- set dates = [] -%}
 {%- for e in news.entries %}{% set dates = (dates.push(e.date), dates) %}{% endfor -%}

@@ -1,4 +1,4 @@
-// Tests for the link check of the built site (lib/link-check.js). Run with `npm test`.
+// Tester for lenkesjekken av den bygde siden (lib/link-check.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -15,15 +15,15 @@ function site(files) {
   return dir;
 }
 
-test("finds href, src and every URL in srcset, but not data in script blocks", () => {
+test("finner href, src og hver URL i srcset, men ikke data i script-blokker", () => {
   const html = `<a href="/tarn/">x</a><img src="a.jpg" srcset="/img/a-400.webp 400w, /img/a-800.webp 800w">
     <script type="application/json">{"url":"/missing/"}</script><script src="/assets/js/site.js"></script>`;
   assert.deepEqual(extractLinks(html), ["/tarn/", "a.jpg", "/img/a-400.webp", "/img/a-800.webp", "/assets/js/site.js"]);
-  // End tags with a space or in capitals still end the block, and links after it are found.
+  // Slutttagger med mellomrom eller store bokstaver avslutter fortsatt blokken, og lenker etter den finnes.
   assert.deepEqual(extractLinks(`<SCRIPT>{"u":"/x/"}</SCRIPT ><a href="/a/">a</a><script>{"u":"/y/"}</script\n><a href='/b/'>b</a>`), ["/a/", "/b/"]);
 });
 
-test("external links are skipped, and the site's own address and the path prefix are removed", () => {
+test("eksterne lenker hoppes over, og sidens egen adresse og stiprefikset fjernes", () => {
   assert.equal(resolveLink("https://yr.no/", "index.html"), null);
   assert.equal(resolveLink("mailto:post@hpgt.com", "index.html"), null);
   assert.equal(resolveLink("//unpkg.com/x.js", "index.html"), null);
@@ -33,7 +33,7 @@ test("external links are skipped, and the site's own address and the path prefix
   assert.deepEqual(resolveLink("#kart", "en/index.html"), { file: "en/index.html", anchor: "kart" });
 });
 
-test("a link to a page that only exists in Norwegian is caught (/en/luftrom/)", () => {
+test("en lenke til en side som bare finnes på norsk, fanges opp (/en/luftrom/)", () => {
   const dir = site({
     "luftrom/index.html": "<p>flyttet</p>",
     "en/towers/index.html": "<h2 id='evenes'>Evenes</h2>",

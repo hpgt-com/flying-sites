@@ -1,9 +1,10 @@
-name: Browser cache
+name: Nettleserbuffer
 
-# Fills the cache of the Playwright browser that the PR check's accessibility job uses (pr-check.yml). A cache made by a
-# PR's own run is seen only by that PR, so without this every PR downloaded Chromium again, and the apt step of the
-# download hung the runner for ten minutes more than once (22.10.2026). A cache made on main is seen by every PR.
-# Runs when the Playwright version may have changed (package-lock.json on main), and by hand. Needs no secrets.
+# Fyller bufferen med Playwright-nettleseren som tilgjengelighetsjobben i PR-sjekken bruker (pr-check.yml). En buffer
+# laget av en PR sin egen kjøring ses bare av den PR-en, så uten denne lastet hver PR ned Chromium på nytt, og
+# apt-steget i nedlastingen hang runneren i ti minutter mer enn én gang (22.10.2026). En buffer laget på main ses av
+# alle PR-er. Kjører når Playwright-versjonen kan ha endret seg (package-lock.json på main), og for hånd. Trenger
+# ingen hemmeligheter.
 on:
   push:
     branches: [main]
@@ -31,7 +32,7 @@ jobs:
 
       - run: npm ci --ignore-scripts
 
-      # The same path and key as in pr-check.yml, so the PR check finds it.
+      # Samme sti og nøkkel som i pr-check.yml, så PR-sjekken finner den.
       - id: browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

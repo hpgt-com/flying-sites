@@ -1,5 +1,5 @@
-// The web app manifest (lib/pwa.js), one per language: /manifest.webmanifest and /en/manifest.webmanifest.
-// Linked from base.njk, so «Add to home screen» opens the front page in the language the visitor uses.
+// Web app-manifestet (lib/pwa.js), ett per språk: /manifest.webmanifest og /en/manifest.webmanifest.
+// Lenket fra base.njk, så «Legg til på startskjermen» åpner forsiden på språket den besøkende bruker.
 import { manifest } from "../lib/pwa.js";
 
 export default class {

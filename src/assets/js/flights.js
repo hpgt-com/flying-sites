@@ -1,9 +1,9 @@
-// «Flyaktivitet» on the site page (site.njk, #flights): how many flights the Open Glider Network has seen paragliders
-// make from this site, from the data service (/v1/flights.json, workers/data/src/sources/flights.js). The sums as three
-// numbers (flights, days with flying, hours in the air), the farthest from launch and the highest, and the flights per
-// month for the last 12 months as bars once there is more than one month. Only pilots who send their position to OGN
-// are counted, which the note under says. The section stays hidden when the data service
-// cannot be reached. Built with DOM methods only. Exposed as window.FlyingSitesFlights; tested in test/flights.test.js.
+// «Flyaktivitet» på stedssiden (site.njk, #flights): hvor mange turer Open Glider Network har sett paraglidere
+// fly fra dette stedet, fra datatjenesten (/v1/flights.json, workers/data/src/sources/flights.js). Summene som tre
+// tall (turer, dager med flyging, timer i lufta), lengst fra start og høyest, og turene per måned de siste
+// 12 månedene som søyler når det er mer enn én måned. Bare piloter som sender posisjonen sin til OGN, telles,
+// og det står i merknaden under. Seksjonen forblir skjult når datatjenesten
+// ikke svarer. Bygges bare med DOM-metoder. Eksponert som window.FlyingSitesFlights. Testet i test/flights.test.js.
 (function () {
   "use strict";
 
@@ -15,7 +15,7 @@
   function lang() { return globalThis.FlyingSites && globalThis.FlyingSites.lang === "en" ? "en-GB" : "nb-NO"; }
   function number(n, digits) { var FS = globalThis.FlyingSites; return FS && FS.formatNumber ? FS.formatNumber(n, digits) : String(n); }
 
-  // Only data in the expected shape.
+  // Bare data i forventet form.
   function isFlightsData(d) {
     if (!d || d.dataset !== "flights" || typeof d.since !== "string" || !d.sites || typeof d.sites !== "object") return false;
     return Object.keys(d.sites).every(function (k) {
@@ -25,7 +25,7 @@
     });
   }
 
-  // The last MONTHS months up to the month of `now` (YYYY-MM, oldest first), with the flights and days of each.
+  // De siste MONTHS månedene fram til måneden for `now` (YYYY-MM, eldste først), med turene og dagene i hver.
   function lastMonths(site, now) {
     var d = new Date(now), out = [];
     var y = d.getUTCFullYear(), m = d.getUTCMonth();
@@ -44,7 +44,7 @@
   function monthText(key, style) {
     return new Intl.DateTimeFormat(lang(), { month: style, timeZone: "UTC" }).format(new Date(key + "-15T12:00:00Z")).replace(".", "");
   }
-  // «Lengst fra start 12,3 km · høyest 1850 moh · sist 19. okt. 2026», the parts there are.
+  // «Lengst fra start 12,3 km · høyest 1850 moh · sist 19. okt. 2026», de delene som finnes.
   function detailText(site) {
     var parts = [];
     if (site.maxDist > 0) parts.push(text("flights.farthest", { km: number(site.maxDist, 1) }));
@@ -66,8 +66,8 @@
     div.appendChild(make("small", null, label));
     return div;
   }
-  // The flights per month as bars, the highest labelled; each bar says its month and numbers to screen readers and on hover.
-  // titleKey: the words for each bar (default flights.barTitle, with the month, flights and days).
+  // Turene per måned som søyler, den høyeste med tall. Hver søyle oppgir måned og tall til skjermlesere og ved hover.
+  // titleKey: teksten for hver søyle (standard flights.barTitle, med måned, turer og dager).
   function chart(months, titleKey) {
     var max = Math.max.apply(null, months.map(function (m) { return m.flights; }));
     var list = make("ol", "flights-chart");
@@ -92,7 +92,7 @@
     return list;
   }
 
-  // The section's content for one site: [nodes].
+  // Innholdet i seksjonen for ett sted: [nodes].
   function render(data, siteId, now) {
     var site = data.sites[siteId];
     var out = [];
@@ -112,7 +112,7 @@
       var months = lastMonths(site, now);
       if (months.filter(function (m) { return m.flights > 0; }).length > 1) out.push(chart(months));
     }
-    // How the flights are counted, folded.
+    // Hvordan turene telles, foldet.
     var help = make("details", "help-fold");
     help.appendChild(make("summary", null, text("help.howCounted")));
     help.appendChild(make("p", "flights-note", text("flights.note", { date: dateText(data.since) })));
@@ -120,9 +120,9 @@
     return out;
   }
 
-  // «Siste turer herfra»: the last flights from this site in the flight log (/v1/flight-log.json), each linking to the
-  // flight on /flyaktivitet/ (#tur-<id>), where it is drawn on a map. Only counted flights; at most RECENT_SHOWN. The
-  // link comes from the page (#flights-recent-link); only the hash is set, from an id checked to be hex.
+  // «Siste turer herfra»: de siste turene fra dette stedet i turloggen (/v1/flight-log.json), hver med lenke til
+  // turen på /flyaktivitet/ (#tur-<id>), der den tegnes på et kart. Bare talte turer, høyst RECENT_SHOWN.
+  // Lenken kommer fra siden (#flights-recent-link). Bare hashen settes, fra en id som er sjekket å være hex.
   var RECENT_SHOWN = 8;
   function recentList(log, siteId, linkTemplate) {
     var FS = globalThis.FlyingSites;

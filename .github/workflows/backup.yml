@@ -1,21 +1,22 @@
-name: Backup
+name: Sikkerhetskopi
 
-# The off-site copy, every night after the data service's own backup (02:14 UTC, workers/data/src/backup.js): the
-# whole archive bucket in R2 (measurements by day, the nightly backups of the history) is copied to a bucket at
-# another provider (Backblaze B2), so a lost Cloudflare account or bucket does not lose the data. The copy is then
-# checked: every file in R2 must be in the copy with the same checksum (rclone check), and the latest backup of each
-# table must be there, parse, and be from today or yesterday (scripts/check-backup.mjs). The code and the issues go too: the issues as JSON every night, the whole Git history as a bundle on
-# Sundays (and when run by hand). Nothing is ever deleted from the copy (rclone copy, not sync), and the bucket keeps
-# old versions, so a bad night cannot destroy a good copy. When something fails an issue is opened (a comment on the
-# open one when the message changes), closed when a night succeeds again. The keys are in the GitHub environment
-# «backup» (docs/operations.md «Kontoer og hemmeligheter»): secrets R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (read-only, the
-# archive bucket only), B2_KEY_ID, B2_APPLICATION_KEY (the backup bucket only); variables R2_ENDPOINT and B2_ENDPOINT
-# (the bucket's S3 address, s3.<region>.backblazeb2.com), and R2_BUCKET and B2_BUCKET only when the names differ from
-# the defaults below.
+# Kopien hos en annen leverandør, hver natt etter datatjenestens egen sikkerhetskopi (02:14 UTC,
+# workers/data/src/backup.js): hele arkivbøtta i R2 (målinger per dag, de nattlige sikkerhetskopiene av historikken)
+# kopieres til en bøtte hos en annen leverandør (Backblaze B2), så en tapt Cloudflare-konto eller bøtte ikke gjør at
+# dataene går tapt. Kopien sjekkes etterpå: hver fil i R2 må finnes i kopien med samme sjekksum (rclone check), og
+# siste sikkerhetskopi av hver tabell må finnes, kunne leses og være fra i dag eller i går (scripts/check-backup.mjs).
+# Koden og sakene kopieres også: sakene som JSON hver natt, hele Git-historikken som en bundle på søndager (og når
+# den kjøres for hånd). Ingenting slettes noen gang fra kopien (rclone copy, ikke sync), og bøtta tar vare på gamle
+# versjoner, så en dårlig natt ikke kan ødelegge en god kopi. Når noe feiler, åpnes en sak (en kommentar på den åpne
+# når meldingen endres), og den lukkes når en natt går bra igjen. Nøklene ligger i GitHub-miljøet «backup»
+# (docs/operations.md «Kontoer og hemmeligheter»): hemmelighetene R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (bare
+# lesing, bare arkivbøtta), B2_KEY_ID, B2_APPLICATION_KEY (bare backup-bøtta); variablene R2_ENDPOINT og B2_ENDPOINT
+# (bøttas S3-adresse, s3.<region>.backblazeb2.com), og R2_BUCKET og B2_BUCKET bare når navnene er andre enn
+# standardverdiene nedenfor.
 
 on:
   schedule:
-    - cron: "30 3 * * *" # 03:30 UTC, after the data service's backup at 02:14
+    - cron: "30 3 * * *" # 03:30 UTC, etter datatjenestens sikkerhetskopi kl. 02:14
   workflow_dispatch:
 
 permissions: {}
@@ -29,7 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: backup
-    # shell: bash adds pipefail, so a failing rclone is not hidden by «| tail» (GitHub's default shell has no pipefail).
+    # shell: bash legger til pipefail, så en rclone som feiler, ikke skjules av «| tail» (GitHubs standardskall har
+    # ikke pipefail).
     defaults:
       run:
         shell: bash
@@ -37,7 +39,7 @@ jobs:
       contents: read
       issues: write
     env:
-      # rclone reads its remotes from the environment: «r2» (Cloudflare) and «b2» (Backblaze), both over the S3 API.
+      # rclone leser fjernlagrene fra miljøet: «r2» (Cloudflare) og «b2» (Backblaze), begge over S3-API-et.
       RCLONE_CONFIG_R2_TYPE: s3
       RCLONE_CONFIG_R2_PROVIDER: Cloudflare
       RCLONE_CONFIG_R2_REGION: auto
@@ -51,7 +53,8 @@ jobs:
       RCLONE_CONFIG_B2_ENDPOINT: ${{ vars.B2_ENDPOINT }}
       RCLONE_CONFIG_B2_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
       RCLONE_CONFIG_B2_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
-      # The bucket names are not secret and have defaults here; the variables override them for another account or bucket.
+      # Bøttenavnene er ikke hemmelige og har standardverdier her; variablene overstyrer dem for en annen konto eller
+      # bøtte.
       R2_BUCKET: ${{ vars.R2_BUCKET || 'hpgt-data-archive' }}
       B2_BUCKET: ${{ vars.B2_BUCKET || 'hpgt-flysteder-backup' }}
     steps:
@@ -62,7 +65,7 @@ jobs:
             [ -n "${!v}" ] || missing="$missing $v"
           done
           if [ -n "$missing" ]; then echo "Mangler i miljøet backup:$missing (se docs/operations.md «Kontoer og hemmeligheter»)"; exit 1; fi
-          # B2 signs with the region in the address (s3.<region>.backblazeb2.com), so rclone is told which it is.
+          # B2 signerer med regionen i adressen (s3.<region>.backblazeb2.com), så rclone får vite hvilken det er.
           region=$(echo "$RCLONE_CONFIG_B2_ENDPOINT" | sed -E 's#^https?://##; s#/.*$##; s#^s3\.([a-z0-9-]+)\.backblazeb2\.com$#\1#')
           echo "RCLONE_CONFIG_B2_REGION=$region" >> "$GITHUB_ENV"
 
@@ -77,18 +80,20 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone > /dev/null && rclone version | head -1
 
       - name: Kopier arkivet fra R2 til B2
-        # copy, never sync: nothing is deleted from the copy. Files already there with the same checksum are skipped.
-        # --checksum compares the MD5 (ETag) from the listings, so rclone never asks B2 for each file's modification time.
-        # Without it every run made one HEAD per file in the copy (a Class B transaction), and the archive grows by about
-        # 20 files a day: on 18.11.2026 two runs reached B2's free daily cap of 2 500. Now a run costs a few listings.
+        # copy, aldri sync: ingenting slettes fra kopien. Filer som allerede finnes med samme sjekksum, hoppes over.
+        # --checksum sammenligner MD5 (ETag) fra listene, så rclone aldri spør B2 om endringstiden for hver fil. Uten
+        # den gjorde hver kjøring én HEAD per fil i kopien (en Class B-transaksjon), og arkivet vokser med omtrent 20
+        # filer om dagen: 18.11.2026 nådde to kjøringer B2s gratisgrense på 2 500 per dag. Nå koster en kjøring noen få
+        # lister.
         run: rclone copy "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --checksum --transfers 8 --checkers 16 --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -20
 
       - name: Sjekk at hele arkivet er kopiert
-        # Every file in R2 must be in the copy with the same checksum. Compares the listings only (Class C at B2).
+        # Hver fil i R2 må finnes i kopien med samme sjekksum. Sammenligner bare listene (Class C hos B2).
         run: rclone check "r2:$R2_BUCKET" "b2:$B2_BUCKET/archive" --one-way --checksum --fast-list 2>&1 | tail -5
 
       - name: Sjekk kopien av sikkerhetskopien
-        # The latest backup of each table is read back from the copy (not from R2), so what is checked is what a restore would use.
+        # Siste sikkerhetskopi av hver tabell leses tilbake fra kopien (ikke fra R2), så det som sjekkes, er det en
+        # gjenoppretting ville brukt.
         run: |
           for t in flight_days verify_hours flights; do
             rclone copyto "b2:$B2_BUCKET/archive/backup/$t/latest.json" "copy/$t/latest.json" || true
@@ -101,11 +106,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           mkdir -p out/github out/git
-          # Every issue and pull request with its comments, as the API gives them: «Meld fra» ends up here, and nowhere else.
+          # Alle saker og pull requests med kommentarene, slik API-et gir dem: «Meld fra» havner her og ingen andre
+          # steder.
           gh api --paginate "repos/$GH_REPO/issues?state=all&per_page=100" > out/github/issues.json
           gh api --paginate "repos/$GH_REPO/issues/comments?per_page=100" > out/github/issue-comments.json
           echo "saker: $(jq length out/github/issues.json), kommentarer: $(jq length out/github/issue-comments.json)"
-          # The whole history as one file, on Sundays and when run by hand: it is 50 MB and the bucket keeps old versions.
+          # Hele historikken som én fil, på søndager og ved kjøring for hånd: den er 50 MB, og bøtta tar vare
+          # på gamle versjoner.
           if [ "$(date -u +%u)" = "7" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             git bundle create out/git/flying-sites.bundle --all
             git bundle verify out/git/flying-sites.bundle
@@ -113,8 +120,8 @@ jobs:
           rclone copy out "b2:$B2_BUCKET" --checksum --fast-list --stats-one-line --stats 0 -v 2>&1 | tail -5
 
       - name: Sjekk sakene og koden i kopien
-        # What was just uploaded must be in B2 with the same checksum, and the Git bundle must be at most 8 days old
-        # (it is written on Sundays), so a missing week is noticed.
+        # Det som nettopp ble lastet opp, må finnes i B2 med samme sjekksum, og Git-bundlen kan være høyst 8 dager
+        # gammel (den skrives på søndager), så en uke som mangler, blir oppdaget.
         run: |
           rclone check out "b2:$B2_BUCKET" --one-way --checksum --fast-list 2>&1 | tail -5
           for f in issues.json issue-comments.json; do jq -e 'type == "array"' "out/github/$f" > /dev/null; done

@@ -1,17 +1,17 @@
-# The data service (src/index.js). Deployed from main by .github/workflows/data-worker.yml, with the token and account in
-# the GitHub environment «cloudflare». The Holfuy key is the secret HOLFUY_KEY, set in Cloudflare (Workers & Pages →
-# data → Settings → Variables and Secrets); deploys keep it.
+# Datatjenesten (src/index.js). Publiseres fra main av .github/workflows/data-worker.yml, med tokenet og kontoen i
+# miljøet «cloudflare» på GitHub. Nøkkelen til Holfuy er hemmeligheten HOLFUY_KEY, satt i Cloudflare (Workers & Pages →
+# data → Settings → Variables and Secrets); publiseringer beholder den.
 name = "data"
 main = "src/index.js"
 compatibility_date = "2026-09-30"
-# Only at data.hpgt.com (hpgt.com is on Cloudflare from November 2026): a custom domain added by hand under Workers &
-# Pages → data → Settings → Domains & Routes, since the deploy token may only publish this Worker and cannot make DNS
-# records. Deploys keep it (no routes here). data.hpgt.workers.dev was turned off on 19.11.2026, when the site,
-# the checks and the workflows had moved over; no preview addresses either.
+# Bare på data.hpgt.com (hpgt.com er på Cloudflare fra november 2026): et eget domene lagt til for hånd under Workers &
+# Pages → data → Settings → Domains & Routes, siden tokenet for publisering bare kan publisere denne Workeren og ikke
+# kan lage DNS-poster. Publiseringer beholder det (ingen routes her). data.hpgt.workers.dev ble slått av 19.11.2026, da
+# nettstedet, sjekkene og arbeidsflytene hadde flyttet over; heller ingen adresser for forhåndsvisning.
 workers_dev = false
 preview_urls = false
 
-# The store: one Durable Object with SQLite (src/store.js).
+# Lageret: ett Durable Object med SQLite (src/store.js).
 [[durable_objects.bindings]]
 name = "STORE"
 class_name = "Store"
@@ -20,23 +20,23 @@ class_name = "Store"
 tag = "v1"
 new_sqlite_classes = ["Store"]
 
-# The archive (src/archive.js, docs/operations.md «Værarkivet (R2)»): the private R2 bucket hpgt-data-archive. The token
-# in the GitHub environment needs «Workers R2 Storage → Edit» to deploy with it.
+# Arkivet (src/archive.js, docs/operations.md «Værarkivet (R2)»): den private R2-bøtta hpgt-data-archive. Tokenet i
+# miljøet på GitHub trenger «Workers R2 Storage → Edit» for å publisere med den.
 [[r2_buckets]]
 binding = "ARCHIVE"
 bucket_name = "hpgt-data-archive"
 
-# The rate limit for CSP violation reports (src/csp-report.js): 30 requests a minute from one address, counted
-# by Cloudflare at each location under a hash of the address. Rate limit namespaces are shared by the whole Cloudflare
-# account «HPGT», so each Worker and each limit has its own namespace_id: 1001 is the forms on hpgt.com (hpgt-web,
-# BEGRENS), 1002 is this one. A new limit gets a new number.
+# Grensen for antall rapporter om brudd på CSP (src/csp-report.js): 30 forespørsler i minuttet fra én adresse, telt
+# av Cloudflare på hvert sted under en hash av adressen. Navnerommene for grenser deles av hele Cloudflare-kontoen
+# «HPGT», så hver Worker og hver grense har sin egen namespace_id: 1001 er skjemaene på hpgt.com (hpgt-web,
+# BEGRENS), 1002 er denne. En ny grense får et nytt nummer.
 [[ratelimits]]
 name = "CSP_LIMIT"
 namespace_id = "1002"
 simple = { limit = 30, period = 60 }
 
 [triggers]
-# Every minute: each source has its own interval in src/index.js (INTERVALS), so one schedule serves them all.
+# Hvert minutt: hver kilde har sitt eget intervall i src/index.js (INTERVALS), så én tidsplan dekker alle.
 crons = ["* * * * *"]
 
 # Bare Workerens egne linjer (kildene, feil, csp-report). Cloudflares logg per kall er av, fordi den tar med IP-adressen

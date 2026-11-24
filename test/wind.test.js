@@ -1,4 +1,4 @@
-// Tests for the wind assessment (src/assets/js/wind.js). Run with `npm test`.
+// Tester for vindvurderingen (src/assets/js/wind.js). Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -7,42 +7,42 @@ import { t } from "../lib/i18n.js";
 
 await import("../src/assets/js/wind.js");
 const W = globalThis.FlyingSitesWind;
-// Norwegian strings from the dictionary (src/_i18n/nb.json), as on the site.
+// Norske tekster fra ordboka (src/_i18n/nb.json), som på siden.
 W.useText((key, vars) => t(`js.${key}`, "nb", vars ?? {}));
 const rules = JSON.parse(fs.readFileSync(new URL("../src/_data/windRules.json", import.meta.url), "utf8"));
 
 const site = { primary: ["SW", "W"], possible: ["S"], maxWind: null };
 const rate = (wind, s = site) => W.rateWind(s, wind, rules);
 
-// Forecast with one value per hour from `start` (ISO, UTC).
+// Varsel med én verdi per time fra `start` (ISO, UTC).
 function hourly(start, hours) {
   const t0 = Date.parse(start);
   return Array.from({ length: hours }, (_, i) => new Date(t0 + i * 3600000).toISOString().replace(".000Z", "Z"));
 }
 
-test("main direction, moderate wind and small gusts give «Kan passe»", () => {
+test("hovedretning, moderat vind og små kast gir «Kan passe»", () => {
   assert.deepEqual(rate({ dir: 247, speed: 4, gust: 6 }), { rating: "ok", reasons: [], codes: [] });
 });
 
-test("missing gusts never improve the assessment", () => {
+test("manglende kast gjør aldri vurderingen bedre", () => {
   const r = rate({ dir: 247, speed: 6, gust: null });
   assert.equal(r.rating, "maybe");
   assert.match(r.reasons.join(), /mangler kast/);
 });
 
-test("gusts more than maxGustSpread above the mean wind give «Usikkert»", () => {
+test("kast mer enn maxGustSpread over middelvinden gir «Usikkert»", () => {
   assert.equal(rate({ dir: 247, speed: 3, gust: 3 + rules.maxGustSpread + 1 }).rating, "maybe");
 });
 
-test("gusts above maxGust give «For mye vind» even with low mean wind", () => {
+test("kast over maxGust gir «For mye vind» selv med lav middelvind", () => {
   assert.equal(rate({ dir: 247, speed: 5, gust: rules.maxGust + 1 }).rating, "high");
 });
 
-test("mean wind above the common limit gives «For mye vind»", () => {
+test("middelvind over den felles grensen gir «For mye vind»", () => {
   assert.equal(rate({ dir: 247, speed: rules.maxWind + 0.5, gust: rules.maxWind + 1 }).rating, "high");
 });
 
-test("the site's own limit is used instead of the common limit", () => {
+test("stedets egen grense brukes i stedet for den felles grensen", () => {
   const local = { ...site, maxWind: 5 };
   const r = rate({ dir: 247, speed: 6, gust: 7 }, local);
   assert.equal(r.rating, "high");
@@ -50,40 +50,40 @@ test("the site's own limit is used instead of the common limit", () => {
   assert.equal(rate({ dir: 247, speed: 4.5, gust: 6 }, local).rating, "ok");
 });
 
-test("light wind from the right direction is «Passer», with no reason or note", () => {
+test("svak vind fra riktig retning er «Passer», uten grunn eller merknad", () => {
   const r = rate({ dir: 247, speed: rules.minWind - 0.5, gust: 2 });
   assert.equal(r.rating, "ok");
   assert.deepEqual(r.reasons, []);
   assert.equal(r.note, undefined);
 });
 
-test("possible direction gives «Usikkert», wrong direction gives «Passer ikke»", () => {
+test("mulig retning gir «Usikkert», feil retning gir «Passer ikke»", () => {
   assert.equal(rate({ dir: 180, speed: 4, gust: 5 }).rating, "maybe");
   assert.equal(rate({ dir: 90, speed: 4, gust: 5 }).rating, "no");
 });
 
-test("a direction near the edge of a sector that is not a main direction gives «Usikkert»", () => {
-  // SW is 225°, the sector runs from 202.5° to 247.5°, and W (270°) is also a main direction.
-  assert.equal(rate({ dir: 205, speed: 4, gust: 5 }).rating, "maybe"); // near S (possible)
-  assert.equal(rate({ dir: 250, speed: 4, gust: 5 }).rating, "ok"); // between SW and W, both main directions
-  assert.equal(rate({ dir: 288, speed: 4, gust: 5 }).rating, "maybe"); // near NW (not suitable)
+test("en retning nær kanten av en sektor som ikke er hovedretning, gir «Usikkert»", () => {
+  // SW er 225°, sektoren går fra 202,5° til 247,5°, og W (270°) er også en hovedretning.
+  assert.equal(rate({ dir: 205, speed: 4, gust: 5 }).rating, "maybe"); // nær S (mulig)
+  assert.equal(rate({ dir: 250, speed: 4, gust: 5 }).rating, "ok"); // mellom SW og W, begge hovedretninger
+  assert.equal(rate({ dir: 288, speed: 4, gust: 5 }).rating, "maybe"); // nær NW (passer ikke)
   assert.equal(rate({ dir: 225, speed: 4, gust: 5 }).rating, "ok");
 });
 
-test("directions around north are handled correctly (355° and 5° are N)", () => {
+test("retninger rundt nord håndteres riktig (355° og 5° er N)", () => {
   assert.equal(W.directionCode(355), "N");
   assert.equal(W.directionCode(5), "N");
   assert.equal(W.directionCode(-10), "N");
   assert.equal(W.directionCode(360), "N");
 });
 
-test("rain from rainNo gives «Passer ikke», even when the wind is suitable", () => {
+test("nedbør fra rainNo gir «Passer ikke», selv når vinden passer", () => {
   const r = rate({ dir: 247, speed: 4, gust: 6, rain: rules.rainNo });
   assert.equal(r.rating, "no");
   assert.match(r.reasons[0], /^Regn meldt \(0,5 mm\)$/);
 });
 
-test("light precipitation gives at most «Usikkert», and no or missing precipitation changes nothing", () => {
+test("lett nedbør gir høyst «Usikkert», og ingen eller manglende nedbør endrer ingenting", () => {
   const r = rate({ dir: 247, speed: 4, gust: 6, rain: rules.rainMaybe });
   assert.equal(r.rating, "maybe");
   assert.match(r.reasons.join(), /Litt nedbør meldt \(0,1 mm\)/);
@@ -91,44 +91,44 @@ test("light precipitation gives at most «Usikkert», and no or missing precipit
   assert.equal(rate({ dir: 247, speed: 4, gust: 6, rain: null }).rating, "ok");
 });
 
-test("too much wind takes precedence over rain", () => {
+test("for mye vind går foran nedbør", () => {
   assert.equal(rate({ dir: 247, speed: rules.maxWind + 1, gust: 12, rain: 2 }).rating, "high");
 });
 
-test("precipitation is read from the forecast, and an older forecast without precipitation gives rain null", () => {
+test("nedbør leses fra varselet, og et eldre varsel uten nedbør gir rain null", () => {
   const forecast = { times: ["2026-10-05T12:00:00Z"], sites: { a: [[247, 4, 6, 1.2]], b: [[247, 4, 6]] } };
   assert.equal(W.windAt(forecast, "a", 0).rain, 1.2);
   assert.equal(W.windAt(forecast, "b", 0).rain, null);
   assert.equal(W.formatRain(1.24), "1,2 mm");
 });
 
-test("a forecast older than maxForecastAgeHours is too old", () => {
+test("et varsel eldre enn maxForecastAgeHours er for gammelt", () => {
   const now = Date.parse("2026-10-04T12:00:00Z");
   const fetched = (h) => ({ fetched: new Date(now - h * 3600000).toISOString() });
   assert.equal(W.isStale(fetched(1), rules, now), false);
   assert.equal(W.isStale(fetched(rules.maxForecastAgeHours + 0.1), rules, now), true);
   assert.equal(W.isStale({ fetched: "tull" }, rules, now), true);
-  assert.equal(W.isStale({ fetched: "2099-01-01T00:00:00Z" }, rules, now), true, "fetched in the future");
+  assert.equal(W.isStale({ fetched: "2099-01-01T00:00:00Z" }, rules, now), true, "hentet i framtiden");
   const model = (h) => ({ ...fetched(0.2), updated: new Date(now - h * 3600000).toISOString() });
   assert.equal(W.isStale(model(2), rules, now), false);
-  assert.equal(W.isStale(model(48), rules, now), true, "fetched lately, but from a model run two days old");
-  assert.equal(W.isStale(model(-1), rules, now), true, "a model run in the future");
+  assert.equal(W.isStale(model(48), rules, now), true, "hentet nylig, men fra en modellkjøring som er to dager gammel");
+  assert.equal(W.isStale(model(-1), rules, now), true, "en modellkjøring i framtiden");
 });
 
-test("«nå» finds the current hour, and +3/+6 hours from it", () => {
+test("«nå» finner timen som pågår, og +3/+6 timer fra den", () => {
   const times = hourly("2026-10-04T10:00:00Z", 48);
   const now = Date.parse("2026-10-04T12:40:00Z");
   assert.equal(W.slotIndex(times, "0", now), 2);
   assert.equal(W.slotIndex(times, "3", now), 5);
   assert.equal(W.slotIndex(times, "6", now), 8);
   assert.equal(W.slotIndex(times, "off", now), -1);
-  // A missing hour (12, 13, 15, 16): +3 from 12 is 15, and +1 from 13 is not there, so no later hour is shown instead.
+  // En manglende time (12, 13, 15, 16): +3 fra 12 er 15, og +1 fra 13 finnes ikke, så ingen senere time vises i stedet.
   const gap = ["2026-10-04T12:00:00Z", "2026-10-04T13:00:00Z", "2026-10-04T15:00:00Z", "2026-10-04T16:00:00Z"];
   assert.equal(W.slotIndex(gap, "3", Date.parse("2026-10-04T12:10:00Z")), 2);
   assert.equal(W.slotIndex(gap, "1", Date.parse("2026-10-04T13:10:00Z")), -1);
 });
 
-test("the timeline on the home page: any number of hours from now, as far as the forecast goes", () => {
+test("tidslinjen på forsiden: et hvilket som helst antall timer fra nå, så langt varselet rekker", () => {
   const times = hourly("2026-10-04T10:00:00Z", 48);
   const now = Date.parse("2026-10-04T12:40:00Z");
   assert.equal(W.slotIndex(times, "20", now), 22);
@@ -136,73 +136,73 @@ test("the timeline on the home page: any number of hours from now, as far as the
   assert.equal(W.slotIndex(times, "46", now), -1);
 });
 
-test("«nå» moves to the next hour when the hour changes (the home page then redraws)", () => {
+test("«nå» flytter seg til neste time når timen skifter (forsiden tegnes da på nytt)", () => {
   const times = hourly("2026-10-04T10:00:00Z", 48);
-  // 11:50 and 12:10 UTC: same choice, but a different hour in the forecast.
+  // 11:50 og 12:10 UTC: samme valg, men en annen time i varselet.
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T11:50:00Z")), 1);
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T12:10:00Z")), 2);
   assert.equal(W.slotIndex(times, "3", Date.parse("2026-10-04T11:50:00Z")), 4);
   assert.equal(W.slotIndex(times, "3", Date.parse("2026-10-04T12:10:00Z")), 5);
 });
 
-test("an expired forecast gives no «nå», even though the last hour is in the past", () => {
+test("et utløpt varsel gir ingen «nå», selv om den siste timen er passert", () => {
   const times = hourly("2026-10-01T10:00:00Z", 48);
   assert.equal(W.slotIndex(times, "0", Date.parse("2026-10-04T12:00:00Z")), -1);
-  // The last hour is valid for one hour, no longer.
+  // Den siste timen gjelder i én time, ikke lenger.
   const last = Date.parse(times.at(-1));
   assert.equal(W.slotIndex(times, "0", last + 30 * 60000), 47);
   assert.equal(W.slotIndex(times, "0", last + 61 * 60000), -1);
   assert.equal(W.slotIndex(times, "3", last), -1);
 });
 
-test("«i morgen kl. 12» is Norwegian time, also just after midnight", () => {
-  // Summer time (UTC+2): 12:00 Norwegian time is 10:00 UTC.
+test("«i morgen kl. 12» er norsk tid, også rett etter midnatt", () => {
+  // Sommertid (UTC+2): 12:00 norsk tid er 10:00 UTC.
   const summer = hourly("2026-06-10T12:00:00Z", 48);
-  const s = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T22:30:00Z")); // 00:30 Norwegian time on 11 June
+  const s = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T22:30:00Z")); // 00:30 norsk tid 11. juni
   assert.equal(summer[s], "2026-06-12T10:00:00Z");
-  const s2 = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T21:30:00Z")); // 23:30 Norwegian time on 10 June
+  const s2 = W.slotIndex(summer, "tomorrow", Date.parse("2026-06-10T21:30:00Z")); // 23:30 norsk tid 10. juni
   assert.equal(summer[s2], "2026-06-11T10:00:00Z");
-  // Winter time (UTC+1): 12:00 Norwegian time is 11:00 UTC.
+  // Vintertid (UTC+1): 12:00 norsk tid er 11:00 UTC.
   const winter = hourly("2026-12-01T00:00:00Z", 48);
-  const w = W.slotIndex(winter, "tomorrow", Date.parse("2026-12-01T23:15:00Z")); // 00:15 Norwegian time on 2 December
-  assert.equal(w, -1); // 3 December at 12:00 is outside the 48 hours
+  const w = W.slotIndex(winter, "tomorrow", Date.parse("2026-12-01T23:15:00Z")); // 00:15 norsk tid 2. desember
+  assert.equal(w, -1); // 3. desember kl. 12:00 er utenfor de 48 timene
   const w2 = W.slotIndex(winter, "tomorrow", Date.parse("2026-12-01T08:00:00Z"));
   assert.equal(winter[w2], "2026-12-02T11:00:00Z");
 });
 
-test("«i morgen kl. 12» across the switch to winter time", () => {
-  // The clocks go back in the night to 25 October 2026. 12:00 Norwegian time on 25 Oct is 11:00 UTC.
+test("«i morgen kl. 12» over skiftet til vintertid", () => {
+  // Klokka stilles tilbake natt til 25. oktober 2026. 12:00 norsk tid 25. oktober er 11:00 UTC.
   const times = hourly("2026-10-24T00:00:00Z", 48);
   const i = W.slotIndex(times, "tomorrow", Date.parse("2026-10-24T09:00:00Z"));
   assert.equal(times[i], "2026-10-25T11:00:00Z");
 });
 
-test("invalid wind is never «Kan passe»", () => {
-  // Comparisons with undefined, NaN or a string are always false, so such values used to slip past every limit.
+test("ugyldig vind er aldri «Kan passe»", () => {
+  // Sammenligninger med undefined, NaN eller en streng er alltid false, så slike verdier slapp før forbi alle grenser.
   for (const speed of [undefined, null, NaN, Infinity, "5", -1]) {
     const r = rate({ dir: 247, speed, gust: 3 });
-    assert.equal(r.rating, "no", `speed ${String(speed)}`);
+    assert.equal(r.rating, "no", `fart ${String(speed)}`);
     assert.deepEqual(r.codes, ["noData"]);
     assert.match(r.reasons.join(), /Mangler gyldige vinddata/);
   }
   for (const dir of [undefined, null, NaN, "247", -10, 400]) {
-    assert.equal(rate({ dir, speed: 4, gust: 6 }).rating, "no", `dir ${String(dir)}`);
+    assert.equal(rate({ dir, speed: 4, gust: 6 }).rating, "no", `retning ${String(dir)}`);
   }
   assert.equal(rate(null).rating, "no");
 });
 
-test("invalid gusts and rain count as missing", () => {
-  // A broken gust is treated like a missing one: at best «Usikkert», never «Kan passe».
+test("ugyldige kast og ugyldig nedbør regnes som manglende", () => {
+  // Et ødelagt kast behandles som et manglende: i beste fall «Usikkert», aldri «Kan passe».
   for (const gust of [NaN, "6", -2]) {
     const r = rate({ dir: 247, speed: 4, gust });
-    assert.equal(r.rating, "maybe", `gust ${String(gust)}`);
+    assert.equal(r.rating, "maybe", `kast ${String(gust)}`);
     assert.deepEqual(r.codes, ["noGust"]);
   }
-  // Broken precipitation is ignored, like missing precipitation.
+  // Ødelagt nedbør ignoreres, som manglende nedbør.
   assert.equal(rate({ dir: 247, speed: 4, gust: 6, rain: NaN }).rating, "ok");
 });
 
-test("hours without valid wind give no wind, so the page shows «Ingen varsel»", () => {
+test("timer uten gyldig vind gir ingen vind, så siden viser «Ingen varsel»", () => {
   const forecast = { sites: { a: [[247, null, 5, 0], [null, 4, 5, 0], [247, 4, null, null], [247, 4, 5, -1]] } };
   assert.equal(W.windAt(forecast, "a", 0), null);
   assert.equal(W.windAt(forecast, "a", 1), null);
@@ -210,12 +210,12 @@ test("hours without valid wind give no wind, so the page shows «Ingen varsel»"
   assert.deepEqual(W.windAt(forecast, "a", 3), { dir: 247, speed: 4, gust: 5, rain: null });
 });
 
-test("times are shown in Norwegian time", () => {
+test("tider vises i norsk tid", () => {
   assert.equal(W.formatClock(Date.parse("2026-06-10T22:05:00Z")), "00.05");
   assert.equal(W.formatClock(Date.parse("2026-12-10T08:30:00Z")), "09.30");
 });
 
-test("sites without a forecast or with gaps in it give no wind", () => {
+test("steder uten varsel eller med hull i det gir ingen vind", () => {
   const forecast = { sites: { a: [[200, 4, 5], null] } };
   assert.deepEqual(W.windAt(forecast, "a", 0), { dir: 200, speed: 4, gust: 5, rain: null });
   assert.equal(W.windAt(forecast, "a", 1), null);
@@ -223,10 +223,10 @@ test("sites without a forecast or with gaps in it give no wind", () => {
   assert.equal(W.windAt(forecast, "a", -1), null);
 });
 
-test("sunrise and sunset in Harstad, with midnight sun and polar night", () => {
+test("soloppgang og solnedgang i Harstad, med midnattssol og mørketid", () => {
   const clock = (ms) => W.formatClock(ms);
   const oct = W.sunTimes("2026-10-09", 68.8, 16.3);
-  // Around 07:37 and 17:45 on this day. The formula is accurate to a couple of minutes, so the test allows 4.
+  // Rundt 07:37 og 17:45 denne dagen. Formelen er nøyaktig til et par minutter, så testen tillater 4.
   assert.ok(Math.abs(oct.rise - Date.parse("2026-10-09T05:37:00Z")) < 4 * 60000, clock(oct.rise));
   assert.ok(Math.abs(oct.set - Date.parse("2026-10-09T15:45:00Z")) < 4 * 60000, clock(oct.set));
   assert.deepEqual(W.sunTimes("2026-06-21", 68.8, 16.3), { polar: "day" });
@@ -235,24 +235,24 @@ test("sunrise and sunset in Harstad, with midnight sun and polar night", () => {
   assert.match(W.sunText("2026-10-09", 68.8, 16.3), /^Sola opp 07\.3\d, ned 17\.4\d\.$/);
 });
 
-test("sunPosition: elevation and azimuth at solar noon and midnight", () => {
-  // Harstad, 21 June: solar noon about 10:55 UTC, the sun 90 − 68.8 + 23.4 = 44.6° high in the south; at solar midnight
-  // 23.4 − 21.2 = 2.2° above the horizon in the north.
+test("sunPosition: høyde og asimut ved sann middag og midnatt", () => {
+  // Harstad, 21. juni: sann middag omtrent 10:55 UTC, sola 90 − 68,8 + 23,4 = 44,6° høyt i sør; ved sann midnatt 23,4 −
+  // 21,2 = 2,2° over horisonten i nord.
   const noon = W.sunPosition(Date.parse("2026-06-21T10:55:00Z"), 68.8, 16.3);
   assert.ok(Math.abs(noon.elevation - 44.6) < 1, String(noon.elevation));
   assert.ok(Math.abs(noon.azimuth - 180) < 2, String(noon.azimuth));
   const midnight = W.sunPosition(Date.parse("2026-06-21T22:55:00Z"), 68.8, 16.3);
   assert.ok(Math.abs(midnight.elevation - 2.2) < 1, String(midnight.elevation));
   assert.ok(midnight.azimuth > 358 || midnight.azimuth < 2, String(midnight.azimuth));
-  // 9 October, sunrise about 07:37 in the east-southeast (sunTimes above), the sun 15° high at noon.
+  // 9. oktober, soloppgang omtrent 07:37 i øst-sørøst (sunTimes over), sola 15° høyt midt på dagen.
   const rise = W.sunPosition(Date.parse("2026-10-09T05:37:00Z"), 68.8, 16.3);
   assert.ok(Math.abs(rise.elevation) < 1.5, String(rise.elevation));
   assert.ok(rise.azimuth > 100 && rise.azimuth < 110, String(rise.azimuth));
 });
 
-test("sunOnLaunch: when the sun is on a launch, from its directions", () => {
-  // A south launch in October gets the sun through the middle of the day, a north launch not at all, and a launch
-  // with starts to the east and west gets it in the morning and the afternoon.
+test("sunOnLaunch: når sola står på en start, ut fra retningene", () => {
+  // En sørstart i oktober får sol midt på dagen, en nordstart ikke i det hele tatt, og en start med startplasser mot
+  // øst og vest får den om morgenen og ettermiddagen.
   const south = W.sunOnLaunch("2026-10-09", 68.8, 16.3, ["S"]);
   assert.equal(south.length, 1);
   assert.ok(south[0][0] > 8 && south[0][0] < 10 && south[0][1] > 16 && south[0][1] < 17.5, JSON.stringify(south));
@@ -260,7 +260,7 @@ test("sunOnLaunch: when the sun is on a launch, from its directions", () => {
   assert.equal(W.sunOnLaunch("2026-10-09", 68.8, 16.3, ["E", "W"]).length, 2);
   assert.deepEqual(W.sunOnLaunch("2026-12-15", 68.8, 16.3, ["S"]), []);
   assert.deepEqual(W.sunOnLaunch("2026-10-09", 68.8, 16.3, []), []);
-  // Midnight sun further north: a north launch has the sun across midnight, as one period past 24.
+  // Midnattssol lenger nord: en nordstart har sol over midnatt, som én periode forbi 24.
   const north = W.sunOnLaunch("2026-06-21", 70.5, 23, ["N"]);
   assert.equal(north.length, 1);
   assert.ok(north[0][0] > 18 && north[0][1] > 24 && north[0][1] < 30, JSON.stringify(north));
@@ -270,12 +270,12 @@ test("sunOnLaunch: when the sun is on a launch, from its directions", () => {
   assert.equal(W.sunOnLaunchText("2026-10-09", 68.8, 16.3, ["N"]), "Lite sol på starten i dag.");
 });
 
-test("the day plan merges hours with the same assessment and skips dark hours", () => {
+test("dagsplanen slår sammen timer med samme vurdering og hopper over mørke timer", () => {
   const times = hourly("2026-10-09T00:00:00Z", 24);
   const good = [247, 4, 6, 0], unsure = [247, 6, null, 0], wrong = [90, 4, 6, 0];
-  // Norwegian time is UTC+2 in October. The sun is up roughly 07:37–17:46 in Harstad.
+  // Norsk tid er UTC+2 i oktober. Sola er oppe omtrent 07:37–17:46 i Harstad.
   const rows = times.map((t, i) => (i >= 8 && i < 11 ? good : i === 11 ? unsure : i >= 12 && i < 14 ? good : wrong));
-  rows[2] = good; // 04:00 Norwegian time, dark
+  rows[2] = good; // 04:00 norsk tid, mørkt
   const forecast = { times, sites: { x: rows } };
   const days = W.dayWindows(forecast, { id: "x", ...site }, rules, 68.8, 16.3);
   assert.deepEqual(Object.keys(days), ["2026-10-09"]);
@@ -284,34 +284,34 @@ test("the day plan merges hours with the same assessment and skips dark hours", 
   ]);
   const first = days["2026-10-09"][0];
   assert.deepEqual([first.dir, first.min, first.max, first.gust], ["SW", 4, 4, 6]);
-  assert.equal(days["2026-10-09"][1].gust, null); // gusts missing from the forecast
+  assert.equal(days["2026-10-09"][1].gust, null); // kast mangler i varselet
 });
 
-test("a forecast from the data service is used when it is newer and well formed; a missing launch only has none", () => {
+test("et varsel fra datatjenesten brukes når det er nyere og har riktig form; en start som mangler, har bare ingen", () => {
   const page = { fetched: "2026-10-18T12:00:00Z", times: ["2026-10-18T12:00:00Z"], sites: { a: [[200, 5, 9, 0]], b: [null] } };
   const live = { fetched: "2026-10-18T15:00:00Z", times: ["2026-10-18T15:00:00Z", "2026-10-18T16:00:00Z"], sites: { a: [[200, 5, 9, 0], null], b: [[180, 3, null, null], [180, 3, 6, 0.2]] } };
   assert.equal(W.isNewerForecast(live, page), true);
   assert.equal(W.isNewerForecast(live, null), true);
-  assert.equal(W.isNewerForecast({ ...live, fetched: "2026-10-18T11:00:00Z" }, page), false, "older");
-  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page), true, "a launch missing does not stop the others");
-  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page, "b"), false, "the site page needs its own launch");
-  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, null, "b"), true, "unless it has no forecast to keep");
-  assert.equal(W.isNewerForecast({ ...live, times: [live.times[1], live.times[0]] }, page), false, "hours out of order");
-  assert.equal(W.isNewerForecast({ ...live, times: [live.times[0], live.times[0]] }, page), false, "an hour twice");
-  assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [[180, 3, 6, 0]] } }, page), false, "wrong length");
-  assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [["<b>", 3, 6, 0], null] } }, page), false, "text in a row");
+  assert.equal(W.isNewerForecast({ ...live, fetched: "2026-10-18T11:00:00Z" }, page), false, "eldre");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page), true, "en manglende start stopper ikke de andre");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, page, "b"), false, "stedssiden trenger sin egen start");
+  assert.equal(W.isNewerForecast({ ...live, sites: { a: live.sites.a } }, null, "b"), true, "med mindre den ikke har noe varsel å beholde");
+  assert.equal(W.isNewerForecast({ ...live, times: [live.times[1], live.times[0]] }, page), false, "timer i feil rekkefølge");
+  assert.equal(W.isNewerForecast({ ...live, times: [live.times[0], live.times[0]] }, page), false, "en time to ganger");
+  assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [[180, 3, 6, 0]] } }, page), false, "feil lengde");
+  assert.equal(W.isNewerForecast({ ...live, sites: { ...live.sites, b: [["<b>", 3, 6, 0], null] } }, page), false, "tekst i en rad");
   assert.equal(W.isNewerForecast({ error: "no forecast yet" }, page), false);
   assert.equal(W.isNewerForecast(null, page), false);
 });
 
-test("the hour now with a measurement: a stricter measurement always counts", () => {
+test("timen nå med en måling: en strengere måling teller alltid", () => {
   const fc = { dir: 247, speed: 4, gust: 6, rain: 0 };
   const r = W.rateNow(site, fc, { dir: 247, speed: rules.maxWind + 2, gust: rules.maxWind + 4 }, rules, false);
   assert.equal(r.basis, "measured");
   assert.equal(r.result.rating, "high");
 });
 
-test("the hour now with a measurement: a better measurement counts only when the wind is steady", () => {
+test("timen nå med en måling: en bedre måling teller bare når vinden er jevn", () => {
   const fc = { dir: 247, speed: rules.maxWind + 2, gust: rules.maxWind + 4, rain: 0 };
   const calm = { dir: 247, speed: 4, gust: 6 };
   assert.deepEqual([W.rateNow(site, fc, calm, rules, true).basis, W.rateNow(site, fc, calm, rules, true).result.rating], ["measured", "ok"]);
@@ -319,23 +319,23 @@ test("the hour now with a measurement: a better measurement counts only when the
   assert.deepEqual([unsteady.basis, unsteady.result.rating, unsteady.unsteady], ["forecast", "high", true]);
 });
 
-test("the hour now with a measurement keeps the forecast's rain, and works without a measurement", () => {
+test("timen nå med en måling beholder varselets nedbør, og virker uten måling", () => {
   const fc = { dir: 247, speed: 4, gust: 6, rain: rules.rainNo + 1 };
-  assert.equal(W.rateNow(site, fc, { dir: 247, speed: 4, gust: 6 }, rules, true).result.rating, "no", "rain the station does not see");
+  assert.equal(W.rateNow(site, fc, { dir: 247, speed: 4, gust: 6 }, rules, true).result.rating, "no", "nedbør stasjonen ikke ser");
   assert.equal(W.rateNow(site, fc, null, rules, true).basis, "forecast");
 });
 
-test("wind to stay up (soar_min_wind) is only a note: the rating stays the same, and nothing when too strong", () => {
+test("vind for å holde seg oppe (soar_min_wind) er bare en merknad: lik vurdering, ingenting ved for mye vind", () => {
   const soar = { ...site, soarMinWind: 4 };
   const light = { dir: 247, speed: 3, gust: 4 };
-  assert.equal(rate(light, soar).rating, rate(light).rating, "the site can still be flown (a flight down)");
+  assert.equal(rate(light, soar).rating, rate(light).rating, "stedet kan fortsatt flys (en nedflyging)");
   assert.equal(rate(light, soar).note, "Under 4 m/s: nok til en tur ned, men trolig for lite til å henge her.");
   assert.equal(rate({ dir: 247, speed: 5, gust: 6 }, soar).note, undefined);
-  assert.equal(rate(light).note, undefined, "no note without the field");
-  assert.equal(rate({ dir: 90, speed: 3, gust: 4 }, soar).note, undefined, "no note when the direction does not work anyway");
+  assert.equal(rate(light).note, undefined, "ingen merknad uten feltet");
+  assert.equal(rate({ dir: 90, speed: 3, gust: 4 }, soar).note, undefined, "ingen merknad når retningen uansett ikke passer");
 });
 
-// Hourly from start, then every 6 hours (as MET gives it further ahead).
+// Hver time fra start, deretter hver 6. time (slik MET gir det lenger fram).
 function hourlyThenSix(start, hours, sixes) {
   const times = hourly(start, hours);
   const last = Date.parse(times.at(-1));
@@ -343,25 +343,25 @@ function hourlyThenSix(start, hours, sixes) {
   return times;
 }
 
-test("the times ahead as hours from now, each counting until the next, the 6-hour steps reached by the arrow keys", () => {
+test("tidene framover som timer fra nå, hver gjelder til den neste, 6-timersstegene nås med piltastene", () => {
   const times = hourlyThenSix("2026-10-21T10:00:00Z", 4, 2);
   const now = Date.parse("2026-10-21T11:20:00Z");
   const ahead = W.hoursAhead(times, now);
   assert.deepEqual(ahead.map((a) => [a.index, a.hours]), [[1, 0], [2, 1], [3, 2], [4, 8], [5, 14]]);
-  assert.deepEqual([0, 3, 4, 5].map((i) => W.stepAt(times, i) / 3600000), [1, 6, 6, 6], "the last as long as the one before");
-  assert.equal(W.nearestHours(ahead, 6), 8, "dragged to 6 hours: the nearest time");
+  assert.deepEqual([0, 3, 4, 5].map((i) => W.stepAt(times, i) / 3600000), [1, 6, 6, 6], "den siste like lang som den før");
+  assert.equal(W.nearestHours(ahead, 6), 8, "dratt til 6 timer: nærmeste tid");
   assert.equal(W.nearestHours(ahead, 4), 2);
-  assert.equal(W.nearestHours(ahead, 3, 2), 8, "one step on from the last hour: on to the 6-hour step");
+  assert.equal(W.nearestHours(ahead, 3, 2), 8, "ett steg videre fra siste time: videre til 6-timerssteget");
   assert.equal(W.nearestHours(ahead, 9, 8), 14);
-  assert.equal(W.nearestHours(ahead, 7, 8), 2, "and back");
-  assert.equal(W.slotIndex(times, "8", now), 4, "the hours found again by time");
-  assert.deepEqual(W.hoursAhead(times, Date.parse("2026-10-20T10:00:00Z")), [], "not covering now");
+  assert.equal(W.nearestHours(ahead, 7, 8), 2, "og tilbake");
+  assert.equal(W.slotIndex(times, "8", now), 4, "timene funnet igjen etter tid");
+  assert.deepEqual(W.hoursAhead(times, Date.parse("2026-10-20T10:00:00Z")), [], "dekker ikke nå");
 });
 
-test("the day overview counts a 6-hour step as six hours", () => {
+test("dagsoversikten regner et 6-timerssteg som seks timer", () => {
   const times = hourlyThenSix("2026-10-24T10:00:00Z", 2, 2);
   const forecast = { times, sites: { x: times.map(() => [240, 4, 6, 0]) } };
   const days = W.dayWindows(forecast, { id: "x", ...site }, rules, 68.8, 16.3);
-  // 10 and 11 UTC, then 17 UTC (after sunset, left out): 11 UTC counts until 17.
+  // 10 og 11 UTC, så 17 UTC (etter solnedgang, utelatt): 11 UTC teller til 17.
   assert.deepEqual(days["2026-10-24"].map((w) => [new Date(w.start).toISOString(), new Date(w.end).toISOString()]), [["2026-10-24T10:00:00.000Z", "2026-10-24T17:00:00.000Z"]]);
 });

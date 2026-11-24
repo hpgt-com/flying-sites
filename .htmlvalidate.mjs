@@ -1,15 +1,15 @@
-// HTML validation of the built site (npm run check:html, and the PR check). Starts from the recommended rules.
-// The rules turned off below are listed with the reason, so they can be turned back on when the reason goes away.
+// HTML-validering av det bygde nettstedet (npm run check:html, og sjekken av PR-er). Starter fra de anbefalte reglene.
+// Reglene som er slått av under, står med begrunnelse, så de kan slås på igjen når grunnen forsvinner.
 
 export default {
   extends: ["html-validate:recommended"],
   rules: {
-    // Formatting from the Nunjucks templates, not errors.
+    // Formatering fra Nunjucks-malene, ikke feil.
     "no-trailing-whitespace": "off",
     "doctype-style": "off",
-    // Wants &nbsp; inside the phone numbers on the towers page. The numbers are short, and wrapping does no harm.
+    // Vil ha &nbsp; i telefonnumrene på siden om tårnene. Numrene er korte, og linjeskift gjør ingen skade.
     "tel-non-breaking": "off",
-    // The Leaflet map containers are <div role="region"> with a label, which is correct for a map.
+    // Kartbeholderne fra Leaflet er <div role="region"> med en etikett, som er riktig for et kart.
     "prefer-native-element": ["error", { exclude: ["region"] }],
   },
 };

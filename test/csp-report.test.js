@@ -1,5 +1,5 @@
-// CSP violation reports to the data service (workers/data/src/csp-report.js, POST /v1/csp-report): the methods, both
-// kinds of report, the size limit, the rate limit, and that the log holds no personal data. Run with `npm test`.
+// CSP-brudd rapportert til datatjenesten (workers/data/src/csp-report.js, POST /v1/csp-report): metodene, begge typene
+// rapport, størrelsesgrensen, frekvensgrensen, og at loggen ikke har personopplysninger. Kjør med `npm test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { register } from "node:module";
@@ -38,7 +38,7 @@ const reporting = [
 
 const post = (body, type, headers = {}) => new Request(URL_, { method: "POST", headers: { "content-type": type, "cf-connecting-ip": IP, "user-agent": UA, ...headers }, body });
 
-// Runs the worker with console.log caught; returns the response and the lines logged.
+// Kjører Workeren med console.log fanget; gir svaret og linjene som ble logget.
 async function run(request, env = {}) {
   const lines = [];
   const saved = console.log;
@@ -50,23 +50,23 @@ async function run(request, env = {}) {
   }
 }
 
-// Nothing personal in a log line: no address, user agent, referrer, query string, full address or sample.
+// Ingenting personlig i en logglinje: ingen adresse, nettleserinfo, referrer, spørrestreng, full adresse eller utdrag.
 function assertClean(lines) {
   for (const l of lines) {
-    for (const bad of [IP, "TestBrowser", "example.org", "ola", "?", "token", "lat=", "q=", "onerror", "<img", "x.js", "leaflet.js"]) assert.ok(!l.includes(bad), `«${bad}» in «${l}»`);
+    for (const bad of [IP, "TestBrowser", "example.org", "ola", "?", "token", "lat=", "q=", "onerror", "<img", "x.js", "leaflet.js"]) assert.ok(!l.includes(bad), `«${bad}» i «${l}»`);
   }
 }
 
-test("csp-report: only POST; other methods get 405", async () => {
+test("csp-report: bare POST; andre metoder får 405", async () => {
   for (const method of ["GET", "HEAD", "PUT", "DELETE", "OPTIONS"]) {
     const { res } = await run(new Request(URL_, { method }));
     assert.equal(res.status, 405, method);
     assert.equal(res.headers.get("allow"), "POST");
-    assert.equal(res.headers.get("access-control-allow-origin"), null, "no CORS");
+    assert.equal(res.headers.get("access-control-allow-origin"), null, "ingen CORS");
   }
 });
 
-test("csp-report: a legacy report-uri report is logged as one line without personal data, and answered 204", async () => {
+test("csp-report: en gammel report-uri-rapport logges som én linje uten personopplysninger og besvares med 204", async () => {
   const { res, lines } = await run(post(JSON.stringify(legacy), "application/csp-report"));
   assert.equal(res.status, 204);
   assert.equal(await res.text(), "");
@@ -75,7 +75,7 @@ test("csp-report: a legacy report-uri report is logged as one line without perso
   assertClean(lines);
 });
 
-test("csp-report: Reporting API reports; Trusted Types keep only the sink's name, other pages and types are dropped", async () => {
+test("csp-report: Reporting API-rapporter; Trusted Types beholder bare navnet på sinken, andre sider og typer droppes", async () => {
   const { res, lines } = await run(post(JSON.stringify(reporting), "application/reports+json"));
   assert.equal(res.status, 204);
   assert.deepEqual(lines, [
@@ -85,27 +85,27 @@ test("csp-report: Reporting API reports; Trusted Types keep only the sink's name
   assertClean(lines);
 });
 
-test("csp-report: the size limit holds without Content-Length", async () => {
+test("csp-report: størrelsesgrensen holder uten Content-Length", async () => {
   const big = JSON.stringify({ "csp-report": { ...legacy["csp-report"], "script-sample": "x".repeat(csp.MAX_BODY) } });
-  // A stream has no Content-Length, so only reading it can tell the size.
+  // En strøm har ingen Content-Length, så bare å lese den kan avgjøre størrelsen.
   const stream = new ReadableStream({ start(c) { const b = new TextEncoder().encode(big); for (let i = 0; i < b.length; i += 1000) c.enqueue(b.slice(i, i + 1000)); c.close(); } });
   const req = new Request(URL_, { method: "POST", headers: { "content-type": "application/csp-report" }, body: stream, duplex: "half" });
   assert.equal(req.headers.get("content-length"), null);
   const { res, lines } = await run(req);
   assert.equal(res.status, 413);
   assert.deepEqual(lines, []);
-  // And a false, small Content-Length does not let it through either.
+  // Og en falsk, liten Content-Length slipper den heller ikke gjennom.
   assert.equal(await csp.readLimited(new Request(URL_, { method: "POST", body: big }), csp.MAX_BODY), null);
   assert.equal((await run(post(big, "application/csp-report", { "content-length": "100000" }))).res.status, 413);
 });
 
-test("csp-report: other content types 415, not JSON 400", async () => {
+test("csp-report: andre innholdstyper gir 415, ikke JSON gir 400", async () => {
   assert.equal((await run(post(JSON.stringify(legacy), "text/plain"))).res.status, 415);
   assert.equal((await run(post("{nei", "application/reports+json"))).res.status, 400);
   assert.equal((await run(post("[]", "application/reports+json; charset=utf-8"))).res.status, 204);
 });
 
-test("csp-report: the rate limit counts a hash of the address, never the address", async () => {
+test("csp-report: frekvensgrensen teller en hash av adressen, aldri adressen", async () => {
   const keys = [];
   let allow = true;
   const env = { CSP_LIMIT: { limit: async ({ key }) => { keys.push(key); return { success: allow }; } } };
@@ -114,18 +114,18 @@ test("csp-report: the rate limit counts a hash of the address, never the address
   const { res, lines } = await run(post(JSON.stringify(legacy), "application/csp-report"), env);
   assert.equal(res.status, 429);
   assert.deepEqual(lines, []);
-  assert.equal(keys[0], keys[1], "the same address, the same key");
+  assert.equal(keys[0], keys[1], "samme adresse, samme nøkkel");
   assert.ok(keys.every((k) => /^[0-9a-f]{24}$/.test(k) && !k.includes(IP)));
 });
 
-test("csp-report: at most MAX_REPORTS lines from one request", async () => {
+test("csp-report: høyst MAX_REPORTS linjer fra én forespørsel", async () => {
   const many = Array.from({ length: csp.MAX_REPORTS + 5 }, () => reporting[1]);
   const { res, lines } = await run(post(JSON.stringify(many), "application/reports+json"));
   assert.equal(res.status, 204);
   assert.equal(lines.length, csp.MAX_REPORTS);
 });
 
-test("csp-report: what is blocked is reduced to scheme and host or a keyword", () => {
+test("csp-report: det som blokkeres, reduseres til skjema og vert eller et nøkkelord", () => {
   assert.equal(csp.blockedOf("https://a.example:8443/p?q=1"), "https://a.example:8443");
   assert.equal(csp.blockedOf("data:image/png;base64,AAAA"), "data");
   assert.equal(csp.blockedOf("blob:https://flysteder.hpgt.com/1234"), "blob");
@@ -133,8 +133,8 @@ test("csp-report: what is blocked is reduced to scheme and host or a keyword", (
   assert.equal(csp.blockedOf("trusted-types-policy"), "trusted-types-policy");
   assert.equal(csp.blockedOf("chrome-extension://abcdefghijklmnop/x.js"), "chrome-extension");
   assert.equal(csp.blockedOf(""), "none");
-  assert.equal(csp.pathOf("http://flysteder.hpgt.com/"), null, "only the site over https");
+  assert.equal(csp.pathOf("http://flysteder.hpgt.com/"), null, "bare siden over https");
   assert.equal(csp.pathOf("https://flysteder.hpgt.com/<script>"), "(annen)");
-  assert.equal(csp.sinkOf("<b>ola</b>"), null, "a sample without a sink name is not logged");
+  assert.equal(csp.sinkOf("<b>ola</b>"), null, "et utdrag uten navn på sinken logges ikke");
   assert.equal(csp.sinkOf("HTMLScriptElement src|https://x"), "HTMLScriptElement src");
 });

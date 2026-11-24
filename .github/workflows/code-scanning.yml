@@ -1,8 +1,8 @@
-name: Code scanning
+name: Kodeskanning
 
-# Static analysis (currently CodeQL) of the JavaScript (website and build scripts) and the workflows. Findings appear under
-# Security → Code scanning. Runs on PRs, on main and once a week, so new rules also catch
-# old code. Free for public repos.
+# Statisk analyse (foreløpig CodeQL) av JavaScript-koden (nettstedet og byggeskriptene) og arbeidsflytene. Funnene
+# vises under Security → Code scanning. Kjører på PR-er, på main og én gang i uka, så nye regler også fanger
+# gammel kode. Gratis for offentlige repoer.
 
 on:
   push:
@@ -10,26 +10,26 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "17 4 * * 1" # Mondays 04:17 UTC
+    - cron: "17 4 * * 1" # mandager kl. 04:17 UTC
 
 permissions:
   contents: read
 
-# A new push to the same branch cancels the run for the previous one (on main the runs finish, so every commit is
-# analysed).
+# En ny push til samme gren avbryter kjøringen for den forrige (på main fullføres kjøringene, så hver commit blir
+# analysert).
 concurrency:
   group: code-scanning-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# Timeout on every job (timeout-minutes): if a GitHub runner hangs, the job stops by itself
-# instead of blocking for up to 6 hours.
+# Tidsgrense på hver jobb (timeout-minutes): henger en runner hos GitHub, stopper jobben av seg selv
+# i stedet for å blokkere i opptil 6 timer.
 jobs:
   analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
-      security-events: write # upload the findings
+      security-events: write # laster opp funnene
     strategy:
       fail-fast: false
       matrix:
