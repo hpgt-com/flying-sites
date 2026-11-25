@@ -76,6 +76,8 @@
 {#- Tekstene skriptene trenger, på sidens språk (leses av common.js). -#}
 <script type="application/json" id="i18n-data">{{ { lang: lang, meta: t.meta, directions: t.directions, opensNewTab: t.common.opensNewTab, js: t.js } | json | safe }}</script>
 {#- defer: skriptene kjører i denne rekkefølgen når siden er lest inn, uten å holde igjen første opptegning. -#}
+{#- Trusted Types-policyene først, før Leaflet og våre egne skript (src/assets/js/trusted-types.js). -#}
+<script defer src="{{ "/assets/js/trusted-types.js" | asset }}"></script>
 {% if map %}<script defer src="{{ "/assets/leaflet/leaflet.js" | asset }}"></script>{% endif %}
 <script defer src="{{ "/assets/js/common.js" | asset }}"></script>
 {#- Service workeren, for bruk uten nett (src/assets/js/pwa.js). URL-ene står her, så de følger stiprefikset. -#}

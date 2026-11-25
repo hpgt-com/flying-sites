@@ -180,7 +180,7 @@
     if (!scriptLoads[src]) {
       scriptLoads[src] = new Promise(function (resolve, reject) {
         var el = document.createElement("script");
-        el.src = src;
+        el.src = globalThis.FSTrustedTypes.scriptURL(src);
         el.async = true;
         el.onload = function () { resolve(); };
         el.onerror = function () { delete scriptLoads[src]; el.remove(); reject(new Error("Could not load " + src)); };
@@ -324,7 +324,11 @@
   }
 
   function createMap(element, options) {
-    var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}));
+    // Attribusjonen lages her med vårt eget prefiks, ikke Leaflets (med title og et SVG-flagg). Leaflet setter
+    // prefikset som HTML når kartet lages, og Trusted Types-policyen slipper bare gjennom enkle lenker
+    // (src/assets/js/trusted-types.js).
+    var map = L.map(element, Object.assign({ scrollWheelZoom: true, zoomControl: true }, options || {}, { attributionControl: false }));
+    map.attributionControl = L.control.attribution({ prefix: '<a href="https://leafletjs.com">Leaflet</a>' }).addTo(map);
     var warm = options && options.warmZoomOut;
     if (warm) delete options.warmZoomOut;
     useTwoFingers(map);
@@ -394,7 +398,6 @@
     });
     map.layersControl.addOverlay(hillshadeLayer(), layerLabel(map, "hillshade", t("map.layerHillshade")));
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
-    map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     return map;
   }
 

@@ -34,10 +34,11 @@ serverer de ferske dataene og tar imot det ene offentlige skjemaet, «Meld fra o
   (`workers/data/src/csp-report.js`): headeren legger til `report-uri` og `report-to csp` med
   `Reporting-Endpoints: csp="https://data.hpgt.com/v1/csp-report"` (meta-taggen kan ikke ha dem, så `site.csp`
   er uten). Nettleseren sender rapportene selv, ikke skriptene på sidene, så `connect-src` trenger ikke
-  adressen. Trusted Types prøves i rapporteringsmodus: `Content-Security-Policy-Report-Only:
-  require-trusted-types-for 'script'` med de samme rapporteringsdirektivene. Sidens egne skript tilordner ingen
-  HTML-strenger, men Leaflet gjør det fortsatt (kreditering, prefiks, navnene i lagvelgeren), og Turnstile er fra en
-  tredjepart, så rapportene viser hva som må endres før det kan håndheves. `/sw.js` får verken policyene eller
+  adressen. Trusted Types håndheves: `require-trusted-types-for 'script'; trusted-types default fs-script-url` i
+  headeren. Policyene står i `src/assets/js/trusted-types.js`, som lastes før alle andre skript. `default` gjelder
+  Leaflet og slipper bare gjennom ren tekst, lenker med en `https`-adresse og de faste elementene Leaflet bruker i
+  knappene og lagvelgeren. `fs-script-url` gjelder våre egne skriptadresser: Turnstile, service workeren og skriptene
+  bak kartlagene. Sidens egne skript bygger HTML med DOM-metoder. `/sw.js` får verken policyen eller
   `Reporting-Endpoints`.
 - Ingen av Workerne (`data`, `site`) har Cloudflares logg per forespørsel (`invocation_logs = false`), som ville
   registrert IP-adressen og nettleserinfoen til hver besøkende. Bare Workernes egne linjer logges, og de har ingen

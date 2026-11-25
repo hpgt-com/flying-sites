@@ -52,7 +52,7 @@
     if (window.turnstile) { render(); return; }
     loading = true;
     var s = document.createElement("script");
-    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    s.src = globalThis.FSTrustedTypes.scriptURL("https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit");
     s.async = true;
     s.onload = function () { loading = false; render(); };
     s.onerror = function () { loading = false; say("checkFailed", "error"); };
