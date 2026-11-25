@@ -58,7 +58,7 @@
   if (!("serviceWorker" in navigator) || !script || !script.dataset.sw) return;
   window.addEventListener("load", function () {
     var firstVisit = !navigator.serviceWorker.controller;
-    navigator.serviceWorker.register(script.dataset.sw, { scope: script.dataset.scope }).then(function () {
+    navigator.serviceWorker.register(globalThis.FSTrustedTypes.scriptURL(script.dataset.sw), { scope: script.dataset.scope }).then(function () {
       return navigator.serviceWorker.ready;
     }).then(function (registration) {
       // Den første siden ble lastet før service workeren fantes, så den ber om å bli lagret nå.

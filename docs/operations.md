@@ -107,7 +107,7 @@ merket `noindex`. Den viser per sted:
 
 flysteder.hpgt.com serveres av Cloudflare (Workers static assets, Workeren `flysteder`, `workers/site/wrangler.toml`),
 slik at den sender ekte sikkerhetshoder (`src/headers.njk` → `_headers`: HSTS, CSP-en fra `site.csp` med
-rapportering, Trusted Types i report-only, innramming, referrer, permissions; se [CSP-rapporter](#csp-rapporter)) og
+rapportering, Trusted Types, innramming, referrer, permissions; se [CSP-rapporter](#csp-rapporter)) og
 cacher bildene i et år. Bygget er det samme: jobben «cloudflare» i «Bygg og publiser»
 publiserer arkivet som lages for GitHub Pages, så begge får nøyaktig de samme filene. GitHub Pages får fortsatt hvert
 bygg som reserve. Det egne domenet under Settings → Pages kan bli stående; GitHub varsler bare at DNS-posten ikke
@@ -229,14 +229,17 @@ lenger peker dit.
 - Nettleserne melder brudd på Content-Security-Policy til datatjenesten (`POST https://data.hpgt.com/v1/csp-report`,
   `workers/data/src/csp-report.js`), ved siden av `POST /v1/report`. Adressen er `cspReportUrl` i `src/_data/site.js`,
   og hodene i `src/headers.njk` peker dit: `Reporting-Endpoints: csp="…"`, og `report-uri …; report-to csp` på slutten
-  av `Content-Security-Policy` og `Content-Security-Policy-Report-Only`. `<meta>`-CSP-en i sidene har dem ikke (det
+  av `Content-Security-Policy`. `<meta>`-CSP-en i sidene har dem ikke (det
   kan ikke en meta-tag), så `site.csp` er uten.
-- `Content-Security-Policy-Report-Only: require-trusted-types-for 'script'` prøver Trusted Types uten å håndheve dem.
-  Sidenes egne skript bruker ikke `innerHTML`, men Leaflet (`src/assets/leaflet/`) setter HTML-tekst for kreditering,
-  prefiks og navnene i lagvelgeren, og Turnstile er fra en tredjepart. Rapportene med `disposition=report` viser hva
-  som må endres før regelen kan flyttes til den håndhevede CSP-en, med smale, navngitte policyer.
+- Trusted Types håndheves (`require-trusted-types-for 'script'; trusted-types default fs-script-url`). Policyene står
+  i `src/assets/js/trusted-types.js` og er testet i `test/trusted-types.test.js`. Leaflet setter HTML-tekst for
+  kreditering, prefiks, knappene og navnene i lagvelgeren, og `default` slipper bare gjennom de formene. Ny HTML fra
+  Leaflet, en ny kreditering med andre attributter enn `href` (og `target="_blank" rel="noopener"`) eller et nytt
+  skript som lastes ved behov, blokkeres og gir en rapport med `disposition=enforce`. Sjekkene i nettleseren
+  (`check:behaviour`, `check:a11y`) kjører med de samme direktivene (`scripts/site-server.mjs`), så det oppdages før
+  publisering.
 - Endepunktet lagrer ingenting. Hver rapport blir én linje i loggen, for eksempel
-  `csp-report directive=require-trusted-types-for disposition=report blocked=trusted-types-sink path=/kart/ sink="Element innerHTML"`:
+  `csp-report directive=require-trusted-types-for disposition=enforce blocked=trusted-types-sink path=/kart/ sink="Element innerHTML"`:
   direktivet, `enforce` eller `report`, det som ble blokkert som skjema og vert eller et nøkkelord (`inline`, `eval`,
   `data`, `blob`, `trusted-types-sink`, `trusted-types-policy`), stien på `flysteder.hpgt.com` uten spørrestreng, og
   for Trusted Types navnet på stedet i koden (`Element innerHTML`). Ingen IP-adresse, nettleser, referrer, hele

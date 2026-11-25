@@ -217,8 +217,8 @@ GoatCounter, og service workeren gjør sidene tilgjengelige offline.
 - **Sikkerhet:** Content-Security-Policy i `base.njk` tillater skript bare fra siden selv (og Cloudflare Turnstile for
   «Meld fra om endring»), og bilder og data bare fra kildene over. En ny ekstern kilde må legges inn der. Som hode
   (`src/headers.njk`) har den også `report-uri` og `report-to`, så nettleserne melder brudd til datatjenesten
-  (`POST /v1/csp-report`, `workers/data/src/csp-report.js`), og Trusted Types prøves i report-only
-  (`Content-Security-Policy-Report-Only: require-trusted-types-for 'script'`). Se [SECURITY.md](../SECURITY.md).
+  (`POST /v1/csp-report`, `workers/data/src/csp-report.js`), og Trusted Types håndheves, med policyene i
+  `src/assets/js/trusted-types.js`. Se [SECURITY.md](../SECURITY.md).
 
 ## Språk
 
