@@ -290,7 +290,7 @@ deploy», som publiserer det samme arkivet til Cloudflare og til GitHub Pages so
 | `restore-drill.yml` | Den 1. hver måned, manuelt | Viser at kopien i B2 kan gjenopprettes: kjører datatjenesten lokalt på runneren og sjekker at den leser inn igjen hver rad. Rører ingenting i Cloudflare. |
 | `recover.yml` | Bare manuelt | Katastrofegjenoppretting: skriver arkivet tilbake til R2, publiserer datatjenesten og kontrollerer gjenopprettingen. Miljøet `recovery` (påkrevd godkjenner, vanligvis uten token). |
 | `browser-cache.yml` | Endringer i `package-lock.json` på `main`, manuelt | Fyller Playwright-nettleserens mellomlager som PR-sjekkens jobb `accessibility` bruker. Ingen hemmeligheter. |
-| `dependabot-automerge.yml` | PR-er fra Dependabot | Slår på automatisk merge for patch- og minor-oppdateringer av npm-pakker og Actions (ikke Wrangler), med et token fra GitHub-appen, så merge starter publiseringen. |
+| `dependabot-automerge.yml` | PR-er fra Dependabot | Slår på automatisk merge for patch- og minor-oppdateringer av npm-pakker og Actions (også Wrangler), med et token fra GitHub-appen, så merge starter publiseringen. |
 | Dependabot | Månedlig | PR-er med oppdaterte pakker og Actions, 7 dager etter en utgivelse (30 for major). |
 
 ## Datamoduler
