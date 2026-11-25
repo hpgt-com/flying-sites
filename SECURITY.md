@@ -77,7 +77,7 @@ serverer de ferske dataene og tar imot det ene offentlige skjemaet, «Meld fra o
   pakker med kjente sårbarheter) og zizmor (`workflow-security`, sikkerhetsproblemer i arbeidsflytene).
 - CodeQL analyserer JavaScript-koden og arbeidsflytene på PR-er, på `main` og hver uke.
 - Actions er låst til commit-SHA-er og oppdateres av Dependabot, med en ventetid på 7 dager (30 for
-  major-versjoner). Patch- og minor-oppdateringer av npm-pakker og Actions, unntatt Wrangler, merges automatisk når
+  major-versjoner). Patch- og minor-oppdateringer av npm-pakker og Actions, også Wrangler, merges automatisk når
   alle påkrevde sjekker er grønne (`dependabot-automerge.yml`, med et token fra GitHub-appen). Arbeidsflytene har bare
   lesetilgang som standard. Bare publiseringsjobben har rettighetene til å publisere (`pages`, `id-token`).
 - Alle arbeidsflytene installerer med `npm ci --ignore-scripts`, så ingen pakkers installasjonsskript kjører i CI
