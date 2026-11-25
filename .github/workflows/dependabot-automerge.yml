@@ -7,8 +7,9 @@ name: Automatisk merge av Dependabot
 # tilgjengeligheten eller ytelsesbudsjettet blir stående. Major-oppdateringer og Wrangler merges manuelt.
 #
 # Automatisk merge slås på med et token fra GitHub-appen «HPGT Flying Sites». En merge med GITHUB_TOKEN starter ikke
-# andre arbeidsflyter, så nettstedet ville ikke blitt publisert. Arbeidsflyter fra Dependabot får bare
-# Dependabot-secrets, så nøkkelen ligger i Dependabot-secreten APP_PRIVATE_KEY. Client ID er ikke hemmelig.
+# andre arbeidsflyter, så nettstedet ville ikke blitt publisert. Med pull_request_target får jobben de vanlige
+# secretene, ikke Dependabot-secretene, så nøkkelen hentes fra miljøet «automation» (bare main), der APP_PRIVATE_KEY
+# ligger fra før. Client ID er ikke hemmelig.
 #
 # pull_request_target: arbeidsflyten kjører alltid versjonen fra main og sjekker ikke ut koden i PR-en.
 
@@ -23,6 +24,7 @@ jobs:
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment: automation
     permissions:
       pull-requests: read
     steps:
